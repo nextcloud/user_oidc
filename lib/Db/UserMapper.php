@@ -61,8 +61,16 @@ class UserMapper extends QBMapper {
 		}
 	}
 
-	public function getOrCreate(int $providerId, string $sub): User {
-		$userId = $providerId . '_' . $sub;
+	public function getOrCreate(int $providerId, string $sub, bool $id4me = false): User {
+		$userId = $providerId . '_';
+
+		if ($id4me) {
+			$userId .= '1_';
+		} else {
+			$userId .= '0_';
+		}
+
+		$userId .= $sub;
 
 		try {
 			return $this->getUser($userId);

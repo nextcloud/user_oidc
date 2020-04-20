@@ -24,12 +24,16 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use Id4me\RP\Model\OpenIdConfig;
+use Id4me\RP\Service;
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\Db\Id4Me;
+use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
-use OCA\UserOIDC\Service\ID4MEProvider;
-use OCA\UserOIDC\Service\OIDCProvider;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\OIDCProviderService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -41,11 +45,11 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 
-class LoginController extends Controller {
+class Id4meController extends Controller {
 
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
-	private const PROVIDERID = 'oidc.providerid';
+	private const AUTHNAME = 'oidc.authname';
 
 	/** @var OIDCProviderService */
 	private $providerService;
@@ -64,29 +68,34 @@ class LoginController extends Controller {
 
 	/** @var UserMapper */
 	private $userMapper;
-	/**
-	 * @var IUserSession
-	 */
+
+	/** @var IUserSession */
 	private $userSession;
-	/**
-	 * @var IUserManager
-	 */
+
+	/** @var IUserManager */
 	private $userManager;
+
+	/** @var Id4MeMapper */
+	private $id4MeMapper;
+
+	/** @var Service */
+	private $id4me;
+
 
 	public function __construct(
 		IRequest $request,
-		OIDCProviderService $providerService,
 		ISecureRandom $random,
 		ISession $session,
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
 		IUserSession $userSession,
-		IUserManager $userManager
+		IUserManager $userManager,
+		HttpClientHelper $clientHelper,
+		Id4MeMapper $id4MeMapper
 	) {
 		parent::__construct(Application::APPID, $request);
 
-		$this->providerService = $providerService;
 		$this->random = $random;
 		$this->session = $session;
 		$this->clientService = $clientService;
@@ -94,6 +103,8 @@ class LoginController extends Controller {
 		$this->userMapper = $userMapper;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
+		$this->id4me = new Service($clientHelper);
+		$this->id4MeMapper = $id4MeMapper;
 	}
 
 	/**
@@ -101,8 +112,20 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function login(int $providerId) {
-		$provider = $this->providerService->getProvider($providerId);
+	public function login() {
+
+		// TODO: Handle user entering stuff
+
+		$domain = 'rullzer.com';
+
+		$authorityName = $this->id4me->discover($domain);
+		$openIdConfig = $this->id4me->getOpenIdConfig($authorityName);
+
+		try {
+			$id4Me = $this->id4MeMapper->findByIdentifier($authorityName);
+		} catch (DoesNotExistException $e) {
+			$id4Me = $this->registerClient($authorityName, $openIdConfig);
+		}
 
 		$state = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::STATE, $state);
@@ -110,20 +133,31 @@ class LoginController extends Controller {
 		$nonce = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::NONCE, $nonce);
 
-		$this->session->set(self::PROVIDERID, $providerId);
+		$this->session->set(self::AUTHNAME, $authorityName);
 		$this->session->close();
 
 		$data = [
-			'client_id' => $provider->getClientId(),
+			'client_id' => $id4Me->getClientId(),
 			'response_type' => 'code',
-			'scope' => $provider->getScope(),
-			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.login.code'),
+			'scope' => 'openid email profile',
+			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.id4me.code'),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
 
-		$url = $provider->getAuthEndpoint() . '?' . http_build_query($data);
+		$url = $openIdConfig->getAuthorizationEndpoint() . '?' . http_build_query($data);
 		return new RedirectResponse($url);
+	}
+
+	private function registerClient(string $authorityName, OpenIdConfig $openIdConfig): Id4Me {
+		$client = $this->id4me->register($openIdConfig, 'Nextcloud test', $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.id4me.code'), 'native');
+
+		$id4Me = new Id4Me();
+		$id4Me->setIdentifier($authorityName);
+		$id4Me->setClientId($client->getClientId());
+		$id4Me->setClientSecret($client->getClientSecret());
+
+		return $this->id4MeMapper->insert($id4Me);
 	}
 
 	/**
@@ -142,18 +176,23 @@ class LoginController extends Controller {
 			], Http::STATUS_FORBIDDEN);
 		}
 
-		$providerId = (int)$this->session->get(self::PROVIDERID);
-		$provider = $this->providerService->getProvider($providerId);
+		$authorityName = $this->session->get(self::AUTHNAME);
+		$openIdConfig = $this->id4me->getOpenIdConfig($authorityName);
+
+		$id4Me = $this->id4MeMapper->findByIdentifier($authorityName);
 
 		$client = $this->clientService->newClient();
 		$result = $client->post(
-			$provider->getTokenEndpoint(),
+			$openIdConfig->getTokenEndpoint(),
 			[
+				'headers' => [
+					'Authorization' => 'Basic ' . base64_encode($id4Me->getClientId() . ':' . $id4Me->getClientSecret())
+				],
 				'body' => [
 					'code' => $code,
-					'client_id' => $provider->getClientId(),
-					'client_secret' => $provider->getClientSecret(),
-					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.login.code'),
+					'client_id' => $id4Me->getClientId(),
+					'client_secret' => $id4Me->getClientSecret(),
+					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.id4me.code'),
 					'grant_type' => 'authorization_code',
 				],
 			]
@@ -171,7 +210,7 @@ class LoginController extends Controller {
 		// TODO: validate expiration
 
 		// Verify audience
-		if ($plainPayload['aud'] !== $provider->getClientId()) {
+		if ($plainPayload['aud'] !== $id4Me->getClientId()) {
 			// TODO: error properly
 			return new JSONResponse(['audience does not match']);
 		}
@@ -179,7 +218,7 @@ class LoginController extends Controller {
 		// TODO: VALIDATE NONCE (if set)
 
 		// Insert or update user
-		$backendUser = $this->userMapper->getOrCreate($providerId, $plainPayload['sub']);
+		$backendUser = $this->userMapper->getOrCreate($id4Me->getId(), $plainPayload['sub'], true);
 		$user = $this->userManager->get($backendUser->getUserId());
 
 		$this->userSession->setUser($user);

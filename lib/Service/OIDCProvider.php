@@ -46,10 +46,6 @@ class OIDCProvider {
 		return 'lDYiIuJy6KzWTKVApv8KWp7s';
 	}
 
-	public function getRedirectURL(): string {
-		return 'https://localhost/index.php/apps/user_oidc/code';
-	}
-
 	public function getScope(): string {
 		return 'email openid profile';
 	}

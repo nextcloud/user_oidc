@@ -22,15 +22,26 @@ declare(strict_types=1);
  *
  */
 
-namespace OCA\UserOIDC\Service;
+namespace OCA\UserOIDC\Db;
 
-class OIDCProviderService {
+use OCP\AppFramework\Db\Entity;
 
-	public function getProvider(int $id) {
-		if ($id === 0) {
-			return new OIDCProvider();
-		} elseif ($id === 1) {
-			return new ID4MEProvider();
-		}
-	}
+/**
+ * @method string getIdentifier()
+ * @method void setIdentifier(string $identifier)
+ * @method string getClientId()
+ * @method void setClientId(string $clientId)
+ * @method string getClientSecret()
+ * @method void setClientSecret(string $clientSecret)
+ */
+class Id4Me extends Entity {
+
+	/** @var string */
+	protected $identifier;
+
+	/** @var string */
+	protected $clientId;
+
+	/** @var string */
+	protected $clientSecret;
 }

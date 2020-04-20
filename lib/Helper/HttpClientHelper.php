@@ -22,15 +22,35 @@ declare(strict_types=1);
  *
  */
 
-namespace OCA\UserOIDC\Service;
+namespace OCA\UserOIDC\Helper;
 
-class OIDCProviderService {
+use Id4me\RP\HttpClient;
+use OCP\Http\Client\IClientService;
 
-	public function getProvider(int $id) {
-		if ($id === 0) {
-			return new OIDCProvider();
-		} elseif ($id === 1) {
-			return new ID4MEProvider();
-		}
+class HttpClientHelper implements HttpClient {
+
+	/** @var IClientService */
+	private $clientService;
+
+	public function __construct(IClientService $clientService) {
+		$this->clientService = $clientService;
 	}
+
+	public function get($url, array $headers = []) {
+		$client = $this->clientService->newClient();
+
+		return $client->get($url, [
+			'headers' => $headers,
+		])->getBody();
+	}
+
+	public function post($url, $body, array $headers = []) {
+		$client = $this->clientService->newClient();
+
+		return $client->post($url, [
+			'headers' => $headers,
+			'body' => $body,
+		])->getBody();
+	}
+
 }

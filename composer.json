@@ -1,0 +1,15 @@
+{
+  "name": "nextcloud/user_oidc",
+  "description": "OIDC backend for Nextcloud",
+  "license": "AGPL3",
+  "config": {
+    "optimize-autoloader": true,
+    "classmap-authoritative": true
+  },
+  "scripts": {
+    "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;"
+  },
+  "require": {
+    "id4me/id4me-rp": "^1.2"
+  }
+}

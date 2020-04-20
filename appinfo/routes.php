@@ -26,5 +26,7 @@ return [
 	'routes' => [
 		['name' => 'login#login', 'url' => '/login/{providerId}', 'verb' => 'GET'],
 		['name' => 'login#code', 'url' => '/code', 'verb' => 'GET'],
+		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'GET'],
+		['name' => 'id4me#code', 'url' => '/id4me/code', 'verb' => 'GET'],
 	]
 ];
