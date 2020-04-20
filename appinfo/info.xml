@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>user_oidc</id>
+	<name>OpenID Connect user backend</name>
+	<summary>Use an openID connect backed to login to your Nextcloud</summary>
+	<description>Allow configuring an OIDC server as Nextcloud user backend.</description>
+	<version>0.0.2</version>
+	<licence>agpl</licence>
+	<author>Roeland Jago Douma</author>
+	<namespace>UserOIDC</namespace>
+	<category>integration</category>
+	<category>social</category>
+	<dependencies>
+		<nextcloud min-version="18" max-version="19" />
+	</dependencies>
+	<types>
+		<authentication/>
+	</types>
+</info>
