@@ -187,6 +187,11 @@ class LoginController extends Controller {
 		$backendUser = $this->userMapper->getOrCreate($providerId, $plainPayload['sub']);
 		$user = $this->userManager->get($backendUser->getUserId());
 
+		// Update e-mail
+		if (isset($plainPayload['email'])) {
+			$user->setEMailAddress($plainPayload['email']);
+		}
+
 		$this->userSession->setUser($user);
 		$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
