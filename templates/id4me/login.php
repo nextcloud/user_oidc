@@ -22,12 +22,17 @@ declare(strict_types=1);
  *
  */
 
-return [
-	'routes' => [
-		['name' => 'login#login', 'url' => '/login/{providerId}', 'verb' => 'GET'],
-		['name' => 'login#code', 'url' => '/code', 'verb' => 'GET'],
-		['name' => 'id4me#showLogin', 'url' => '/id4me', 'verb' => 'GET'],
-		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],
-		['name' => 'id4me#code', 'url' => '/id4me/code', 'verb' => 'GET'],
-	]
-];
+?>
+<form method="post">
+	<fieldset class="warning">
+		<p>
+			<label for="domain" class="infield"><?php p($l->t('Domain')); ?></label>
+			<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']) ?>" />
+			<input type="text" name="domain" id="domain"
+				   placeholder="<?php p($l->t('your.domain')); ?>" value=""
+				   autofocus />
+			<input type="submit" id="id4me-submit"
+				   class="svg icon-confirm input-button-inline" value="" />
+		</p>
+	</fieldset>
+</form>

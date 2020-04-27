@@ -112,12 +112,22 @@ class Id4meController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function login() {
+	public function showLogin() {
+		$response = new Http\TemplateResponse('user_oidc', 'id4me/login', [], 'guest');
 
-		// TODO: Handle user entering stuff
+		$csp = new Http\ContentSecurityPolicy();
+		$csp->addAllowedFormActionDomain('*');
 
-		$domain = 'rullzer.com';
+		$response->setContentSecurityPolicy($csp);
 
+		return $response;
+	}
+
+	/**
+	 * @PublicPage
+	 * @UseSession
+	 */
+	public function login(string $domain) {
 		$authorityName = $this->id4me->discover($domain);
 		$openIdConfig = $this->id4me->getOpenIdConfig($authorityName);
 

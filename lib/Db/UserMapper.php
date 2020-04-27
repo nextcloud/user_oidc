@@ -72,6 +72,8 @@ class UserMapper extends QBMapper {
 
 		$userId .= $sub;
 
+		$userId = hash('sha256', $userId);
+
 		try {
 			return $this->getUser($userId);
 		} catch (IMapperException $e) {
