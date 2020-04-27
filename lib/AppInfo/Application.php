@@ -32,7 +32,7 @@ use OCP\IUserSession;
 
 class Application extends App {
 
-	const APPID = 'UserOIDC';
+	const APPID = 'user_oidc';
 
 	public function __construct(array $urlParams = []) {
 		parent::__construct(self::APPID, $urlParams);
