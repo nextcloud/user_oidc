@@ -176,7 +176,12 @@ class LoginController extends Controller {
 			return new JSONResponse(['audience does not match']);
 		}
 
-		// TODO: VALIDATE NONCE (if set)
+		if (isset($plainPayload['nonce'])) {
+			if ($plainPayload['nonce'] !== $this->session->get(self::NONCE)) {
+				// TODO: error properly
+				return new JSONResponse(['inavlid nonce']);
+			}
+		}
 
 		// Insert or update user
 		$backendUser = $this->userMapper->getOrCreate($providerId, $plainPayload['sub']);
