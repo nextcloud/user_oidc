@@ -29,9 +29,6 @@ use Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
-use OCA\UserOIDC\Service\ID4MEProvider;
-use OCA\UserOIDC\Service\OIDCProvider;
-use OCA\UserOIDC\Service\OIDCProviderService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -181,8 +178,6 @@ class LoginController extends Controller {
 		// TODO: proper error handling
 		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
-		/** TODO: VALIATE SIGNATURE! */
-
 		if ($payload->exp < $this->timeFactory->getTime()) {
 			// TODO: error properly
 			return new JSONResponse(['token expired']);
@@ -204,8 +199,14 @@ class LoginController extends Controller {
 
 		// Update displayname
 		if (isset($payload->name)) {
-			// TODO have proper field
-			//$backendUser->setDisplayName($plainPayload['name']);
+			$newDisplayName = mb_substr($payload->name, 0, 255);
+
+			if ($newDisplayName != $backendUser->getDisplayName()) {
+				$backendUser->setDisplayName($payload->name);
+				$backendUser = $this->userMapper->update($backendUser);
+
+				//TODO: dispatch event for the update
+			}
 		}
 
 		$user = $this->userManager->get($backendUser->getUserId());

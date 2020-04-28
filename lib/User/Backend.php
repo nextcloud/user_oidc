@@ -26,10 +26,12 @@ namespace OCA\UserOIDC\User;
 
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\User\Backend\ABackend;
+use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
 
-class Backend extends ABackend implements IPasswordConfirmationBackend {
+class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend {
 
 	/** @var UserMapper */
 	private $userMapper;
@@ -54,9 +56,14 @@ class Backend extends ABackend implements IPasswordConfirmationBackend {
 		return $this->userMapper->userExists($uid);
 	}
 
-	public function getDisplayName($uid) {
-		// TODO: fetch actual name
-		return $uid;
+	public function getDisplayName($uid): string {
+		try {
+			$user = $this->userMapper->getUser($uid);
+		} catch (DoesNotExistException $e) {
+			return $uid;
+		}
+
+		return $user->getDisplayName();
 	}
 
 	public function getDisplayNames($search = '', $limit = null, $offset = null) {

@@ -29,11 +29,16 @@ use OCP\AppFramework\Db\Entity;
 /**
  * @method string getUserId()
  * @method void setUserId(string $userId)
+ * @method string getDisplayName()
+ * @method void setDisplayName(string $displayName)
  */
 class User extends Entity {
 
 	/** @var string */
 	protected $userId;
+
+	/** @var string */
+	protected $displayName;
 
 	public function __construct() {
 		$this->addType('user_id', 'string');
