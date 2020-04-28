@@ -9,7 +9,10 @@ use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
-class Version00003Date20200420120107 extends SimpleMigrationStep {
+/**
+ * Auto-generated migration step: Please modify to your needs!
+ */
+class Version00004Date20200428102743 extends SimpleMigrationStep {
 
 	/**
 	 * @param IOutput $output
@@ -22,7 +25,7 @@ class Version00003Date20200420120107 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->createTable('user_oidc_id4me');
+		$table = $schema->createTable('user_oidc_providers');
 		$table->addColumn('id', 'integer', [
 			'autoincrement' => true,
 			'notnull' => true,
@@ -39,6 +42,10 @@ class Version00003Date20200420120107 extends SimpleMigrationStep {
 		$table->addColumn('client_secret', 'string', [
 			'notnull' => true,
 			'length' => 64,
+		]);
+		$table->addColumn('discovery_endpoint', 'string', [
+			'notnull' => false,
+			'length' => 255,
 		]);
 
 		return $schema;
