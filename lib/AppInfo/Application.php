@@ -53,7 +53,7 @@ class Application extends App {
 		if (!$userSession->isLoggedIn()) {
 			\OC_App::registerLogIn([
 				'name' => 'OPENIDCONNECT',
-				'href' => $urlGenerator->linkToRoute(self::APPID . '.login.login', ['providerId' => 0]),
+				'href' => $urlGenerator->linkToRoute(self::APPID . '.login.login', ['providerId' => 1]),
 			]);
 			\OC_App::registerLogIn([
 				'name' => 'ID4ME',

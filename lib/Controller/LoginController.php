@@ -24,7 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Service\ID4MEProvider;
 use OCA\UserOIDC\Service\OIDCProvider;
@@ -48,9 +51,6 @@ class LoginController extends Controller {
 	private const NONCE = 'oidc.nonce';
 	private const PROVIDERID = 'oidc.providerid';
 
-	/** @var OIDCProviderService */
-	private $providerService;
-
 	/** @var ISecureRandom */
 	private $random;
 
@@ -65,22 +65,22 @@ class LoginController extends Controller {
 
 	/** @var UserMapper */
 	private $userMapper;
-	/**
-	 * @var IUserSession
-	 */
+
+	/** @var IUserSession */
 	private $userSession;
-	/**
-	 * @var IUserManager
-	 */
+
+	/** @var IUserManager */
 	private $userManager;
-	/**
-	 * @var ITimeFactory
-	 */
+
+	/** @var ITimeFactory */
 	private $timeFactory;
+
+	/** @var ProviderMapper */
+	private $providerMapper;
 
 	public function __construct(
 		IRequest $request,
-		OIDCProviderService $providerService,
+		ProviderMapper $providerMapper,
 		ISecureRandom $random,
 		ISession $session,
 		IClientService $clientService,
@@ -92,7 +92,6 @@ class LoginController extends Controller {
 	) {
 		parent::__construct(Application::APPID, $request);
 
-		$this->providerService = $providerService;
 		$this->random = $random;
 		$this->session = $session;
 		$this->clientService = $clientService;
@@ -101,6 +100,7 @@ class LoginController extends Controller {
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
+		$this->providerMapper = $providerMapper;
 	}
 
 	/**
@@ -109,7 +109,8 @@ class LoginController extends Controller {
 	 * @UseSession
 	 */
 	public function login(int $providerId) {
-		$provider = $this->providerService->getProvider($providerId);
+		//TODO: handle exceptions
+		$provider = $this->providerMapper->getProvider($providerId);
 
 		$state = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::STATE, $state);
@@ -123,13 +124,17 @@ class LoginController extends Controller {
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
-			'scope' => $provider->getScope(),
+			'scope' => 'openid email profile',
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.login.code'),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
 
-		$url = $provider->getAuthEndpoint() . '?' . http_build_query($data);
+		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+
+		//TODO verify discovery
+
+		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
 		return new RedirectResponse($url);
 	}
 
@@ -139,8 +144,6 @@ class LoginController extends Controller {
 	 * @UseSession
 	 */
 	public function code($state = '', $code = '', $scope = '') {
-		$params = $this->request->getParams();
-
 		if ($this->session->get(self::STATE) !== $state) {
 			// TODO show page with forbidden
 			return new JSONResponse([
@@ -150,11 +153,13 @@ class LoginController extends Controller {
 		}
 
 		$providerId = (int)$this->session->get(self::PROVIDERID);
-		$provider = $this->providerService->getProvider($providerId);
+		$provider = $this->providerMapper->getProvider($providerId);
+
+		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
 
 		$client = $this->clientService->newClient();
 		$result = $client->post(
-			$provider->getTokenEndpoint(),
+			$discovery['token_endpoint'],
 			[
 				'body' => [
 					'code' => $code,
@@ -168,38 +173,46 @@ class LoginController extends Controller {
 
 		$data = json_decode($result->getBody(), true);
 
-		// Decode header and token
-		[$header, $payload, $signature] = explode('.', $data['id_token']);
-		$plainHeaders = json_decode(base64_decode($header), true);
-		$plainPayload = json_decode(base64_decode($payload), true);
+		// Obtain jwks
+		$client = $this->clientService->newClient();
+		$result = json_decode($client->get($discovery['jwks_uri'])->getBody(), true);
+		$jwks = JWK::parseKeySet($result);
+
+		// TODO: proper error handling
+		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
 		/** TODO: VALIATE SIGNATURE! */
 
-		if ($plainPayload['exp'] < $this->timeFactory->getTime()) {
+		if ($payload->exp < $this->timeFactory->getTime()) {
 			// TODO: error properly
 			return new JSONResponse(['token expired']);
 		}
 
 		// Verify audience
-		if ($plainPayload['aud'] !== $provider->getClientId()) {
+		if ($payload->aud !== $provider->getClientId()) {
 			// TODO: error properly
 			return new JSONResponse(['audience does not match']);
 		}
 
-		if (isset($plainPayload['nonce'])) {
-			if ($plainPayload['nonce'] !== $this->session->get(self::NONCE)) {
+		if (isset($payload->nonce) && $payload->nonce !== $this->session->get(self::NONCE)) {
 				// TODO: error properly
 				return new JSONResponse(['inavlid nonce']);
-			}
 		}
 
 		// Insert or update user
-		$backendUser = $this->userMapper->getOrCreate($providerId, $plainPayload['sub']);
+		$backendUser = $this->userMapper->getOrCreate($providerId, $payload->sub);
+
+		// Update displayname
+		if (isset($payload->name)) {
+			// TODO have proper field
+			//$backendUser->setDisplayName($plainPayload['name']);
+		}
+
 		$user = $this->userManager->get($backendUser->getUserId());
 
 		// Update e-mail
-		if (isset($plainPayload['email'])) {
-			$user->setEMailAddress($plainPayload['email']);
+		if (isset($payload->email)) {
+			$user->setEMailAddress($payload->email);
 		}
 
 		$this->userSession->setUser($user);
@@ -207,5 +220,14 @@ class LoginController extends Controller {
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
+	}
+
+	private function obtainDiscovery(string $url) {
+		$client = $this->clientService->newClient();
+		$response = $client->get($url);
+
+		//TODO handle failures gracefull
+		$body = json_decode($response->getBody(), true);
+		return $body;
 	}
 }

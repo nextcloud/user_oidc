@@ -10,6 +10,7 @@
     "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;"
   },
   "require": {
-    "id4me/id4me-rp": "^1.2"
+    "id4me/id4me-rp": "^1.2",
+    "firebase/php-jwt": "^5.2"
   }
 }

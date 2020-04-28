@@ -22,15 +22,33 @@ declare(strict_types=1);
  *
  */
 
-namespace OCA\UserOIDC\Service;
+namespace OCA\UserOIDC\Db;
 
-class OIDCProviderService {
+use OCP\AppFramework\Db\QBMapper;
+use OCP\IDBConnection;
 
-	public function getProvider(int $id) {
-		if ($id === 0) {
-			return new OIDCProvider();
-		} elseif ($id === 1) {
-			return new ID4MEProvider();
-		}
+class ProviderMapper extends QBMapper {
+
+	public function __construct(IDBConnection $db) {
+		parent::__construct($db, 'user_oidc_providers', Provider::class);
 	}
+
+	/**
+	 * @param int $id
+	 * @return \OCP\AppFramework\Db\Entity
+	 * @throws \OCP\AppFramework\Db\DoesNotExistException
+	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 */
+	public function getProvider(int $id) {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName())
+			->where(
+				$qb->expr()->eq('id', $qb->createNamedParameter($id))
+			);
+
+		return $this->findEntity($qb);
+	}
+
 }

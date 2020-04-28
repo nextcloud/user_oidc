@@ -22,31 +22,31 @@ declare(strict_types=1);
  *
  */
 
-namespace OCA\UserOIDC\Service;
+namespace OCA\UserOIDC\Db;
 
-class OIDCProvider {
+use OCP\AppFramework\Db\Entity;
 
-	public function getId(): int {
-		return 0;
-	}
+/**
+ * @method string getIdentifier()
+ * @method void setIdentifier(string $identifier)
+ * @method string getClientId()
+ * @method void setClientId(string $clientId)
+ * @method string getClientSecret()
+ * @method void setClientSecret(string $clientSecret)
+ * @method string getDiscoveryEndpoint()
+ * @method void setDiscoveryEndpoint(string $discoveryEndpoint)
+ */
+class Provider extends Entity {
 
-	public function getAuthEndpoint(): string {
-		return 'https://accounts.google.com/o/oauth2/v2/auth';
-	}
+	/** @var string */
+	protected $identifier;
 
-	public function getTokenEndpoint(): string {
-		return 'https://oauth2.googleapis.com/token';
-	}
+	/** @var string */
+	protected $clientId;
 
-	public function getClientId(): string {
-		return '13912616499-h67ma3s9p4h81rt5ihk5e4h9lcbkelbn.apps.googleusercontent.com';
-	}
+	/** @var string */
+	protected $clientSecret;
 
-	public function getClientSecret(): string {
-		return 'lDYiIuJy6KzWTKVApv8KWp7s';
-	}
-
-	public function getScope(): string {
-		return 'email openid profile';
-	}
+	/** @var string */
+	protected $discoveryEndpoint;
 }
