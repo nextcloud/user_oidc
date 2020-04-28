@@ -33,6 +33,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Http\Client\IClientService;
 use OCP\IRequest;
 use OCP\ISession;
@@ -72,6 +73,10 @@ class LoginController extends Controller {
 	 * @var IUserManager
 	 */
 	private $userManager;
+	/**
+	 * @var ITimeFactory
+	 */
+	private $timeFactory;
 
 	public function __construct(
 		IRequest $request,
@@ -82,7 +87,8 @@ class LoginController extends Controller {
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
 		IUserSession $userSession,
-		IUserManager $userManager
+		IUserManager $userManager,
+		ITimeFactory $timeFactory
 	) {
 		parent::__construct(Application::APPID, $request);
 
@@ -94,6 +100,7 @@ class LoginController extends Controller {
 		$this->userMapper = $userMapper;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
+		$this->timeFactory = $timeFactory;
 	}
 
 	/**
@@ -168,7 +175,10 @@ class LoginController extends Controller {
 
 		/** TODO: VALIATE SIGNATURE! */
 
-		// TODO: validate expiration
+		if ($plainPayload['exp'] < $this->timeFactory->getTime()) {
+			// TODO: error properly
+			return new JSONResponse(['token expired']);
+		}
 
 		// Verify audience
 		if ($plainPayload['aud'] !== $provider->getClientId()) {
