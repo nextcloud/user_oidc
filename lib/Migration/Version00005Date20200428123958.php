@@ -28,6 +28,7 @@ class Version00005Date20200428123958 extends SimpleMigrationStep {
 		$table->addColumn('display_name', 'string', [
 			'notnull' => true,
 			'length' => 255,
+			'default' => '',
 		]);
 
 		return $schema;
