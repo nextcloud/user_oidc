@@ -20,16 +20,21 @@
  *
  */
 
+import { loadState } from '@nextcloud/initial-state'
 import Vue from 'vue'
 
-import App from './App'
+import App from './components/AdminSettings'
 
 Vue.prototype.t = t
 Vue.prototype.n = n
 Vue.prototype.OC = OC
 Vue.prototype.OCA = OCA
 
-export default new Vue({
-	el: '#content',
-	render: h => h(App),
-})
+const View = Vue.extend(App)
+new View({
+	propsData: {
+		initialId4MeState: loadState('user_oidc', 'id4meState'),
+		initialProviders: loadState('user_oidc', 'providers'),
+		redirectUrl: loadState('user_oidc', 'redirectUrl'),
+	},
+}).$mount('#user-oidc-settings')

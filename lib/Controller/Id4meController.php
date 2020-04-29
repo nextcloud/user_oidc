@@ -94,7 +94,7 @@ class Id4meController extends Controller {
 		HttpClientHelper $clientHelper,
 		Id4MeMapper $id4MeMapper
 	) {
-		parent::__construct(Application::APPID, $request);
+		parent::__construct(Application::APP_ID, $request);
 
 		$this->random = $random;
 		$this->session = $session;
@@ -150,7 +150,7 @@ class Id4meController extends Controller {
 			'client_id' => $id4Me->getClientId(),
 			'response_type' => 'code',
 			'scope' => 'openid email profile',
-			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.id4me.code'),
+			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.id4me.code'),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
@@ -160,7 +160,7 @@ class Id4meController extends Controller {
 	}
 
 	private function registerClient(string $authorityName, OpenIdConfig $openIdConfig): Id4Me {
-		$client = $this->id4me->register($openIdConfig, 'Nextcloud test', $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.id4me.code'), 'native');
+		$client = $this->id4me->register($openIdConfig, 'Nextcloud test', $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.id4me.code'), 'native');
 
 		$id4Me = new Id4Me();
 		$id4Me->setIdentifier($authorityName);
@@ -202,7 +202,7 @@ class Id4meController extends Controller {
 					'code' => $code,
 					'client_id' => $id4Me->getClientId(),
 					'client_secret' => $id4Me->getClientSecret(),
-					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.id4me.code'),
+					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.id4me.code'),
 					'grant_type' => 'authorization_code',
 				],
 			]

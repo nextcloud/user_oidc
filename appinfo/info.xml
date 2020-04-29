@@ -17,4 +17,8 @@
 	<types>
 		<authentication/>
 	</types>
+	<settings>
+		<admin>OCA\UserOIDC\Settings\AdminSettings</admin>
+		<admin-section>OCA\UserOIDC\Settings\Section</admin-section>
+	</settings>
 </info>

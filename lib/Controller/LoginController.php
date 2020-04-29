@@ -87,7 +87,7 @@ class LoginController extends Controller {
 		IUserManager $userManager,
 		ITimeFactory $timeFactory
 	) {
-		parent::__construct(Application::APPID, $request);
+		parent::__construct(Application::APP_ID, $request);
 
 		$this->random = $random;
 		$this->session = $session;
@@ -122,7 +122,7 @@ class LoginController extends Controller {
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => 'openid email profile',
-			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.login.code'),
+			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
@@ -162,7 +162,7 @@ class LoginController extends Controller {
 					'code' => $code,
 					'client_id' => $provider->getClientId(),
 					'client_secret' => $provider->getClientSecret(),
-					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APPID . '.login.code'),
+					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 					'grant_type' => 'authorization_code',
 				],
 			]

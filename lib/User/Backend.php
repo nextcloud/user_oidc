@@ -41,7 +41,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	public function getBackendName(): string {
-		return Application::APPID;
+		return Application::APP_ID;
 	}
 
 	public function deleteUser($uid): bool {

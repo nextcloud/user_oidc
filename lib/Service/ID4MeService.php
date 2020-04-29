@@ -27,7 +27,7 @@ namespace OCA\UserOIDC\Service;
 use OCA\UserOIDC\AppInfo\Application;
 use OCP\IConfig;
 
-class ID4MEService {
+class ID4MeService {
 
 	/** @var IConfig */
 	private $config;
@@ -37,10 +37,10 @@ class ID4MEService {
 	}
 
 	public function setID4ME(bool $enabled): void {
-		$this->config->setAppValue(Application::APPID, 'id4me_enabled', $enabled ? '1' : '0');
+		$this->config->setAppValue(Application::APP_ID, 'id4me_enabled', $enabled ? '1' : '0');
 	}
 
 	public function getID4ME(): bool {
-		return $this->config->getAppValue(Application::APPID, 'id4me_enabled', '0') === '1';
+		return $this->config->getAppValue(Application::APP_ID, 'id4me_enabled', '0') === '1';
 	}
 }
