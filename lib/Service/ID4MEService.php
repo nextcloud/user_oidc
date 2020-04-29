@@ -22,42 +22,25 @@ declare(strict_types=1);
  *
  */
 
-namespace OCA\UserOIDC\Db;
+namespace OCA\UserOIDC\Service;
 
-use OCP\AppFramework\Db\Entity;
+use OCA\UserOIDC\AppInfo\Application;
+use OCP\IConfig;
 
-/**
- * @method string getIdentifier()
- * @method void setIdentifier(string $identifier)
- * @method string getClientId()
- * @method void setClientId(string $clientId)
- * @method string getClientSecret()
- * @method void setClientSecret(string $clientSecret)
- * @method string getDiscoveryEndpoint()
- * @method void setDiscoveryEndpoint(string $discoveryEndpoint)
- */
-class Provider extends Entity implements \JsonSerializable {
+class ID4MEService {
 
-	/** @var string */
-	protected $identifier;
+	/** @var IConfig */
+	private $config;
 
-	/** @var string */
-	protected $clientId;
-
-	/** @var string */
-	protected $clientSecret;
-
-	/** @var string */
-	protected $discoveryEndpoint;
-
-	public function jsonSerialize() {
-		return [
-			'id' => $this->id,
-			'identifier' => $this->identifier,
-			'clientId' => $this->clientId,
-			'discoveryEndpoint' => $this->discoveryEndpoint,
-		];
+	public function __construct(IConfig $config) {
+		$this->config = $config;
 	}
 
+	public function setID4ME(bool $enabled): void {
+		$this->config->setAppValue(Application::APPID, 'id4me_enabled', $enabled ? '1' : '0');
+	}
 
+	public function getID4ME(): bool {
+		return $this->config->getAppValue(Application::APPID, 'id4me_enabled', '0') === '1';
+	}
 }

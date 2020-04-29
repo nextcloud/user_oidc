@@ -35,11 +35,11 @@ class ProviderMapper extends QBMapper {
 
 	/**
 	 * @param int $id
-	 * @return \OCP\AppFramework\Db\Entity
+	 * @return Provider
 	 * @throws \OCP\AppFramework\Db\DoesNotExistException
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
-	public function getProvider(int $id) {
+	public function getProvider(int $id): Provider {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
@@ -51,4 +51,15 @@ class ProviderMapper extends QBMapper {
 		return $this->findEntity($qb);
 	}
 
+	/**
+	 * @return Provider[]
+	 */
+	public function getProviders() {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName());
+
+		return $this->findEntities($qb);
+	}
 }
