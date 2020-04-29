@@ -36,6 +36,9 @@ class Version00001Date20200322114947 extends SimpleMigrationStep {
 			'length' => 64,
 		]);
 
+		$table->setPrimaryKey(['id']);
+		$table->addUniqueIndex(['user_id'], 'user_oidc_uid');
+
 		return $schema;
 	}
 
