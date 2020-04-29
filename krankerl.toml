@@ -21,8 +21,12 @@ exclude = [
 	"package-lock.json",
 	"screenshots",
 	"src",
+	"stylelint.config.js",
 	"tests",
 	"vendor/bin",
+	"webpack.common.js",
+	"webpack.dev.js",
+	"webpack.prod.js",
 ]
 
 before_cmds = [
