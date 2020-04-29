@@ -24,8 +24,11 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\AppInfo;
 
+use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Service\ID4MEService;
 use OCA\UserOIDC\User\Backend;
 use OCP\AppFramework\App;
+use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -42,24 +45,39 @@ class Application extends App {
 		/** @var IUserSession $userSession */
 		$userSession = $this->getContainer()->query(IUserSession::class);
 
-		/** @var IURLGenerator $urlGenerator */
-		$urlGenerator = $this->getContainer()->query(IURLGenerator::class);
-
 		/** @var IUserManager $userManager */
 		$userManager = $this->getContainer()->query(IUserManager::class);
 
+		/* Register our own user backend */
 		$userManager->registerBackend($this->getContainer()->query(Backend::class));
 
 		if (!$userSession->isLoggedIn()) {
-			\OC_App::registerLogIn([
-				'name' => 'OPENIDCONNECT',
-				'href' => $urlGenerator->linkToRoute(self::APPID . '.login.login', ['providerId' => 1]),
-			]);
-			\OC_App::registerLogIn([
-				'name' => 'ID4ME',
-				'href' => $urlGenerator->linkToRoute(self::APPID . '.id4me.login'),
-			]);
 
+			/** @var IURLGenerator $urlGenerator */
+			$urlGenerator = $this->getContainer()->query(IURLGenerator::class);
+
+			/** @var ProviderMapper $providerMapper */
+			$providerMapper = $this->getContainer()->query(ProviderMapper::class);
+			$providers = $providerMapper->getProviders();
+
+			/** @var IL10N $l10n */
+			$l10n = $this->getContainer()->query(IL10N::class);
+
+			foreach ($providers as $provider) {
+				\OC_App::registerLogIn([
+					'name' => $l10n->t('Login with %1s', [$provider->getIdentifier()]),
+					'href' => $urlGenerator->linkToRoute(self::APPID . '.login.login', ['providerId' => $provider->getId()]),
+				]);
+			}
+
+			/** @var ID4MEService $id4meService */
+			$id4meService = $this->getContainer()->query(ID4MEService::class);
+			if ($id4meService->getID4ME()) {
+				\OC_App::registerLogIn([
+					'name' => 'ID4ME',
+					'href' => $urlGenerator->linkToRoute(self::APPID . '.id4me.login'),
+				]);
+			}
 			return;
 		}
 	}
