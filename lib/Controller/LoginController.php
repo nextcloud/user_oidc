@@ -35,6 +35,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Http\Client\IClientService;
+use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
@@ -74,6 +75,10 @@ class LoginController extends Controller {
 
 	/** @var ProviderMapper */
 	private $providerMapper;
+	/**
+	 * @var ILogger
+	 */
+	private $logger;
 
 	public function __construct(
 		IRequest $request,
@@ -85,7 +90,8 @@ class LoginController extends Controller {
 		UserMapper $userMapper,
 		IUserSession $userSession,
 		IUserManager $userManager,
-		ITimeFactory $timeFactory
+		ITimeFactory $timeFactory,
+		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -98,6 +104,7 @@ class LoginController extends Controller {
 		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
 		$this->providerMapper = $providerMapper;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -106,6 +113,8 @@ class LoginController extends Controller {
 	 * @UseSession
 	 */
 	public function login(int $providerId) {
+		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
+
 		//TODO: handle exceptions
 		$provider = $this->providerMapper->getProvider($providerId);
 
@@ -132,6 +141,8 @@ class LoginController extends Controller {
 		//TODO verify discovery
 
 		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
+		$this->logger->debug('Redirecting user to: ' . $url);
+
 		return new RedirectResponse($url);
 	}
 
@@ -141,7 +152,11 @@ class LoginController extends Controller {
 	 * @UseSession
 	 */
 	public function code($state = '', $code = '', $scope = '') {
+		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
+
 		if ($this->session->get(self::STATE) !== $state) {
+			$this->logger->debug('state does not match');
+
 			// TODO show page with forbidden
 			return new JSONResponse([
 				'got' => $state,
@@ -153,6 +168,8 @@ class LoginController extends Controller {
 		$provider = $this->providerMapper->getProvider($providerId);
 
 		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+
+		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
 
 		$client = $this->clientService->newClient();
 		$result = $client->post(
@@ -173,29 +190,39 @@ class LoginController extends Controller {
 		// Obtain jwks
 		$client = $this->clientService->newClient();
 		$result = json_decode($client->get($discovery['jwks_uri'])->getBody(), true);
+		$this->logger->debug('Obtained the jwks');
+
 		$jwks = JWK::parseKeySet($result);
+		$this->logger->debug('Parsed the jwks');
 
 		// TODO: proper error handling
 		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
+		$this->logger->debug('Parsed the JWT');
+
 		if ($payload->exp < $this->timeFactory->getTime()) {
+			$this->logger->debug('Toklen has expired');
 			// TODO: error properly
 			return new JSONResponse(['token expired']);
 		}
 
 		// Verify audience
 		if ($payload->aud !== $provider->getClientId()) {
+			$this->logger->debug('This token is not for us');
 			// TODO: error properly
 			return new JSONResponse(['audience does not match']);
 		}
 
 		if (isset($payload->nonce) && $payload->nonce !== $this->session->get(self::NONCE)) {
-				// TODO: error properly
-				return new JSONResponse(['inavlid nonce']);
+			$this->logger->debug('Nonce does nto match');
+			// TODO: error properly
+			return new JSONResponse(['inavlid nonce']);
 		}
 
 		// Insert or update user
 		$backendUser = $this->userMapper->getOrCreate($providerId, $payload->sub);
+
+		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
 		// Update displayname
 		if (isset($payload->name)) {
@@ -213,12 +240,19 @@ class LoginController extends Controller {
 
 		// Update e-mail
 		if (isset($payload->email)) {
+			$this->logger->debug('Updating e-mail');
 			$user->setEMailAddress($payload->email);
 		}
+
+		$this->logger->debug('Logging user in');
 
 		$this->userSession->setUser($user);
 		$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
+
+		$this->logger->debug('Redirecting user');
+
+		// TODO: user proper redirect url
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
 	}
