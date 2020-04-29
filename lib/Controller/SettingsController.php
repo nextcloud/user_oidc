@@ -27,7 +27,7 @@ namespace OCA\UserOIDC\Controller;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Service\ID4MEService;
+use OCA\UserOIDC\Service\ID4MeService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -39,16 +39,16 @@ class SettingsController extends Controller {
 	/** @var ProviderMapper */
 	private $providerMapper;
 	/**
-	 * @var ID4MEService
+	 * @var ID4MeService
 	 */
 	private $id4meService;
 
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
-		ID4MEService $id4meService
+		ID4MeService $id4meService
 		) {
-		parent::__construct(Application::APPID, $request);
+		parent::__construct(Application::APP_ID, $request);
 
 		$this->providerMapper = $providerMapper;
 		$this->id4meService = $id4meService;
@@ -66,9 +66,9 @@ class SettingsController extends Controller {
 		return new JSONResponse($provider);
 	}
 
-	public function deleteProvider(int $id): JSONResponse {
+	public function deleteProvider(int $providerId): JSONResponse {
 		try {
-			$provider = $this->providerMapper->getProvider($id);
+			$provider = $this->providerMapper->getProvider($providerId);
 		} catch (DoesNotExistException $e) {
 			return new JSONResponse([], Http::STATUS_NOT_FOUND);
 		}

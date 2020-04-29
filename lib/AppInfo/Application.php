@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\AppInfo;
 
 use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Service\ID4MEService;
+use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\User\Backend;
 use OCP\AppFramework\App;
 use OCP\IL10N;
@@ -35,10 +35,10 @@ use OCP\IUserSession;
 
 class Application extends App {
 
-	const APPID = 'user_oidc';
+	const APP_ID = 'user_oidc';
 
 	public function __construct(array $urlParams = []) {
-		parent::__construct(self::APPID, $urlParams);
+		parent::__construct(self::APP_ID, $urlParams);
 	}
 
 	public function register() {
@@ -66,16 +66,16 @@ class Application extends App {
 			foreach ($providers as $provider) {
 				\OC_App::registerLogIn([
 					'name' => $l10n->t('Login with %1s', [$provider->getIdentifier()]),
-					'href' => $urlGenerator->linkToRoute(self::APPID . '.login.login', ['providerId' => $provider->getId()]),
+					'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login', ['providerId' => $provider->getId()]),
 				]);
 			}
 
-			/** @var ID4MEService $id4meService */
-			$id4meService = $this->getContainer()->query(ID4MEService::class);
+			/** @var ID4MeService $id4meService */
+			$id4meService = $this->getContainer()->query(ID4MeService::class);
 			if ($id4meService->getID4ME()) {
 				\OC_App::registerLogIn([
 					'name' => 'ID4ME',
-					'href' => $urlGenerator->linkToRoute(self::APPID . '.id4me.login'),
+					'href' => $urlGenerator->linkToRoute(self::APP_ID . '.id4me.login'),
 				]);
 			}
 			return;
