@@ -259,6 +259,8 @@ class LoginController extends Controller {
 
 	private function obtainDiscovery(string $url) {
 		$client = $this->clientService->newClient();
+
+		$this->logger->debug('Obtaining discovery endpoint: ' . $url);
 		$response = $client->get($url);
 
 		//TODO handle failures gracefull
