@@ -207,7 +207,7 @@ class LoginController extends Controller {
 		}
 
 		// Verify audience
-		if ($payload->aud !== $provider->getClientId()) {
+		if (!(($payload->aud === $provider->getClientId() || in_array($provider->getClientId(), $payload->aud, true)))) {
 			$this->logger->debug('This token is not for us');
 			// TODO: error properly
 			return new JSONResponse(['audience does not match']);
