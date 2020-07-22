@@ -48,6 +48,7 @@ class LoginController extends Controller {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	private const PROVIDERID = 'oidc.providerid';
+	private const REDIRECTURL = 'oidc.redirecturl';
 
 	/** @var ISecureRandom */
 	private $random;
@@ -112,7 +113,7 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function login(int $providerId) {
+	public function login(int $providerId, string $redirectUrl = '') {
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
 
 		//TODO: handle exceptions
@@ -125,6 +126,9 @@ class LoginController extends Controller {
 		$this->session->set(self::NONCE, $nonce);
 
 		$this->session->set(self::PROVIDERID, $providerId);
+
+		$this->session->set(self::REDIRECTURL, $redirectUrl);
+
 		$this->session->close();
 
 		$data = [
@@ -252,9 +256,12 @@ class LoginController extends Controller {
 
 		$this->logger->debug('Redirecting user');
 
-		// TODO: user proper redirect url
+		$redirectUrl = $this->session->get(self::REDIRECTURL);
+		if ($redirectUrl === '') {
+			$redirectUrl = \OC_Util::getDefaultPageUrl();
+		}
 
-		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
+		return new RedirectResponse($redirectUrl);
 	}
 
 	private function obtainDiscovery(string $url) {

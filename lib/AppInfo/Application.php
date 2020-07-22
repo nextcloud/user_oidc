@@ -29,6 +29,7 @@ use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\User\Backend;
 use OCP\AppFramework\App;
 use OCP\IL10N;
+use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -63,10 +64,23 @@ class Application extends App {
 			/** @var IL10N $l10n */
 			$l10n = $this->getContainer()->query(IL10N::class);
 
+			/** @var IRequest $request */
+			$request = $this->getContainer()->query(IRequest::class);
+			$requestParams = $request->getParams();
+
+			$redirectUrl = '';
+			if(isset($requestParams['redirect_url'])) {
+				$redirectUrl = $requestParams['redirect_url'];
+			}
+
 			foreach ($providers as $provider) {
 				\OC_App::registerLogIn([
 					'name' => $l10n->t('Login with %1s', [$provider->getIdentifier()]),
-					'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login', ['providerId' => $provider->getId()]),
+					'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login',
+						[
+							'providerId' => $provider->getId(),
+							'redirectUrl' => $redirectUrl,
+						]),
 				]);
 			}
 
