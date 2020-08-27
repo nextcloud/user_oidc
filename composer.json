@@ -9,13 +9,34 @@
   "scripts": {
     "cs:fix": "php-cs-fixer fix",
     "cs:check": "php-cs-fixer fix --dry-run --diff",
-    "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;"
+    "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;",
+    "post-install-cmd": [
+       "\"vendor/bin/mozart\" compose",
+       "composer dump-autoload"
+    ],
+    "post-update-cmd": [
+      "\"vendor/bin/mozart\" compose",
+      "composer dump-autoload"
+    ]
   },
   "require": {
+    "coenjacobs/mozart": "^0.5.1",
     "id4me/id4me-rp": "^1.2",
     "firebase/php-jwt": "^5.2"
   },
   "require-dev": {
     "nextcloud/coding-standard": "^0.3.0"
+  },
+  "extra": {
+    "mozart": {
+        "dep_namespace": "OCA\\UserOIDC\\Vendor\\",
+        "dep_directory": "/lib/Vendor/",
+        "classmap_directory": "/lib/autoload/",
+        "classmap_prefix": "NEXTCLOUD_USER_OIDC_",
+        "packages": [
+            "firebase/php-jwt"
+        ],
+        "delete_vendor_directories": true
+    }
   }
 }
