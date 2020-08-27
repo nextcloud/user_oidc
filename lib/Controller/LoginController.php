@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
-use Firebase\JWT\JWK;
-use Firebase\JWT\JWT;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
