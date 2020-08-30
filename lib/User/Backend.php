@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
@@ -77,6 +78,4 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	public function canConfirmPassword(string $uid): bool {
 		return false;
 	}
-
-
 }
