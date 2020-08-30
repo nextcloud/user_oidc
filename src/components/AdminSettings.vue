@@ -56,7 +56,10 @@
 			<label for="oidc-client-id">{{ t('user_oidc', 'Client ID') }}</label>
 			<input id="oidc-client-id" v-model="newProvider.clientId" type="text">
 			<label for="oidc-client-secret">{{ t('user_oidc', 'Client secret') }}</label>
-			<input id="oidc-client-secret" v-model="newProvider.clientSecret" type="text" autocomplete="off">
+			<input id="oidc-client-secret"
+				v-model="newProvider.clientSecret"
+				type="text"
+				autocomplete="off">
 			<label for="oidc-discovery-endpoint">{{ t('user_oidc', 'Discovery endpoint') }}</label>
 			<input id="oidc-discovery-endpoint" v-model="newProvider.discoveryEndpoint" type="text">
 
