@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
@@ -34,8 +35,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 
 class Application extends App {
-
-	const APP_ID = 'user_oidc';
+	public const APP_ID = 'user_oidc';
 
 	public function __construct(array $urlParams = []) {
 		parent::__construct(self::APP_ID, $urlParams);

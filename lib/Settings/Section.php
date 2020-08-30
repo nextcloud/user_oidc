@@ -73,5 +73,4 @@ class Section implements IIconSection {
 	public function getIcon() {
 		return $this->url->imagePath('core', 'actions/settings-dark.svg');
 	}
-
 }

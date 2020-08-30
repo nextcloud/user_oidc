@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
@@ -46,7 +47,6 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 
 class Id4meController extends Controller {
-
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	private const AUTHNAME = 'oidc.authname';
