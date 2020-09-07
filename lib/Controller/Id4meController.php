@@ -25,14 +25,11 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
-use Id4me\RP\Model\OpenIdConfig;
-use Id4me\RP\Service;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Id4Me;
 use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
-use OCA\UserOIDC\Service\OIDCProviderService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -50,9 +47,6 @@ class Id4meController extends Controller {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	private const AUTHNAME = 'oidc.authname';
-
-	/** @var OIDCProviderService */
-	private $providerService;
 
 	/** @var ISecureRandom */
 	private $random;
