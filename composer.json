@@ -20,7 +20,7 @@
     ]
   },
   "require": {
-    "coenjacobs/mozart": "^0.5.1",
+    "coenjacobs/mozart": "^0.7.0",
     "id4me/id4me-rp": "^1.2",
     "firebase/php-jwt": "^5.2"
   },
