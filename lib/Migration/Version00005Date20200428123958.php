@@ -26,7 +26,6 @@ class Version00005Date20200428123958 extends SimpleMigrationStep {
 
 		$table = $schema->getTable('user_oidc');
 		$table->addColumn('display_name', 'string', [
-			'notnull' => true,
 			'length' => 255,
 			'default' => '',
 		]);
