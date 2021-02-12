@@ -53,16 +53,16 @@
         },
         {
             "name": "firebase/php-jwt",
-            "version": "v5.2.0",
+            "version": "v5.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/firebase/php-jwt.git",
-                "reference": "feb0e820b8436873675fd3aca04f3728eb2185cb"
+                "reference": "f42c9110abe98dd6cfe9053c49bc86acc70b2d23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/feb0e820b8436873675fd3aca04f3728eb2185cb",
-                "reference": "feb0e820b8436873675fd3aca04f3728eb2185cb",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/f42c9110abe98dd6cfe9053c49bc86acc70b2d23",
+                "reference": "f42c9110abe98dd6cfe9053c49bc86acc70b2d23",
                 "shasum": ""
             },
             "require": {
@@ -99,7 +99,7 @@
                 "jwt",
                 "php"
             ],
-            "time": "2020-03-25T18:49:23+00:00"
+            "time": "2021-02-12T00:02:00+00:00"
         },
         {
             "name": "id4me/id4me-rp",
