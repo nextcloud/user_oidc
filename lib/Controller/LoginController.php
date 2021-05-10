@@ -196,6 +196,7 @@ class LoginController extends Controller {
 		$this->logger->debug('Parsed the jwks');
 
 		// TODO: proper error handling
+		JWT::$leeway = 60;
 		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
 		$this->logger->debug('Parsed the JWT');
