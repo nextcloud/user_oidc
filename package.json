@@ -46,7 +46,7 @@
 		"eslint-config-standard": "^15.0.1",
 		"eslint-import-resolver-webpack": "^0.13.1",
 		"eslint-loader": "^4.0.2",
-		"eslint-plugin-import": "^2.23.2",
+		"eslint-plugin-import": "^2.23.3",
 		"eslint-plugin-nextcloud": "^0.3.0",
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-promise": "^5.1.0",
