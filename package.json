@@ -43,7 +43,7 @@
 		"css-loader": "^5.2.5",
 		"eslint": "^7.27.0",
 		"eslint-config-nextcloud": "0.1.1",
-		"eslint-config-standard": "^15.0.1",
+		"eslint-config-standard": "^16.0.3",
 		"eslint-import-resolver-webpack": "^0.13.1",
 		"eslint-loader": "^4.0.2",
 		"eslint-plugin-import": "^2.23.3",
