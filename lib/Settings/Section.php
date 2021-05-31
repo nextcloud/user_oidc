@@ -36,17 +36,16 @@ class Section implements IIconSection {
 	private $l;
 
 	/** @var IURLGenerator */
-	private $url;
+	private $urlGenerator;
 
 	/**
 	 * @param IL10N $l
-	 * @param IURLGenerator $url
+	 * @param IURLGenerator $urlGenerator
 	 */
-	public function __construct(
-		IL10N $l,
-		IURLGenerator $url) {
+	public function __construct(IL10N $l,
+								IURLGenerator $urlGenerator) {
 		$this->l = $l;
-		$this->url = $url;
+		$this->urlGenerator = $urlGenerator;
 	}
 
 	/**
@@ -71,6 +70,6 @@ class Section implements IIconSection {
 	}
 
 	public function getIcon() {
-		return $this->url->imagePath('core', 'actions/settings-dark.svg');
+		return $this->urlGenerator->imagePath(Application::APP_ID, 'app-dark.svg');
 	}
 }

@@ -32,6 +32,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IInitialStateService;
 use OCP\IURLGenerator;
 use OCP\Settings\ISettings;
+use OCP\Util;
 
 class AdminSettings implements ISettings {
 
@@ -73,6 +74,8 @@ class AdminSettings implements ISettings {
 			'redirectUrl',
 			$this->urlGenerator->linkToRouteAbsolute('user_oidc.login.code')
 		);
+
+		Util::addScript(Application::APP_ID, Application::APP_ID . '-admin-settings');
 
 		return new TemplateResponse(Application::APP_ID, 'admin-settings');
 	}
