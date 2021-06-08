@@ -1,0 +1,25 @@
+version: 2
+updates:
+- package-ecosystem: composer
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "03:00"
+    timezone: Europe/Paris
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: coenjacobs/mozart
+    versions:
+    - 0.6.0
+    - 0.7.0
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "03:00"
+    timezone: Europe/Paris
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: webpack-cli
+    versions:
+    - 4.4.0
