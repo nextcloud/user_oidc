@@ -52,6 +52,40 @@ class UserMapper extends QBMapper {
 		return $this->findEntity($qb);
 	}
 
+	public function find(string $search, $limit = null, $offset = null): array {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+			->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+			->orderBy($qb->func()->lower('user_id'), 'ASC')
+			->setMaxResults($limit)
+			->setFirstResult($offset);
+
+		return $this->findEntities($qb);
+	}
+
+	public function findDisplayNames(string $search, $limit = null, $offset = null): array {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+			->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+			->orderBy($qb->func()->lower('user_id'), 'ASC')
+			->setMaxResults($limit)
+			->setFirstResult($offset);
+
+		$result = $qb->execute();
+		$displayNames = [];
+		while ($row = $result->fetch()) {
+			$displayNames[(string)$row['user_id']] = (string)$row['display_name'];
+		}
+
+		return $displayNames;
+	}
+
 	public function userExists(string $uid): bool {
 		try {
 			$this->getUser($uid);
