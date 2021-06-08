@@ -28,17 +28,22 @@ namespace OCA\UserOIDC\User;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\DB\Exception;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
+use Psr\Log\LoggerInterface;
 
 class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend {
 
 	/** @var UserMapper */
 	private $userMapper;
+	/** @var LoggerInterface */
+	private $logger;
 
-	public function __construct(UserMapper $userMapper) {
+	public function __construct(UserMapper $userMapper, LoggerInterface $logger) {
 		$this->userMapper = $userMapper;
+		$this->logger = $logger;
 	}
 
 	public function getBackendName(): string {
@@ -46,11 +51,20 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	public function deleteUser($uid): bool {
-		return true;
+		try {
+			$user = $this->userMapper->getUser($uid);
+			$this->userMapper->delete($user);
+			return true;
+		} catch (Exception $e) {
+			$this->logger->error('Failed to delete user', [ 'exception' => $e ]);
+			return false;
+		}
 	}
 
 	public function getUsers($search = '', $limit = null, $offset = null) {
-		return [];
+		return array_map(function ($user) {
+			return $user->getUserId();
+		}, $this->userMapper->find($search, $limit, $offset));
 	}
 
 	public function userExists($uid): bool {
@@ -68,11 +82,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	public function getDisplayNames($search = '', $limit = null, $offset = null) {
-		return [];
+		return $this->userMapper->findDisplayNames($search, $limit, $offset);
 	}
 
 	public function hasUserListings(): bool {
-		return false;
+		return true;
 	}
 
 	public function canConfirmPassword(string $uid): bool {
