@@ -67,6 +67,20 @@ class SettingsController extends Controller {
 		return new JSONResponse($provider);
 	}
 
+	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null): JSONResponse {
+		$provider = $this->providerMapper->getProvider($providerId);
+		$provider->setIdentifier($identifier);
+		$provider->setClientId($clientId);
+		if ($clientSecret) {
+			$provider->setClientSecret($clientSecret);
+		}
+		$provider->setDiscoveryEndpoint($discoveryEndpoint);
+
+		$provider = $this->providerMapper->update($provider);
+
+		return new JSONResponse($provider->jsonSerialize());
+	}
+
 	public function deleteProvider(int $providerId): JSONResponse {
 		try {
 			$provider = $this->providerMapper->getProvider($providerId);
