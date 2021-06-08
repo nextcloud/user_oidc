@@ -29,6 +29,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -43,19 +44,25 @@ class SettingsController extends Controller {
 	 * @var ID4MeService
 	 */
 	private $id4meService;
+	/**
+	 * @var ProviderService
+	 */
+	private $providerService;
 
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
-		ID4MeService $id4meService
+		ID4MeService $id4meService,
+		ProviderService $providerService
 		) {
 		parent::__construct(Application::APP_ID, $request);
 
 		$this->providerMapper = $providerMapper;
 		$this->id4meService = $id4meService;
+		$this->providerService = $providerService;
 	}
 
-	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint): JSONResponse {
+	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint, array $settings = []): JSONResponse {
 		$provider = new Provider();
 		$provider->setIdentifier($identifier);
 		$provider->setClientId($clientId);
@@ -64,10 +71,12 @@ class SettingsController extends Controller {
 
 		$provider = $this->providerMapper->insert($provider);
 
-		return new JSONResponse($provider);
+		$providerSettings = $this->providerService->setSettings($provider->getId(), $settings);
+
+		return new JSONResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
 
-	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null): JSONResponse {
+	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null, array $settings = []): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
 		$provider->setIdentifier($identifier);
 		$provider->setClientId($clientId);
@@ -78,7 +87,9 @@ class SettingsController extends Controller {
 
 		$provider = $this->providerMapper->update($provider);
 
-		return new JSONResponse($provider->jsonSerialize());
+		$providerSettings = $this->providerService->setSettings($providerId, $settings);
+
+		return new JSONResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
 
 	public function deleteProvider(int $providerId): JSONResponse {
@@ -89,13 +100,13 @@ class SettingsController extends Controller {
 		}
 
 		$this->providerMapper->delete($provider);
+		$this->providerService->deleteSettings($providerId);
 
 		return new JSONResponse([], Http::STATUS_OK);
 	}
 
 	public function getProviders(): JSONResponse {
-		$providers = $this->providerMapper->getProviders();
-		return new JSONResponse($providers);
+		return new JSONResponse($this->providerService->getProvidersWithSettings());
 	}
 
 	public function getID4ME(): JSONResponse {

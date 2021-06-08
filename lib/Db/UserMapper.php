@@ -25,13 +25,18 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Db;
 
+use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 class UserMapper extends QBMapper {
-	public function __construct(IDBConnection $db) {
+	/** @var ProviderService */
+	private $providerService;
+
+	public function __construct(IDBConnection $db, ProviderService $providerService) {
 		parent::__construct($db, 'user_oidc', User::class);
+		$this->providerService = $providerService;
 	}
 
 	/**

@@ -46,45 +46,15 @@
 				</Actions>
 			</h2>
 
-			<div v-if="showNewProvider">
-				<h3>{{ t('user_oids', 'Register a new provider') }}</h3>
-				<p class="settings-hint">
-					{{ t('user_oidc', 'Configure your provider to redirect back to {url}', {url: redirectUrl}) }}
-				</p>
-				<form @submit.prevent="onSubmit">
-					<p>
-						<label for="oidc-new-identifier">{{ t('user_oidc', 'Identifier') }}</label>
-						<input id="oidc-new-identifier"
-							v-model="newProvider.identifier"
-							type="text"
-							required>
+			<Modal v-if="showNewProvider" :can-close="false">
+				<div class="providermodal__wrapper">
+					<h3>{{ t('user_oids', 'Register a new provider') }}</h3>
+					<p class="settings-hint">
+						{{ t('user_oidc', 'Configure your provider to redirect back to {url}', {url: redirectUrl}) }}
 					</p>
-					<p>
-						<label for="oidc-new-client-id">{{ t('user_oidc', 'Client ID') }}</label>
-						<input id="oidc-new-client-id"
-							v-model="newProvider.clientId"
-							type="text"
-							required>
-					</p>
-					<p>
-						<label for="oidc-new-client-secret">{{ t('user_oidc', 'Client secret') }}</label>
-						<input id="oidc-new-client-secret"
-							v-model="newProvider.clientSecret"
-							type="text"
-							autocomplete="off"
-							required>
-					</p>
-					<p>
-						<label for="oidc-new-discovery-endpoint">{{ t('user_oidc', 'Discovery endpoint') }}</label>
-						<input id="oidc-new-discovery-endpoint"
-							v-model="newProvider.discoveryEndpoint"
-							type="text"
-							required>
-					</p>
-					<input type="button" :value="t('user_oidc', 'Cancel')" @click="showNewProvider=false">
-					<input type="submit" :value="t('user_oidc', 'Register new provider')">
-				</form>
-			</div>
+					<SettingsForm :provider="newProvider" @submit="onSubmit" @cancel="showNewProvider=false" />
+				</div>
+			</Modal>
 
 			<div class="oidcproviders">
 				<p v-if="providers.length === 0">
@@ -112,39 +82,16 @@
 				</div>
 			</div>
 
-			<form v-if="editProvider" @submit.prevent="onUpdate">
-				<p>
-					<label for="oidc-identifier">{{ t('user_oidc', 'Identifier') }}</label>
-					<input id="oidc-identifier"
-						v-model="editProvider.identifier"
-						type="text"
-						required>
-				</p>
-				<p>
-					<label for="oidc-client-id">{{ t('user_oidc', 'Client ID') }}</label>
-					<input id="oidc-client-id"
-						v-model="editProvider.clientId"
-						type="text"
-						required>
-				</p>
-				<p>
-					<label for="oidc-client-secret">{{ t('user_oidc', 'Client secret') }}</label>
-					<input id="oidc-client-secret"
-						v-model="editProvider.clientSecret"
-						:placeholder="t('user_oidc', 'Leave empty to keep existing')"
-						type="text"
-						autocomplete="off">
-				</p>
-				<p>
-					<label for="oidc-discovery-endpoint">{{ t('user_oidc', 'Discovery endpoint') }}</label>
-					<input id="oidc-discovery-endpoint"
-						v-model="editProvider.discoveryEndpoint"
-						type="text"
-						required>
-				</p>
-				<input type="button" :value="t('user_oidc', 'Cancel')" @click="updateProviderCancel">
-				<input type="submit" :value="t('user_oidc', 'Update')">
-			</form>
+			<Modal v-if="editProvider" :can-close="false">
+				<div class="providermodal__wrapper">
+					<h3>{{ t('user_oidc', 'Update provider settings') }}</h3>
+					<SettingsForm :provider="editProvider"
+						:update="true"
+						:submit-text="t('user_oidc', 'Update provider')"
+						@submit="onUpdate"
+						@cancel="editProvider=null" />
+				</div>
+			</Modal>
 		</div>
 	</div>
 </template>
@@ -155,14 +102,18 @@ import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
 import Actions from '@nextcloud/vue/dist/Components/Actions'
 import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
+import Modal from '@nextcloud/vue/dist/Components/Modal'
 
 import logger from '../logger'
+import SettingsForm from './SettingsForm'
 
 export default {
 	name: 'AdminSettings',
 	components: {
+		SettingsForm,
 		Actions,
 		ActionButton,
+		Modal,
 	},
 	props: {
 		initialId4MeState: {
@@ -188,6 +139,9 @@ export default {
 				clientId: '',
 				clientSecret: '',
 				discoveryEndpoint: '',
+				settings: {
+					uniqueUid: true,
+				},
 			},
 			showNewProvider: false,
 			editProvider: null,
@@ -213,18 +167,20 @@ export default {
 			}
 		},
 		updateProvider(provider) {
-			this.editProvider = provider
+			this.editProvider = { ...provider }
 		},
-		updateProviderCancel(provider) {
+		updateProviderCancel() {
 			this.editProvider = null
 		},
-		async onUpdate() {
-			logger.info('Update oidc provider', { data: this.editProvider })
+		async onUpdate(provider) {
+			logger.info('Update oidc provider', { data: provider })
 
-			const url = generateUrl(`/apps/user_oidc/provider/${this.editProvider.id}`)
+			const url = generateUrl(`/apps/user_oidc/provider/${provider.id}`)
 			try {
-				await axios.put(url, this.editProvider)
+				await axios.put(url, provider)
 				this.editProvider = null
+				const index = this.providers.findIndex((p) => p.id === provider.id)
+				this.$set(this.providers, index, provider)
 			} catch (error) {
 				logger.error('Could not update the provider: ' + error.message, { error })
 				showError(t('user_oidc', 'Could not update the provider: ' + error.message))
@@ -256,6 +212,7 @@ export default {
 				this.newProvider.clientId = ''
 				this.newProvider.clientSecret = ''
 				this.newProvider.discoveryEndpoint = ''
+				this.showNewProvider = false
 			} catch (error) {
 				logger.error('Could not register a provider: ' + error.message, { error })
 				showError(t('user_oidc', 'Could not register provider: ' + error.message))
@@ -265,17 +222,6 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-p label {
-	width: 130px;
-	display: inline-block;
-}
-
-p input[type=text] {
-	width: 100%;
-	min-width: 200px;
-	max-width: 400px;
-}
-
 h2 .action-item {
 	vertical-align: middle;
 	margin-top: -2px;
@@ -303,5 +249,14 @@ h3 {
 	.oidcproviders__details {
 		flex-grow: 1;
 	}
+}
+
+.providermodal__wrapper {
+	min-width: 320px;
+	width: 50vw;
+	max-width: 800px;
+	height: calc(80vh - 40px);
+	margin: 20px;
+	overflow: scroll;
 }
 </style>

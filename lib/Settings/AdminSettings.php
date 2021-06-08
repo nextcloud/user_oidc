@@ -28,6 +28,7 @@ namespace OCA\UserOIDC\Settings;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IInitialStateService;
 use OCP\IURLGenerator;
@@ -36,8 +37,8 @@ use OCP\Util;
 
 class AdminSettings implements ISettings {
 
-	/** @var ProviderMapper */
-	private $providerMapper;
+	/** @var ProviderService */
+	private $providerService;
 
 	/** @var ID4MeService */
 	private $Id4MeService;
@@ -48,11 +49,11 @@ class AdminSettings implements ISettings {
 	/** @var IInitialStateService */
 	private $initialStateService;
 
-	public function __construct(ProviderMapper $providerMapper,
+	public function __construct(ProviderService $providerService,
 								ID4MeService $ID4MEService,
 								IURLGenerator $urlGenerator,
 								IInitialStateService $initialStateService) {
-		$this->providerMapper = $providerMapper;
+		$this->providerService = $providerService;
 		$this->Id4MeService = $ID4MEService;
 		$this->urlGenerator = $urlGenerator;
 		$this->initialStateService = $initialStateService;
@@ -67,7 +68,7 @@ class AdminSettings implements ISettings {
 		$this->initialStateService->provideInitialState(
 			Application::APP_ID,
 			'providers',
-			$this->providerMapper->getProviders()
+			$this->providerService->getProvidersWithSettings()
 		);
 		$this->initialStateService->provideInitialState(
 			Application::APP_ID,

@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
@@ -36,6 +37,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
@@ -79,10 +81,19 @@ class LoginController extends Controller {
 	 * @var ILogger
 	 */
 	private $logger;
+	/**
+	 * @var IConfig
+	 */
+	private $config;
+	/**
+	 * @var ProviderService
+	 */
+	private $providerService;
 
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
+		ProviderService $providerService,
 		ISecureRandom $random,
 		ISession $session,
 		IClientService $clientService,
@@ -91,6 +102,7 @@ class LoginController extends Controller {
 		IUserSession $userSession,
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
+		IConfig $config,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -103,7 +115,9 @@ class LoginController extends Controller {
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
+		$this->config = $config;
 		$this->providerMapper = $providerMapper;
+		$this->providerService = $providerService;
 		$this->logger = $logger;
 	}
 
@@ -199,7 +213,7 @@ class LoginController extends Controller {
 		JWT::$leeway = 60;
 		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
-		$this->logger->debug('Parsed the JWT');
+		$this->logger->debug('Parsed the JWT payload: ' . json_encode($payload, JSON_THROW_ON_ERROR));
 
 		if ($payload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Toklen has expired');
@@ -221,16 +235,21 @@ class LoginController extends Controller {
 		}
 
 		// Insert or update user
-		$backendUser = $this->userMapper->getOrCreate($providerId, $payload->sub);
+		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
+		if (!isset($payload->{$uidAttribute})) {
+			return new JSONResponse($payload);
+		}
+		$backendUser = $this->userMapper->getOrCreate($providerId, $payload->{$uidAttribute});
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
 		// Update displayname
-		if (isset($payload->name)) {
-			$newDisplayName = mb_substr($payload->name, 0, 255);
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		if (isset($payload->{$displaynameAttribute})) {
+			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
 
 			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($payload->name);
+				$backendUser->setDisplayName($payload->{$displaynameAttribute});
 				$backendUser = $this->userMapper->update($backendUser);
 
 				//TODO: dispatch event for the update
@@ -238,11 +257,20 @@ class LoginController extends Controller {
 		}
 
 		$user = $this->userManager->get($backendUser->getUserId());
+		if ($user === null) {
+			return new JSONResponse(['Failed to provision user']);
+		}
 
 		// Update e-mail
-		if (isset($payload->email)) {
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		if (isset($payload->{$emailAttribute})) {
 			$this->logger->debug('Updating e-mail');
-			$user->setEMailAddress($payload->email);
+			$user->setEMailAddress($payload->{$emailAttribute});
+		}
+
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'quota');
+		if (isset($payload->{$quotaAttribute})) {
+			$user->setQuota($payload->{$quotaAttribute});
 		}
 
 		$this->logger->debug('Logging user in');
