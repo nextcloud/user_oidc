@@ -119,6 +119,6 @@ class ProviderService {
 		if ($key === self::SETTING_UNIQUE_UID) {
 			$value = $value === '1';
 		}
-		return $value;
+		return (string)$value;
 	}
 }

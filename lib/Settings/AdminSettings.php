@@ -26,7 +26,6 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Settings;
 
 use OCA\UserOIDC\AppInfo\Application;
-use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Http\TemplateResponse;

@@ -101,7 +101,7 @@ class UserMapper extends QBMapper {
 	}
 
 	public function getOrCreate(int $providerId, string $sub, bool $id4me = false): User {
-		if ($this->providerService->getSetting($providerId, ProviderService::SETTING_UNIQUE_UID, '1') === '1') {
+		if ($this->providerService->getSetting($providerId, ProviderService::SETTING_UNIQUE_UID, '1') === '1' || $id4me) {
 			$userId = $providerId . '_';
 
 			if ($id4me) {
@@ -111,6 +111,7 @@ class UserMapper extends QBMapper {
 			}
 
 			$userId .= $sub;
+			$userId = hash('sha256', $userId);
 		} else {
 			$userId = $sub;
 		}
