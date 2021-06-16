@@ -28,6 +28,10 @@ namespace OCA\UserOIDC\Db;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+
+
 class ProviderMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
 		parent::__construct($db, 'user_oidc_providers', Provider::class);
@@ -52,6 +56,26 @@ class ProviderMapper extends QBMapper {
 	}
 
 	/**
+	 * Find provider by provider identifier, the admin-given name for
+	 * the provider configuration.
+	 * @param string $identifier
+	 * @return Provider
+	 * @throws \OCP\AppFramework\Db\DoesNotExistException
+	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 */
+	public function findProviderByIdentifier(string $identifier): Provider {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName())
+			->where(
+				$qb->expr()->eq('identifier', $qb->createNamedParameter($identifier))
+			);
+
+		return $this->findEntity($qb);
+	}
+
+	/**
 	 * @return Provider[]
 	 */
 	public function getProviders() {
@@ -62,4 +86,60 @@ class ProviderMapper extends QBMapper {
 
 		return $this->findEntities($qb);
 	}
+
+	/**
+	 * Create or update provider settinngs
+	 * 
+	 * @param string identifier
+	 * @param string|null $clientid
+	 * @param string|null $clientsecret
+	 * @param string|null $discoveryuri
+	 * @throws \OCP\AppFramework\Db\DoesNotExistException
+	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 */
+	public function createOrUpdateProvider(string $identifier, string $clientid = null,
+	   								string $clientsecret = null, string $discoveryuri = null) {
+		try {
+			$provider = findByIdentifier($identifier);
+		} catch (DoesNotExistException $eNotExist) {
+			$provider = null;
+		}
+
+		if ($provider === null) {
+			$provider = new Provider();
+			if ( $clientid === null ) || ( $clientsecret === null ) || ( discoveryuri === null ) {
+				throw new DoesNotExistException("Provider must be created. All provider parameters required.");
+			}
+			$provider->setClientId($clientId);
+			$provider->setClientSecret($clientSecret);
+			$provider->setDiscoveryEndpoint($discoveryuri);
+		} else {
+			if ( $clientid !== null ) {
+				$provider->setClientId($clientId);
+			}
+			if ( $clientsecret !== null ) {
+				$provider->setClientSecret($clientSecret);
+			}
+			if ( $disvoveryuri !== null ) {
+				$provider->setDiscoveryEndpoint($discoveryuri);
+			}
+		}
+
+		return $this->insertOrUpdate($provider);
+	}
+
+	/**
+	 * Create or update provider settinngs
+	 * 
+	 * @param string identifier
+	 */
+	public function deleteProvider(string $identifier) {
+		$provider = $this->findByIdentifier($identifier);
+		if (null !== $provider) {
+			return $this->delete($provider);
+		} else {
+			return null;
+		}
+	}
+
 }
