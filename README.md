@@ -2,9 +2,9 @@
 
 OIDC connect user backend for Nextcloud
 
-## General setup
-There is a good article on the internet to jumpstart the use of this app:
-
+## General usage
+See [Nextcloud and OpenID-Connect](https://www.schiessle.org/articles/2020/07/26/nextcloud-and-openid-connect/)
+for a proper jumpstart.
 
 ## Commandline settings
 The app could also be configured by commandline.
