@@ -100,25 +100,26 @@ class ProviderMapper extends QBMapper {
 	public function createOrUpdateProvider(string $identifier, string $clientid = null,
 	   								string $clientsecret = null, string $discoveryuri = null) {
 		try {
-			$provider = findByIdentifier($identifier);
+			$provider = $this->findProviderByIdentifier($identifier);
 		} catch (DoesNotExistException $eNotExist) {
 			$provider = null;
 		}
 
 		if ($provider === null) {
 			$provider = new Provider();
-			if ( $clientid === null ) || ( $clientsecret === null ) || ( discoveryuri === null ) {
+			if (( $clientid === null ) || ( $clientsecret === null ) || ( $discoveryuri === null )) {
 				throw new DoesNotExistException("Provider must be created. All provider parameters required.");
 			}
-			$provider->setClientId($clientId);
-			$provider->setClientSecret($clientSecret);
+			$provider->setIdentifier($identifier);
+			$provider->setClientId($clientid);
+			$provider->setClientSecret($clientsecret);
 			$provider->setDiscoveryEndpoint($discoveryuri);
 		} else {
 			if ( $clientid !== null ) {
-				$provider->setClientId($clientId);
+				$provider->setClientId($clientid);
 			}
 			if ( $clientsecret !== null ) {
-				$provider->setClientSecret($clientSecret);
+				$provider->setClientSecret($clientsecret);
 			}
 			if ( $disvoveryuri !== null ) {
 				$provider->setDiscoveryEndpoint($discoveryuri);
@@ -134,7 +135,7 @@ class ProviderMapper extends QBMapper {
 	 * @param string identifier
 	 */
 	public function deleteProvider(string $identifier) {
-		$provider = $this->findByIdentifier($identifier);
+		$provider = $this->findProviderByIdentifier($identifier);
 		if (null !== $provider) {
 			return $this->delete($provider);
 		} else {

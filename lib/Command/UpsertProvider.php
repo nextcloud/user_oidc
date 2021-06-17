@@ -27,6 +27,7 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\Provider;
 
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -54,7 +55,7 @@ class UpsertProvider extends Base {
 		$providerid   = $input->getArgument('providerid');
 		$clientid     = $input->getOption('clientid');
 		$clientsecret = $input->getOption('clientsecret');
-		$discoveriuri = $input->getOption('discoveryuri');
+		$discoveryuri = $input->getOption('discoveryuri');
 
 		if (false === $clientid) {
 			// in this case, the option was not passed when running the command
@@ -66,38 +67,33 @@ class UpsertProvider extends Base {
 			// handle it the same as a lacking value
 			$clientsecret = null;
 		}
-		if (false === $clientid) {
+		if (false === $discoveryuri) {
 			// in this case, the option was not passed when running the command
 			// handle it the same as a lacking value
 			$discoveryuri = null;
 		}
 
 		// show (unprotected) data in case no field is given
-		if ( (null === $clientid) && 
-		     (null === $clientsecret) && 
-			 (null === $dicoveryuri) ) {
-			try {
-				$provider = $this->providerMapper->findByIdentifier($providerid);
+		try {
+			if ( (null === $clientid) && 
+			     (null === $clientsecret) && 
+				 (null === $dicoveryuri) ) {
+				$provider = $this->providerMapper->findProviderByIdentifier($providerid);
 				if (null === $provider) {
 					return -4;
 				}
-				$output->write("{'" . $providerid . "': { 'identifier': '" . $provider . "', ");
-				$output->write(."'clientid': '" . $provider->getClientId() ."', ");   
-				$output->write(."'clientsecret': '***', "   
-				$output->write(."'discoveryuri': '" . $provider->getDiscoveryEndpoint() ."', ");   
-				$output->writeln(" }}");
-			} catch(Exception $e) {
-				$output->writeln($e->getMessage());
-				return -1;
-			}	
-		} else {
-			try {
-				$this->providerMapper->createOrUpdateProvider($providerid, $clientid, $clientsecret, $discoveriuri);
-			} catch(Exception $e) {
-				$output->writeln($e->getMessage());
-				return -1;
-			}	
-		}
+				$output->write("{ 'identifier': '" . $provider->getIdentifier() . "', ");
+				$output->write("'clientid': '" . $provider->getClientId() . "', ");   
+				$output->write("'clientsecret': '***', ");   
+				$output->write("'discoveryuri': '" . $provider->getDiscoveryEndpoint() . "', ");   
+				$output->writeln("}");
+			} else {
+				$this->providerMapper->createOrUpdateProvider($providerid, $clientid, $clientsecret, $discoveryuri);
+			}
+		} catch(Exception $e) {
+			$output->writeln($e->getMessage());
+			return -1;
+		}	
 
 		return 0;
 	}

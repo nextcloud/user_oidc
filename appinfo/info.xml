@@ -24,4 +24,9 @@
 		<admin>OCA\UserOIDC\Settings\AdminSettings</admin>
 		<admin-section>OCA\UserOIDC\Settings\Section</admin-section>
 	</settings>
+
+	<commands>
+		<command>OCA\UserOIDC\Command\UpsertProvider</command>
+		<command>OCA\UserOIDC\Command\DeleteProvider</command>
+	</commands>
 </info>

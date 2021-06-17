@@ -53,9 +53,9 @@ class DeleteProvider extends Base {
 		try {
 			$providerid = $input->getArgument('providerid');
 			$helper = $this->getHelper('question');
-			$question = new ConfirmationQuestion('Are you sure you want to delete OpenID Provider ' . $providerid . '\nand may invalidate all assiciated user accounts.', false);
+			$question = new ConfirmationQuestion('Are you sure you want to delete OpenID Provider "' . $providerid . '" and may invalidate all assiciated user accounts [y/n] ', false);
 			if ($input->getOption('force') || $helper->ask($input, $output, $question)) {
-				$this->providerMapper->deletePovider($providerid);
+				$this->providerMapper->deleteProvider($providerid);
 			}
 		} catch(Exception $e) {
 			$output->writeln($e->getMessage());
