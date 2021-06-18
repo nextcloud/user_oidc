@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2021 Bernd Rederlechner tsdicloud@github.com>
  *
@@ -24,9 +26,7 @@ namespace OCA\UserOIDC\Command;
 use OC\Core\Command\Base;
 
 use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Db\Provider;
 
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -51,8 +51,8 @@ class UpsertProvider extends Base {
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
-		$providerid   = $input->getArgument('providerid');
-		$clientid     = $input->getOption('clientid');
+		$providerid = $input->getArgument('providerid');
+		$clientid = $input->getOption('clientid');
 		$clientsecret = $input->getOption('clientsecret');
 		$discoveryuri = $input->getOption('discoveryuri');
 
@@ -69,22 +69,22 @@ class UpsertProvider extends Base {
 		}
 		// show (unprotected) data in case no field is given
 		try {
-			if ( (null === $clientid) && 
-			     (null === $clientsecret) && 
-				 (null === $discoveryuri) ) {
+			if ((null === $clientid) &&
+				 (null === $clientsecret) &&
+				 (null === $discoveryuri)) {
 				$provider = $this->providerMapper->findProviderByIdentifier($providerid);
 				$output->write("{ 'identifier': '" . $provider->getIdentifier() . "', ");
-				$output->write("'clientid': '" . $provider->getClientId() . "', ");   
-				$output->write("'clientsecret': '***', ");   
-				$output->write("'discoveryuri': '" . $provider->getDiscoveryEndpoint() . "', ");   
+				$output->write("'clientid': '" . $provider->getClientId() . "', ");
+				$output->write("'clientsecret': '***', ");
+				$output->write("'discoveryuri': '" . $provider->getDiscoveryEndpoint() . "', ");
 				$output->writeln("}");
 			} else {
 				$this->providerMapper->createOrUpdateProvider($providerid, $clientid, $clientsecret, $discoveryuri);
 			}
-		} catch(Exception $e) {
+		} catch (Exception $e) {
 			$output->writeln($e->getMessage());
 			return -1;
-		}	
+		}
 
 		return 0;
 	}

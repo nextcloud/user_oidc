@@ -29,8 +29,6 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 use OCP\AppFramework\Db\DoesNotExistException;
-use OCP\AppFramework\Db\MultipleObjectsReturnedException;
-
 
 class ProviderMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
@@ -89,7 +87,7 @@ class ProviderMapper extends QBMapper {
 
 	/**
 	 * Create or update provider settinngs
-	 * 
+	 *
 	 * @param string identifier
 	 * @param string|null $clientid
 	 * @param string|null $clientsecret
@@ -98,7 +96,7 @@ class ProviderMapper extends QBMapper {
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
 	public function createOrUpdateProvider(string $identifier, string $clientid = null,
-	   								string $clientsecret = null, string $discoveryuri = null) {
+									string $clientsecret = null, string $discoveryuri = null) {
 		try {
 			$provider = $this->findProviderByIdentifier($identifier);
 		} catch (DoesNotExistException $eNotExist) {
@@ -107,7 +105,7 @@ class ProviderMapper extends QBMapper {
 
 		if ($provider === null) {
 			$provider = new Provider();
-			if (( $clientid === null ) || ( $clientsecret === null ) || ( $discoveryuri === null )) {
+			if (($clientid === null) || ($clientsecret === null) || ($discoveryuri === null)) {
 				throw new DoesNotExistException("Provider must be created. All provider parameters required.");
 			}
 			$provider->setIdentifier($identifier);
@@ -116,13 +114,13 @@ class ProviderMapper extends QBMapper {
 			$provider->setDiscoveryEndpoint($discoveryuri);
 			return $this->insert($provider);
 		} else {
-			if ( $clientid !== null ) {
+			if ($clientid !== null) {
 				$provider->setClientId($clientid);
 			}
-			if ( $clientsecret !== null ) {
+			if ($clientsecret !== null) {
 				$provider->setClientSecret($clientsecret);
 			}
-			if ( $discoveryuri !== null ) {
+			if ($discoveryuri !== null) {
 				$provider->setDiscoveryEndpoint($discoveryuri);
 			}
 			return $this->update($provider);
@@ -131,7 +129,7 @@ class ProviderMapper extends QBMapper {
 
 	/**
 	 * Create or update provider settinngs
-	 * 
+	 *
 	 * @param string identifier
 	 */
 	public function deleteProvider(string $identifier) {
@@ -142,5 +140,4 @@ class ProviderMapper extends QBMapper {
 			return null;
 		}
 	}
-
 }
