@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2018 Robin Appelman <robin@icewind.nl>
  *
@@ -24,7 +26,6 @@ namespace OCA\UserOIDC\Command;
 use OC\Core\Command\Base;
 
 use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Db\Provider;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -57,7 +58,7 @@ class DeleteProvider extends Base {
 			if ($input->getOption('force') || $helper->ask($input, $output, $question)) {
 				$this->providerMapper->deleteProvider($providerid);
 			}
-		} catch(Exception $e) {
+		} catch (Exception $e) {
 			$output->writeln($e->getMessage());
 			return -1;
 		}
