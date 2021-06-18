@@ -46,8 +46,7 @@ class UpsertProvider extends Base {
 			->addArgument('providerid', InputOption::VALUE_REQUIRED, 'Administrative identifier name of the provider in the setup')
 			->addOption('clientid', 'c', InputOption::VALUE_REQUIRED, 'OpenID client identifier')
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
-			->addOption('discoveryuri', 'e', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri');
-
+			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri');
 		parent::configure();
 	}
 
@@ -63,25 +62,17 @@ class UpsertProvider extends Base {
 			$clientid = null;
 		}
 		if (false === $clientsecret) {
-			// in this case, the option was not passed when running the command
-			// handle it the same as a lacking value
 			$clientsecret = null;
 		}
 		if (false === $discoveryuri) {
-			// in this case, the option was not passed when running the command
-			// handle it the same as a lacking value
 			$discoveryuri = null;
 		}
-
 		// show (unprotected) data in case no field is given
 		try {
 			if ( (null === $clientid) && 
 			     (null === $clientsecret) && 
-				 (null === $dicoveryuri) ) {
+				 (null === $discoveryuri) ) {
 				$provider = $this->providerMapper->findProviderByIdentifier($providerid);
-				if (null === $provider) {
-					return -4;
-				}
 				$output->write("{ 'identifier': '" . $provider->getIdentifier() . "', ");
 				$output->write("'clientid': '" . $provider->getClientId() . "', ");   
 				$output->write("'clientsecret': '***', ");   
