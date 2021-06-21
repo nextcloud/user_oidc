@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Command;
 
-use OC\Core\Command\Base;
+use \Symfony\Component\Console\Command\Command;
 
 use OCA\UserOIDC\Db\ProviderMapper;
 
@@ -31,7 +31,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class UpsertProvider extends Base {
+class UpsertProvider extends Command {
 	private $providerMapper;
 
 	public function __construct(ProviderMapper $providerMapper) {
