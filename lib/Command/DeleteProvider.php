@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Command;
 
-use OC\Core\Command\Base;
+use \Symfony\Component\Console\Command\Command;
 
 use OCA\UserOIDC\Db\ProviderMapper;
 
@@ -33,7 +33,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
-class DeleteProvider extends Base {
+class DeleteProvider extends Command {
 	private $providerMapper;
 
 	public function __construct(ProviderMapper $providerMapper) {
