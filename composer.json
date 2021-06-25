@@ -23,7 +23,9 @@
   "require": {
     "coenjacobs/mozart": "^0.7.1",
     "id4me/id4me-rp": "^1.2",
-    "firebase/php-jwt": "^5.2"
+    "firebase/php-jwt": "^5.2",
+    "symfony/event-dispatcher": "^4",
+    "symfony/console": "^4"
   },
   "require-dev": {
     "nextcloud/coding-standard": "^0.5.0"
