@@ -25,13 +25,18 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Db;
 
+use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
 class UserMapper extends QBMapper {
-	public function __construct(IDBConnection $db) {
+	/** @var ProviderService */
+	private $providerService;
+
+	public function __construct(IDBConnection $db, ProviderService $providerService) {
 		parent::__construct($db, 'user_oidc', User::class);
+		$this->providerService = $providerService;
 	}
 
 	/**
@@ -96,17 +101,24 @@ class UserMapper extends QBMapper {
 	}
 
 	public function getOrCreate(int $providerId, string $sub, bool $id4me = false): User {
-		$userId = $providerId . '_';
+		if ($this->providerService->getSetting($providerId, ProviderService::SETTING_UNIQUE_UID, '1') === '1' || $id4me) {
+			$userId = $providerId . '_';
 
-		if ($id4me) {
-			$userId .= '1_';
+			if ($id4me) {
+				$userId .= '1_';
+			} else {
+				$userId .= '0_';
+			}
+
+			$userId .= $sub;
+			$userId = hash('sha256', $userId);
 		} else {
-			$userId .= '0_';
+			$userId = $sub;
 		}
 
-		$userId .= $sub;
-
-		$userId = hash('sha256', $userId);
+		if (strlen($userId) > 64) {
+			$userId = hash('sha256', $userId);
+		}
 
 		try {
 			return $this->getUser($userId);

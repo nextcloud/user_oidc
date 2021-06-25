@@ -31,6 +31,7 @@ return [
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],
 		['name' => 'id4me#code', 'url' => '/id4me/code', 'verb' => 'GET'],
 		['name' => 'Settings#createProvider', 'url' => '/provider', 'verb' => 'POST'],
+		['name' => 'Settings#updateProvider', 'url' => '/provider/{providerId}', 'verb' => 'PUT'],
 		['name' => 'Settings#deleteProvider', 'url' => '/provider/{providerId}', 'verb' => 'DELETE'],
 		['name' => 'Settings#setID4ME', 'url' => '/provider/id4me', 'verb' => 'POST'],
 	]
