@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
@@ -36,8 +37,8 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
-use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
@@ -77,17 +78,14 @@ class LoginController extends Controller {
 
 	/** @var ProviderMapper */
 	private $providerMapper;
-	/**
-	 * @var ILogger
-	 */
+
+	/** @var IEventDispatcher */
+	private $eventDispatcher;
+
+	/** @var ILogger */
 	private $logger;
-	/**
-	 * @var IConfig
-	 */
-	private $config;
-	/**
-	 * @var ProviderService
-	 */
+
+	/** @var ProviderService */
 	private $providerService;
 
 	public function __construct(
@@ -102,7 +100,7 @@ class LoginController extends Controller {
 		IUserSession $userSession,
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
-		IConfig $config,
+		IEventDispatcher $eventDispatcher,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -115,9 +113,9 @@ class LoginController extends Controller {
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
-		$this->config = $config;
 		$this->providerMapper = $providerMapper;
 		$this->providerService = $providerService;
+		$this->eventDispatcher = $eventDispatcher;
 		$this->logger = $logger;
 	}
 
@@ -239,7 +237,9 @@ class LoginController extends Controller {
 		if (!isset($payload->{$uidAttribute})) {
 			return new JSONResponse($payload);
 		}
-		$backendUser = $this->userMapper->getOrCreate($providerId, $payload->{$uidAttribute});
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload->{$uidAttribute});
+		$this->eventDispatcher->dispatchTyped($event);
+		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
@@ -247,6 +247,9 @@ class LoginController extends Controller {
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		if (isset($payload->{$displaynameAttribute})) {
 			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $newDisplayName);
+			$this->eventDispatcher->dispatchTyped($event);
+			$newDisplayName = $event->getValue();
 
 			if ($newDisplayName != $backendUser->getDisplayName()) {
 				$backendUser->setDisplayName($payload->{$displaynameAttribute});
@@ -264,13 +267,17 @@ class LoginController extends Controller {
 		// Update e-mail
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		if (isset($payload->{$emailAttribute})) {
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload->{$emailAttribute});
+			$this->eventDispatcher->dispatchTyped($event);
 			$this->logger->debug('Updating e-mail');
-			$user->setEMailAddress($payload->{$emailAttribute});
+			$user->setEMailAddress($event->getValue());
 		}
 
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'quota');
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		if (isset($payload->{$quotaAttribute})) {
-			$user->setQuota($payload->{$quotaAttribute});
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload->{$quotaAttribute});
+			$this->eventDispatcher->dispatchTyped($event);
+			$user->setQuota($event->getValue());
 		}
 
 		$this->logger->debug('Logging user in');
