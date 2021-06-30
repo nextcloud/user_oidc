@@ -183,7 +183,7 @@ export default {
 				this.$set(this.providers, index, provider)
 			} catch (error) {
 				logger.error('Could not update the provider: ' + error.message, { error })
-				showError(t('user_oidc', 'Could not update the provider: ' + error.message))
+				showError(t('user_oidc', 'Could not update the provider:') + ' ' + (error.response?.data?.message ?? error.message))
 			}
 		},
 		async onRemove(provider) {
@@ -215,7 +215,7 @@ export default {
 				this.showNewProvider = false
 			} catch (error) {
 				logger.error('Could not register a provider: ' + error.message, { error })
-				showError(t('user_oidc', 'Could not register provider: ' + error.message))
+				showError(t('user_oidc', 'Could not register provider:') + ' ' + (error.response?.data?.message ?? error.message))
 			}
 		},
 	},
