@@ -6,6 +6,12 @@ OIDC connect user backend for Nextcloud
 See [Nextcloud and OpenID-Connect](https://www.schiessle.org/articles/2020/07/26/nextcloud-and-openid-connect/)
 for a proper jumpstart.
 
+### User IDs
+
+The OIDC backend will ensure that user ids are unique even when multiple providers would report the same user
+id to ensure that a user cannot identify for the same Nextcloud account through different providers.
+Therefore, a hash of the provider id and the user id is used. This behaviour can be turned off in the provider options.
+
 ## Commandline settings
 The app could also be configured by commandline.
 
@@ -56,7 +62,7 @@ Requirements for building:
 - PHP
 - composer
 
-The app uses [krankerl](https://github.com/ChristophWurst/krankerl) to build the release archive from the git repository. 
+The app uses [krankerl](https://github.com/ChristophWurst/krankerl) to build the release archive from the git repository.
 The release will be put into `build/artifacts/` when running the `krankerl package`.
 
 The app can also be built without krankerl by manually running:
