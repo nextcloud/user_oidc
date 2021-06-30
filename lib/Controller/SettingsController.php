@@ -40,13 +40,9 @@ class SettingsController extends Controller {
 
 	/** @var ProviderMapper */
 	private $providerMapper;
-	/**
-	 * @var ID4MeService
-	 */
+	/** @var ID4MeService */
 	private $id4meService;
-	/**
-	 * @var ProviderService
-	 */
+	/** @var ProviderService */
 	private $providerService;
 
 	public function __construct(
@@ -63,12 +59,15 @@ class SettingsController extends Controller {
 	}
 
 	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint, array $settings = []): JSONResponse {
+		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
+			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
+		}
+
 		$provider = new Provider();
 		$provider->setIdentifier($identifier);
 		$provider->setClientId($clientId);
 		$provider->setClientSecret($clientSecret);
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
-
 		$provider = $this->providerMapper->insert($provider);
 
 		$providerSettings = $this->providerService->setSettings($provider->getId(), $settings);
@@ -78,6 +77,11 @@ class SettingsController extends Controller {
 
 	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null, array $settings = []): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
+
+		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
+			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
+		}
+
 		$provider->setIdentifier($identifier);
 		$provider->setClientId($clientId);
 		if ($clientSecret) {
