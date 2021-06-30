@@ -28,6 +28,8 @@ sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider --cl
     --clientsecret="lbXy***********" --discoveryuri="https://accounts.example.com/openid-configuration"
 ```
 
+Attribute mappings can be optionally specified. For more details refer to `occ user_oidc:provider --help`.
+
 To delete a provider, use:
 ```
 sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider:remove demoprovider
