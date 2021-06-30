@@ -19,7 +19,7 @@ The app can also be built without krankerl by manually running:
 ```
 composer install --no-dev -o
 npm install
-npm` run build
+npm run build
 ```
 
 That would however require manual cleanup and moving into an archive.
