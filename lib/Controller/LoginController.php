@@ -211,9 +211,12 @@ class LoginController extends Controller {
 
 		// TODO: proper error handling
 		JWT::$leeway = 60;
+		error_log('TOKEN : '.$data['id_token']);
 		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($payload, JSON_THROW_ON_ERROR));
+		$prettyToken = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+		error_log('DECODED login TOKEN : '.$prettyToken);
 
 		if ($payload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Toklen has expired');
