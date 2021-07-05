@@ -38,6 +38,7 @@ use OCP\IUserSession;
 
 class Application extends App {
 	public const APP_ID = 'user_oidc';
+	public const OIDC_API_REQ_HEADER = 'Authorization';
 
 	public function __construct(array $urlParams = []) {
 		parent::__construct(self::APP_ID, $urlParams);
@@ -51,7 +52,9 @@ class Application extends App {
 		$userManager = $this->getContainer()->query(IUserManager::class);
 
 		/* Register our own user backend */
-		$userManager->registerBackend($this->getContainer()->query(Backend::class));
+		$backend = $this->getContainer()->query(Backend::class);
+		$userManager->registerBackend($backend);
+		\OC_User::useBackend($backend);
 
 		if (!$userSession->isLoggedIn()) {
 
