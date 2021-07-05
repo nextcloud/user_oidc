@@ -147,6 +147,17 @@ class LoginController extends Controller {
 			'response_type' => 'code',
 			'scope' => $provider->getScope(),
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
+			'claims' => json_encode([
+				'id_token' => [
+					'preferred_username' => ['essential' => true],
+					'name' => ['essential' => true],
+					'email' => ['essential' => true],
+					'quota' => ['essential' => true],
+				],
+				//'userinfo' => [
+				//	'preferred_username' => ['essential' => true],
+				//],
+			]),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
@@ -220,6 +231,7 @@ class LoginController extends Controller {
 		);
 
 		$data = json_decode($result->getBody(), true);
+		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
 		// Obtain jwks
@@ -250,14 +262,38 @@ class LoginController extends Controller {
 		}
 
 		if (isset($payload->nonce) && $payload->nonce !== $this->session->get(self::NONCE)) {
-			$this->logger->debug('Nonce does nto match');
+			$this->logger->debug('Nonce does not match');
 			// TODO: error properly
-			return new JSONResponse(['inavlid nonce']);
+			return new JSONResponse(['invalid nonce']);
 		}
 
-		// Insert or update user
+		// get attribute mapping settings
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $payload->{$uidAttribute});
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+
+		// try to get id/name/email information from the token itself
+		$userId = $payload->{$uidAttribute} ?? null;
+		$userName = $payload->{$displaynameAttribute} ?? null;
+		$email = $payload->{$emailAttribute} ?? null;
+		$quota = $payload->{$quotaAttribute} ?? null;
+
+		// if something is missing from the token, get user info from /userinfo endpoint
+		if (is_null($userId) || is_null($userName) || is_null($email) || is_null($quota)) {
+			$options = [
+				'headers' => [
+					'Authorization' => 'Bearer ' . $data['access_token'],
+				],
+			];
+			$userInfoResult = json_decode($client->get($discovery['userinfo_endpoint'], $options)->getBody(), true);
+			$userId = $userId ?? $userInfoResult[$uidAttribute] ?? null;
+			$userName = $userName ?? $userInfoResult[$displaynameAttribute] ?? null;
+			$email = $email ?? $userInfoResult[$emailAttribute] ?? null;
+			$quota = $quota ?? $userInfoResult[$quotaAttribute] ?? null;
+		}
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $userId);
 		$this->eventDispatcher->dispatchTyped($event);
 		if (!$event->hasValue()) {
 			return new JSONResponse($payload);
@@ -272,9 +308,8 @@ class LoginController extends Controller {
 		}
 
 		// Update displayname
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		if (isset($payload->{$displaynameAttribute})) {
-			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
+		if (isset($userName)) {
+			$newDisplayName = mb_substr($userName, 0, 255);
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
 		} else {
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
@@ -290,16 +325,14 @@ class LoginController extends Controller {
 		}
 
 		// Update e-mail
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $payload->{$emailAttribute});
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $email);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Email dispatched');
 		if ($event->hasValue()) {
 			$user->setEMailAddress($event->getValue());
 		}
 
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $payload->{$quotaAttribute});
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $quota);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Quota dispatched');
 		if ($event->hasValue()) {
