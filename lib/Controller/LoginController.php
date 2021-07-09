@@ -126,7 +126,7 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function login(int $providerId) {
+	public function login(int $providerId, string $redirect_url = '') {
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
 
 		//TODO: handle exceptions
@@ -141,11 +141,15 @@ class LoginController extends Controller {
 		$this->session->set(self::PROVIDERID, $providerId);
 		$this->session->close();
 
+		$redirectArguments = [];
+		if ($redirect_url) {
+			$redirectArguments['redirect_url'] = $redirect_url;
+		}
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => 'openid email profile',
-			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
+			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code', $redirectArguments),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
@@ -156,6 +160,7 @@ class LoginController extends Controller {
 
 		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
 		$this->logger->debug('Redirecting user to: ' . $url);
+		error_log('Redirecting user to: ' . $url);
 
 		return new RedirectResponse($url);
 	}
@@ -165,7 +170,7 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function code($state = '', $code = '', $scope = '') {
+	public function code($state = '', $code = '', $scope = '', string $redirect_url = '') {
 		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
 
 		if ($this->session->get(self::STATE) !== $state) {
@@ -286,6 +291,7 @@ class LoginController extends Controller {
 
 		// TODO: user proper redirect url
 
+		error_log('CODE : redirect_url = ' . $redirect_url);
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
 	}
 
