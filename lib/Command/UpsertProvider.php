@@ -23,10 +23,12 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Command;
 
+use Exception;
 use \Symfony\Component\Console\Command\Command;
 
 use OCA\UserOIDC\Db\ProviderMapper;
 
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -42,50 +44,102 @@ class UpsertProvider extends Command {
 	protected function configure() {
 		$this
 			->setName('user_oidc:provider')
-			->setDescription('Create, show or update a OpenId connect provider connfig given the identifier of a provider')
+			->setDescription('Create, show or update a OpenId connect provider config given the identifier of a provider')
 			->addArgument('providerid', InputOption::VALUE_REQUIRED, 'Administrative identifier name of the provider in the setup')
 			->addOption('clientid', 'c', InputOption::VALUE_REQUIRED, 'OpenID client identifier')
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
-			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri');
+			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
+			->addOption(
+				'output',
+				null,
+				InputOption::VALUE_OPTIONAL,
+				'Output format (table, json or json_pretty, default is table)',
+				'table'
+			);
 		parent::configure();
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
+		$outputFormat = $input->getOption('output') ?? 'table';
+
 		$providerid = $input->getArgument('providerid');
 		$clientid = $input->getOption('clientid');
 		$clientsecret = $input->getOption('clientsecret');
 		$discoveryuri = $input->getOption('discoveryuri');
 
-		if (false === $clientid) {
-			// in this case, the option was not passed when running the command
-			// handle it the same as a lacking value
-			$clientid = null;
+		if ($providerid === null) {
+			return $this->listProviders($input, $output);
 		}
-		if (false === $clientsecret) {
-			$clientsecret = null;
-		}
-		if (false === $discoveryuri) {
-			$discoveryuri = null;
-		}
+
 		// show (unprotected) data in case no field is given
 		try {
 			if ((null === $clientid) &&
 				 (null === $clientsecret) &&
 				 (null === $discoveryuri)) {
 				$provider = $this->providerMapper->findProviderByIdentifier($providerid);
-				$output->write("{ 'identifier': '" . $provider->getIdentifier() . "', ");
-				$output->write("'clientid': '" . $provider->getClientId() . "', ");
-				$output->write("'clientsecret': '***', ");
-				$output->write("'discoveryuri': '" . $provider->getDiscoveryEndpoint() . "', ");
-				$output->writeln("}");
-			} else {
-				$this->providerMapper->createOrUpdateProvider($providerid, $clientid, $clientsecret, $discoveryuri);
+				if ($outputFormat === 'json') {
+					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
+					return 0;
+				}
+
+				if ($outputFormat === 'json_pretty') {
+					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+					return 0;
+				}
+
+				$table = new Table($output);
+				$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID']);
+				$table->addRow( [
+					$provider->getId(),
+					$provider->getIdentifier(),
+					$provider->getDiscoveryEndpoint(),
+					$provider->getClientId()
+				]);
+				$table->render();
+				return 0;
 			}
+
+			$this->providerMapper->createOrUpdateProvider($providerid, $clientid, $clientsecret, $discoveryuri);
 		} catch (Exception $e) {
 			$output->writeln($e->getMessage());
 			return -1;
 		}
 
+		return 0;
+	}
+
+	private function listProviders(InputInterface $input, OutputInterface $output) {
+		$outputFormat = $input->getOption('output') ?? 'table';
+
+		$providers = $this->providerMapper->getProviders();
+
+		if ($outputFormat === 'json') {
+			$output->writeln(json_encode($providers, JSON_THROW_ON_ERROR));
+			return 0;
+		}
+
+		if ($outputFormat === 'json_pretty') {
+			$output->writeln(json_encode($providers, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+			return 0;
+		}
+
+		if (count($providers) === 0) {
+			$output->writeln('No providers configured');
+			return 0;
+		}
+
+		$table = new Table($output);
+		$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID']);
+		$providers = array_map(function ($provider) {
+			return [
+				$provider->getId(),
+				$provider->getIdentifier(),
+				$provider->getDiscoveryEndpoint(),
+				$provider->getClientId()
+			];
+		}, $providers);
+		$table->setRows($providers);
+		$table->render();
 		return 0;
 	}
 }
