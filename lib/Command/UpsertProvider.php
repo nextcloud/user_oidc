@@ -23,12 +23,11 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Command;
 
-use Exception;
 use OCA\UserOIDC\Service\ProviderService;
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use \Symfony\Component\Console\Command\Command;
-
 use OCA\UserOIDC\Db\ProviderMapper;
-
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -85,65 +84,64 @@ class UpsertProvider extends Command {
 			return $this->listProviders($input, $output);
 		}
 
-		// show (unprotected) data in case no field is given
-		try {
-			// check if any option for updating is provided
-			$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
-				return in_array($option, [
-					'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-					'unique-uid',
-					'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
-				]) && $value !== null;
-			}, ARRAY_FILTER_USE_BOTH);
+		// check if any option for updating is provided
+		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
+			return in_array($option, [
+				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
+				'unique-uid',
+				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
+			]) && $value !== null;
+		}, ARRAY_FILTER_USE_BOTH);
 
-			if (count($updateOptions) === 0) {
-				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
-				$provider = $this->providerService->getProviderWithSettings($provider->getId());
-				if ($outputFormat === 'json') {
-					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
-					return 0;
-				}
-
-				if ($outputFormat === 'json_pretty') {
-					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
-					return 0;
-				}
-
-				$provider['settings'][ProviderService::SETTING_UNIQUE_UID] = $provider['settings'][ProviderService::SETTING_UNIQUE_UID] ? '1' : '0';
-				$provider['settings'] = json_encode($provider['settings']);
-				$table = new Table($output);
-				$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID', 'Advanced settings']);
-				$table->addRow($provider);
-				$table->render();
+		if (count($updateOptions) === 0) {
+			$provider = $this->providerMapper->findProviderByIdentifier($identifier);
+			$provider = $this->providerService->getProviderWithSettings($provider->getId());
+			if ($outputFormat === 'json') {
+				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
 				return 0;
 			}
 
-			$provider = $this->providerService->getProviderByIdentifier($identifier);
-			if ($provider !== null) {
-				$clientid = $clientid ?? $provider->getClientId();
-				$clientsecret = $clientsecret ?? $provider->getClientSecret();
-				$discoveryuri = $discoveryuri ?? $provider->getDiscoveryEndpoint();
-			}
-			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri);
-			if (($uniqueUid = $input->getOption('unique-uid')) !== null) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_UNIQUE_UID, (string)$uniqueUid === '0' ? '0' : '1');
+			if ($outputFormat === 'json_pretty') {
+				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+				return 0;
 			}
 
-			if ($mapping = $input->getOption('mapping-display-name')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, $mapping);
-			}
-			if ($mapping = $input->getOption('mapping-email')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_EMAIL, $mapping);
-			}
-			if ($mapping = $input->getOption('mapping-quota')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_QUOTA, $mapping);
-			}
-			if ($mapping = $input->getOption('mapping-uid')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, $mapping);
-			}
-		} catch (Exception $e) {
-			$output->writeln($e->getMessage());
+			$provider['settings'][ProviderService::SETTING_UNIQUE_UID] = $provider['settings'][ProviderService::SETTING_UNIQUE_UID] ? '1' : '0';
+			$provider['settings'] = json_encode($provider['settings']);
+			$table = new Table($output);
+			$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID', 'Advanced settings']);
+			$table->addRow($provider);
+			$table->render();
+			return 0;
+		}
+
+		$provider = $this->providerService->getProviderByIdentifier($identifier);
+		if ($provider !== null) {
+			$clientid = $clientid ?? $provider->getClientId();
+			$clientsecret = $clientsecret ?? $provider->getClientSecret();
+			$discoveryuri = $discoveryuri ?? $provider->getDiscoveryEndpoint();
+		}
+		try {
+			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri);
+		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
+			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return -1;
+		}
+		if (($uniqueUid = $input->getOption('unique-uid')) !== null) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_UNIQUE_UID, (string)$uniqueUid === '0' ? '0' : '1');
+		}
+
+		if ($mapping = $input->getOption('mapping-display-name')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-email')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_EMAIL, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-quota')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_QUOTA, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-uid')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, $mapping);
 		}
 
 		return 0;
