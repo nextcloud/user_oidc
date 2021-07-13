@@ -25,3 +25,5 @@ vendor/bin
 webpack.common.js
 webpack.dev.js
 webpack.prod.js
+/vendor/bin
+/vendor-bin
