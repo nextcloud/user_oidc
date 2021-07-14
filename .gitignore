@@ -7,3 +7,4 @@ node_modules/
 /.php_cs.cache
 /lib/Vendor
 tests/.phpunit.result.cache
+/vendor-bin/mozart/vendor

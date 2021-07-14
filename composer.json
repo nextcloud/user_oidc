@@ -12,21 +12,24 @@
     "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;",
     "test:unit": "phpunit -c tests/phpunit.xml",
     "post-install-cmd": [
-       "\"vendor/bin/mozart\" compose",
-       "composer dump-autoload"
+      "@composer bin all install --ansi",
+      "\"vendor/bin/mozart\" compose",
+      "composer dump-autoload"
     ],
     "post-update-cmd": [
+      "@composer bin all install --ansi",
       "\"vendor/bin/mozart\" compose",
       "composer dump-autoload"
     ]
   },
   "require": {
-    "coenjacobs/mozart": "^0.7.1",
     "id4me/id4me-rp": "^1.2",
-    "firebase/php-jwt": "^5.2"
+    "firebase/php-jwt": "^5.2",
+    "bamarni/composer-bin-plugin": "^1.4"
   },
   "require-dev": {
-    "nextcloud/coding-standard": "^0.5.0"
+    "nextcloud/coding-standard": "^0.5.0",
+    "symfony/event-dispatcher": "^4"
   },
   "extra": {
     "mozart": {
