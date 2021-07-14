@@ -27,7 +27,9 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IConfig;
 
 class ProviderService {
@@ -53,6 +55,20 @@ class ProviderService {
 			$providerSettings = $this->getSettings($provider->getId());
 			return array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]);
 		}, $providers);
+	}
+
+	public function getProviderByIdentifier(string $identifier): ?Provider {
+		try {
+			return $this->providerMapper->findProviderByIdentifier($identifier);
+		} catch (DoesNotExistException $e) {
+			return null;
+		}
+	}
+
+	public function getProviderWithSettings(int $id): array {
+		$provider = $this->providerMapper->getProvider($id);
+		$providerSettings = $this->getSettings($provider->getId());
+		return array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]);
 	}
 
 	public function getSettings(int $providerId): array {
