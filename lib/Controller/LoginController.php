@@ -144,7 +144,7 @@ class LoginController extends Controller {
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
-			'scope' => 'openid email profile',
+			'scope' => $provider->getScope(),
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 			'state' => $state,
 			'nonce' => $nonce,
@@ -164,8 +164,13 @@ class LoginController extends Controller {
 		}
 
 		//TODO verify discovery
+		if (isset($provider->getCustomQuery())) {
+			// if the request needs some additional query parameters
+			$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data) . "&" . $provider->getCustomQuery();
+		} else {
+			$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
+		}
 
-		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
 		$this->logger->debug('Redirecting user to: ' . $url);
 
 		return new RedirectResponse($url);
@@ -227,7 +232,7 @@ class LoginController extends Controller {
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($payload, JSON_THROW_ON_ERROR));
 
 		if ($payload->exp < $this->timeFactory->getTime()) {
-			$this->logger->debug('Toklen has expired');
+			$this->logger->debug('Token expired');
 			// TODO: error properly
 			return new JSONResponse(['token expired']);
 		}

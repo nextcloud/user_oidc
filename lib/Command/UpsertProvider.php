@@ -56,6 +56,8 @@ class UpsertProvider extends Command {
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
 			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
 
+			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, defaults to "openid email profile"')
+			->addOption('customquery', 'q', InputOption::VALUE_OPTION, 'Custom query string to append to discovery request')
 			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable.')
 			->addOption('mapping-display-name', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the display name')
 			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
@@ -76,28 +78,45 @@ class UpsertProvider extends Command {
 		$outputFormat = $input->getOption('output') ?? 'table';
 
 		$identifier = $input->getArgument('identifier');
-		$clientid = $input->getOption('clientid');
-		$clientsecret = $input->getOption('clientsecret');
-		$discoveryuri = $input->getOption('discoveryuri');
-
 		if ($identifier === null) {
 			return $this->listProviders($input, $output);
 		}
 
-		// check if any option for updating is provided
-		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
-			return in_array($option, [
-				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-				'unique-uid',
-				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
-			]) && $value !== null;
-		}, ARRAY_FILTER_USE_BOTH);
+		$clientid = $input->getOption('clientid');
+		$clientsecret = $input->getOption('clientsecret');
+		$discoveryuri = $input->getOption('discoveryuri');
+		$customQuery = $input->getOption('customquery');
+		$scope = $input->getOption('scope') ?? 'openid email profile';
 
-		if (count($updateOptions) === 0) {
-			$provider = $this->providerMapper->findProviderByIdentifier($identifier);
-			$provider = $this->providerService->getProviderWithSettings($provider->getId());
-			if ($outputFormat === 'json') {
-				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
+		try {
+			// check if any option for updating is provided
+			$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
+				return in_array($option, [
+					'identifier', 'clientid', 'clientsecret', 'discoveryuri',
+					'scope', 'customquery', 'unique-uid',
+					'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
+				]) && $value !== null;
+			}, ARRAY_FILTER_USE_BOTH);
+
+			if (count($updateOptions) === 0) {
+				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
+				$provider = $this->providerService->getProviderWithSettings($provider->getId());
+				if ($outputFormat === 'json') {
+					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
+					return 0;
+				}
+
+				if ($outputFormat === 'json_pretty') {
+					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+					return 0;
+				}
+
+				$provider['settings'][ProviderService::SETTING_UNIQUE_UID] = $provider['settings'][ProviderService::SETTING_UNIQUE_UID] ? '1' : '0';
+				$provider['settings'] = json_encode($provider['settings']);
+				$table = new Table($output);
+				$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID', 'Advanced settings']);
+				$table->addRow($provider);
+				$table->render();
 				return 0;
 			}
 

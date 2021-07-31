@@ -53,6 +53,20 @@
 				type="text"
 				required>
 		</p>
+		<p>
+			<label for="oidc-scope">{{ t('user_oidc', 'Scope') }}</label>
+			<input id="oidc-scope"
+				v-model="localProvider.scope"
+				type="text"
+				:placeholder="openid email profile">
+		</p>
+		<p>
+			<label for="oidc-custom-query">{{ t('user_oidc', 'Custom query') }}</label>
+			<input id="oidc-discovery-endpoint"
+				v-model="localProvider.customQuery"
+				type="text"
+				:placeholder="t('user_oidc', 'Optional custom query')">
+		</p>
 		<h4>{{ t('user_oidc', 'Attribute mapping') }}</h4>
 		<p>
 			<label for="mapping-uid">{{ t('user_oidc', 'User ID mapping') }}</label>
