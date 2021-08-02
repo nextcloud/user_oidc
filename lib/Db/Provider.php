@@ -58,9 +58,6 @@ class Provider extends Entity implements \JsonSerializable {
 	/** @var string */
 	protected $scope;
 
-	/** @var string */
-	protected $customQuery;
-
 	public function jsonSerialize() {
 		return [
 			'id' => $this->id,
@@ -68,7 +65,6 @@ class Provider extends Entity implements \JsonSerializable {
 			'clientId' => $this->clientId,
 			'discoveryEndpoint' => $this->discoveryEndpoint,
 			'scope' => scope,
-			'customQuery' => $this->customQuery
 		];
 	}
 }

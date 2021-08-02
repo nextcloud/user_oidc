@@ -99,7 +99,7 @@ class ProviderMapper extends QBMapper {
 	 */
 	public function createOrUpdateProvider(string $identifier, string $clientid = null,
 									string $clientsecret = null, string $discoveryuri = null,
-									string $customquery = null, string $scope = 'openid email profile') {
+									string $scope = 'openid email profile') {
 		try {
 			$provider = $this->findProviderByIdentifier($identifier);
 		} catch (DoesNotExistException $eNotExist) {
@@ -116,7 +116,6 @@ class ProviderMapper extends QBMapper {
 			$provider->setClientSecret($clientsecret);
 			$provider->setDiscoveryEndpoint($discoveryuri);
 			$provider->setScope($scope);
-			$provider->setCustomQuery($customquery);
 			return $this->insert($provider);
 		} else {
 			if ($clientid !== null) {
@@ -127,9 +126,6 @@ class ProviderMapper extends QBMapper {
 			}
 			if ($discoveryuri !== null) {
 				$provider->setDiscoveryEndpoint($discoveryuri);
-			}
-			if ($customquery !== null) {
-				$provider->setCustomQuery($customquery);
 			}
 			$provider->setScope($scope);
 			return $this->update($provider);

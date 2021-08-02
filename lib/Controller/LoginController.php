@@ -164,13 +164,12 @@ class LoginController extends Controller {
 		}
 
 		//TODO verify discovery
-		if (isset($provider->getCustomQuery())) {
-			// if the request needs some additional query parameters
-			$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data) . "&" . $provider->getCustomQuery();
-		} else {
-			$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
-		}
-
+		
+		// compose url evey if a compley endpoint url format is given
+		$url = http_build_url($discovery['authorization_endpoint'],
+							  array(
+								  query => http_build_query($data)
+							  ), HTTP_URL_JOIN_QUERY);
 		$this->logger->debug('Redirecting user to: ' . $url);
 
 		return new RedirectResponse($url);

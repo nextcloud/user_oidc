@@ -56,8 +56,7 @@ class UpsertProvider extends Command {
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
 			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
 
-			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, defaults to "openid email profile"')
-			->addOption('customquery', 'q', InputOption::VALUE_OPTION, 'Custom query string to append to discovery request')
+			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"')
 			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable.')
 			->addOption('mapping-display-name', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the display name')
 			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
@@ -85,7 +84,6 @@ class UpsertProvider extends Command {
 		$clientid = $input->getOption('clientid');
 		$clientsecret = $input->getOption('clientsecret');
 		$discoveryuri = $input->getOption('discoveryuri');
-		$customQuery = $input->getOption('customquery');
 		$scope = $input->getOption('scope') ?? 'openid email profile';
 
 		try {
@@ -93,7 +91,7 @@ class UpsertProvider extends Command {
 			$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 				return in_array($option, [
 					'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-					'scope', 'customquery', 'unique-uid',
+					'scope', 'unique-uid',
 					'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
 				]) && $value !== null;
 			}, ARRAY_FILTER_USE_BOTH);

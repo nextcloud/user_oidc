@@ -20,13 +20,6 @@ class Version00007Date20210730170713 extends SimpleMigrationStep {
 			'default' => 'openid email profile',
 			'notnull' => true,
 		]);
-		$table->addColumn('custom_query', 'string', [
-			'length' => 255,
-			'default' => '',
-			'notnull' => false,
-		]);
-
-
 
 		return $schema;
 	}
