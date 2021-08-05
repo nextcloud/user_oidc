@@ -149,6 +149,14 @@ class LoginController extends Controller {
 			'state' => $state,
 			'nonce' => $nonce,
 		];
+		// pass discovery query parameters also on to the authentication
+		$discoveryUrl = parse_url( $provider->getDiscoveryEndpoint());
+		if (isset($discoveryUrl["query"])) {
+			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl["query"]);
+			$discoveryQuery = [];
+			parse_str($discoveryUrl["query"], $discoveryQuery);
+			$data += $discoveryQuery;
+		}
 
 		try {
 			$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
@@ -165,11 +173,7 @@ class LoginController extends Controller {
 
 		//TODO verify discovery
 		
-		// compose url evey if a compley endpoint url format is given
-		$url = http_build_url($discovery['authorization_endpoint'],
-							  array(
-								  query => http_build_query($data)
-							  ), HTTP_URL_JOIN_QUERY);
+		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
 		$this->logger->debug('Redirecting user to: ' . $url);
 
 		return new RedirectResponse($url);

@@ -54,11 +54,11 @@
 				required>
 		</p>
 		<p>
-			<label for="oidc-scope">{{ t('user_oidc', 'Scope') }}</label>
+			<label for="oidc-scopr">{{ t('user_oidc', 'Scope') }}</label>
 			<input id="oidc-scope"
 				v-model="localProvider.scope"
 				type="text"
-				:placeholder="openid email profile">
+				placeholder="openid email profile">
 		</p>
 		<h4>{{ t('user_oidc', 'Attribute mapping') }}</h4>
 		<p>

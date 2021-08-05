@@ -92,7 +92,6 @@ class ProviderMapper extends QBMapper {
 	 * @param string|null $clientid
 	 * @param string|null $clientsecret
 	 * @param string|null $discoveryuri
-	 * @param string|null $customquery
 	 * @param string scope
 	 * @throws \OCP\AppFramework\Db\DoesNotExistException
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
