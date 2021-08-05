@@ -264,6 +264,11 @@ class LoginController extends Controller {
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
+		$user = $this->userManager->get($backendUser->getUserId());
+		if ($user === null) {
+			return new JSONResponse(['Failed to provision user']);
+		}
+
 		// Update displayname
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		if (isset($payload->{$displaynameAttribute})) {
@@ -273,16 +278,10 @@ class LoginController extends Controller {
 			$newDisplayName = $event->getValue();
 
 			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($payload->{$displaynameAttribute});
+			 	$backendUser->setDisplayName($newDisplayName);
 				$backendUser = $this->userMapper->update($backendUser);
-
-				//TODO: dispatch event for the update
+			 	//TODO: dispatch event for the update
 			}
-		}
-
-		$user = $this->userManager->get($backendUser->getUserId());
-		if ($user === null) {
-			return new JSONResponse(['Failed to provision user']);
 		}
 
 		// Update e-mail
