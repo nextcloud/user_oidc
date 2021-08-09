@@ -39,13 +39,18 @@ class AttributeMappedEvent extends Event {
 	/** @var string */
 	private $attribute;
 	/** @var string */
+	private $claims;
+	/** @var string */
 	private $value;
 
-	public function __construct(string $attribute, string $value) {
+	public function __construct(string $attribute, array $claims, string $default) {
 		parent::__construct();
 		$this->attribute = $attribute;
-		$this->value = $value;
+		$this->claims = $claims;
+		$this->value = $default;
 	}
+
+
 
 	/**
 	 * @return string One of the ProviderService::SETTING_MAPPING_* constants for the attribute mapping that is currently processed
@@ -54,6 +59,16 @@ class AttributeMappedEvent extends Event {
 		return $this->attribute;
 	}
 
+	/**
+	 * @return array the array of claim values associated with the event
+	 */
+	public function getClaims(): array {
+		return $this->claims;
+	}
+
+	/**
+	 * @return value for the logged in user attribute
+	 */
 	public function getValue(): string {
 		return $this->value;
 	}
