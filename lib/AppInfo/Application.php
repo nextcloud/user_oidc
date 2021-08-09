@@ -27,6 +27,7 @@ namespace OCA\UserOIDC\AppInfo;
 
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\User\Backend;
 use OCP\AppFramework\App;
 use OCP\IL10N;
@@ -63,9 +64,28 @@ class Application extends App {
 
 			/** @var IL10N $l10n */
 			$l10n = $this->getContainer()->query(IL10N::class);
+			/** @var IRequest $request */
 			$request = $this->getContainer()->query(IRequest::class);
+			/** @var SettingsService $settings */
+			$settings = $this->getContainer()->query(SettingsService::class);
 
 			$redirectUrl = $request->getParam('redirect_url');
+
+			// Handle immediate redirect to the oidc provider if just one is configured and no other backens are allowed
+			$isDefaultLogin = false;
+			try {
+				$isDefaultLogin = $request->getPathInfo() === '/login' && $request->getParam('direct') !== '1';
+			} catch (\Exception $e) {
+				// in case any errors happen when checkinf for the path do not apply redirect logic as it is only needed for the login
+			}
+			if ($isDefaultLogin && !$settings->getAllowMultipleUserBackEnds() && count($providers) === 1) {
+				$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
+					'providerId' => $providers[0]->getId(),
+					'redirectUrl' => $redirectUrl
+				]);
+				header('Location: ' . $targetUrl);
+				exit();
+			}
 
 			foreach ($providers as $provider) {
 				\OC_App::registerLogIn([
