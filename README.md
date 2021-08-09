@@ -54,6 +54,16 @@ ID4me is an application setting switch which is configurable as normal Nextcloud
 sudo -u www-data php /var/www/nextcloud/occ config:app:set --value=1 user_oidc id4me_enabled
 ```
 
+### Disable other login methods
+If there is only one OIDC provider configured, it can be made the default login
+method and the user would get redirected to the provider immediately for the
+login. Admins can still use the regular login through adding the `?direct=1`
+parameter to the login URL.
+
+```bash
+sudo -u www-data php var/www/nextcloud/occ config:app:set --value=0 user_oidc allow_multiple_user_backends
+```
+
 ## Building the app
 
 Requirements for building:
