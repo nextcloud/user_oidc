@@ -50,6 +50,7 @@ class LoginController extends Controller {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	private const PROVIDERID = 'oidc.providerid';
+	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
 
 	/** @var ISecureRandom */
 	private $random;
@@ -126,7 +127,7 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function login(int $providerId) {
+	public function login(int $providerId, string $redirectUrl = null) {
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
 
 		//TODO: handle exceptions
@@ -134,6 +135,7 @@ class LoginController extends Controller {
 
 		$state = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::STATE, $state);
+		$this->session->set(self::REDIRECT_AFTER_LOGIN, $redirectUrl);
 
 		$nonce = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::NONCE, $nonce);
@@ -281,7 +283,10 @@ class LoginController extends Controller {
 
 		$this->logger->debug('Redirecting user');
 
-		// TODO: user proper redirect url
+		$redirectUrl = $this->session->get(self::REDIRECT_AFTER_LOGIN);
+		if ($redirectUrl) {
+			return new RedirectResponse($redirectUrl);
+		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
 	}
