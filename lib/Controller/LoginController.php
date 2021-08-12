@@ -259,7 +259,7 @@ class LoginController extends Controller {
 			return new JSONResponse($payload);
 		}
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $payload->{$uidAttribute});
-		$this->eventDispatcher->dispatchTyped($event);
+		$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
 		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
@@ -274,7 +274,8 @@ class LoginController extends Controller {
 		if (isset($payload->{$displaynameAttribute})) {
 			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
-			$this->eventDispatcher->dispatchTyped($event);
+			$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
+			$this->logger->debug('Displayname dispatched');
 			$newDisplayName = $event->getValue();
 
 			if ($newDisplayName != $backendUser->getDisplayName()) {
@@ -288,17 +289,20 @@ class LoginController extends Controller {
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		if (isset($payload->{$emailAttribute})) {
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $payload->{$emailAttribute});
-			$this->eventDispatcher->dispatchTyped($event);
-			$this->logger->debug('Updating e-mail');
+			$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
+			$this->logger->debug('Email dispatched');
 			$user->setEMailAddress($event->getValue());
 		}
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		if (isset($payload->{$quotaAttribute})) {
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $payload->{$quotaAttribute});
-			$this->eventDispatcher->dispatchTyped($event);
-			$user->setQuota($event->getValue());
+		} else {
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, '');
 		}
+		$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
+		$this->logger->debug('Quota dispatched');
+		$user->setQuota($event->getValue());
 
 		$this->logger->debug('Logging user in');
 

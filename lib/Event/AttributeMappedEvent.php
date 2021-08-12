@@ -38,19 +38,17 @@ class AttributeMappedEvent extends Event {
 
 	/** @var string */
 	private $attribute;
-	/** @var string */
+	/** @var object */
 	private $claims;
 	/** @var string */
 	private $value;
 
-	public function __construct(string $attribute, array $claims, string $default) {
+	public function __construct(string $attribute, object $claims, string $default) {
 		parent::__construct();
 		$this->attribute = $attribute;
 		$this->claims = $claims;
 		$this->value = $default;
 	}
-
-
 
 	/**
 	 * @return string One of the ProviderService::SETTING_MAPPING_* constants for the attribute mapping that is currently processed
