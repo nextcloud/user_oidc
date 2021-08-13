@@ -295,14 +295,12 @@ class LoginController extends Controller {
 		}
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		if (isset($payload->{$quotaAttribute})) {
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $payload->{$quotaAttribute});
-		} else {
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, '');
-		}
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $payload->{$quotaAttribute});
 		$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
 		$this->logger->debug('Quota dispatched');
-		$user->setQuota($event->getValue());
+		if ($event->hasValue()) {
+			$user->setQuota($event->getValue());
+		}
 
 		$this->logger->debug('Logging user in');
 

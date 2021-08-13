@@ -43,7 +43,7 @@ class AttributeMappedEvent extends Event {
 	/** @var string */
 	private $value;
 
-	public function __construct(string $attribute, object $claims, string $default) {
+	public function __construct(string $attribute, object $claims, ?string $default = null) {
 		parent::__construct();
 		$this->attribute = $attribute;
 		$this->claims = $claims;
@@ -64,14 +64,18 @@ class AttributeMappedEvent extends Event {
 		return $this->claims;
 	}
 
+	public function hasValue() : bool {
+		return ($this->value != null);
+	}
+
 	/**
 	 * @return value for the logged in user attribute
 	 */
-	public function getValue(): string {
+	public function getValue(): ?string {
 		return $this->value;
 	}
 
-	public function setValue(string $value): void {
+	public function setValue(?string $value): void {
 		$this->value = $value;
 	}
 }
