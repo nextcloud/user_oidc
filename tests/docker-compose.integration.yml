@@ -1,0 +1,13 @@
+version: '3'
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:13.0.1
+    ports:
+      - 8999:8080
+    volumes:
+      - ./integration/config:/tmp/keycloak
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      PROXY_ADDRESS_FORWARDING: "true"
+      KEYCLOAK_IMPORT: /tmp/keycloak/realm-export.json
