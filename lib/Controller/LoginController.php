@@ -255,13 +255,13 @@ class LoginController extends Controller {
 
 		// Insert or update user
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		if (!isset($payload->{$uidAttribute})) {
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $payload->{$uidAttribute});
+		$this->eventDispatcher->dispatchTyped($event);
+		if ($event->hasValue()) {
 			return new JSONResponse($payload);
 		}
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $payload->{$uidAttribute});
-		$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
-		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
 
+		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
 		$user = $this->userManager->get($backendUser->getUserId());
@@ -272,31 +272,33 @@ class LoginController extends Controller {
 		// Update displayname
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		if (isset($payload->{$displaynameAttribute})) {
-			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
+            $newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
-			$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
-			$this->logger->debug('Displayname dispatched');
+		} else {
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
+		}
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Displayname dispatched');
+		if ($event->hasValue()) {
 			$newDisplayName = $event->getValue();
-
 			if ($newDisplayName != $backendUser->getDisplayName()) {
 			 	$backendUser->setDisplayName($newDisplayName);
 				$backendUser = $this->userMapper->update($backendUser);
-			 	//TODO: dispatch event for the update
 			}
 		}
 
 		// Update e-mail
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		if (isset($payload->{$emailAttribute})) {
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $payload->{$emailAttribute});
-			$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
-			$this->logger->debug('Email dispatched');
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $payload->{$emailAttribute});
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Email dispatched');
+  	    if ($event->hasValue()) {
 			$user->setEMailAddress($event->getValue());
 		}
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $payload->{$quotaAttribute});
-		$this->eventDispatcher->dispatch(AttributeMappedEvent::class, $event);
+		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Quota dispatched');
 		if ($event->hasValue()) {
 			$user->setQuota($event->getValue());

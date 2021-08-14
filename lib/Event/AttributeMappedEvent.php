@@ -60,7 +60,7 @@ class AttributeMappedEvent extends Event {
 	/**
 	 * @return array the array of claim values associated with the event
 	 */
-	public function getClaims(): array {
+	public function getClaims(): object {
 		return $this->claims;
 	}
 
