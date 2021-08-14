@@ -257,7 +257,7 @@ class LoginController extends Controller {
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $payload->{$uidAttribute});
 		$this->eventDispatcher->dispatchTyped($event);
-		if ($event->hasValue()) {
+		if (!$event->hasValue()) {
 			return new JSONResponse($payload);
 		}
 
