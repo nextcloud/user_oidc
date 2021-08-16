@@ -24,6 +24,7 @@
 declare(strict_types=1);
 
 use GuzzleHttp\RedirectMiddleware;
+use OCA\UserOIDC\Service\ProviderService;
 
 /**
  * @group DB
@@ -96,9 +97,40 @@ class Test extends \Test\TestCase {
 
 		// Validate login with correct user data
 		$userInfo = $client->get($this->baseUrl . '/ocs/v1.php/cloud/users/' . $userId . '?format=json', ['auth' => ['admin', 'admin'], 'headers' => ['OCS-APIRequest' => 'true'],]);
-
 		$userInfo = json_decode($userInfo->getBody()->getContents());
 		self::assertEquals('keycloak1@example.com', $userInfo->ocs->data->email);
 		self::assertEquals('Key Cloak 1', $userInfo->ocs->data->displayname);
+
+		$providerId = '1';
+		$userIdHashed = hash('sha256', $providerId . '_0_' . 'aea81860-b25c-4f75-b9b5-9d632c3ba06f');
+		self::assertEquals($userId, $userIdHashed);
+	}
+
+	public function testUnreachable() {
+		/** @var ProviderService $service */
+		$service = \OC::$server->get(ProviderService::class);
+		$mapper = \OC::$server->get(\OCA\UserOIDC\Db\ProviderMapper::class);
+		$provider = $service->getProviderByIdentifier('nextcloudci');
+
+		$previousDiscovery = $provider->getDiscoveryEndpoint();
+
+		$provider->setDiscoveryEndpoint('http://unreachable/url');
+		$mapper->update($provider);
+
+		try {
+			$client = new \GuzzleHttp\Client(['allow_redirects' => ['track_redirects' => true]]);
+			$response = $client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		} catch (\Exception $e) {
+			$response = $e->getResponse();
+		}
+		$status = $response->getStatusCode();
+
+		$provider->setDiscoveryEndpoint($previousDiscovery);
+		$mapper->update($provider);
+
+		self::assertEquals($status, 404);
+	}
+
+	public function testNonUnique() {
 	}
 }
