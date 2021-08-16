@@ -152,7 +152,18 @@ class LoginController extends Controller {
 			'nonce' => $nonce,
 		];
 
-		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+		try {
+			$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+		} catch (\Exception $e) {
+			$this->logger->error('Could not reach provider at URL ' . $provider->getDiscoveryEndpoint());
+			$response = new Http\TemplateResponse('', 'error', [
+				'errors' => [
+					['error' => 'Could not the reach OpenID Connect provider.']
+				]
+			], Http\TemplateResponse::RENDER_AS_ERROR);
+			$response->setStatus(404);
+			return $response;
+		}
 
 		//TODO verify discovery
 
