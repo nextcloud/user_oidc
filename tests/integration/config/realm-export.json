@@ -399,6 +399,9 @@
     "firstName" : "Key",
     "lastName" : "Cloak 1",
     "email" : "keycloak1@example.com",
+    "attributes" : {
+      "quota" : [ "1G" ]
+    },
     "credentials" : [ {
       "id" : "892c47c3-f871-4aaf-8170-6df32e31f587",
       "type" : "password",
@@ -586,14 +589,18 @@
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
     "protocolMappers" : [ {
-      "id" : "6e069701-e8cd-4a9a-bd76-91cfeed71226",
+      "id" : "ca1ca820-713f-4c19-a367-e4ffdb671856",
       "name" : "quota",
       "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-claims-param-token-mapper",
+      "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "userinfo.token.claim" : "true",
+        "user.attribute" : "quota",
         "id.token.claim" : "true",
-        "userinfo.token.claim" : "true"
+        "access.token.claim" : "true",
+        "claim.name" : "quota",
+        "jsonType.label" : "String"
       }
     }, {
       "id" : "5b2bfd1e-6f32-4e40-9716-28a278e12d55",
@@ -1013,6 +1020,20 @@
         "id.token.claim" : "true",
         "access.token.claim" : "true",
         "claim.name" : "nickname",
+        "jsonType.label" : "String"
+      }
+    }, {
+      "id" : "7359df3a-5768-4338-880d-e2ca0ba73a2a",
+      "name" : "quota",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usermodel-attribute-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "userinfo.token.claim" : "true",
+        "user.attribute" : "quota",
+        "id.token.claim" : "true",
+        "access.token.claim" : "true",
+        "claim.name" : "quota",
         "jsonType.label" : "String"
       }
     }, {
