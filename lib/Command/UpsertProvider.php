@@ -109,7 +109,7 @@ class UpsertProvider extends Command {
 			$provider['settings'][ProviderService::SETTING_UNIQUE_UID] = $provider['settings'][ProviderService::SETTING_UNIQUE_UID] ? '1' : '0';
 			$provider['settings'] = json_encode($provider['settings']);
 			$table = new Table($output);
-			$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID', 'Advanced settings']);
+			$table->setHeaders(['ID', 'Identifier', 'Client ID', 'Discovery endpoint', 'Advanced settings']);
 			$table->addRow($provider);
 			$table->render();
 			return 0;
