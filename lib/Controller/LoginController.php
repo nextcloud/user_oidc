@@ -269,10 +269,14 @@ class LoginController extends Controller {
 		if (!isset($payload->{$uidAttribute})) {
 			return new JSONResponse($payload);
 		}
-		$this->providerService->setSetting($providerId, 'uid_' . $payload->{$uidAttribute}, $prefUserId ?? '');
 		$backendUser = $this->userMapper->getOrCreate($providerId, $prefUserId ?? $payload->{$uidAttribute});
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
+
+		// update remote_user_id
+		// store link between sub and real user ID
+		$backendUser->setRemoteUserId($payload->{$uidAttribute});
+		$backendUser = $this->userMapper->update($backendUser);
 
 		// Update displayname
 		if ($userName) {
