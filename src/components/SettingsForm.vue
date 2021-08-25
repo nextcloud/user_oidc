@@ -122,6 +122,8 @@ export default {
 	},
 	created() {
 		this.localProvider = this.provider
+		console.debug('local provider')
+		console.debug(this.localProvider)
 	},
 }
 </script>
