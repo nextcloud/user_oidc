@@ -149,6 +149,16 @@ class LoginController extends Controller {
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => 'openid email profile',
+			'claims' => json_encode([
+				'id_token' => [
+					'preferred_username' => ['essential' => true],
+					'name' => ['essential' => true],
+					'email' => ['essential' => true],
+				],
+				//'userinfo' => [
+				//	'preferred_username' => ['essential' => true],
+				//],
+			]),
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code', $redirectArguments),
 			'state' => $state,
 			'nonce' => $nonce,
