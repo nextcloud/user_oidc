@@ -205,6 +205,9 @@ class LoginController extends Controller {
 		);
 
 		$data = json_decode($result->getBody(), true);
+		foreach ($data as $k => $v) {
+			error_log('----- token_endpoint data['.$k.']: ' . $v);
+		}
 
 		// Obtain jwks
 		$client = $this->clientService->newClient();
@@ -224,7 +227,7 @@ class LoginController extends Controller {
 		error_log('DECODED login TOKEN : '.$prettyToken);
 
 		if ($payload->exp < $this->timeFactory->getTime()) {
-			$this->logger->debug('Toklen has expired');
+			$this->logger->debug('Token has expired');
 			// TODO: error properly
 			return new JSONResponse(['token expired']);
 		}
@@ -237,30 +240,49 @@ class LoginController extends Controller {
 		}
 
 		if (isset($payload->nonce) && $payload->nonce !== $this->session->get(self::NONCE)) {
-			$this->logger->debug('Nonce does nto match');
+			$this->logger->debug('Nonce does not match');
 			// TODO: error properly
-			return new JSONResponse(['inavlid nonce']);
+			return new JSONResponse(['invalid nonce']);
 		}
+
+		// get user info from /userinfo endpoint
+		$options = [
+			'headers' => [
+				'Authorization' => 'Bearer '. $data['access_token'],
+			],
+		];
+		$userInfoResult = json_decode($client->get($discovery['userinfo_endpoint'], $options)->getBody(), true);
+		$prefUserId = $userInfoResult['preferred_username'] ?? null;
+		$userName = $userInfoResult['name'] ?? null;
+		$email = $userInfoResult['email'] ?? null;
 
 		// Insert or update user
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
 		if (!isset($payload->{$uidAttribute})) {
 			return new JSONResponse($payload);
 		}
-		$backendUser = $this->userMapper->getOrCreate($providerId, $payload->{$uidAttribute});
+		$backendUser = $this->userMapper->getOrCreate($providerId, $prefUserId ?? $payload->{$uidAttribute});
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
 		// Update displayname
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		if (isset($payload->{$displaynameAttribute})) {
-			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
-
-			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($payload->{$displaynameAttribute});
+		if ($userName) {
+			if ($userName != $backendUser->getDisplayName()) {
+				$newDisplayName = mb_substr($userName, 0, 255);
+				$backendUser->setDisplayName($newDisplayName);
 				$backendUser = $this->userMapper->update($backendUser);
+			}
+		} else {
+			$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+			if (isset($payload->{$displaynameAttribute})) {
+				$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
 
-				//TODO: dispatch event for the update
+				if ($newDisplayName != $backendUser->getDisplayName()) {
+					$backendUser->setDisplayName($payload->{$displaynameAttribute});
+					$backendUser = $this->userMapper->update($backendUser);
+
+					//TODO: dispatch event for the update
+				}
 			}
 		}
 
@@ -270,10 +292,14 @@ class LoginController extends Controller {
 		}
 
 		// Update e-mail
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		if (isset($payload->{$emailAttribute})) {
-			$this->logger->debug('Updating e-mail');
-			$user->setEMailAddress($payload->{$emailAttribute});
+		if ($email) {
+			$user->setEMailAddress($email);
+		} else {
+			$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+			if (isset($payload->{$emailAttribute})) {
+				$this->logger->debug('Updating e-mail');
+				$user->setEMailAddress($payload->{$emailAttribute});
+			}
 		}
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'quota');

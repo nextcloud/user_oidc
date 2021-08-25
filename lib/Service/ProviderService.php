@@ -117,7 +117,7 @@ class ProviderService {
 
 	private function convertToJSON(string $key, $value) {
 		if ($key === self::SETTING_UNIQUE_UID) {
-			$value = $value === '1';
+			return $value === '1';
 		}
 		return (string)$value;
 	}
