@@ -197,15 +197,19 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		// get user info
-
 		// get or create local user from token info
 		$uidAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, 'sub');
 		if (!isset($payload->{$uidAttribute})) {
 			error_log('NO $payload->{$uidAttribute}');
 			return '';
 		}
-		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $payload->{$uidAttribute});
+
+		$prefUserId = $this->providerService->getSetting($provider->getId(), 'uid_' . $payload->{$uidAttribute}, '');
+		if ($prefUserId === '') {
+			$prefUserId = $payload->{$uidAttribute};
+		}
+
+		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $prefUserId);
 
 		return $backendUser->getUserId();
 	}

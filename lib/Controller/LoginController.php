@@ -261,6 +261,7 @@ class LoginController extends Controller {
 		if (!isset($payload->{$uidAttribute})) {
 			return new JSONResponse($payload);
 		}
+		$this->providerService->setSetting($providerId, 'uid_' . $payload->{$uidAttribute}, $prefUserId ?? '');
 		$backendUser = $this->userMapper->getOrCreate($providerId, $prefUserId ?? $payload->{$uidAttribute});
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
