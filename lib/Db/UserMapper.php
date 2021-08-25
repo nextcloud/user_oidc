@@ -91,6 +91,22 @@ class UserMapper extends QBMapper {
 		return $displayNames;
 	}
 
+	public function getByRemoteUserId(string $remoteUserId): array {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('remote_user_id', $qb->createNamedParameter($remoteUserId)));
+
+		$result = $qb->execute();
+		$userIds = [];
+		while ($row = $result->fetch()) {
+			$userIds[] = (string)$row['user_id'];
+		}
+
+		return $userIds;
+	}
+
 	public function userExists(string $uid): bool {
 		try {
 			$this->getUser($uid);

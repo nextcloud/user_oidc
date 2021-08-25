@@ -204,12 +204,14 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		$prefUserId = $this->providerService->getSetting($provider->getId(), 'uid_' . $payload->{$uidAttribute}, '');
-		if ($prefUserId === '') {
-			$prefUserId = $payload->{$uidAttribute};
+		$realUserIds = $this->userMapper->getByRemoteUserId($payload->{$uidAttribute});
+		if (count($realUserIds) === 0) {
+			error_log('NO users matching token "' . $uidAttribute . '" field');
+			return '';
 		}
+		$realUserId = $realUserIds[0];
 
-		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $prefUserId);
+		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $realUserId);
 
 		return $backendUser->getUserId();
 	}
