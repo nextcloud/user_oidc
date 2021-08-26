@@ -186,7 +186,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		// decode the token passed in the request headers
 		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
 		JWT::$leeway = 60;
-		$payload = JWT::decode($headerToken, $jwks, array_keys(JWT::$supported_algs));
+		try {
+			$payload = JWT::decode($headerToken, $jwks, array_keys(JWT::$supported_algs));
+		} catch (\Exception | \Throwable $e) {
+			$this->logger->error('Impossible to decode OIDC token');
+			return '';
+		}
 
 		$prettyToken = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 		$this->logger->debug('Parsed the JWT payload: ' . $prettyToken);
@@ -224,6 +229,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		}
 
 		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
+
+		// update sub
+		// store link between sub and user ID (to allow API requests with token only having 'sub')
+		$backendUser->setSub($sub ?? '');
+		$backendUser = $this->userMapper->update($backendUser);
 
 		// TODO set or update email/name/quota if found in the token
 
