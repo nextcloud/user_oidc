@@ -78,8 +78,8 @@ class SettingsController extends Controller {
 	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null, array $settings = []): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
 
-		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
-			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
+		if ($this->providerService->getProviderByIdentifier($identifier) === null) {
+			return new JSONResponse(['message' => 'Provider with the given identifier does not exist'], Http::STATUS_NOT_FOUND);
 		}
 
 		$provider->setIdentifier($identifier);
