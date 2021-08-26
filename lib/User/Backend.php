@@ -197,21 +197,35 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		// get or create local user from token info
+		// get attribute mapping settings
 		$uidAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, 'sub');
-		if (!isset($payload->{$uidAttribute})) {
-			error_log('NO $payload->{$uidAttribute}');
+		$emailAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$displaynameAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$quotaAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+
+		// get or create local user from token info
+		if (!isset($payload->{$uidAttribute}) && !isset($payload->{'sub'})) {
+			error_log('NO $payload->{' . $uidAttribute . '}');
 			return '';
 		}
+		$sub = $payload->{'sub'} ?? null;
 
-		$realUserIds = $this->userMapper->getByRemoteUserId($payload->{$uidAttribute});
-		if (count($realUserIds) === 0) {
-			error_log('NO users matching token "' . $uidAttribute . '" field');
-			return '';
+		// try to get the user ID from the token
+		$userId = $payload->{$uidAttribute} ?? null;
+
+		// if nothing found in token payload, check if we have something matching the token sub field
+		if (is_null($userId) && !is_null($sub)) {
+			$matchingUserIds = $this->userMapper->getBySub($sub);
+			if (count($matchingUserIds) === 0) {
+				error_log('NO ' . $uidAttribute . ' found in the token and NO user matching token\'s sub');
+				return '';
+			}
+			$userId = $matchingUserIds[0];
 		}
-		$realUserId = $realUserIds[0];
 
-		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $realUserId);
+		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
+
+		// TODO set or update email/name/quota if found in the token
 
 		return $backendUser->getUserId();
 	}
