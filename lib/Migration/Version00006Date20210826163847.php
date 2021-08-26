@@ -12,7 +12,7 @@ use OCP\Migration\SimpleMigrationStep;
 /**
  * Auto-generated migration step: Please modify to your needs!
  */
-class Version00006Date20210825163847 extends SimpleMigrationStep {
+class Version00006Date20210826163847 extends SimpleMigrationStep {
 
 	/**
 	 * @param IOutput $output
@@ -25,7 +25,7 @@ class Version00006Date20210825163847 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		$table = $schema->getTable('user_oidc');
-		$table->addColumn('remote_user_id', 'string', [
+		$table->addColumn('sub', 'string', [
 			'length' => 255,
 			'default' => '',
 			'notnull' => false,

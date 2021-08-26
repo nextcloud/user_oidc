@@ -91,12 +91,12 @@ class UserMapper extends QBMapper {
 		return $displayNames;
 	}
 
-	public function getByRemoteUserId(string $remoteUserId): array {
+	public function getBySub(string $sub): array {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
 			->from($this->getTableName())
-			->where($qb->expr()->eq('remote_user_id', $qb->createNamedParameter($remoteUserId)));
+			->where($qb->expr()->eq('sub', $qb->createNamedParameter($sub)));
 
 		$result = $qb->execute();
 		$userIds = [];
