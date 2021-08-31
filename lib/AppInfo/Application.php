@@ -38,7 +38,7 @@ use OCP\IUserSession;
 
 class Application extends App {
 	public const APP_ID = 'user_oidc';
-	public const OIDC_API_REQ_HEADER = 'oidc';
+	public const OIDC_API_REQ_HEADER = 'Authorization';
 
 	public function __construct(array $urlParams = []) {
 		parent::__construct(self::APP_ID, $urlParams);

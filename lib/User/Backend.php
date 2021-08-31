@@ -35,6 +35,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
+use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\IRequest;
 use OCP\ISession;
@@ -174,70 +175,105 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		// get the JWKS from the provider
-		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
-		$client = $this->clientService->newClient();
-		$result = json_decode($client->get($discovery['jwks_uri'])->getBody(), true);
-		$this->logger->debug('Obtained the jwks');
-
-		$jwks = JWK::parseKeySet($result);
-		$this->logger->debug('Parsed the jwks');
-
-		// decode the token passed in the request headers
-		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
-		JWT::$leeway = 60;
-		try {
-			$payload = JWT::decode($headerToken, $jwks, array_keys(JWT::$supported_algs));
-		} catch (\Exception | \Throwable $e) {
-			$this->logger->error('Impossible to decode OIDC token');
-			return '';
-		}
-
-		$prettyToken = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-		$this->logger->debug('Parsed the JWT payload: ' . $prettyToken);
-
-		// check if the token has expired
-		if ($payload->exp < $this->timeFactory->getTime()) {
-			$this->logger->error('OIDC token has expired');
-			return '';
-		}
-
 		// get attribute mapping settings
 		$uidAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, 'sub');
 		$emailAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$displaynameAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		$quotaAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+		$userId = null;
 
-		// get or create local user from token info
-		if (!isset($payload->{$uidAttribute}) && !isset($payload->{'sub'})) {
-			error_log('NO $payload->{' . $uidAttribute . '}');
+		/*
+		 * try to decode the token
+		 * if valid:
+		 * 		if not expired and we find user ID mapping attr inside:
+		 * 			validate
+		 * 		else:
+		 * 			it might be an access token, try to use it to reach userinfo
+		 * else:
+		 * 		it might be an access token, try to use it to reach userinfo
+		 */
+
+		// get the JWKS from the provider
+		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+		$client = $this->clientService->newClient();
+		$result = json_decode($client->get($discovery['jwks_uri'])->getBody(), true);
+		$this->logger->debug('Obtained the jwks');
+		$jwks = JWK::parseKeySet($result);
+		$this->logger->debug('Parsed the jwks');
+
+		// get the bearer token from headers
+		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
+		$headerToken = preg_replace('/^bearer\s+/i', '', $headerToken);
+		if ($headerToken === '') {
+			$this->logger->error('No Bearer token');
+			error_log('No Bearer token');
 			return '';
 		}
-		$sub = $payload->{'sub'} ?? null;
 
-		// try to get the user ID from the token
-		$userId = $payload->{$uidAttribute} ?? null;
+		// try to decode the bearer token
+		JWT::$leeway = 60;
+		$payload = null;
+		try {
+			$payload = JWT::decode($headerToken, $jwks, array_keys(JWT::$supported_algs));
+		} catch (\Exception | \Throwable $e) {
+			$this->logger->error('Impossible to decode OIDC token');
+			error_log('Impossible to decode OIDC token');
+		}
 
-		// if nothing found in token payload, check if we have something matching the token sub field
-		if (is_null($userId) && !is_null($sub)) {
-			$matchingUserIds = $this->userMapper->getBySub($sub);
-			if (count($matchingUserIds) === 0) {
-				error_log('NO ' . $uidAttribute . ' found in the token and NO user matching token\'s sub');
+		// successfully decoded
+		if (!is_null($payload)) {
+			// $prettyToken = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+
+			// check if the token has expired
+			if ($payload->exp < $this->timeFactory->getTime()) {
+				$this->logger->error('OIDC token has expired');
+				error_log('OIDC token has expired');
 				return '';
 			}
-			$userId = $matchingUserIds[0];
+
+			// find the user ID
+			if (isset($payload->{$uidAttribute})) {
+				$userId = $payload->{$uidAttribute};
+				// TODO get other attributes and update user
+			} else {
+				// this might be an access token
+				error_log('DECODED token: NO $payload->{' . $uidAttribute . '}');
+				$userInfo = $this->getUserinfo($headerToken, $discovery['userinfo_endpoint'], $client);
+				$userId = $userInfo[$uidAttribute] ?? null;
+				error_log('user ID found in userinfo: ' . $userId);
+			}
+		} else {
+			// not decoded, it might be an access token, try userinfo
+			$userInfo = $this->getUserinfo($headerToken, $discovery['userinfo_endpoint'], $client);
+			$userId = $userInfo[$uidAttribute] ?? null;
+			error_log('user ID found in userinfo: ' . $userId);
 		}
+
+		if (is_null($userId)) {
+			$this->logger->error('No user ID found');
+			error_log('No user ID found');
+			return '';
+		}
+		$userId = $userInfo['userid'];
 
 		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
 
-		// update sub
-		// store link between sub and user ID (to allow API requests with token only having 'sub')
-		$backendUser->setSub($sub ?? '');
-		$backendUser = $this->userMapper->update($backendUser);
-
-		// TODO set or update email/name/quota if found in the token
+		// TODO set or update email/name/quota if found
 
 		return $backendUser->getUserId();
+	}
+
+	private function getUserinfo(string $accessToken, string $userinfoUrl, IClient $client): array {
+		$options = [
+			'headers' => [
+				'Authorization' => 'Bearer ' . $accessToken,
+			],
+		];
+		try {
+			return json_decode($client->get($userinfoUrl, $options)->getBody(), true);
+		} catch (\Exception | \Throwable $e) {
+			return [];
+		}
 	}
 
 	private function obtainDiscovery(string $url) {
