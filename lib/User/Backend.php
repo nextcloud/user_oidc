@@ -177,9 +177,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		// get attribute mapping settings
 		$uidAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, 'sub');
-		$emailAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$displaynameAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$quotaAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		$userId = null;
 
 		/*
@@ -234,19 +231,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			// find the user ID
 			if (isset($payload->{$uidAttribute})) {
 				$userId = $payload->{$uidAttribute};
-				// TODO get other attributes and update user
+				error_log('user ID found in decoded token: ' . $userId);
 			} else {
 				// this might be an access token
-				error_log('DECODED token: NO $payload->{' . $uidAttribute . '}');
-				$userInfo = $this->getUserinfo($headerToken, $discovery['userinfo_endpoint'], $client);
-				$userId = $userInfo[$uidAttribute] ?? null;
-				error_log('user ID found in userinfo: ' . $userId);
+				error_log('DECODED token: userId not found, NO $payload->{' . $uidAttribute . '}');
 			}
 		} else {
-			// not decoded, it might be an access token, try userinfo
+			error_log('impossible to decode the token');
+		}
+
+		// if user ID was not found in decoded token OR token couldn't be decoded
+		// the token might be an access token, try userinfo
+		if (is_null($userId)) {
 			$userInfo = $this->getUserinfo($headerToken, $discovery['userinfo_endpoint'], $client);
 			$userId = $userInfo[$uidAttribute] ?? null;
-			error_log('user ID found in userinfo: ' . $userId);
+			error_log('user ID in userinfo: ' . $userId);
 		}
 
 		if (is_null($userId)) {
@@ -254,12 +253,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			error_log('No user ID found');
 			return '';
 		}
-		$userId = $userInfo['userid'];
 
 		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
-
-		// TODO set or update email/name/quota if found
-
 		return $backendUser->getUserId();
 	}
 
