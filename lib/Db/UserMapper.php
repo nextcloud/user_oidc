@@ -91,22 +91,6 @@ class UserMapper extends QBMapper {
 		return $displayNames;
 	}
 
-	public function getBySub(string $sub): array {
-		$qb = $this->db->getQueryBuilder();
-
-		$qb->select('*')
-			->from($this->getTableName())
-			->where($qb->expr()->eq('sub', $qb->createNamedParameter($sub)));
-
-		$result = $qb->execute();
-		$userIds = [];
-		while ($row = $result->fetch()) {
-			$userIds[] = (string)$row['user_id'];
-		}
-
-		return $userIds;
-	}
-
 	public function userExists(string $uid): bool {
 		try {
 			$this->getUser($uid);

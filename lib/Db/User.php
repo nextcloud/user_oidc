@@ -32,8 +32,6 @@ use OCP\AppFramework\Db\Entity;
  * @method void setUserId(string $userId)
  * @method string getDisplayName()
  * @method void setDisplayName(string $displayName)
- * @method string getSub()
- * @method void setSub(string $sub)
  */
 class User extends Entity {
 
@@ -42,9 +40,6 @@ class User extends Entity {
 
 	/** @var string */
 	protected $displayName;
-
-	/** @var string */
-	protected $sub;
 
 	public function __construct() {
 		$this->addType('user_id', 'string');

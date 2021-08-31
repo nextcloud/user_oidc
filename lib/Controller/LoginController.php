@@ -298,11 +298,6 @@ class LoginController extends Controller {
 
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
-		// update sub
-		// store link between sub and user ID (to allow API requests with token only having 'sub')
-		$backendUser->setSub($payload->{'sub'} ?? '');
-		$backendUser = $this->userMapper->update($backendUser);
-
 		// Update displayname
 		if ($userName) {
 			$newDisplayName = mb_substr($userName, 0, 255);
