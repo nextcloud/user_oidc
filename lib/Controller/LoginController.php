@@ -143,21 +143,34 @@ class LoginController extends Controller {
 		$this->session->set(self::PROVIDERID, $providerId);
 		$this->session->close();
 
+		// get attribute mapping settings
+		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => 'openid email profile',
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 			'claims' => json_encode([
+				// more details about requesting claims:
+				// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
 				'id_token' => [
-					'preferred_username' => ['essential' => true],
-					'name' => ['essential' => true],
-					'email' => ['essential' => true],
-					'quota' => ['essential' => true],
+					// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
+					$uidAttribute => ['essential' => true],
+					// null means we want it
+					$emailAttribute => null,
+					$displaynameAttribute => null,
+					$quotaAttribute => null,
 				],
-				//'userinfo' => [
-				//	'preferred_username' => ['essential' => true],
-				//],
+				'userinfo' => [
+					$uidAttribute => ['essential' => true],
+					$emailAttribute => null,
+					$displaynameAttribute => null,
+					$quotaAttribute => null,
+				],
 			]),
 			'state' => $state,
 			'nonce' => $nonce,
@@ -244,6 +257,11 @@ class LoginController extends Controller {
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($payload, JSON_THROW_ON_ERROR));
 		$prettyToken = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 		error_log('DECODED login TOKEN : '.$prettyToken);
+
+		// access token debug
+		$payloadAcc = JWT::decode($data['access_token'], $jwks, array_keys(JWT::$supported_algs));
+		$prettyAccToken = json_encode($payloadAcc, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+		error_log('DECODED access TOKEN : '.$prettyAccToken);
 
 		if ($payload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token has expired');
