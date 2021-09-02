@@ -150,7 +150,7 @@ class LoginController extends Controller {
 			'nonce' => $nonce,
 		];
 		// pass discovery query parameters also on to the authentication
-		$discoveryUrl = parse_url( $provider->getDiscoveryEndpoint());
+		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
 		if (isset($discoveryUrl["query"])) {
 			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl["query"]);
 			$discoveryQuery = [];
@@ -272,7 +272,7 @@ class LoginController extends Controller {
 		// Update displayname
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		if (isset($payload->{$displaynameAttribute})) {
-            $newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
+			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
 		} else {
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
@@ -282,7 +282,7 @@ class LoginController extends Controller {
 		if ($event->hasValue()) {
 			$newDisplayName = $event->getValue();
 			if ($newDisplayName != $backendUser->getDisplayName()) {
-			 	$backendUser->setDisplayName($newDisplayName);
+				$backendUser->setDisplayName($newDisplayName);
 				$backendUser = $this->userMapper->update($backendUser);
 			}
 		}
@@ -292,7 +292,7 @@ class LoginController extends Controller {
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $payload->{$emailAttribute});
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Email dispatched');
-  	    if ($event->hasValue()) {
+		if ($event->hasValue()) {
 			$user->setEMailAddress($event->getValue());
 		}
 
