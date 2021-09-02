@@ -77,44 +77,29 @@ class UpsertProvider extends Command {
 		$outputFormat = $input->getOption('output') ?? 'table';
 
 		$identifier = $input->getArgument('identifier');
+		$clientid = $input->getOption('clientid');
+		$clientsecret = $input->getOption('clientsecret');
+		$discoveryuri = $input->getOption('discoveryuri');
+		$scope = $input->getOption('scope');
+
 		if ($identifier === null) {
 			return $this->listProviders($input, $output);
 		}
 
-		$clientid = $input->getOption('clientid');
-		$clientsecret = $input->getOption('clientsecret');
-		$discoveryuri = $input->getOption('discoveryuri');
-		$scope = $input->getOption('scope') ?? 'openid email profile';
+		// check if any option for updating is provided
+		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
+			return in_array($option, [
+				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
+				'scope', 'unique-uid',
+				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
+			]) && $value !== null;
+		}, ARRAY_FILTER_USE_BOTH);
 
-		try {
-			// check if any option for updating is provided
-			$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
-				return in_array($option, [
-					'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-					'scope', 'unique-uid',
-					'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
-				]) && $value !== null;
-			}, ARRAY_FILTER_USE_BOTH);
-
-			if (count($updateOptions) === 0) {
-				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
-				$provider = $this->providerService->getProviderWithSettings($provider->getId());
-				if ($outputFormat === 'json') {
-					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
-					return 0;
-				}
-
-				if ($outputFormat === 'json_pretty') {
-					$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
-					return 0;
-				}
-
-				$provider['settings'][ProviderService::SETTING_UNIQUE_UID] = $provider['settings'][ProviderService::SETTING_UNIQUE_UID] ? '1' : '0';
-				$provider['settings'] = json_encode($provider['settings']);
-				$table = new Table($output);
-				$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID', 'Advanced settings']);
-				$table->addRow($provider);
-				$table->render();
+		if (count($updateOptions) === 0) {
+			$provider = $this->providerMapper->findProviderByIdentifier($identifier);
+			$provider = $this->providerService->getProviderWithSettings($provider->getId());
+			if ($outputFormat === 'json') {
+				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
 				return 0;
 			}
 
@@ -138,8 +123,9 @@ class UpsertProvider extends Command {
 			$clientsecret = $clientsecret ?? $provider->getClientSecret();
 			$discoveryuri = $discoveryuri ?? $provider->getDiscoveryEndpoint();
 		}
+		$scope = $scope ?? 'openid email profile';
 		try {
-			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri);
+			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope);
 		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
 			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return -1;
