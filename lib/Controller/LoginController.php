@@ -281,7 +281,7 @@ class LoginController extends Controller {
 			$user->setEMailAddress($payload->{$emailAttribute});
 		}
 
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'quota');
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		if (isset($payload->{$quotaAttribute})) {
 			$user->setQuota($payload->{$quotaAttribute});
 		}
