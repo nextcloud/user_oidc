@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\Event\AttributeMappedEvent;
+use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
@@ -172,7 +173,7 @@ class LoginController extends Controller {
 		}
 
 		//TODO verify discovery
-		
+
 		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
 		$this->logger->debug('Redirecting user to: ' . $url);
 
@@ -219,6 +220,7 @@ class LoginController extends Controller {
 		);
 
 		$data = json_decode($result->getBody(), true);
+		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
 		// Obtain jwks
 		$client = $this->clientService->newClient();
