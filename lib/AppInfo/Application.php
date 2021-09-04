@@ -102,7 +102,6 @@ class Application extends App {
 					'href' => $urlGenerator->linkToRoute(self::APP_ID . '.id4me.login'),
 				]);
 			}
-			return;
 		}
 	}
 }
