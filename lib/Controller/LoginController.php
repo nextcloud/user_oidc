@@ -1,5 +1,7 @@
 <?php
 
+/** @noinspection AdditionOperationOnArraysInspection */
+
 declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
@@ -27,8 +29,8 @@ namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
+use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
-use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
@@ -90,10 +92,14 @@ class LoginController extends Controller {
 	/** @var ProviderService */
 	private $providerService;
 
+	/** @var DiscoveryService */
+	private $discoveryService;
+
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
 		ProviderService $providerService,
+		DiscoveryService $discoveryService,
 		ISecureRandom $random,
 		ISession $session,
 		IClientService $clientService,
@@ -110,6 +116,7 @@ class LoginController extends Controller {
 		$this->random = $random;
 		$this->session = $session;
 		$this->clientService = $clientService;
+		$this->discoveryService = $discoveryService;
 		$this->urlGenerator = $urlGenerator;
 		$this->userMapper = $userMapper;
 		$this->userSession = $userSession;
@@ -184,7 +191,7 @@ class LoginController extends Controller {
 		}
 
 		try {
-			$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
 			$this->logger->error('Could not reach provider at URL ' . $provider->getDiscoveryEndpoint());
 			$response = new Http\TemplateResponse('', 'error', [
@@ -225,7 +232,7 @@ class LoginController extends Controller {
 		$providerId = (int)$this->session->get(self::PROVIDERID);
 		$provider = $this->providerMapper->getProvider($providerId);
 
-		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
 
@@ -247,24 +254,12 @@ class LoginController extends Controller {
 		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
-		// Obtain jwks
-		$client = $this->clientService->newClient();
-		$result = json_decode($client->get($discovery['jwks_uri'])->getBody(), true);
-		$this->logger->debug('Obtained the jwks');
-
-		$jwks = JWK::parseKeySet($result);
-		$this->logger->debug('Parsed the jwks');
-
 		// TODO: proper error handling
+		$jwks = $this->discoveryService->obtainJWK($provider);
 		JWT::$leeway = 60;
 		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($payload, JSON_THROW_ON_ERROR));
-
-		// access token debug
-		$payloadAcc = JWT::decode($data['access_token'], $jwks, array_keys(JWT::$supported_algs));
-		$prettyAccToken = json_encode($payloadAcc, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-		error_log('DECODED access TOKEN : '.$prettyAccToken);
 
 		if ($payload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
@@ -298,6 +293,7 @@ class LoginController extends Controller {
 		$quota = $payload->{$quotaAttribute} ?? null;
 
 		// if something is missing from the token, get user info from /userinfo endpoint
+		// FIXME: only when attribute mapping is set or optional
 		if (is_null($userId) || is_null($userName) || is_null($email) || is_null($quota)) {
 			$options = [
 				'headers' => [
@@ -371,16 +367,5 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
-	}
-
-	private function obtainDiscovery(string $url) {
-		$client = $this->clientService->newClient();
-
-		$this->logger->debug('Obtaining discovery endpoint: ' . $url);
-		$response = $client->get($url);
-
-		//TODO handle failures gracefull
-		$body = json_decode($response->getBody(), true);
-		return $body;
 	}
 }

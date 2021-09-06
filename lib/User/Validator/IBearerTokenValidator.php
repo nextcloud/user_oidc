@@ -23,38 +23,18 @@
 
 declare(strict_types=1);
 
-namespace OCA\UserOIDC\Event;
+namespace OCA\UserOIDC\User\Validator;
 
 use OCA\UserOIDC\Db\Provider;
-use OCP\EventDispatcher\Event;
 
-/**
- * This event is emitted with the raw token information that is returned to the code endpoint
- *
- * It may be used for further handling of oidc authenticated requests
- */
-class TokenObtainedEvent extends Event {
-	private $token;
-	private $provider;
-	private $discovery;
+interface IBearerTokenValidator {
 
-	public function __construct(array $token, $provider, $discovery) {
-		parent::__construct();
-
-		$this->token = $token;
-		$this->provider = $provider;
-		$this->discovery = $discovery;
-	}
-
-	public function getToken(): array {
-		return $this->token;
-	}
-
-	public function getProvider(): Provider {
-		return $this->provider;
-	}
-
-	public function getDiscovery(): array {
-		return $this->discovery;
-	}
+	/**
+	 * Validate the passed token and return the matched user id if found
+	 *
+	 * @param Provider $provider
+	 * @param string $bearerToken
+	 * @return string|null user id or null if the token was not valid
+	 */
+	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string;
 }
