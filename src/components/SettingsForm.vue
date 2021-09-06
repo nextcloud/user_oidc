@@ -95,6 +95,12 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'By default every user will get a unique userid that is a hashed value of the provider and user id. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then.') }}
 		</p>
+		<CheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
+			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
+		</CheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Do you want to allow API calls and WebDav request that are authenticated with an OIDC ID token or access token?') }}
+		</p>
 		<input type="button" :value="t('user_oidc', 'Cancel')" @click="$emit('cancel')">
 		<input type="submit" :value="submitText">
 	</form>
