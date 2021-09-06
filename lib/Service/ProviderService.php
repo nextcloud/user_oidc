@@ -35,6 +35,7 @@ use OCP\IConfig;
 class ProviderService {
 	public const SETTING_UNIQUE_UID = 'uniqueUid';
 	public const SETTING_MAPPING_UID = 'mappingUid';
+	public const SETTING_MAPPING_UID_DEFAULT = 'sub';
 	public const SETTING_MAPPING_DISPLAYNAME = 'mappingDisplayName';
 	public const SETTING_MAPPING_EMAIL = 'mappingEmail';
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
