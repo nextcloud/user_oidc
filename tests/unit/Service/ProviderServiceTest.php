@@ -81,6 +81,7 @@ class ProviderServiceTest extends TestCase {
 					'mappingQuota' => '1',
 					'mappingUid' => '1',
 					'uniqueUid' => true,
+					'checkBearer' => true,
 				],
 			],
 			[
@@ -95,6 +96,7 @@ class ProviderServiceTest extends TestCase {
 					'mappingQuota' => '1',
 					'mappingUid' => '1',
 					'uniqueUid' => true,
+					'checkBearer' => true,
 				],
 			],
 		], $this->providerService->getProvidersWithSettings());
@@ -106,7 +108,8 @@ class ProviderServiceTest extends TestCase {
 			'mappingEmail' => 'mail',
 			'mappingQuota' => '1g',
 			'mappingUid' => 'uid',
-			'uniqueUid' => '1',
+			'uniqueUid' => true,
+			'checkBearer' => false,
 		];
 		$this->config->expects(self::any())
 			->method('getAppValue')
@@ -116,6 +119,7 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_QUOTA, '', '1g'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_UID, '', 'uid'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_UNIQUE_UID, '', '1'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_CHECK_BEARER, '', '0'],
 			]);
 
 		Assert::assertEquals(
@@ -126,6 +130,11 @@ class ProviderServiceTest extends TestCase {
 		Assert::assertEquals(
 			array_merge($defaults, ['uniqueUid' => '0']),
 			$this->providerService->setSettings(1, [ProviderService::SETTING_UNIQUE_UID => '0'])
+		);
+
+		Assert::assertEquals(
+			array_merge($defaults, ['checkBearer' => '1']),
+			$this->providerService->setSettings(1, [ProviderService::SETTING_CHECK_BEARER => '1'])
 		);
 	}
 
@@ -171,6 +180,10 @@ class ProviderServiceTest extends TestCase {
 			[ProviderService::SETTING_UNIQUE_UID, true, '1', true],
 			[ProviderService::SETTING_UNIQUE_UID, false, '0', false],
 			[ProviderService::SETTING_UNIQUE_UID, 'test', '1', true],
+			// Setting check bearer is a boolean
+			[ProviderService::SETTING_CHECK_BEARER, true, '1', true],
+			[ProviderService::SETTING_CHECK_BEARER, false, '0', false],
+			[ProviderService::SETTING_CHECK_BEARER, 'test', '1', true],
 			// Any other values are just strings
 			[ProviderService::SETTING_MAPPING_EMAIL, false, '', false],
 			[ProviderService::SETTING_MAPPING_EMAIL, true, '1', true],

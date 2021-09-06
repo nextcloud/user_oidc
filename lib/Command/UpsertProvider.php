@@ -58,6 +58,7 @@ class UpsertProvider extends Command {
 
 			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"')
 			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable.')
+			->addOption('check-bearer', null, InputOption::VALUE_OPTIONAL, 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable.')
 			->addOption('mapping-display-name', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the display name')
 			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
 			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
@@ -90,7 +91,7 @@ class UpsertProvider extends Command {
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
 				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-				'scope', 'unique-uid',
+				'scope', 'unique-uid', 'check-bearer',
 				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
@@ -129,6 +130,9 @@ class UpsertProvider extends Command {
 		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
 			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return -1;
+		}
+		if (($checkBearer = $input->getOption('check-bearer')) !== null) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, (string)$checkBearer === '0' ? '0' : '1');
 		}
 		if (($uniqueUid = $input->getOption('unique-uid')) !== null) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_UNIQUE_UID, (string)$uniqueUid === '0' ? '0' : '1');

@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\User;
 
+use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCA\UserOIDC\AppInfo\Application;
@@ -53,15 +54,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	private $request;
 	/** @var ProviderMapper */
 	private $providerMapper;
+	/**
+	 * @var ProviderService
+	 */
+	private $providerService;
 
 	public function __construct(UserMapper $userMapper,
 								LoggerInterface $logger,
 								IRequest $request,
-								ProviderMapper $providerMapper) {
+								ProviderMapper $providerMapper,
+								ProviderService $providerService) {
 		$this->userMapper = $userMapper;
 		$this->logger = $logger;
 		$this->request = $request;
 		$this->providerMapper = $providerMapper;
+		$this->providerService = $providerService;
 	}
 
 	public function getBackendName(): string {
@@ -144,6 +151,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			$provider = $providers[0];
 		} else {
 			$this->logger->error('no OIDC providers');
+			return '';
+		}
+
+		if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, '0') !== '1') {
+			$this->logger->debug('Bearer token check is disabled for provider ' . $provider->getId());
 			return '';
 		}
 
