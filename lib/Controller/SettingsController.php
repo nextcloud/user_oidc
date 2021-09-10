@@ -58,7 +58,8 @@ class SettingsController extends Controller {
 		$this->providerService = $providerService;
 	}
 
-	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint, array $settings = []): JSONResponse {
+	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
+								   array $settings = [], string $scope = "openid email profile"): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
 		}
@@ -68,6 +69,7 @@ class SettingsController extends Controller {
 		$provider->setClientId($clientId);
 		$provider->setClientSecret($clientSecret);
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
+		$provider->setScope($scope);
 		$provider = $this->providerMapper->insert($provider);
 
 		$providerSettings = $this->providerService->setSettings($provider->getId(), $settings);
@@ -75,7 +77,8 @@ class SettingsController extends Controller {
 		return new JSONResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
 
-	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null, array $settings = []): JSONResponse {
+	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null,
+								   array $settings = [], string $scope = "openid email profile"): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
 
 		if ($this->providerService->getProviderByIdentifier($identifier) === null) {
@@ -88,7 +91,7 @@ class SettingsController extends Controller {
 			$provider->setClientSecret($clientSecret);
 		}
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
-
+		$provider->setScope($scope);
 		$provider = $this->providerMapper->update($provider);
 
 		$providerSettings = $this->providerService->setSettings($providerId, $settings);

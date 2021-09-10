@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use OCA\UserOIDC\Event\AttributeMappedEvent;
+use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
@@ -36,8 +38,8 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
-use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
@@ -78,17 +80,14 @@ class LoginController extends Controller {
 
 	/** @var ProviderMapper */
 	private $providerMapper;
-	/**
-	 * @var ILogger
-	 */
+
+	/** @var IEventDispatcher */
+	private $eventDispatcher;
+
+	/** @var ILogger */
 	private $logger;
-	/**
-	 * @var IConfig
-	 */
-	private $config;
-	/**
-	 * @var ProviderService
-	 */
+
+	/** @var ProviderService */
 	private $providerService;
 
 	public function __construct(
@@ -103,7 +102,7 @@ class LoginController extends Controller {
 		IUserSession $userSession,
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
-		IConfig $config,
+		IEventDispatcher $eventDispatcher,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -116,9 +115,9 @@ class LoginController extends Controller {
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
-		$this->config = $config;
 		$this->providerMapper = $providerMapper;
 		$this->providerService = $providerService;
+		$this->eventDispatcher = $eventDispatcher;
 		$this->logger = $logger;
 	}
 
@@ -146,11 +145,19 @@ class LoginController extends Controller {
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
-			'scope' => 'openid email profile',
+			'scope' => $provider->getScope(),
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
+		// pass discovery query parameters also on to the authentication
+		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
+		if (isset($discoveryUrl["query"])) {
+			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl["query"]);
+			$discoveryQuery = [];
+			parse_str($discoveryUrl["query"], $discoveryQuery);
+			$data += $discoveryQuery;
+		}
 
 		try {
 			$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
@@ -213,6 +220,7 @@ class LoginController extends Controller {
 		);
 
 		$data = json_decode($result->getBody(), true);
+		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
 		// Obtain jwks
 		$client = $this->clientService->newClient();
@@ -229,7 +237,7 @@ class LoginController extends Controller {
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($payload, JSON_THROW_ON_ERROR));
 
 		if ($payload->exp < $this->timeFactory->getTime()) {
-			$this->logger->debug('Toklen has expired');
+			$this->logger->debug('Token expired');
 			// TODO: error properly
 			return new JSONResponse(['token expired']);
 		}
@@ -249,41 +257,53 @@ class LoginController extends Controller {
 
 		// Insert or update user
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		if (!isset($payload->{$uidAttribute})) {
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $payload->{$uidAttribute});
+		$this->eventDispatcher->dispatchTyped($event);
+		if (!$event->hasValue()) {
 			return new JSONResponse($payload);
 		}
-		$backendUser = $this->userMapper->getOrCreate($providerId, $payload->{$uidAttribute});
 
+		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
 		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
-
-		// Update displayname
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		if (isset($payload->{$displaynameAttribute})) {
-			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
-
-			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($payload->{$displaynameAttribute});
-				$backendUser = $this->userMapper->update($backendUser);
-
-				//TODO: dispatch event for the update
-			}
-		}
 
 		$user = $this->userManager->get($backendUser->getUserId());
 		if ($user === null) {
 			return new JSONResponse(['Failed to provision user']);
 		}
 
+		// Update displayname
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		if (isset($payload->{$displaynameAttribute})) {
+			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
+		} else {
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
+		}
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Displayname dispatched');
+		if ($event->hasValue()) {
+			$newDisplayName = $event->getValue();
+			if ($newDisplayName != $backendUser->getDisplayName()) {
+				$backendUser->setDisplayName($newDisplayName);
+				$backendUser = $this->userMapper->update($backendUser);
+			}
+		}
+
 		// Update e-mail
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		if (isset($payload->{$emailAttribute})) {
-			$this->logger->debug('Updating e-mail');
-			$user->setEMailAddress($payload->{$emailAttribute});
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $payload->{$emailAttribute});
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Email dispatched');
+		if ($event->hasValue()) {
+			$user->setEMailAddress($event->getValue());
 		}
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		if (isset($payload->{$quotaAttribute})) {
-			$user->setQuota($payload->{$quotaAttribute});
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $payload->{$quotaAttribute});
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Quota dispatched');
+		if ($event->hasValue()) {
+			$user->setQuota($event->getValue());
 		}
 
 		$this->logger->debug('Logging user in');

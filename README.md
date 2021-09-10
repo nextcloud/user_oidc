@@ -76,9 +76,18 @@ The app uses [krankerl](https://github.com/ChristophWurst/krankerl) to build the
 The release will be put into `build/artifacts/` when running the `krankerl package`.
 
 The app can also be built without krankerl by manually running:
-
 ```
 composer install --no-dev -o
-npm install
+npm ci
 npm run build
 ```
+
+On Ubuntu 20.04, a possible way to get build working is with matching npm and node versions is:
+```
+sudo apt-get remove nodejs
+sudo curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - 
+sudo apt-get install nodejs
+sudo npm install -g npm@7
+```
+
+

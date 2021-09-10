@@ -36,6 +36,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setClientSecret(string $clientSecret)
  * @method string getDiscoveryEndpoint()
  * @method void setDiscoveryEndpoint(string $discoveryEndpoint)
+ * @method string getScope()
+ * @method void setScope(string $scope)
  */
 class Provider extends Entity implements \JsonSerializable {
 
@@ -51,12 +53,16 @@ class Provider extends Entity implements \JsonSerializable {
 	/** @var string */
 	protected $discoveryEndpoint;
 
+	/** @var string */
+	protected $scope;
+
 	public function jsonSerialize() {
 		return [
 			'id' => $this->id,
 			'identifier' => $this->identifier,
 			'clientId' => $this->clientId,
 			'discoveryEndpoint' => $this->discoveryEndpoint,
+			'scope' => $this->scope,
 		];
 	}
 }
