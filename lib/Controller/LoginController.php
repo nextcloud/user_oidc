@@ -1,5 +1,7 @@
 <?php
 
+/** @noinspection AdditionOperationOnArraysInspection */
+
 declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
@@ -27,8 +29,8 @@ namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
+use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
-use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
@@ -90,10 +92,14 @@ class LoginController extends Controller {
 	/** @var ProviderService */
 	private $providerService;
 
+	/** @var DiscoveryService */
+	private $discoveryService;
+
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
 		ProviderService $providerService,
+		DiscoveryService $discoveryService,
 		ISecureRandom $random,
 		ISession $session,
 		IClientService $clientService,
@@ -110,6 +116,7 @@ class LoginController extends Controller {
 		$this->random = $random;
 		$this->session = $session;
 		$this->clientService = $clientService;
+		$this->discoveryService = $discoveryService;
 		$this->urlGenerator = $urlGenerator;
 		$this->userMapper = $userMapper;
 		$this->userSession = $userSession;
@@ -142,11 +149,35 @@ class LoginController extends Controller {
 		$this->session->set(self::PROVIDERID, $providerId);
 		$this->session->close();
 
+		// get attribute mapping settings
+		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => $provider->getScope(),
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
+			'claims' => json_encode([
+				// more details about requesting claims:
+				// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
+				'id_token' => [
+					// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
+					$uidAttribute => ['essential' => true],
+					// null means we want it
+					$emailAttribute => null,
+					$displaynameAttribute => null,
+					$quotaAttribute => null,
+				],
+				'userinfo' => [
+					$uidAttribute => ['essential' => true],
+					$emailAttribute => null,
+					$displaynameAttribute => null,
+					$quotaAttribute => null,
+				],
+			]),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
@@ -160,7 +191,7 @@ class LoginController extends Controller {
 		}
 
 		try {
-			$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
 			$this->logger->error('Could not reach provider at URL ' . $provider->getDiscoveryEndpoint());
 			$response = new Http\TemplateResponse('', 'error', [
@@ -201,7 +232,7 @@ class LoginController extends Controller {
 		$providerId = (int)$this->session->get(self::PROVIDERID);
 		$provider = $this->providerMapper->getProvider($providerId);
 
-		$discovery = $this->obtainDiscovery($provider->getDiscoveryEndpoint());
+		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
 
@@ -220,17 +251,11 @@ class LoginController extends Controller {
 		);
 
 		$data = json_decode($result->getBody(), true);
+		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
-		// Obtain jwks
-		$client = $this->clientService->newClient();
-		$result = json_decode($client->get($discovery['jwks_uri'])->getBody(), true);
-		$this->logger->debug('Obtained the jwks');
-
-		$jwks = JWK::parseKeySet($result);
-		$this->logger->debug('Parsed the jwks');
-
 		// TODO: proper error handling
+		$jwks = $this->discoveryService->obtainJWK($provider);
 		JWT::$leeway = 60;
 		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
@@ -250,14 +275,39 @@ class LoginController extends Controller {
 		}
 
 		if (isset($payload->nonce) && $payload->nonce !== $this->session->get(self::NONCE)) {
-			$this->logger->debug('Nonce does nto match');
+			$this->logger->debug('Nonce does not match');
 			// TODO: error properly
-			return new JSONResponse(['inavlid nonce']);
+			return new JSONResponse(['invalid nonce']);
 		}
 
-		// Insert or update user
+		// get attribute mapping settings
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $payload->{$uidAttribute});
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+
+		// try to get id/name/email information from the token itself
+		$userId = $payload->{$uidAttribute} ?? null;
+		$userName = $payload->{$displaynameAttribute} ?? null;
+		$email = $payload->{$emailAttribute} ?? null;
+		$quota = $payload->{$quotaAttribute} ?? null;
+
+		// if something is missing from the token, get user info from /userinfo endpoint
+		// FIXME: only when attribute mapping is set or optional
+		if (is_null($userId) || is_null($userName) || is_null($email) || is_null($quota)) {
+			$options = [
+				'headers' => [
+					'Authorization' => 'Bearer ' . $data['access_token'],
+				],
+			];
+			$userInfoResult = json_decode($client->get($discovery['userinfo_endpoint'], $options)->getBody(), true);
+			$userId = $userId ?? $userInfoResult[$uidAttribute] ?? null;
+			$userName = $userName ?? $userInfoResult[$displaynameAttribute] ?? null;
+			$email = $email ?? $userInfoResult[$emailAttribute] ?? null;
+			$quota = $quota ?? $userInfoResult[$quotaAttribute] ?? null;
+		}
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $userId);
 		$this->eventDispatcher->dispatchTyped($event);
 		if (!$event->hasValue()) {
 			return new JSONResponse($payload);
@@ -272,9 +322,8 @@ class LoginController extends Controller {
 		}
 
 		// Update displayname
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		if (isset($payload->{$displaynameAttribute})) {
-			$newDisplayName = mb_substr($payload->{$displaynameAttribute}, 0, 255);
+		if (isset($userName)) {
+			$newDisplayName = mb_substr($userName, 0, 255);
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
 		} else {
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
@@ -290,16 +339,14 @@ class LoginController extends Controller {
 		}
 
 		// Update e-mail
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $payload->{$emailAttribute});
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $email);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Email dispatched');
 		if ($event->hasValue()) {
 			$user->setEMailAddress($event->getValue());
 		}
 
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $payload->{$quotaAttribute});
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $quota);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Quota dispatched');
 		if ($event->hasValue()) {
@@ -320,16 +367,5 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
-	}
-
-	private function obtainDiscovery(string $url) {
-		$client = $this->clientService->newClient();
-
-		$this->logger->debug('Obtaining discovery endpoint: ' . $url);
-		$response = $client->get($url);
-
-		//TODO handle failures gracefull
-		$body = json_decode($response->getBody(), true);
-		return $body;
 	}
 }

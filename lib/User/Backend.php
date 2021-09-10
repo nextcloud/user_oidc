@@ -25,25 +25,50 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\User;
 
+use OCA\UserOIDC\Service\ProviderService;
+use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
+use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
+use OCP\IRequest;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
 use Psr\Log\LoggerInterface;
 
-class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend {
+class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend {
+	private $tokenValidators = [
+		SelfEncodedValidator::class,
+		UserInfoValidator::class,
+	];
 
 	/** @var UserMapper */
 	private $userMapper;
 	/** @var LoggerInterface */
 	private $logger;
+	/** @var IRequest */
+	private $request;
+	/** @var ProviderMapper */
+	private $providerMapper;
+	/**
+	 * @var ProviderService
+	 */
+	private $providerService;
 
-	public function __construct(UserMapper $userMapper, LoggerInterface $logger) {
+	public function __construct(UserMapper $userMapper,
+								LoggerInterface $logger,
+								IRequest $request,
+								ProviderMapper $providerMapper,
+								ProviderService $providerService) {
 		$this->userMapper = $userMapper;
 		$this->logger = $logger;
+		$this->request = $request;
+		$this->providerMapper = $providerMapper;
+		$this->providerService = $providerService;
 	}
 
 	public function getBackendName(): string {
@@ -91,5 +116,72 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 	public function canConfirmPassword(string $uid): bool {
 		return false;
+	}
+
+	/**
+	 * In case the user has been authenticated by Apache true is returned.
+	 *
+	 * @return boolean whether Apache reports a user as currently logged in.
+	 * @since 6.0.0
+	 */
+	public function isSessionActive() {
+		// if this returns true, getCurrentUserId is called
+		// not sure if we should rather to the validation in here as otherwise it might fail for other backends or bave other side effects
+		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
+		return $headerToken !== '';
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getLogoutUrl() {
+		return '';
+	}
+
+	/**
+	 * Return the id of the current user
+	 * @return string
+	 * @since 6.0.0
+	 */
+	public function getCurrentUserId() {
+		// get the first provider
+		// TODO make sure this fits our needs and there never is more than one provider
+		$providers = $this->providerMapper->getProviders();
+		if (count($providers) > 0) {
+			$provider = $providers[0];
+		} else {
+			$this->logger->error('no OIDC providers');
+			return '';
+		}
+
+		if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, '0') !== '1') {
+			$this->logger->debug('Bearer token check is disabled for provider ' . $provider->getId());
+			return '';
+		}
+
+		// get the bearer token from headers
+		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
+		$headerToken = preg_replace('/^bearer\s+/i', '', $headerToken);
+		if ($headerToken === '') {
+			$this->logger->error('No Bearer token');
+			return '';
+		}
+
+		$userId = null;
+		// find user id through different token validation methods
+		foreach ($this->tokenValidators as $validatorClass) {
+			$validator = \OC::$server->get($validatorClass);
+			$userId = $validator->isValidBearerToken($provider, $headerToken);
+			if ($userId) {
+				break;
+			}
+		}
+
+		if ($userId === null) {
+			$this->logger->error('Could not find unique token validation');
+			return '';
+		}
+		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
+		return $backendUser->getUserId();
 	}
 }

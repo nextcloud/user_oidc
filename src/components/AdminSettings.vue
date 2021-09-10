@@ -141,6 +141,7 @@ export default {
 				discoveryEndpoint: '',
 				settings: {
 					uniqueUid: true,
+					checkBearer: false,
 				},
 			},
 			showNewProvider: false,
