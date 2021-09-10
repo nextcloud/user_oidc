@@ -3,8 +3,8 @@
   xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>user_oidc</id>
 	<name>OpenID Connect user backend</name>
-	<summary>Use an OpenID Connect backed to login to your Nextcloud</summary>
-	<description>Allows felxible configuration of an OIDC server as Nextcloud login user backend.</description>
+	<summary>Use an OpenID Connect backend to login to your Nextcloud</summary>
+	<description>Allows flexible configuration of an OIDC server as Nextcloud login user backend.</description>
 	<version>1.1.0-dev1</version>
 	<licence>agpl</licence>
 	<author>Roeland Jago Douma</author>

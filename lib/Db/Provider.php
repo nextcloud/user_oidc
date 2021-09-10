@@ -38,8 +38,6 @@ use OCP\AppFramework\Db\Entity;
  * @method void setDiscoveryEndpoint(string $discoveryEndpoint)
  * @method string getScope()
  * @method void setScope(string $scope)
- * @method string getCustomQuery()
- * @method void setCustomQuery(string $customQuery)
  */
 class Provider extends Entity implements \JsonSerializable {
 
