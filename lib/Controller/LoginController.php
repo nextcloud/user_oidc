@@ -40,6 +40,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OC\Authentication\Token\DefaultTokenProvider;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\ILogger;
@@ -356,8 +357,20 @@ class LoginController extends Controller {
 		$this->logger->debug('Logging user in');
 
 		$this->userSession->setUser($user);
-		$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
+		
+		$this->userSession->getSession()->regenerateId();
+		$tokenProvider = \OC::$server->query(DefaultTokenProvider::class);
+		$this->userSession->setTokenProvider($tokenProvider);
+		
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
+		
+		$token = $tokenProvider->getToken($this->userSession->getSession()->getId());
+
+		$this->userSession->completeLogin($user, [
+			'loginName' => $user->getUID(),
+			'password' => '',
+			'token' => $token,
+		], false);
 
 		$this->logger->debug('Redirecting user');
 
