@@ -155,29 +155,34 @@ class LoginController extends Controller {
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 
+		$claims = [
+			// more details about requesting claims:
+			// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
+			'id_token' => [
+				// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
+				// null means we want it
+				$emailAttribute => null,
+				$displaynameAttribute => null,
+				$quotaAttribute => null,
+			],
+			'userinfo' => [
+				$emailAttribute => null,
+				$displaynameAttribute => null,
+				$quotaAttribute => null,
+			],
+		];
+
+		if ($uidAttribute !== 'sub') {
+			$claims['id_token'][$uidAttribute] = ['essential' => true];
+			$claims['userinfo'][$uidAttribute] = ['essential' => true];
+		}
+
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => $provider->getScope(),
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
-			'claims' => json_encode([
-				// more details about requesting claims:
-				// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
-				'id_token' => [
-					// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
-					$uidAttribute => ['essential' => true],
-					// null means we want it
-					$emailAttribute => null,
-					$displaynameAttribute => null,
-					$quotaAttribute => null,
-				],
-				'userinfo' => [
-					$uidAttribute => ['essential' => true],
-					$emailAttribute => null,
-					$displaynameAttribute => null,
-					$quotaAttribute => null,
-				],
-			]),
+			'claims' => json_encode($claims),
 			'state' => $state,
 			'nonce' => $nonce,
 		];
@@ -216,8 +221,15 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function code($state = '', $code = '', $scope = '') {
+	public function code($state = '', $code = '', $scope = '', $error = '', $error_description = '') {
 		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
+
+		if ($error !== '') {
+			return new JSONResponse([
+				'error' => $error,
+				'error_description' => $error_description,
+			], Http::STATUS_FORBIDDEN);
+		}
 
 		if ($this->session->get(self::STATE) !== $state) {
 			$this->logger->debug('state does not match');
