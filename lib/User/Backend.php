@@ -27,12 +27,14 @@ namespace OCA\UserOIDC\User;
 
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
+use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
+use OCP\IConfig;
 use OCP\IRequest;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\IGetDisplayNameBackend;
@@ -42,6 +44,7 @@ use Psr\Log\LoggerInterface;
 class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend {
 	private $tokenValidators = [
 		SelfEncodedValidator::class,
+		UserInfoValidator::class,
 	];
 
 	/** @var UserMapper */
@@ -56,12 +59,18 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @var ProviderService
 	 */
 	private $providerService;
+	/**
+	 * @var IConfig
+	 */
+	private $config;
 
-	public function __construct(UserMapper $userMapper,
+	public function __construct(IConfig $config,
+								UserMapper $userMapper,
 								LoggerInterface $logger,
 								IRequest $request,
 								ProviderMapper $providerMapper,
 								ProviderService $providerService) {
+		$this->config = $config;
 		$this->userMapper = $userMapper;
 		$this->logger = $logger;
 		$this->request = $request;
@@ -166,6 +175,14 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		}
 
 		$userId = null;
+
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		if (!isset($oidcSystemConfig['userinfo_bearer_validation']) || !$oidcSystemConfig['userinfo_bearer_validation']) {
+			if (($key = array_search(UserInfoValidator::class, $this->tokenValidators)) !== false) {
+				unset($this->tokenValidators[$key]);
+			}
+		}
+
 		// find user id through different token validation methods
 		foreach ($this->tokenValidators as $validatorClass) {
 			$validator = \OC::$server->get($validatorClass);
