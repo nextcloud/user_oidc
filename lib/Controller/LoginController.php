@@ -304,21 +304,6 @@ class LoginController extends Controller {
 		$email = $payload->{$emailAttribute} ?? null;
 		$quota = $payload->{$quotaAttribute} ?? null;
 
-		// if something is missing from the token, get user info from /userinfo endpoint
-		// FIXME: only when attribute mapping is set or optional
-		if (is_null($userId) || is_null($userName) || is_null($email) || is_null($quota)) {
-			$options = [
-				'headers' => [
-					'Authorization' => 'Bearer ' . $data['access_token'],
-				],
-			];
-			$userInfoResult = json_decode($client->get($discovery['userinfo_endpoint'], $options)->getBody(), true);
-			$userId = $userId ?? $userInfoResult[$uidAttribute] ?? null;
-			$userName = $userName ?? $userInfoResult[$displaynameAttribute] ?? null;
-			$email = $email ?? $userInfoResult[$emailAttribute] ?? null;
-			$quota = $quota ?? $userInfoResult[$quotaAttribute] ?? null;
-		}
-
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $userId);
 		$this->eventDispatcher->dispatchTyped($event);
 		if (!$event->hasValue()) {

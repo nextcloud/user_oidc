@@ -27,7 +27,6 @@ namespace OCA\UserOIDC\User;
 
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
-use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
@@ -43,7 +42,6 @@ use Psr\Log\LoggerInterface;
 class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend {
 	private $tokenValidators = [
 		SelfEncodedValidator::class,
-		UserInfoValidator::class,
 	];
 
 	/** @var UserMapper */
