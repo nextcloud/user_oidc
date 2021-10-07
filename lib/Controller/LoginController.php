@@ -149,32 +149,45 @@ class LoginController extends Controller {
 		$this->session->set(self::PROVIDERID, $providerId);
 		$this->session->close();
 
-		// get attribute mapping settings
-		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+		$customClaimAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_CUSTOM_CLAIM_ATTRIBUTE, '');
 
-		$claims = [
-			// more details about requesting claims:
-			// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
-			'id_token' => [
-				// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
-				// null means we want it
-				$emailAttribute => null,
-				$displaynameAttribute => null,
-				$quotaAttribute => null,
-			],
-			'userinfo' => [
-				$emailAttribute => null,
-				$displaynameAttribute => null,
-				$quotaAttribute => null,
-			],
-		];
+		if ($customClaimAttribute) {
+			$claims = [
+				'id_token' => [
+					$customClaimAttribute => null,
+				],
+				'userinfo' => [
+					$customClaimAttribute => null,
+				],
+			];
+		} else {
+			// get attribute mapping settings
+			$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
+			$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+			$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+			$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 
-		if ($uidAttribute !== 'sub') {
-			$claims['id_token'][$uidAttribute] = ['essential' => true];
-			$claims['userinfo'][$uidAttribute] = ['essential' => true];
+			$claims = [
+				// more details about requesting claims:
+				// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
+				'id_token' => [
+					// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
+					// null means we want it
+					$emailAttribute => null,
+					$displaynameAttribute => null,
+					$quotaAttribute => null,
+				],
+				'userinfo' => [
+					$emailAttribute => null,
+					$displaynameAttribute => null,
+					$quotaAttribute => null,
+				],
+			];
+
+			if ($uidAttribute !== 'sub') {
+				$claims['id_token'][$uidAttribute] = ['essential' => true];
+				$claims['userinfo'][$uidAttribute] = ['essential' => true];
+			}
 		}
 
 		$data = [

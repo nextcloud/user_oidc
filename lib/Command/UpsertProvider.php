@@ -59,6 +59,7 @@ class UpsertProvider extends Command {
 			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"')
 			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable.')
 			->addOption('check-bearer', null, InputOption::VALUE_OPTIONAL, 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable.')
+			->addOption('custom-claim', null, InputOption::VALUE_OPTIONAL, 'Custom attribute to be claimed when creating an OIDC token through the login flow.')
 			->addOption('mapping-display-name', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the display name')
 			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
 			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
@@ -91,7 +92,7 @@ class UpsertProvider extends Command {
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
 				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-				'scope', 'unique-uid', 'check-bearer',
+				'scope', 'unique-uid', 'check-bearer', 'custom-claim',
 				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
@@ -138,6 +139,9 @@ class UpsertProvider extends Command {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_UNIQUE_UID, (string)$uniqueUid === '0' ? '0' : '1');
 		}
 
+		if ($customClaim = $input->getOption('custom-claim')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_CUSTOM_CLAIM_ATTRIBUTE, $customClaim);
+		}
 		if ($mapping = $input->getOption('mapping-display-name')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, $mapping);
 		}

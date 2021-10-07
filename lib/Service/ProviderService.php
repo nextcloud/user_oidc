@@ -33,6 +33,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IConfig;
 
 class ProviderService {
+	public const SETTING_CUSTOM_CLAIM_ATTRIBUTE = 'customClaim';
 	public const SETTING_CHECK_BEARER = 'checkBearer';
 	public const SETTING_UNIQUE_UID = 'uniqueUid';
 	public const SETTING_MAPPING_UID = 'mappingUid';
@@ -124,6 +125,7 @@ class ProviderService {
 			self::SETTING_MAPPING_UID,
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
+			self::SETTING_CUSTOM_CLAIM_ATTRIBUTE,
 		];
 	}
 

@@ -60,6 +60,13 @@
 				type="text"
 				placeholder="openid email profile">
 		</p>
+		<p>
+			<label for="oidc-claim">{{ t('user_oidc', 'Custom claim') }}</label>
+			<input id="oidc-claim"
+				v-model="localProvider.settings.customClaim"
+				type="text"
+				:placeholder="t('user_oidc', 'Leave empty to claim all mapped attributes')">
+		</p>
 		<h4>{{ t('user_oidc', 'Attribute mapping') }}</h4>
 		<p>
 			<label for="mapping-uid">{{ t('user_oidc', 'User ID mapping') }}</label>
