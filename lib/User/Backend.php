@@ -151,18 +151,9 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @since 6.0.0
 	 */
 	public function getCurrentUserId() {
-		// get the first provider
-		// TODO make sure this fits our needs and there never is more than one provider
 		$providers = $this->providerMapper->getProviders();
-		if (count($providers) > 0) {
-			$provider = $providers[0];
-		} else {
+		if (count($providers) === 0) {
 			$this->logger->error('no OIDC providers');
-			return '';
-		}
-
-		if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, '0') !== '1') {
-			$this->logger->debug('Bearer token check is disabled for provider ' . $provider->getId());
 			return '';
 		}
 
@@ -174,8 +165,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		$userId = null;
-
+		// check if we should use UserInfoValidator
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		if (!isset($oidcSystemConfig['userinfo_bearer_validation']) || !$oidcSystemConfig['userinfo_bearer_validation']) {
 			if (($key = array_search(UserInfoValidator::class, $this->tokenValidators)) !== false) {
@@ -183,20 +173,26 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			}
 		}
 
-		// find user id through different token validation methods
-		foreach ($this->tokenValidators as $validatorClass) {
-			$validator = \OC::$server->get($validatorClass);
-			$userId = $validator->isValidBearerToken($provider, $headerToken);
-			if ($userId) {
-				break;
+		// try to validate with all providers
+		foreach ($providers as $provider) {
+			if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, '0') === '1') {
+				// find user id through different token validation methods
+				foreach ($this->tokenValidators as $validatorClass) {
+					$validator = \OC::$server->get($validatorClass);
+					$userId = $validator->isValidBearerToken($provider, $headerToken);
+					if ($userId) {
+						$this->logger->debug(
+							'Token validated with ' . $validatorClass . ' by provider: ' . $provider->getId()
+								. ' (' . $provider->getIdentifier() . ')'
+						);
+						$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
+						return $backendUser->getUserId();
+					}
+				}
 			}
 		}
 
-		if ($userId === null) {
-			$this->logger->error('Could not find unique token validation');
-			return '';
-		}
-		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
-		return $backendUser->getUserId();
+		$this->logger->error('Could not find unique token validation');
+		return '';
 	}
 }
