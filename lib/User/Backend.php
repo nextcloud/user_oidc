@@ -27,12 +27,14 @@ namespace OCA\UserOIDC\User;
 
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
+use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
+use OCP\IConfig;
 use OCP\IRequest;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\IGetDisplayNameBackend;
@@ -42,6 +44,7 @@ use Psr\Log\LoggerInterface;
 class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend {
 	private $tokenValidators = [
 		SelfEncodedValidator::class,
+		UserInfoValidator::class,
 	];
 
 	/** @var UserMapper */
@@ -56,12 +59,18 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @var ProviderService
 	 */
 	private $providerService;
+	/**
+	 * @var IConfig
+	 */
+	private $config;
 
-	public function __construct(UserMapper $userMapper,
+	public function __construct(IConfig $config,
+								UserMapper $userMapper,
 								LoggerInterface $logger,
 								IRequest $request,
 								ProviderMapper $providerMapper,
 								ProviderService $providerService) {
+		$this->config = $config;
 		$this->userMapper = $userMapper;
 		$this->logger = $logger;
 		$this->request = $request;
@@ -142,18 +151,9 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @since 6.0.0
 	 */
 	public function getCurrentUserId() {
-		// get the first provider
-		// TODO make sure this fits our needs and there never is more than one provider
 		$providers = $this->providerMapper->getProviders();
-		if (count($providers) > 0) {
-			$provider = $providers[0];
-		} else {
+		if (count($providers) === 0) {
 			$this->logger->error('no OIDC providers');
-			return '';
-		}
-
-		if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, '0') !== '1') {
-			$this->logger->debug('Bearer token check is disabled for provider ' . $provider->getId());
 			return '';
 		}
 
@@ -165,21 +165,34 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		$userId = null;
-		// find user id through different token validation methods
-		foreach ($this->tokenValidators as $validatorClass) {
-			$validator = \OC::$server->get($validatorClass);
-			$userId = $validator->isValidBearerToken($provider, $headerToken);
-			if ($userId) {
-				break;
+		// check if we should use UserInfoValidator
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		if (!isset($oidcSystemConfig['userinfo_bearer_validation']) || !$oidcSystemConfig['userinfo_bearer_validation']) {
+			if (($key = array_search(UserInfoValidator::class, $this->tokenValidators)) !== false) {
+				unset($this->tokenValidators[$key]);
 			}
 		}
 
-		if ($userId === null) {
-			$this->logger->error('Could not find unique token validation');
-			return '';
+		// try to validate with all providers
+		foreach ($providers as $provider) {
+			if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, '0') === '1') {
+				// find user id through different token validation methods
+				foreach ($this->tokenValidators as $validatorClass) {
+					$validator = \OC::$server->get($validatorClass);
+					$userId = $validator->isValidBearerToken($provider, $headerToken);
+					if ($userId) {
+						$this->logger->debug(
+							'Token validated with ' . $validatorClass . ' by provider: ' . $provider->getId()
+								. ' (' . $provider->getIdentifier() . ')'
+						);
+						$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
+						return $backendUser->getUserId();
+					}
+				}
+			}
 		}
-		$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
-		return $backendUser->getUserId();
+
+		$this->logger->error('Could not find unique token validation');
+		return '';
 	}
 }
