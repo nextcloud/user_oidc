@@ -31,16 +31,22 @@ use OCP\Http\Client\IClientService;
 use Psr\Log\LoggerInterface;
 
 class DiscoveryService {
+	public const INVALIDATE_JWKS_CACHE_AFTER_SECONDS = 3600;
 
 	/** @var LoggerInterface */
 	private $logger;
 
 	/** @var IClientService */
 	private $clientService;
+	/**
+	 * @var ProviderService
+	 */
+	private $providerService;
 
-	public function __construct(LoggerInterface $logger, IClientService $clientService) {
+	public function __construct(LoggerInterface $logger, IClientService $clientService, ProviderService $providerService) {
 		$this->logger = $logger;
 		$this->clientService = $clientService;
+		$this->providerService = $providerService;
 	}
 
 	public function obtainDiscovery(Provider $provider): array {
@@ -54,10 +60,21 @@ class DiscoveryService {
 	}
 
 	public function obtainJWK(Provider $provider): array {
-		$discovery = $this->obtainDiscovery($provider);
-		$client = $this->clientService->newClient();
-		$result = json_decode($client->get($discovery['jwks_uri'])->getBody(), true);
-		$jwks = JWK::parseKeySet($result);
+		$lastJwksRefresh = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
+		if ($lastJwksRefresh !== '' && (int) $lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
+			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
+			$rawJwks = json_decode($rawJwks, true);
+			$jwks = JWK::parseKeySet($rawJwks);
+		} else {
+			$discovery = $this->obtainDiscovery($provider);
+			$client = $this->clientService->newClient();
+			$responseBody = $client->get($discovery['jwks_uri'])->getBody();
+			$result = json_decode($responseBody, true);
+			$jwks = JWK::parseKeySet($result);
+			// cache jwks
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, $responseBody);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, strval(time()));
+		}
 
 		$this->logger->debug('Parsed the jwks');
 		return $jwks;

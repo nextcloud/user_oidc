@@ -95,6 +95,9 @@ class SettingsController extends Controller {
 		$provider = $this->providerMapper->update($provider);
 
 		$providerSettings = $this->providerService->setSettings($providerId, $settings);
+		// invalidate JWKS cache
+		$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE, '');
+		$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');
 
 		return new JSONResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
