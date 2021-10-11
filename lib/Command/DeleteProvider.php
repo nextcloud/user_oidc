@@ -23,9 +23,12 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Command;
 
+use Exception;
+use OCP\AppFramework\Db\DoesNotExistException;
 use \Symfony\Component\Console\Command\Command;
 
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Service\ProviderService;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,32 +38,46 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class DeleteProvider extends Command {
 	private $providerMapper;
+	/**
+	 * @var ProviderService
+	 */
+	private $providerService;
 
-	public function __construct(ProviderMapper $providerMapper) {
+	public function __construct(ProviderMapper $providerMapper, ProviderService $providerService) {
 		parent::__construct();
 		$this->providerMapper = $providerMapper;
+		$this->providerService = $providerService;
 	}
 
 	protected function configure() {
 		$this
 			->setName('user_oidc:provider:delete')
-			->setDescription('Delete OpenId connect provider connfig')
-			->addArgument('providerid', InputArgument::REQUIRED, 'Identification name of the provider config entry')
+			->setDescription('Delete an OpenId connect provider')
+			->addArgument('identifier', InputArgument::REQUIRED, 'Administrative identifier name of the provider to delete')
 			->addOption('force', 'f', InputOption::VALUE_NONE, 'Skip confirmation');
 		parent::configure();
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		try {
-			$providerid = $input->getArgument('providerid');
+			$identifier = $input->getArgument('identifier');
+			try {
+				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
+			} catch (DoesNotExistException $e) {
+				$output->writeln('Provider not found.');
+				return -1;
+			}
 			$helper = $this->getHelper('question');
-			$question = new ConfirmationQuestion('Are you sure you want to delete OpenID Provider "' . $providerid . '" and may invalidate all assiciated user accounts [y/n] ', false);
+			$question = new ConfirmationQuestion('Are you sure you want to delete OpenID Provider "' . $provider->getIdentifier() . '"? It may invalidate all associated user accounts [y/N] ', false);
 			if ($input->getOption('force') || $helper->ask($input, $output, $question)) {
-				$this->providerMapper->deleteProvider($providerid);
+				$this->providerMapper->delete($provider);
+				$this->providerService->deleteSettings($provider->getId());
+				$output->writeln('"' . $provider->getIdentifier() . '" has been deleted.');
 			}
 		} catch (Exception $e) {
 			$output->writeln($e->getMessage());
 			return -1;
 		}
+		return 0;
 	}
 }
