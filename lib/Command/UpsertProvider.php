@@ -132,6 +132,9 @@ class UpsertProvider extends Command {
 		$scope = $scope ?? 'openid email profile';
 		try {
 			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope);
+			// invalidate JWKS cache (even if it was just created)
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, '');
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');
 		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
 			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return -1;
