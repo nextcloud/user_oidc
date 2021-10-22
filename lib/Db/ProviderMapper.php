@@ -130,16 +130,4 @@ class ProviderMapper extends QBMapper {
 			return $this->update($provider);
 		}
 	}
-
-	/**
-	 * Delete provider settinngs
-	 *
-	 * @param string identifier
-	 */
-	public function deleteProvider(string $identifier): void {
-		$provider = $this->findProviderByIdentifier($identifier);
-		if (null !== $provider) {
-			$this->delete($provider);
-		}
-	}
 }

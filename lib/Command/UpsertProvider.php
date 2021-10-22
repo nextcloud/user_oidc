@@ -56,9 +56,9 @@ class UpsertProvider extends Command {
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
 			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
 
-			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"')
-			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable.')
-			->addOption('check-bearer', null, InputOption::VALUE_OPTIONAL, 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable.')
+			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes', 'openid email profile')
+			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable, 0 to disable', 1)
+			->addOption('check-bearer', null, InputOption::VALUE_OPTIONAL, 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable, 0 to disable', 1)
 			->addOption('mapping-display-name', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the display name')
 			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
 			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
@@ -68,7 +68,7 @@ class UpsertProvider extends Command {
 				'output',
 				null,
 				InputOption::VALUE_OPTIONAL,
-				'Output format (table, json or json_pretty, default is table)',
+				'Output format (table, json or json_pretty)',
 				'table'
 			);
 		parent::configure();
@@ -97,7 +97,12 @@ class UpsertProvider extends Command {
 		}, ARRAY_FILTER_USE_BOTH);
 
 		if (count($updateOptions) === 0) {
-			$provider = $this->providerMapper->findProviderByIdentifier($identifier);
+			try {
+				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
+			} catch (DoesNotExistException $e) {
+				$output->writeln('Provider not found.');
+				return -1;
+			}
 			$provider = $this->providerService->getProviderWithSettings($provider->getId());
 			if ($outputFormat === 'json') {
 				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
