@@ -4,7 +4,10 @@
   "license": "AGPL3",
   "config": {
     "optimize-autoloader": true,
-    "classmap-authoritative": true
+    "classmap-authoritative": true,
+    "allow-plugins": {
+      "bamarni/composer-bin-plugin": true
+    }
   },
   "scripts": {
     "cs:fix": "php-cs-fixer fix",
