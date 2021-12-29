@@ -134,6 +134,9 @@ class LoginController extends Controller {
 	 * @UseSession
 	 */
 	public function login(int $providerId, string $redirectUrl = null) {
+		if ($this->userSession->isLoggedIn()) {
+			return new RedirectResponse($redirectUrl);
+		}
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
 
 		//TODO: handle exceptions
@@ -212,6 +215,12 @@ class LoginController extends Controller {
 
 		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
 		$this->logger->debug('Redirecting user to: ' . $url);
+
+		// Workaround to avoid empty session on special conditions in Safari
+		// https://github.com/nextcloud/user_oidc/pull/358
+		if ($this->request->isUserAgent(['/Safari/']) && !$this->request->isUserAgent(['/Chrome/'])) {
+			return new Http\DataDisplayResponse('<meta http-equiv="refresh" content="0; url=' . $url . '" />');
+		}
 
 		return new RedirectResponse($url);
 	}
