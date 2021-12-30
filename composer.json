@@ -7,6 +7,9 @@
     "classmap-authoritative": true,
     "allow-plugins": {
       "bamarni/composer-bin-plugin": true
+    },
+	"platform": {
+      "php": "7.3"
     }
   },
   "scripts": {
