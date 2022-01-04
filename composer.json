@@ -4,7 +4,13 @@
   "license": "AGPL3",
   "config": {
     "optimize-autoloader": true,
-    "classmap-authoritative": true
+    "classmap-authoritative": true,
+    "allow-plugins": {
+      "bamarni/composer-bin-plugin": true
+    },
+	"platform": {
+      "php": "7.3"
+    }
   },
   "scripts": {
     "cs:fix": "php-cs-fixer fix",
@@ -28,7 +34,7 @@
     "bamarni/composer-bin-plugin": "^1.4"
   },
   "require-dev": {
-    "nextcloud/coding-standard": "^0.5.0",
+    "nextcloud/coding-standard": "^1.0.0",
     "symfony/event-dispatcher": "^4",
     "phpunit/phpunit": "^9.5"
   },
