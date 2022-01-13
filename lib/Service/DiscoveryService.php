@@ -28,9 +28,12 @@ namespace OCA\UserOIDC\Service;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCP\Http\Client\IClientService;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 
 class DiscoveryService {
+	public const INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS = 3600;
 	public const INVALIDATE_JWKS_CACHE_AFTER_SECONDS = 3600;
 
 	/** @var LoggerInterface */
@@ -38,25 +41,34 @@ class DiscoveryService {
 
 	/** @var IClientService */
 	private $clientService;
-	/**
-	 * @var ProviderService
-	 */
+
+	/** @var ProviderService */
 	private $providerService;
 
-	public function __construct(LoggerInterface $logger, IClientService $clientService, ProviderService $providerService) {
+	/** @var ICache */
+	private $cache;
+
+	public function __construct(LoggerInterface $logger, IClientService $clientService, ProviderService $providerService, ICacheFactory $cacheFactory) {
 		$this->logger = $logger;
 		$this->clientService = $clientService;
 		$this->providerService = $providerService;
+		$this->cache = $cacheFactory->createDistributed('user_oidc');
 	}
 
 	public function obtainDiscovery(Provider $provider): array {
-		$url = $provider->getDiscoveryEndpoint();
-		$client = $this->clientService->newClient();
+		$cacheKey = 'discovery-' . $provider->getId();
+		$cachedDiscovery = $this->cache->get($cacheKey);
+		if ($cachedDiscovery === null) {
+			$url = $provider->getDiscoveryEndpoint();
+			$this->logger->debug('Obtaining discovery endpoint: ' . $url);
 
-		$this->logger->debug('Obtaining discovery endpoint: ' . $url);
-		$response = $client->get($url);
+			$client = $this->clientService->newClient();
+			$response = $client->get($url);
+			$cachedDiscovery = $response->getBody();
+			$this->cache->set($cacheKey, $cachedDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
+		}
 
-		return json_decode($response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+		return json_decode($cachedDiscovery, true, 512, JSON_THROW_ON_ERROR);
 	}
 
 	public function obtainJWK(Provider $provider): array {
