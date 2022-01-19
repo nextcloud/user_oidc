@@ -77,6 +77,15 @@ Add this to `config.php` to enable such extra validation step:
 ],
 ```
 
+If you only want the token to be validated against the `userinfo` endpoint,
+it is possible to disable the classic "self-encoded" validation:
+``` php
+'user_oidc' => [
+    'userinfo_bearer_validation' => true,
+    'selfencoded_bearer_validation' => false,
+],
+```
+
 ## Building the app
 
 Requirements for building:
