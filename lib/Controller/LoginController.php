@@ -53,7 +53,7 @@ use OCP\Security\ISecureRandom;
 class LoginController extends Controller {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
-	private const PROVIDERID = 'oidc.providerid';
+	public const PROVIDERID = 'oidc.providerid';
 	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
 
 	/** @var ISecureRandom */
@@ -373,5 +373,24 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @return Http\RedirectResponse
+	 * @throws Error
+	 */
+	public function singleLogoutService() {
+		$providerId = (int)$this->session->get(self::PROVIDERID);
+		$provider = $this->providerMapper->getProvider($providerId);
+		$targetUrl = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'] ?? null;
+		if ($targetUrl) {
+			$targetUrl .= '?post_logout_redirect_uri=' . $this->urlGenerator->getAbsoluteURL('/');
+		}
+		$this->userSession->logout();
+		return new RedirectResponse($targetUrl);
 	}
 }

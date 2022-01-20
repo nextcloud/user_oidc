@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\User;
 
 use OCA\UserOIDC\Event\TokenValidatedEvent;
+use OCA\UserOIDC\Controller\LoginController;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
@@ -39,6 +40,8 @@ use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
 use OCP\IRequest;
+use OCP\ISession;
+use OCP\IURLGenerator;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
@@ -74,11 +77,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @var DiscoveryService
 	 */
 	private $discoveryService;
+	/**
+	 * @var IURLGenerator
+	 */
+	private $urlGenerator;
+	/**
+	 * @var ISession
+	 */
+	private $session;
 
 	public function __construct(IConfig $config,
 								UserMapper $userMapper,
 								LoggerInterface $logger,
 								IRequest $request,
+								ISession $session,
+								IURLGenerator $urlGenerator,
 								IEventDispatcher $eventDispatcher,
 								DiscoveryService $discoveryService,
 								ProviderMapper $providerMapper,
@@ -91,6 +104,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		$this->providerService = $providerService;
 		$this->eventDispatcher = $eventDispatcher;
 		$this->discoveryService = $discoveryService;
+		$this->session = $session;
+		$this->urlGenerator = $urlGenerator;
 	}
 
 	public function getBackendName(): string {
@@ -150,14 +165,30 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		// if this returns true, getCurrentUserId is called
 		// not sure if we should rather to the validation in here as otherwise it might fail for other backends or bave other side effects
 		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
-		return $headerToken !== '';
+		// session is active if we have a bearer token (API request) OR if we logged in via user_oidc (we have a provider ID in the session)
+		// TODO maybe only check the session stuff if a "singleLogout option" is enabled
+		return $headerToken !== '' || $this->session->get(LoginController::PROVIDERID) !== null;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public function getLogoutUrl() {
-		return '';
+		if ($this->session->get(LoginController::PROVIDERID) === null) {
+			return '';
+		}
+		$providerId = (int)$this->session->get(LoginController::PROVIDERID);
+		$provider = $this->providerMapper->getProvider($providerId);
+		$url = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'] ?? null;
+		if ($url === null) {
+			return '';
+		}
+		return $this->urlGenerator->linkToRouteAbsolute(
+			'user_oidc.login.singleLogoutService',
+			[
+				'requesttoken' => \OC::$server->getCsrfTokenManager()->getToken()->getEncryptedValue(),
+			]
+		);
 	}
 
 	/**
