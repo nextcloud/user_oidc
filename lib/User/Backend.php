@@ -165,10 +165,16 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		// check if we should use UserInfoValidator
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		// check if we should use UserInfoValidator (default is false)
 		if (!isset($oidcSystemConfig['userinfo_bearer_validation']) || !$oidcSystemConfig['userinfo_bearer_validation']) {
 			if (($key = array_search(UserInfoValidator::class, $this->tokenValidators)) !== false) {
+				unset($this->tokenValidators[$key]);
+			}
+		}
+		// check if we should use SelfEncodedValidator (default is true)
+		if (isset($oidcSystemConfig['selfencoded_bearer_validation']) && !$oidcSystemConfig['selfencoded_bearer_validation']) {
+			if (($key = array_search(SelfEncodedValidator::class, $this->tokenValidators)) !== false) {
 				unset($this->tokenValidators[$key]);
 			}
 		}
