@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\User;
 
+use OCA\UserOIDC\Event\TokenValidatedEvent;
+use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
@@ -34,6 +36,7 @@ use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\User\Backend\ABackend;
@@ -63,11 +66,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @var IConfig
 	 */
 	private $config;
+	/**
+	 * @var IEventDispatcher
+	 */
+	private $eventDispatcher;
+	/**
+	 * @var DiscoveryService
+	 */
+	private $discoveryService;
 
 	public function __construct(IConfig $config,
 								UserMapper $userMapper,
 								LoggerInterface $logger,
 								IRequest $request,
+								IEventDispatcher $eventDispatcher,
+								DiscoveryService $discoveryService,
 								ProviderMapper $providerMapper,
 								ProviderService $providerService) {
 		$this->config = $config;
@@ -76,6 +89,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		$this->request = $request;
 		$this->providerMapper = $providerMapper;
 		$this->providerService = $providerService;
+		$this->eventDispatcher = $eventDispatcher;
+		$this->discoveryService = $discoveryService;
 	}
 
 	public function getBackendName(): string {
@@ -191,6 +206,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							'Token validated with ' . $validatorClass . ' by provider: ' . $provider->getId()
 								. ' (' . $provider->getIdentifier() . ')'
 						);
+						$discovery = $this->discoveryService->obtainDiscovery($provider);
+						$this->eventDispatcher->dispatchTyped(new TokenValidatedEvent(['token' => $headerToken], $provider, $discovery));
 						$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
 						return $backendUser->getUserId();
 					}
