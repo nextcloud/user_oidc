@@ -40,6 +40,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
@@ -57,6 +58,7 @@ class LoginController extends Controller {
 	private const PROVIDERID = 'oidc.providerid';
 	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
 	private const SILENT_LOGIN = 'oidc.silentlogin';
+	private const SILENT_LOGIN_PARENT_URL = 'oidc.silentloginParentUrl';
 
 	/** @var ISecureRandom */
 	private $random;
@@ -96,6 +98,10 @@ class LoginController extends Controller {
 
 	/** @var DiscoveryService */
 	private $discoveryService;
+	/**
+	 * @var IInitialState
+	 */
+	private $initialStateService;
 
 	public function __construct(
 		IRequest $request,
@@ -111,7 +117,8 @@ class LoginController extends Controller {
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
 		IEventDispatcher $eventDispatcher,
-		ILogger $logger
+		ILogger $logger,
+		IInitialState $initialStateService
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -128,6 +135,7 @@ class LoginController extends Controller {
 		$this->providerService = $providerService;
 		$this->eventDispatcher = $eventDispatcher;
 		$this->logger = $logger;
+		$this->initialStateService = $initialStateService;
 	}
 
 	/**
@@ -135,7 +143,8 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function silentLogin(int $providerId) {
+	public function silentLogin(int $providerId, string $parentUrl = '') {
+		$this->session->set(self::SILENT_LOGIN_PARENT_URL, $parentUrl);
 		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.silentLoginResult', ['loggedIn' => 'true']);
 		$extraGetParams = [
 			'prompt' => 'none',
@@ -149,6 +158,7 @@ class LoginController extends Controller {
 	 * @UseSession
 	 */
 	public function silentLoginResult() {
+		$this->initialStateService->provideInitialState('silent_login_parent_url', $this->session->get(self::SILENT_LOGIN_PARENT_URL) ?? '');
 		$response = new TemplateResponse(Application::APP_ID, 'silentLoginResult');
 		return $response;
 	}
