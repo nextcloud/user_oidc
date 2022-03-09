@@ -146,6 +146,14 @@ class LoginController extends Controller {
 	public function silentLogin(int $providerId, string $parentUrl = '') {
 		$this->session->set(self::SILENT_LOGIN_PARENT_URL, $parentUrl);
 		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.silentLoginResult', ['loggedIn' => 'true']);
+
+		// TODO check if that makes sense as it will skip oidc login even if user was logged in with another method
+		// if we are already logged in, skip the OIDC login flow
+		if ($this->userSession->isLoggedIn()) {
+			return new RedirectResponse($redirectUrl);
+		}
+
+		// extra params to pass to the authorization_endpoint
 		$extraGetParams = [
 			'prompt' => 'none',
 		];
