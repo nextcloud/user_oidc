@@ -26,6 +26,8 @@ declare(strict_types=1);
 return [
 	'routes' => [
 		['name' => 'login#login', 'url' => '/login/{providerId}', 'verb' => 'GET'],
+		['name' => 'login#silentLogin', 'url' => '/silentLogin/{providerId}', 'verb' => 'GET'],
+		['name' => 'login#silentLoginResult', 'url' => '/silentLoginResult', 'verb' => 'GET'],
 		['name' => 'login#code', 'url' => '/code', 'verb' => 'GET'],
 		['name' => 'id4me#showLogin', 'url' => '/id4me', 'verb' => 'GET'],
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],

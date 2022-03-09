@@ -39,6 +39,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
@@ -55,6 +56,7 @@ class LoginController extends Controller {
 	private const NONCE = 'oidc.nonce';
 	private const PROVIDERID = 'oidc.providerid';
 	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
+	private const SILENT_LOGIN = 'oidc.silentlogin';
 
 	/** @var ISecureRandom */
 	private $random;
@@ -133,7 +135,30 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function login(int $providerId, string $redirectUrl = null) {
+	public function silentLogin(int $providerId) {
+		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.silentLoginResult', ['loggedIn' => 'true']);
+		$extraGetParams = [
+			'prompt' => 'none',
+		];
+		return $this->login($providerId, $redirectUrl, $extraGetParams, true);
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 * @UseSession
+	 */
+	public function silentLoginResult() {
+		$response = new TemplateResponse(Application::APP_ID, 'silentLoginResult');
+		return $response;
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 * @UseSession
+	 */
+	public function login(int $providerId, string $redirectUrl = null, array $extraGetParams = [], bool $isSilent = false) {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
 		}
@@ -150,6 +175,9 @@ class LoginController extends Controller {
 		$this->session->set(self::NONCE, $nonce);
 
 		$this->session->set(self::PROVIDERID, $providerId);
+		// remember we are doing a silent login for code to behave properly
+		$this->session->set(self::SILENT_LOGIN, $isSilent ? 'true' : 'false');
+
 		$this->session->close();
 
 		// get attribute mapping settings
@@ -202,14 +230,17 @@ class LoginController extends Controller {
 			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
 			$this->logger->error('Could not reach provider at URL ' . $provider->getDiscoveryEndpoint());
-			$response = new Http\TemplateResponse('', 'error', [
+			$response = new TemplateResponse('', 'error', [
 				'errors' => [
 					['error' => 'Could not the reach OpenID Connect provider.']
 				]
-			], Http\TemplateResponse::RENDER_AS_ERROR);
+			], TemplateResponse::RENDER_AS_ERROR);
 			$response->setStatus(404);
 			return $response;
 		}
+
+		// pass extra params to authorization_endpoint
+		$data = array_merge($data, $extraGetParams);
 
 		//TODO verify discovery
 
@@ -234,6 +265,10 @@ class LoginController extends Controller {
 		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
 
 		if ($error !== '') {
+			if ($this->session->get(self::SILENT_LOGIN) === 'true') {
+				$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.silentLoginResult', ['loggedIn' => 'false']);
+				return new RedirectResponse($redirectUrl);
+			}
 			return new JSONResponse([
 				'error' => $error,
 				'error_description' => $error_description,
