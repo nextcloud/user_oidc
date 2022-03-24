@@ -43,11 +43,12 @@ use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\User\Backend\ABackend;
+use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
 use Psr\Log\LoggerInterface;
 
-class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend {
+class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout {
 	private $tokenValidators = [
 		SelfEncodedValidator::class,
 		UserInfoValidator::class,
@@ -173,16 +174,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getLogoutUrl() {
-		if ($this->session->get(LoginController::PROVIDERID) === null) {
-			return '';
-		}
-		$providerId = (int)$this->session->get(LoginController::PROVIDERID);
-		$provider = $this->providerMapper->getProvider($providerId);
-		$url = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'] ?? null;
-		if ($url === null) {
-			return '';
-		}
+	public function getLogoutUrl(): string {
 		return $this->urlGenerator->linkToRouteAbsolute(
 			'user_oidc.login.singleLogoutService',
 			[
