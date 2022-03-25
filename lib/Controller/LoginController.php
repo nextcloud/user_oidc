@@ -42,6 +42,7 @@ use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
@@ -53,7 +54,7 @@ use OCP\Security\ISecureRandom;
 class LoginController extends Controller {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
-	private const PROVIDERID = 'oidc.providerid';
+	public const PROVIDERID = 'oidc.providerid';
 	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
 
 	/** @var ISecureRandom */
@@ -94,6 +95,10 @@ class LoginController extends Controller {
 
 	/** @var DiscoveryService */
 	private $discoveryService;
+	/**
+	 * @var IConfig
+	 */
+	private $config;
 
 	public function __construct(
 		IRequest $request,
@@ -109,6 +114,7 @@ class LoginController extends Controller {
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
 		IEventDispatcher $eventDispatcher,
+		IConfig $config,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -126,6 +132,7 @@ class LoginController extends Controller {
 		$this->providerService = $providerService;
 		$this->eventDispatcher = $eventDispatcher;
 		$this->logger = $logger;
+		$this->config = $config;
 	}
 
 	/**
@@ -373,5 +380,28 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @UseSession
+	 *
+	 * @return Http\RedirectResponse
+	 * @throws Error
+	 */
+	public function singleLogoutService() {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
+		if (!isset($oidcSystemConfig['single_logout']) || $oidcSystemConfig['single_logout']) {
+			$providerId = (int)$this->session->get(self::PROVIDERID);
+			$provider = $this->providerMapper->getProvider($providerId);
+			$targetUrl = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'] ?? $this->urlGenerator->getAbsoluteURL('/');
+			if ($targetUrl) {
+				$targetUrl .= '?post_logout_redirect_uri=' . $this->urlGenerator->getAbsoluteURL('/');
+			}
+		}
+		$this->userSession->logout();
+		return new RedirectResponse($targetUrl);
 	}
 }
