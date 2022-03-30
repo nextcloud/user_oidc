@@ -56,6 +56,7 @@ class Provider extends Entity implements \JsonSerializable {
 	/** @var string */
 	protected $scope;
 
+	#[\ReturnTypeWillChange]
 	public function jsonSerialize() {
 		return [
 			'id' => $this->id,
