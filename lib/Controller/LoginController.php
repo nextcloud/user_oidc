@@ -187,6 +187,15 @@ class LoginController extends Controller {
 			$claims['userinfo'][$uidAttribute] = ['essential' => true];
 		}
 
+		$extraClaimsString = $this->providerService->getSetting($providerId, ProviderService::SETTING_EXTRA_CLAIMS, '');
+		if ($extraClaimsString) {
+			$extraClaims = explode(' ', $extraClaimsString);
+			foreach ($extraClaims as $extraClaim) {
+				$claims['id_token'][$extraClaim] = null;
+				$claims['userinfo'][$extraClaim] = null;
+			}
+		}
+
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',

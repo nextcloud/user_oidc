@@ -63,6 +63,7 @@ class UpsertProvider extends Command {
 			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
 			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
 			->addOption('mapping-uid', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the user id')
+			->addOption('extra-claims', null, InputOption::VALUE_OPTIONAL, 'Extra claims to request when getting tokens')
 
 			->addOption(
 				'output',
@@ -93,6 +94,7 @@ class UpsertProvider extends Command {
 				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
 				'scope', 'unique-uid', 'check-bearer',
 				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
+				'extra-claims'
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
 
@@ -157,6 +159,9 @@ class UpsertProvider extends Command {
 		}
 		if ($mapping = $input->getOption('mapping-uid')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, $mapping);
+		}
+		if ($extraClaims = $input->getOption('extra-claims')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_EXTRA_CLAIMS, $extraClaims);
 		}
 
 		return 0;

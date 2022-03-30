@@ -60,6 +60,13 @@
 				type="text"
 				placeholder="openid email profile">
 		</p>
+		<p>
+			<label for="oidc-extra-claims">{{ t('user_oidc', 'Extra claims') }}</label>
+			<input id="oidc-extra-claims"
+				v-model="localProvider.settings.extraClaims"
+				type="text"
+				placeholder="claim1 claim2 claim3">
+		</p>
 		<h4>{{ t('user_oidc', 'Attribute mapping') }}</h4>
 		<p>
 			<label for="mapping-uid">{{ t('user_oidc', 'User ID mapping') }}</label>

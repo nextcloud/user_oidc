@@ -40,6 +40,7 @@ class ProviderService {
 	public const SETTING_MAPPING_DISPLAYNAME = 'mappingDisplayName';
 	public const SETTING_MAPPING_EMAIL = 'mappingEmail';
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
+	public const SETTING_EXTRA_CLAIMS = 'extraClaims';
 	public const SETTING_JWKS_CACHE = 'jwksCache';
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
 
@@ -126,6 +127,7 @@ class ProviderService {
 			self::SETTING_MAPPING_UID,
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
+			self::SETTING_EXTRA_CLAIMS,
 		];
 	}
 
