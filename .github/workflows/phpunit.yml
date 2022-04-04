@@ -20,10 +20,16 @@ jobs:
       matrix:
         php-versions: ['7.3', '7.4', "8.0", "8.1"]
         databases: ['sqlite', 'mysql', 'pgsql']
-        server-versions: ['stable20', 'stable21', 'stable22', 'stable23', 'master']
+        server-versions: ['stable21', 'stable22', 'stable23', 'master']
         exclude:
           - php-versions: 7.3
             server-versions: master
+          - php-versions: 8.1
+            server-versions: stable21
+          - php-versions: 8.1
+            server-versions: stable22
+          - php-versions: 8.1
+            server-versions: stable23
 
     name: php${{ matrix.php-versions }}-${{ matrix.databases }}-${{ matrix.server-versions }}
 
