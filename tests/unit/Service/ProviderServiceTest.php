@@ -82,6 +82,7 @@ class ProviderServiceTest extends TestCase {
 					'mappingUid' => '1',
 					'uniqueUid' => true,
 					'checkBearer' => true,
+					'extraClaims' => '1',
 				],
 			],
 			[
@@ -97,6 +98,7 @@ class ProviderServiceTest extends TestCase {
 					'mappingUid' => '1',
 					'uniqueUid' => true,
 					'checkBearer' => true,
+					'extraClaims' => '1',
 				],
 			],
 		], $this->providerService->getProvidersWithSettings());
@@ -110,6 +112,7 @@ class ProviderServiceTest extends TestCase {
 			'mappingUid' => 'uid',
 			'uniqueUid' => true,
 			'checkBearer' => false,
+			'extraClaims' => 'claim1 claim2',
 		];
 		$this->config->expects(self::any())
 			->method('getAppValue')
@@ -120,6 +123,7 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_UID, '', 'uid'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_UNIQUE_UID, '', '1'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_CHECK_BEARER, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_EXTRA_CLAIMS, '', 'claim1 claim2'],
 			]);
 
 		Assert::assertEquals(
@@ -191,6 +195,7 @@ class ProviderServiceTest extends TestCase {
 			[ProviderService::SETTING_MAPPING_UID, 'test', 'test', 'test'],
 			[ProviderService::SETTING_MAPPING_QUOTA, 'test', 'test', 'test'],
 			[ProviderService::SETTING_MAPPING_DISPLAYNAME, 'test', 'test', 'test'],
+			[ProviderService::SETTING_EXTRA_CLAIMS, 'test', 'test', 'test'],
 		];
 	}
 	/** @dataProvider dataConvertJson */
