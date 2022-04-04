@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-versions: ['7.4']
+        php-versions: ['7.4', '8.0', '8.1']
         databases: ['sqlite', 'mysql', 'pgsql']
         server-versions: ['master']
 
@@ -97,7 +97,7 @@ jobs:
         working-directory: apps/${{ env.APP_NAME }}
         run: ./vendor/phpunit/phpunit/phpunit -c tests/phpunit.integration.xml
 
-      - name: Set up Nextcloud
+      - name: Dump nextcloud.log
         if: always()
         run: cat data/nextcloud.log
 
