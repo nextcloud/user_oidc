@@ -29,14 +29,18 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
+use OC\Cache\CappedMemoryCache;
 
 class UserMapper extends QBMapper {
 	/** @var ProviderService */
 	private $providerService;
+	/** CappedMemoryCache */
+	private $userCache;
 
 	public function __construct(IDBConnection $db, ProviderService $providerService) {
 		parent::__construct($db, 'user_oidc', User::class);
 		$this->providerService = $providerService;
+		$this->userCache = new CappedMemoryCache();
 	}
 
 	/**
@@ -46,6 +50,9 @@ class UserMapper extends QBMapper {
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
 	public function getUser(string $uid): User {
+		if ($this->userCache->hasKey($uid)) {
+			return $this->userCache->get($uid);
+		}
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
@@ -93,7 +100,7 @@ class UserMapper extends QBMapper {
 
 	public function userExists(string $uid): bool {
 		try {
-			$this->getUser($uid);
+			$this->userCache->set($uid, $this->getUser($uid));
 			return true;
 		} catch (IMapperException $e) {
 			return false;
