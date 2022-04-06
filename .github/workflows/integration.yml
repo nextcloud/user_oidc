@@ -20,6 +20,19 @@ jobs:
         php-versions: ['7.4']
         databases: ['sqlite', 'mysql', 'pgsql']
         server-versions: ['master']
+        include:
+            - php-versions: 7.4
+              databases: mysql
+              server-versions: stable21
+            - php-versions: 8.0
+              databases: mysql
+              server-versions: stable22
+            - php-versions: 8.0
+              databases: mysql
+              server-versions: stable23
+            - php-versions: 8.1
+              databases: mysql
+              server-versions: master
 
     name: php${{ matrix.php-versions }}-${{ matrix.databases }}-${{ matrix.server-versions }}
 
@@ -97,7 +110,7 @@ jobs:
         working-directory: apps/${{ env.APP_NAME }}
         run: ./vendor/phpunit/phpunit/phpunit -c tests/phpunit.integration.xml
 
-      - name: Set up Nextcloud
+      - name: Dump nextcloud.log
         if: always()
         run: cat data/nextcloud.log
 
