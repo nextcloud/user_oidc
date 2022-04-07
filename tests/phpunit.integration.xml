@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<phpunit bootstrap="bootstrap.php">
+<phpunit bootstrap="bootstrap.php" convertDeprecationsToExceptions="true">
 	<testsuite name='user_oidc app tests'>
 		<directory>integration</directory>
 	</testsuite>
