@@ -59,6 +59,8 @@ class Application extends App implements IBootstrap {
 
 		/* Register our own user backend */
 		$backend = $this->getContainer()->get(Backend::class);
+		// let our user backend know which are the others
+		$backend->registerBackends($userManager->getBackends());
 		$userManager->registerBackend($backend);
 		OC_User::useBackend($backend);
 	}

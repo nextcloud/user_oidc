@@ -330,8 +330,8 @@ class LoginController extends Controller {
 		$quota = $payload->{$quotaAttribute} ?? null;
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$autoProvision = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
-		if (!$autoProvision) {
+		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+		if (!$autoProvisionAllowed) {
 			$user = $this->userManager->get($userId);
 			if ($user === null) {
 				return new JSONResponse(['Failed to provision user']);
