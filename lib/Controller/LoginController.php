@@ -329,50 +329,59 @@ class LoginController extends Controller {
 		$email = $payload->{$emailAttribute} ?? null;
 		$quota = $payload->{$quotaAttribute} ?? null;
 
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $userId);
-		$this->eventDispatcher->dispatchTyped($event);
-		if (!$event->hasValue()) {
-			return new JSONResponse($payload);
-		}
-
-		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
-		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
-
-		$user = $this->userManager->get($backendUser->getUserId());
-		if ($user === null) {
-			return new JSONResponse(['Failed to provision user']);
-		}
-
-		// Update displayname
-		if (isset($userName)) {
-			$newDisplayName = mb_substr($userName, 0, 255);
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
-		} else {
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
-		}
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Displayname dispatched');
-		if ($event->hasValue()) {
-			$newDisplayName = $event->getValue();
-			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($newDisplayName);
-				$backendUser = $this->userMapper->update($backendUser);
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$autoProvision = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+		if (!$autoProvision) {
+			$user = $this->userManager->get($userId);
+			if ($user === null) {
+				return new JSONResponse(['Failed to provision user']);
 			}
-		}
+		} else {
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $userId);
+			$this->eventDispatcher->dispatchTyped($event);
+			if (!$event->hasValue()) {
+				return new JSONResponse($payload);
+			}
 
-		// Update e-mail
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $email);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Email dispatched');
-		if ($event->hasValue()) {
-			$user->setEMailAddress($event->getValue());
-		}
+			$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
+			$this->logger->debug('User obtained: ' . $backendUser->getUserId());
 
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $quota);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Quota dispatched');
-		if ($event->hasValue()) {
-			$user->setQuota($event->getValue());
+			$user = $this->userManager->get($backendUser->getUserId());
+			if ($user === null) {
+				return new JSONResponse(['Failed to provision user']);
+			}
+
+			// Update displayname
+			if (isset($userName)) {
+				$newDisplayName = mb_substr($userName, 0, 255);
+				$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
+			} else {
+				$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
+			}
+			$this->eventDispatcher->dispatchTyped($event);
+			$this->logger->debug('Displayname dispatched');
+			if ($event->hasValue()) {
+				$newDisplayName = $event->getValue();
+				if ($newDisplayName != $backendUser->getDisplayName()) {
+					$backendUser->setDisplayName($newDisplayName);
+					$backendUser = $this->userMapper->update($backendUser);
+				}
+			}
+
+			// Update e-mail
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $email);
+			$this->eventDispatcher->dispatchTyped($event);
+			$this->logger->debug('Email dispatched');
+			if ($event->hasValue()) {
+				$user->setEMailAddress($event->getValue());
+			}
+
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $quota);
+			$this->eventDispatcher->dispatchTyped($event);
+			$this->logger->debug('Quota dispatched');
+			if ($event->hasValue()) {
+				$user->setQuota($event->getValue());
+			}
 		}
 
 		$this->logger->debug('Logging user in');
