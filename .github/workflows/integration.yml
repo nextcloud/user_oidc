@@ -32,6 +32,9 @@ jobs:
               server-versions: stable23
             - php-versions: 8.1
               databases: mysql
+              server-versions: stable24
+            - php-versions: 8.1
+              databases: mysql
               server-versions: master
 
     name: php${{ matrix.php-versions }}-${{ matrix.databases }}-${{ matrix.server-versions }}
