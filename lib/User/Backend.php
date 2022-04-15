@@ -42,11 +42,11 @@ use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
+use OCP\IUserManager;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
-use OCP\UserInterface;
 use Psr\Log\LoggerInterface;
 
 class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout {
@@ -54,9 +54,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		SelfEncodedValidator::class,
 		UserInfoValidator::class,
 	];
-
-	/** @var UserInterface[] */
-	private static $backends = [];
 
 	/** @var UserMapper */
 	private $userMapper;
@@ -90,6 +87,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @var ISession
 	 */
 	private $session;
+	/**
+	 * @var IUserManager
+	 */
+	private $userManager;
 
 	public function __construct(IConfig $config,
 								UserMapper $userMapper,
@@ -100,7 +101,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								IEventDispatcher $eventDispatcher,
 								DiscoveryService $discoveryService,
 								ProviderMapper $providerMapper,
-								ProviderService $providerService) {
+								ProviderService $providerService,
+								IUserManager $userManager) {
 		$this->config = $config;
 		$this->userMapper = $userMapper;
 		$this->logger = $logger;
@@ -111,6 +113,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		$this->discoveryService = $discoveryService;
 		$this->session = $session;
 		$this->urlGenerator = $urlGenerator;
+		$this->userManager = $userManager;
 	}
 
 	public function getBackendName(): string {
@@ -135,11 +138,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	public function userExists($uid): bool {
-		if ($backend = $this->getActualUserBackend($uid)) {
-			return $backend->userExists($uid);
-		} else {
-			return $this->userMapper->userExists($uid);
-		}
+		return $this->userMapper->userExists($uid);
 	}
 
 	public function getDisplayName($uid): string {
@@ -162,31 +161,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 	public function canConfirmPassword(string $uid): bool {
 		return false;
-	}
-
-	/**
-	 * Gets the actual user backend of the user
-	 *
-	 * @param string $uid
-	 * @return null|UserInterface
-	 */
-	public function getActualUserBackend($uid): ?UserInterface {
-		foreach (self::$backends as $backend) {
-			if ($backend->userExists($uid)) {
-				return $backend;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Registers the used backends, used later to get the actual user backend
-	 * of the user.
-	 *
-	 * @param UserInterface[] $backends
-	 */
-	public function registerBackends(array $backends) {
-		self::$backends = $backends;
 	}
 
 	/**
@@ -269,7 +243,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						if ($autoProvisionAllowed) {
 							$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
 							return $backendUser->getUserId();
-						} elseif ($this->userExists($userId)) {
+						} elseif ($this->userExists($userId) || $this->userManager->userExists($userId)) {
 							return $userId;
 						}
 						return '';
