@@ -60,6 +60,22 @@ class Test extends \Test\TestCase {
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
 	}
 
+	public function tearDown(): void {
+		$this->cleanupUser('keycloak1');
+		$this->cleanupUser('f617ef761d09b2afe1647c0bf9080ab75ec0d0fa1fbc95850091614f5fec1eea');
+		$this->cleanupUser('9aa987a707a5d4699efb0753d0e1a9bb9303bf028d613538883fba0368c164da');
+		$this->cleanupUser('aea81860-b25c-4f75-b9b5-9d632c3ba06f');
+	}
+
+	private function cleanupUser(string $userId): void {
+		/** @var IUserManager $userManager */
+		$userManager = \OC::$server->get(IUserManager::class);
+		if ($userManager->userExists($userId)) {
+			$user = $userManager->get($userId);
+			$user->delete();
+		}
+	}
+
 
 	public function testAlternativeLogins() {
 		self::assertEquals([
@@ -132,10 +148,13 @@ class Test extends \Test\TestCase {
 	}
 
 	public function testDisabledAutoProvision() {
-		sleep(5);
 		/** @var IUserManager $userManager */
 		$userManager = \OC::$server->get(IUserManager::class);
-		$localUser = $userManager->createUser('keycloak1', 'passwordKeycloak1Local');
+		if (!$userManager->userExists('keycloak1')) {
+			$localUser = $userManager->createUser('keycloak1', 'passwordKeycloak1Local');
+		} else {
+			$localUser = $userManager->get('keycloak1');
+		}
 		self::assertNotEquals(false, $localUser);
 		$localUser->setEMailAddress('keycloak1@local.com');
 		$localUser->setDisplayName('Local name');
@@ -167,7 +186,6 @@ class Test extends \Test\TestCase {
 		$config->setSystemValue('user_oidc', [ 'auto_provision' => true ]);
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '1');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
-		sleep(5);
 	}
 
 	public function testUnreachable() {
