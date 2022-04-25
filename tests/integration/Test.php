@@ -148,6 +148,7 @@ class Test extends \Test\TestCase {
 	}
 
 	public function testDisabledAutoProvision() {
+		sleep(5);
 		/** @var IUserManager $userManager */
 		$userManager = \OC::$server->get(IUserManager::class);
 		if (!$userManager->userExists('keycloak1')) {
@@ -169,6 +170,8 @@ class Test extends \Test\TestCase {
 		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
+		$status = $response->getStatusCode();
+		self::assertEquals($status, 200);
 		$userHtmlData = $this->getUserHtmlData($response);
 		$userId = $userHtmlData['userId'];
 		self::assertEquals($userId, 'keycloak1');
@@ -186,6 +189,7 @@ class Test extends \Test\TestCase {
 		$config->setSystemValue('user_oidc', [ 'auto_provision' => true ]);
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '1');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
+		sleep(5);
 	}
 
 	public function testUnreachable() {
