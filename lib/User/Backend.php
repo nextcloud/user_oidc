@@ -42,6 +42,7 @@ use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
+use OCP\IUserManager;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
@@ -86,6 +87,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @var ISession
 	 */
 	private $session;
+	/**
+	 * @var IUserManager
+	 */
+	private $userManager;
 
 	public function __construct(IConfig $config,
 								UserMapper $userMapper,
@@ -96,7 +101,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								IEventDispatcher $eventDispatcher,
 								DiscoveryService $discoveryService,
 								ProviderMapper $providerMapper,
-								ProviderService $providerService) {
+								ProviderService $providerService,
+								IUserManager $userManager) {
 		$this->config = $config;
 		$this->userMapper = $userMapper;
 		$this->logger = $logger;
@@ -107,6 +113,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		$this->discoveryService = $discoveryService;
 		$this->session = $session;
 		$this->urlGenerator = $urlGenerator;
+		$this->userManager = $userManager;
 	}
 
 	public function getBackendName(): string {
@@ -217,6 +224,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			}
 		}
 
+		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+
 		// try to validate with all providers
 		foreach ($providers as $provider) {
 			if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, '0') === '1') {
@@ -231,8 +240,13 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						);
 						$discovery = $this->discoveryService->obtainDiscovery($provider);
 						$this->eventDispatcher->dispatchTyped(new TokenValidatedEvent(['token' => $headerToken], $provider, $discovery));
-						$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
-						return $backendUser->getUserId();
+						if ($autoProvisionAllowed) {
+							$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
+							return $backendUser->getUserId();
+						} elseif ($this->userExists($userId) || $this->userManager->userExists($userId)) {
+							return $userId;
+						}
+						return '';
 					}
 				}
 			}

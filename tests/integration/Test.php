@@ -28,6 +28,8 @@ use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\RedirectMiddleware;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
+use OCP\IConfig;
+use OCP\IUserManager;
 
 /**
  * @group DB
@@ -58,6 +60,22 @@ class Test extends \Test\TestCase {
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
 	}
 
+	public function tearDown(): void {
+		$this->cleanupUser('keycloak1');
+		$this->cleanupUser('f617ef761d09b2afe1647c0bf9080ab75ec0d0fa1fbc95850091614f5fec1eea');
+		$this->cleanupUser('9aa987a707a5d4699efb0753d0e1a9bb9303bf028d613538883fba0368c164da');
+		$this->cleanupUser('aea81860-b25c-4f75-b9b5-9d632c3ba06f');
+	}
+
+	private function cleanupUser(string $userId): void {
+		/** @var IUserManager $userManager */
+		$userManager = \OC::$server->get(IUserManager::class);
+		if ($userManager->userExists($userId)) {
+			$user = $userManager->get($userId);
+			$user->delete();
+		}
+	}
+
 
 	public function testAlternativeLogins() {
 		self::assertEquals([
@@ -79,6 +97,7 @@ class Test extends \Test\TestCase {
 		$this->client = new Client(['allow_redirects' => ['track_redirects' => true], 'cookies' => $cookieJar]);
 		return $this->client;
 	}
+
 	public function testLoginRedirectCallback() {
 		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
@@ -86,7 +105,7 @@ class Test extends \Test\TestCase {
 
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
-		$userId = $this->getUserId($response);
+		$userId = $this->getUserHtmlData($response)['userId'];
 		self::assertStringStartsWith($this->baseUrl . '/index.php/apps/user_oidc/code?', $headersRedirect[0]);
 		self::assertEquals($this->baseUrl . '/index.php/apps/dashboard/', $headersRedirect[1]);
 
@@ -114,14 +133,63 @@ class Test extends \Test\TestCase {
 		return $this->client->post($url, ['form_params' => ['username' => $username, 'password' => $password, "credentialId" => '']]);
 	}
 
-	private function getUserId($response) {
+	private function getUserHtmlData($response) {
 		$content = $response->getBody()->getContents();
 		$doc = new DOMDocument();
 		$doc->loadHtml($content);
 		$body = $doc->getElementsByTagName('head')->item(0);
 		$userId = $body->getAttribute('data-user');
+		$userDisplayName = $body->getAttribute('data-user-displayname');
 		libxml_clear_errors();
-		return $userId;
+		return [
+			'userId' => $userId,
+			'displayName' => $userDisplayName,
+		];
+	}
+
+	public function testDisabledAutoProvision() {
+		sleep(5);
+		/** @var IUserManager $userManager */
+		$userManager = \OC::$server->get(IUserManager::class);
+		if (!$userManager->userExists('keycloak1')) {
+			$localUser = $userManager->createUser('keycloak1', 'passwordKeycloak1Local');
+		} else {
+			$localUser = $userManager->get('keycloak1');
+		}
+		self::assertNotEquals(false, $localUser);
+		$localUser->setEMailAddress('keycloak1@local.com');
+		$localUser->setDisplayName('Local name');
+
+		/** @var IConfig $config */
+		$config = \OC::$server->get(IConfig::class);
+		$config->setSystemValue('user_oidc', [ 'auto_provision' => false ]);
+
+		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '0');
+		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, 'preferred_username');
+
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
+		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
+		$status = $response->getStatusCode();
+		self::assertEquals($status, 200);
+		$userHtmlData = $this->getUserHtmlData($response);
+		$userId = $userHtmlData['userId'];
+		self::assertEquals($userId, 'keycloak1');
+		$userDisplayName = $userHtmlData['displayName'];
+		self::assertEquals($userDisplayName, 'Local name');
+
+		// check the local user's attributes were not replaced by the keycloak ones
+		$userInfo = $this->client->get($this->baseUrl . '/ocs/v1.php/cloud/users/' . $userId . '?format=json', ['auth' => ['admin', 'admin'], 'headers' => ['OCS-APIRequest' => 'true'],]);
+		$userInfo = json_decode($userInfo->getBody()->getContents());
+		self::assertEquals('keycloak1@local.com', $userInfo->ocs->data->email);
+		self::assertEquals('Local name', $userInfo->ocs->data->displayname);
+
+		// restore initial settings
+		$localUser->delete();
+		$config->setSystemValue('user_oidc', [ 'auto_provision' => true ]);
+		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '1');
+		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
+		sleep(5);
 	}
 
 	public function testUnreachable() {
@@ -154,7 +222,7 @@ class Test extends \Test\TestCase {
 		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
-		$userId = $this->getUserId($response);
+		$userId = $this->getUserHtmlData($response)['userId'];
 		self::assertEquals($userId, 'aea81860-b25c-4f75-b9b5-9d632c3ba06f');
 	}
 
@@ -165,7 +233,7 @@ class Test extends \Test\TestCase {
 		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
-		$userId = $this->getUserId($response);
+		$userId = $this->getUserHtmlData($response)['userId'];
 		self::assertEquals($userId, 'keycloak1');
 	}
 
@@ -175,7 +243,7 @@ class Test extends \Test\TestCase {
 		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
-		$userId = $this->getUserId($response);
+		$userId = $this->getUserHtmlData($response)['userId'];
 		self::assertEquals($userId, hash('sha256', '1_0_keycloak1'));
 	}
 }

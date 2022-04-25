@@ -47,6 +47,7 @@ use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
@@ -294,85 +295,39 @@ class LoginController extends Controller {
 		// TODO: proper error handling
 		$jwks = $this->discoveryService->obtainJWK($provider);
 		JWT::$leeway = 60;
-		$payload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
+		$idTokenPayload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
-		$this->logger->debug('Parsed the JWT payload: ' . json_encode($payload, JSON_THROW_ON_ERROR));
+		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
 
-		if ($payload->exp < $this->timeFactory->getTime()) {
+		if ($idTokenPayload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
 			// TODO: error properly
 			return new JSONResponse(['token expired']);
 		}
 
 		// Verify audience
-		if (!(($payload->aud === $provider->getClientId() || in_array($provider->getClientId(), $payload->aud, true)))) {
+		if (!(($idTokenPayload->aud === $provider->getClientId() || in_array($provider->getClientId(), $idTokenPayload->aud, true)))) {
 			$this->logger->debug('This token is not for us');
 			// TODO: error properly
 			return new JSONResponse(['audience does not match']);
 		}
 
-		if (isset($payload->nonce) && $payload->nonce !== $this->session->get(self::NONCE)) {
+		if (isset($idTokenPayload->nonce) && $idTokenPayload->nonce !== $this->session->get(self::NONCE)) {
 			$this->logger->debug('Nonce does not match');
 			// TODO: error properly
 			return new JSONResponse(['invalid nonce']);
 		}
 
-		// get attribute mapping settings
+		// get user ID attribute
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-
-		// try to get id/name/email information from the token itself
-		$userId = $payload->{$uidAttribute} ?? null;
-		$userName = $payload->{$displaynameAttribute} ?? null;
-		$email = $payload->{$emailAttribute} ?? null;
-		$quota = $payload->{$quotaAttribute} ?? null;
-
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $payload, $userId);
-		$this->eventDispatcher->dispatchTyped($event);
-		if (!$event->hasValue()) {
-			return new JSONResponse($payload);
-		}
-
-		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
-		$this->logger->debug('User obtained: ' . $backendUser->getUserId());
-
-		$user = $this->userManager->get($backendUser->getUserId());
-		if ($user === null) {
+		$userId = $idTokenPayload->{$uidAttribute} ?? null;
+		if ($userId === null) {
 			return new JSONResponse(['Failed to provision user']);
 		}
 
-		// Update displayname
-		if (isset($userName)) {
-			$newDisplayName = mb_substr($userName, 0, 255);
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload, $newDisplayName);
-		} else {
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $payload);
-		}
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Displayname dispatched');
-		if ($event->hasValue()) {
-			$newDisplayName = $event->getValue();
-			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($newDisplayName);
-				$backendUser = $this->userMapper->update($backendUser);
-			}
-		}
-
-		// Update e-mail
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $payload, $email);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Email dispatched');
-		if ($event->hasValue()) {
-			$user->setEMailAddress($event->getValue());
-		}
-
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $payload, $quota);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Quota dispatched');
-		if ($event->hasValue()) {
-			$user->setQuota($event->getValue());
+		$user = $this->provisionUser($userId, $providerId, $idTokenPayload);
+		if ($user === null) {
+			return new JSONResponse(['Failed to provision user']);
 		}
 
 		$this->logger->debug('Logging user in');
@@ -389,6 +344,70 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
+	}
+
+	private function provisionUser(string $userId, int $providerId, object $idTokenPayload): ?IUser {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+		if (!$autoProvisionAllowed) {
+			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
+			return $this->userManager->get($userId);
+		}
+
+		// now we try to auto-provision
+
+		// get name/email/quota information from the token itself
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$email = $idTokenPayload->{$emailAttribute} ?? null;
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$userName = $idTokenPayload->{$displaynameAttribute} ?? null;
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $userId);
+		$this->eventDispatcher->dispatchTyped($event);
+
+		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
+		$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
+
+		$user = $this->userManager->get($backendUser->getUserId());
+		if ($user === null) {
+			return $user;
+		}
+
+		// Update displayname
+		if (isset($userName)) {
+			$newDisplayName = mb_substr($userName, 0, 255);
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload, $newDisplayName);
+		} else {
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload);
+		}
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Displayname mapping event dispatched');
+		if ($event->hasValue()) {
+			$newDisplayName = $event->getValue();
+			if ($newDisplayName != $backendUser->getDisplayName()) {
+				$backendUser->setDisplayName($newDisplayName);
+				$backendUser = $this->userMapper->update($backendUser);
+			}
+		}
+
+		// Update e-mail
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $idTokenPayload, $email);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Email mapping event dispatched');
+		if ($event->hasValue()) {
+			$user->setEMailAddress($event->getValue());
+		}
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $idTokenPayload, $quota);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Quota mapping event dispatched');
+		if ($event->hasValue()) {
+			$user->setQuota($event->getValue());
+		}
+
+		return $user;
 	}
 
 	/**
