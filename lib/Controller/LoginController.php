@@ -335,6 +335,7 @@ class LoginController extends Controller {
 		$this->userSession->setUser($user);
 		$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
+		$this->userSession->createRememberMeToken($user);
 
 		$this->logger->debug('Redirecting user');
 
