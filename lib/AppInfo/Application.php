@@ -47,6 +47,7 @@ class Application extends App implements IBootstrap {
 	public const APP_ID = 'user_oidc';
 	public const OIDC_API_REQ_HEADER = 'Authorization';
 
+	private $backend;
 	private $cachedProviders;
 
 	public function __construct(array $urlParams = []) {
@@ -58,12 +59,13 @@ class Application extends App implements IBootstrap {
 		$userManager = $this->getContainer()->get(IUserManager::class);
 
 		/* Register our own user backend */
-		$backend = $this->getContainer()->get(Backend::class);
-		$userManager->registerBackend($backend);
-		OC_User::useBackend($backend);
+		$this->backend = $this->getContainer()->get(Backend::class);
+		$userManager->registerBackend($this->backend);
+		OC_User::useBackend($this->backend);
 	}
 
 	public function boot(IBootContext $context): void {
+		$context->injectFn(\Closure::fromCallable([$this->backend, 'injectSession']));
 		/** @var IUserSession $userSession */
 		$userSession = $this->getContainer()->get(IUserSession::class);
 		if ($userSession->isLoggedIn()) {

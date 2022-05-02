@@ -164,6 +164,16 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	/**
+	 * As session cannot be injected in the constructor here, we inject it later
+	 *
+	 * @param ISession $session
+	 * @return void
+	 */
+	public function injectSession(ISession $session): void {
+		$this->session = $session;
+	}
+
+	/**
 	 * In case the user has been authenticated by Apache true is returned.
 	 *
 	 * @return boolean whether Apache reports a user as currently logged in.
@@ -174,7 +184,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		// not sure if we should rather to the validation in here as otherwise it might fail for other backends or bave other side effects
 		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
 		// session is active if we have a bearer token (API request) OR if we logged in via user_oidc (we have a provider ID in the session)
-		// TODO maybe only check the session stuff if a "singleLogout option" is enabled
 		return $headerToken !== '' || $this->session->get(LoginController::PROVIDERID) !== null;
 	}
 
