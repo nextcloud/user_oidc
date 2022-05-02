@@ -431,6 +431,8 @@ class LoginController extends Controller {
 			}
 		}
 		$this->userSession->logout();
+		// make sure we clear the session to avoid messing with Backend::isSessionActive
+		$this->session->clear();
 		return new RedirectResponse($targetUrl);
 	}
 }
