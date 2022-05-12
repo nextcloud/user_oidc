@@ -86,7 +86,7 @@ class ProviderMapper extends QBMapper {
 	}
 
 	/**
-	 * Create or update provider settinngs
+	 * Create or update provider settings
 	 *
 	 * @param string identifier
 	 * @param string|null $clientid
@@ -108,7 +108,7 @@ class ProviderMapper extends QBMapper {
 		if ($provider === null) {
 			$provider = new Provider();
 			if (($clientid === null) || ($clientsecret === null) || ($discoveryuri === null)) {
-				throw new DoesNotExistException("Provider must be created. All provider parameters required.");
+				throw new DoesNotExistException('Provider must be created. All provider parameters required.');
 			}
 			$provider->setIdentifier($identifier);
 			$provider->setClientId($clientid);

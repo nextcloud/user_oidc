@@ -127,11 +127,15 @@ class UpsertProvider extends Command {
 
 		$provider = $this->providerService->getProviderByIdentifier($identifier);
 		if ($provider !== null) {
+			// existing provider, keep values that are not set
 			$clientid = $clientid ?? $provider->getClientId();
 			$clientsecret = $clientsecret ?? $provider->getClientSecret();
 			$discoveryuri = $discoveryuri ?? $provider->getDiscoveryEndpoint();
+			$scope = $scope ?? $provider->getScope();
+		} else {
+			// new provider default scope value
+			$scope = $scope ?? 'openid email profile';
 		}
-		$scope = $scope ?? 'openid email profile';
 		try {
 			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope);
 			// invalidate JWKS cache (even if it was just created)
