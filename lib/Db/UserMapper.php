@@ -34,7 +34,7 @@ use OC\Cache\CappedMemoryCache;
 class UserMapper extends QBMapper {
 	/** @var ProviderService */
 	private $providerService;
-	/** CappedMemoryCache */
+	/** @var CappedMemoryCache<User> */
 	private $userCache;
 
 	public function __construct(IDBConnection $db, ProviderService $providerService) {
@@ -61,7 +61,10 @@ class UserMapper extends QBMapper {
 				$qb->expr()->eq('user_id', $qb->createNamedParameter($uid))
 			);
 
-		return $this->findEntity($qb);
+		/** @var User $user */
+		$user = $this->findEntity($qb);
+		$this->userCache->set($uid, $user);
+		return $user;
 	}
 
 	public function find(string $search, $limit = null, $offset = null): array {
@@ -100,7 +103,7 @@ class UserMapper extends QBMapper {
 
 	public function userExists(string $uid): bool {
 		try {
-			$this->userCache->set($uid, $this->getUser($uid));
+			$this->getUser($uid);
 			return true;
 		} catch (IMapperException $e) {
 			return false;
