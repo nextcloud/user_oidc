@@ -252,8 +252,15 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						if ($autoProvisionAllowed) {
 							$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
 							return $backendUser->getUserId();
-						} elseif ($this->userExists($userId) || $this->userManager->userExists($userId)) {
-							return $userId;
+						} else {
+							if ($this->userExists($userId)) {
+								return $userId;
+							}
+							// so user_ldap gets the user if it has not been synced yet
+							$this->userManager->search($userId);
+							if ($this->userManager->userExists($userId)) {
+								return $userId;
+							}
 						}
 						return '';
 					}

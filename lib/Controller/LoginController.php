@@ -351,6 +351,9 @@ class LoginController extends Controller {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
 		if (!$autoProvisionAllowed) {
+			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
+			// so new users will be directly available even if they were not synced before this login attempt
+			$this->userManager->search($userId);
 			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
 			return $this->userManager->get($userId);
 		}
