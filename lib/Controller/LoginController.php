@@ -337,6 +337,11 @@ class LoginController extends Controller {
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 		$this->userSession->createRememberMeToken($user);
 
+		// if the user was provisioned by user_ldap, this is required to update and/or generate the avatar
+		if ($user->canChangeAvatar()) {
+			$this->logger->debug('$user->canChangeAvatar() is true');
+		}
+
 		$this->logger->debug('Redirecting user');
 
 		$redirectUrl = $this->session->get(self::REDIRECT_AFTER_LOGIN);
