@@ -256,7 +256,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							if ($this->userExists($userId)) {
 								return $userId;
 							}
-							// so user_ldap gets the user if it has not been synced yet
+							// if the user exists locally
+							if ($this->userManager->userExists($userId)) {
+								return $userId;
+							}
+							// if not, this potentially triggers a user_ldap search
+							// to get the user if it has not been synced yet
 							$this->userManager->search($userId);
 							if ($this->userManager->userExists($userId)) {
 								return $userId;
