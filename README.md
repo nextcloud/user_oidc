@@ -1,6 +1,6 @@
 # user_oidc
 
-OIDC connect user backend for Nextcloud
+OpenID Connect user backend for Nextcloud
 
 ## General usage
 See [Nextcloud and OpenID-Connect](https://www.schiessle.org/articles/2020/07/26/nextcloud-and-openid-connect/)
@@ -8,7 +8,7 @@ for a proper jumpstart.
 
 ### User IDs
 
-The OIDC backend will ensure that user ids are unique even when multiple providers would report the same user
+The OpenID Connect backend will ensure that user ids are unique even when multiple providers would report the same user
 id to ensure that a user cannot identify for the same Nextcloud account through different providers.
 Therefore, a hash of the provider id and the user id is used. This behaviour can be turned off in the provider options.
 
@@ -55,7 +55,7 @@ sudo -u www-data php /var/www/nextcloud/occ config:app:set --value=1 user_oidc i
 ```
 
 ### Disable other login methods
-If there is only one OIDC provider configured, it can be made the default login
+If there is only one OpenID Connect provider configured, it can be made the default login
 method and the user would get redirected to the provider immediately for the
 login. Admins can still use the regular login through adding the `?direct=1`
 parameter to the login URL.
@@ -66,8 +66,8 @@ sudo -u www-data php var/www/nextcloud/occ config:app:set --value=0 user_oidc al
 
 ### Single logout
 
-Single logout is enabled by default. When logging out of Nextcloud, the end_session_endpoint of the OIDC provider
-is requested to end the session on this side.
+Single logout is enabled by default. When logging out of Nextcloud,
+the end_session_endpoint of the OpenID Connect provider is requested to end the session on this side.
 
 It can be disabled in `config.php`:
 ``` php
@@ -78,8 +78,8 @@ It can be disabled in `config.php`:
 
 ### Auto provisioning
 
-By default, this app provisions the users with the information contained in the OIDC ID token which means it gets
-the user information (such as the display name or the email) from the OIDC provider.
+By default, this app provisions the users with the information contained in the OIDC token
+which means it gets the user information (such as the display name or the email) from the ID provider.
 This also means that user_oidc takes care of creating the users when they first log in.
 
 It is possible to disable auto provisioning to let other user backends (like LDAP)
@@ -92,6 +92,21 @@ Auto provisioning can be disabled in `config.php`:
     'auto_provision' => false,
 ],
 ```
+
+:warning: When relying on the LDAP user backend for user provisioning, you need to adjust the
+"Login Attributes" section and the Expert tab's "Internal Username" value of your LDAP settings.
+Even if LDAP does not handle the login process,
+the user_oidc app will trigger an LDAP search when logging in to make sure the user is created if it was
+not synced already.
+So it is essential that:
+* the OpenID Connect "User ID mapping" attribute matches the LDAP Expert tab's "Internal Username".
+The attribute names can be different but their values should match. Do not change the LDAP configuration,
+simply adapt the OpenID Connect provider configuration.
+* the OpenID Connect "User ID mapping" attribute can be used in the LDAP login query
+defined in the "Login Attributes" tab.
+
+In other words, make sure that your OpenID Connect provider's "User ID mapping" setting is set to an attribute
+which provides the same values as the LDAP attribute set in "Internal Username" in your LDAP settings.
 
 ### UserInfo request for Bearer token validation
 
