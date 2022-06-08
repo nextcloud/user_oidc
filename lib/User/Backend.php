@@ -37,11 +37,14 @@ use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
+use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\ICustomLogout;
@@ -251,19 +254,23 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						$this->eventDispatcher->dispatchTyped(new TokenValidatedEvent(['token' => $headerToken], $provider, $discovery));
 						if ($autoProvisionAllowed) {
 							$backendUser = $this->userMapper->getOrCreate($provider->getId(), $userId);
+							$this->checkFirstLogin($userId);
 							return $backendUser->getUserId();
 						} else {
 							if ($this->userExists($userId)) {
+								$this->checkFirstLogin($userId);
 								return $userId;
 							}
 							// if the user exists locally
 							if ($this->userManager->userExists($userId)) {
+								$this->checkFirstLogin($userId);
 								return $userId;
 							}
 							// if not, this potentially triggers a user_ldap search
 							// to get the user if it has not been synced yet
 							$this->userManager->search($userId);
 							if ($this->userManager->userExists($userId)) {
+								$this->checkFirstLogin($userId);
 								return $userId;
 							}
 						}
@@ -275,5 +282,35 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$this->logger->error('Could not find unique token validation');
 		return '';
+	}
+
+	/**
+	 * Inspired by lib/private/User/Session.php::prepareUserLogin()
+	 *
+	 * @param $userId
+	 * @return void
+	 * @throws \OCP\Files\NotFoundException
+	 */
+	private function checkFirstLogin($userId): void {
+		$user = $this->userManager->get($userId);
+		if ($user === null) {
+			return;
+		}
+		$firstLogin = $user->getLastLogin() === 0;
+		if ($firstLogin) {
+			$user->updateLastLoginTimestamp();
+			\OC_Util::setupFS($userId);
+			// trigger creation of user home and /files folder
+			$userFolder = \OC::$server->getUserFolder($userId);
+			try {
+				// copy skeleton
+				\OC_Util::copySkeleton($userId, $userFolder);
+			} catch (NotPermittedException $ex) {
+				// read only uses
+			}
+
+			// trigger any other initialization
+			\OC::$server->getEventDispatcher()->dispatch(IUser::class . '::firstLogin', new GenericEvent($user));
+		}
 	}
 }
