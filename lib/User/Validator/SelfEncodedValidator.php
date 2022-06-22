@@ -68,6 +68,12 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 			return null;
 		}
 
+		// Verify audience
+		if (!(($payload->aud === $provider->getClientId() || in_array($provider->getClientId(), $payload->aud, true)))) {
+			$this->logger->debug('This token is not for us');
+			return null;
+		}
+
 		// find the user ID
 		if (!isset($payload->{$uidAttribute})) {
 			return null;
