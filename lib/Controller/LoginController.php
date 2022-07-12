@@ -30,6 +30,7 @@ namespace OCA\UserOIDC\Controller;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
@@ -100,12 +101,17 @@ class LoginController extends Controller {
 	 * @var IConfig
 	 */
 	private $config;
+	/**
+	 * @var LdapService
+	 */
+	private $ldapService;
 
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
 		ProviderService $providerService,
 		DiscoveryService $discoveryService,
+		LdapService $ldapService,
 		ISecureRandom $random,
 		ISession $session,
 		IClientService $clientService,
@@ -134,6 +140,7 @@ class LoginController extends Controller {
 		$this->eventDispatcher = $eventDispatcher;
 		$this->logger = $logger;
 		$this->config = $config;
+		$this->ldapService = $ldapService;
 	}
 
 	/**
@@ -360,7 +367,11 @@ class LoginController extends Controller {
 			// so new users will be directly available even if they were not synced before this login attempt
 			$this->userManager->search($userId);
 			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
-			return $this->userManager->get($userId);
+			$user = $this->userManager->get($userId);
+			if ($this->ldapService->isLdapDeletedUser($user)) {
+				return null;
+			}
+			return $user;
 		}
 
 		// now we try to auto-provision

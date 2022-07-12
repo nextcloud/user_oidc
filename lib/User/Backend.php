@@ -28,6 +28,7 @@ namespace OCA\UserOIDC\User;
 use OCA\UserOIDC\Event\TokenValidatedEvent;
 use OCA\UserOIDC\Controller\LoginController;
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
@@ -94,6 +95,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @var IUserManager
 	 */
 	private $userManager;
+	/**
+	 * @var LdapService
+	 */
+	private $ldapService;
 
 	public function __construct(IConfig $config,
 								UserMapper $userMapper,
@@ -105,6 +110,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								DiscoveryService $discoveryService,
 								ProviderMapper $providerMapper,
 								ProviderService $providerService,
+								LdapService $ldapService,
 								IUserManager $userManager) {
 		$this->config = $config;
 		$this->userMapper = $userMapper;
@@ -117,6 +123,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		$this->session = $session;
 		$this->urlGenerator = $urlGenerator;
 		$this->userManager = $userManager;
+		$this->ldapService = $ldapService;
 	}
 
 	public function getBackendName(): string {
@@ -263,6 +270,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 							// if the user exists locally
 							if ($this->userManager->userExists($userId)) {
+								$user = $this->userManager->get($userId);
+								if ($this->ldapService->isLdapDeletedUser($user)) {
+									return '';
+								}
 								$this->checkFirstLogin($userId);
 								return $userId;
 							}
@@ -270,6 +281,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							// to get the user if it has not been synced yet
 							$this->userManager->search($userId);
 							if ($this->userManager->userExists($userId)) {
+								$user = $this->userManager->get($userId);
+								if ($this->ldapService->isLdapDeletedUser($user)) {
+									return '';
+								}
 								$this->checkFirstLogin($userId);
 								return $userId;
 							}
@@ -287,15 +302,15 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	/**
 	 * Inspired by lib/private/User/Session.php::prepareUserLogin()
 	 *
-	 * @param $userId
+	 * @param IUser $user
 	 * @return void
 	 * @throws \OCP\Files\NotFoundException
 	 */
-	private function checkFirstLogin($userId): void {
-		$user = $this->userManager->get($userId);
+	private function checkFirstLogin(IUser $user): void {
 		if ($user === null) {
 			return;
 		}
+		$userId = $user->getUID();
 		$firstLogin = $user->getLastLogin() === 0;
 		if ($firstLogin) {
 			$user->updateLastLoginTimestamp();
