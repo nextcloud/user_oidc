@@ -28,9 +28,13 @@ return [
 		['name' => 'login#login', 'url' => '/login/{providerId}', 'verb' => 'GET'],
 		['name' => 'login#code', 'url' => '/code', 'verb' => 'GET'],
 		['name' => 'login#singleLogoutService', 'url' => '/sls', 'verb' => 'GET'],
+
+		['name' => 'api#createUser', 'url' => '/user', 'verb' => 'POST'],
+
 		['name' => 'id4me#showLogin', 'url' => '/id4me', 'verb' => 'GET'],
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],
 		['name' => 'id4me#code', 'url' => '/id4me/code', 'verb' => 'GET'],
+
 		['name' => 'Settings#createProvider', 'url' => '/provider', 'verb' => 'POST'],
 		['name' => 'Settings#updateProvider', 'url' => '/provider/{providerId}', 'verb' => 'PUT'],
 		['name' => 'Settings#deleteProvider', 'url' => '/provider/{providerId}', 'verb' => 'DELETE'],
