@@ -45,6 +45,7 @@ use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
+use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IRequest;
@@ -60,7 +61,6 @@ class LoginController extends Controller {
 	private const NONCE = 'oidc.nonce';
 	public const PROVIDERID = 'oidc.providerid';
 	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
-	private const CURRENT_SID = 'oidc.sid';
 
 	/** @var ISecureRandom */
 	private $random;
@@ -112,6 +112,10 @@ class LoginController extends Controller {
 	 * @var IProvider
 	 */
 	private $authTokenProvider;
+	/**
+	 * @var \OCP\ICache
+	 */
+	private $cache;
 
 	public function __construct(
 		IRequest $request,
@@ -130,6 +134,7 @@ class LoginController extends Controller {
 		IEventDispatcher $eventDispatcher,
 		IConfig $config,
 		IProvider $authTokenProvider,
+		ICacheFactory $cacheFactory,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -150,6 +155,7 @@ class LoginController extends Controller {
 		$this->config = $config;
 		$this->ldapService = $ldapService;
 		$this->authTokenProvider = $authTokenProvider;
+		$this->cache = $cacheFactory->createDistributed(Application::APP_ID);
 	}
 
 	/**
@@ -354,8 +360,8 @@ class LoginController extends Controller {
 		$this->userSession->createRememberMeToken($user);
 
 		// for backchannel logout
-		$this->config->setAppValue(Application::APP_ID, 'sid-' . $idTokenPayload->sid, $this->session->getId());
-		$this->session->set(self::CURRENT_SID, $idTokenPayload->sid);
+//		$this->config->setAppValue(Application::APP_ID, 'sid-' . $idTokenPayload->sid, $this->session->getId());
+		$this->cache->set('sid-' . $idTokenPayload->sid, $this->session->getId(), 60 * 60 * 24);
 
 		// if the user was provisioned by user_ldap, this is required to update and/or generate the avatar
 		if ($user->canChangeAvatar()) {
@@ -464,12 +470,7 @@ class LoginController extends Controller {
 				$targetUrl .= '?post_logout_redirect_uri=' . $this->urlGenerator->getAbsoluteURL('/');
 			}
 		}
-		// cleanup backchannel logout related config values
-		$sid = $this->session->get(self::CURRENT_SID);
-		$this->config->deleteAppValue(Application::APP_ID, 'sid-' . $sid);
-
 		$this->userSession->logout();
-
 		// make sure we clear the session to avoid messing with Backend::isSessionActive
 		$this->session->clear();
 		return new RedirectResponse($targetUrl);
@@ -518,8 +519,9 @@ class LoginController extends Controller {
 
 		// get the user session ID associated with the logout token's sid attr
 		$sid = $logoutTokenPayload->sid;
-		$sessionId = $this->config->getAppValue(Application::APP_ID, 'sid-' . $sid);
-		if ($sessionId === '') {
+//		$sessionId = $this->config->getAppValue(Application::APP_ID, 'sid-' . $sid);
+		$sessionId = $this->cache->get('sid-' . $sid);
+		if ($sessionId === null || $sessionId === '') {
 			return $this->getBackchannelLogoutErrorResponse('invalid SID', 'The sid of the logout token was not found');
 		}
 
@@ -530,9 +532,6 @@ class LoginController extends Controller {
 		} catch (InvalidTokenException $e) {
 			return $this->getBackchannelLogoutErrorResponse('session not found', 'The session was not found in Nextcloud');
 		}
-
-		// cleanup
-		$this->config->deleteAppValue(Application::APP_ID, 'sid-' . $sid);
 
 		return new JSONResponse([], Http::STATUS_OK);
 	}
