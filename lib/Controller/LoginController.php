@@ -522,6 +522,7 @@ class LoginController extends Controller {
 //		$sessionId = $this->config->getAppValue(Application::APP_ID, 'sid-' . $sid);
 		$sessionId = $this->cache->get('sid-' . $sid);
 		if ($sessionId === null || $sessionId === '') {
+			error_log('session not founddddd : "'.$sessionId.'"');
 			return $this->getBackchannelLogoutErrorResponse('invalid SID', 'The sid of the logout token was not found');
 		}
 
