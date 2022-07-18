@@ -28,6 +28,7 @@ return [
 		['name' => 'login#login', 'url' => '/login/{providerId}', 'verb' => 'GET'],
 		['name' => 'login#code', 'url' => '/code', 'verb' => 'GET'],
 		['name' => 'login#singleLogoutService', 'url' => '/sls', 'verb' => 'GET'],
+		['name' => 'login#backChannelLogout', 'url' => '/backchannel-logout/{providerIdentifier}', 'verb' => 'POST'],
 
 		['name' => 'api#createUser', 'url' => '/user', 'verb' => 'POST'],
 
