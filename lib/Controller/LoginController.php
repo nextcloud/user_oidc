@@ -314,6 +314,7 @@ class LoginController extends Controller {
 		$idTokenPayload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
+		error_log('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
 
 		if ($idTokenPayload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
@@ -504,6 +505,7 @@ class LoginController extends Controller {
 		$logoutTokenPayload = JWT::decode($logout_token, $jwks, array_keys(JWT::$supported_algs));
 
 		$this->logger->debug('Parsed the logout JWT payload: ' . json_encode($logoutTokenPayload, JSON_THROW_ON_ERROR));
+		error_log('Parsed the LOGOUT JWT payload: ' . json_encode($logoutTokenPayload, JSON_THROW_ON_ERROR));
 
 		// check the audience
 		if (!(($logoutTokenPayload->aud === $provider->getClientId() || in_array($provider->getClientId(), $logoutTokenPayload->aud, true)))) {
