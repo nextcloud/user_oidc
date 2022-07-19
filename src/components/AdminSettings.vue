@@ -67,7 +67,8 @@
 					<div class="oidcproviders__details">
 						<b>{{ provider.identifier }}</b><br>
 						{{ t('user_oidc', 'Client ID') }}: {{ provider.clientId }}<br>
-						{{ t('user_oidc', 'Discovery endpoint') }}: {{ provider.discoveryEndpoint }}
+						{{ t('user_oidc', 'Discovery endpoint') }}: {{ provider.discoveryEndpoint }}<br>
+						{{ t('user_oidc', 'Backchannel Logout URL') }}: {{ getBackchannelUrl(provider) }}
 					</div>
 					<Actions>
 						<ActionButton icon="icon-rename" @click="updateProvider(provider)">
@@ -218,6 +219,10 @@ export default {
 				logger.error('Could not register a provider: ' + error.message, { error })
 				showError(t('user_oidc', 'Could not register provider:') + ' ' + (error.response?.data?.message ?? error.message))
 			}
+		},
+		getBackchannelUrl(provider) {
+			return window.location.protocol + '//' + window.location.host
+				+ generateUrl('/apps/user_oidc/backchannel-logout/{identifier}', { identifier: provider.identifier })
 		},
 	},
 }

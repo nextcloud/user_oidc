@@ -76,6 +76,17 @@ It can be disabled in `config.php`:
 ],
 ```
 
+### Backchannel logout
+
+[OpenId backchannel logout](https://openid.net/specs/openid-connect-backchannel-1_0.html) is supported by this app.
+You just have to configure 2 settings for the OpenId client (on the provider side, Keycloak for example):
+1. Backchannel Logout URL: If your Nextcloud base URL is https://my.nextcloud.org
+and your OpenId provider identifier (on the Nextcloud side) is "myOidcProvider"
+set the backchannel Logout URL to
+https://my.nextcloud.org/index.php/apps/user_oidc/backchannel-logout/myOidcProvider .
+This URL is provided for each provider in the OpenID Connect admin settings.
+2. Enable the "Backchannel Logout Session Required" setting.
+
 ### Auto provisioning
 
 By default, this app provisions the users with the information contained in the OIDC token
