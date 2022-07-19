@@ -354,7 +354,11 @@ class LoginController extends Controller {
 		$this->userSession->createRememberMeToken($user);
 
 		// for backchannel logout
-		$this->config->setAppValue(Application::APP_ID, 'sid-' . $idTokenPayload->sid, $this->session->getId());
+		$authToken = $this->authTokenProvider->getToken($this->session->getId());
+		error_log('SESSSSSSSS '.$this->session->getId().' ;');
+		error_log('SESSSSSSSSTOKEN '.$authToken->getId().' ;');
+//		$this->config->setAppValue(Application::APP_ID, 'sid-' . $idTokenPayload->sid, $this->session->getId());
+		$this->config->setAppValue(Application::APP_ID, 'sid-' . $idTokenPayload->sid, $authToken->getId());
 		$this->session->set(self::CURRENT_SID, $idTokenPayload->sid);
 
 		// if the user was provisioned by user_ldap, this is required to update and/or generate the avatar
@@ -516,17 +520,17 @@ class LoginController extends Controller {
 			return $this->getBackchannelLogoutErrorResponse('invalid nonce', 'The logout token should not contain a nonce attribute');
 		}
 
-		// get the user session ID associated with the logout token's sid attr
+		// get the auth token ID associated with the logout token's sid attr
 		$sid = $logoutTokenPayload->sid;
-		$sessionId = $this->config->getAppValue(Application::APP_ID, 'sid-' . $sid);
-		if ($sessionId === '') {
+		$authTokenId = $this->config->getAppValue(Application::APP_ID, 'sid-' . $sid);
+		if ($authTokenId === '') {
 			return $this->getBackchannelLogoutErrorResponse('invalid SID', 'The sid of the logout token was not found');
 		}
 
 		try {
-			$sessionToken = $this->authTokenProvider->getToken($sessionId);
-			$userId = $sessionToken->getUID();
-			$this->authTokenProvider->invalidateTokenById($userId, $sessionToken->getId());
+			$authToken = $this->authTokenProvider->getTokenById((int)$authTokenId);
+			$userId = $authToken->getUID();
+			$this->authTokenProvider->invalidateTokenById($userId, $authToken->getId());
 		} catch (InvalidTokenException $e) {
 			return $this->getBackchannelLogoutErrorResponse('session not found', 'The session was not found in Nextcloud');
 		}
