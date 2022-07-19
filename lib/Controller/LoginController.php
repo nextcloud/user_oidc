@@ -362,9 +362,18 @@ class LoginController extends Controller {
 		$this->userSession->createRememberMeToken($user);
 
 		// for backchannel logout
-		$authToken = $this->authTokenProvider->getToken($this->session->getId());
-
-		$this->sessionMapper->createSession($idTokenPayload->sid, $idTokenPayload->sub, $idTokenPayload->iss, $authToken->getId(), $this->session->getId());
+		try {
+			$authToken = $this->authTokenProvider->getToken($this->session->getId());
+			$this->sessionMapper->createSession(
+				$idTokenPayload->sid ?? 'fallback-sid',
+				$idTokenPayload->sub ?? 'fallback-sub',
+				$idTokenPayload->iss ?? 'fallback-iss',
+				$authToken->getId(),
+				$this->session->getId()
+			);
+		} catch (InvalidTokenException $e) {
+			$this->logger->debug('Auth token not found after login');
+		}
 
 		// if the user was provisioned by user_ldap, this is required to update and/or generate the avatar
 		if ($user->canChangeAvatar()) {
