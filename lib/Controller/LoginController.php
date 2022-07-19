@@ -573,6 +573,7 @@ class LoginController extends Controller {
 	 */
 	private function getBackchannelLogoutErrorResponse(string $error, string $description): JSONResponse {
 		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
+		error_log('Backchannel logout error. ' . $error . ' ; ' . $description);
 		return new JSONResponse(
 			[
 				'error' => $error,
