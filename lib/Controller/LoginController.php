@@ -546,7 +546,7 @@ class LoginController extends Controller {
 			return $this->getBackchannelLogoutErrorResponse('invalid ISS', 'The iss does not match the one from the login ID token');
 		}
 
-		$authTokenId = $oidcSession->getAuthtokenId();
+		$authTokenId = (int)$oidcSession->getAuthtokenId();
 		error_log('authtokenidddddd is "'.$authTokenId.'"');
 		error_log('authtokenidddddd TYPE is "'.gettype($authTokenId).'"');
 		try {
