@@ -547,6 +547,8 @@ class LoginController extends Controller {
 		}
 
 		$authTokenId = $oidcSession->getAuthtokenId();
+		error_log('authtokenidddddd is "'.$authTokenId.'"');
+		error_log('authtokenidddddd TYPE is "'.gettype($authTokenId).'"');
 		try {
 			$authToken = $this->authTokenProvider->getTokenById($authTokenId);
 			// we could also get the auth token by nc session ID
