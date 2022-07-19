@@ -40,11 +40,11 @@ class SessionMapper extends QBMapper {
 
 	/**
 	 * @param int $id
-	 * @return Provider
+	 * @return Session
 	 * @throws \OCP\AppFramework\Db\DoesNotExistException
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
-	public function getSession(int $id): Provider {
+	public function getSession(int $id): Session {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
