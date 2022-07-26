@@ -92,6 +92,20 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
+	 * @param int $minCreationTimestamp
+	 * @throws \OCP\DB\Exception
+	 */
+	public function cleanupSessions(int $minCreationTimestamp): void {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->delete($this->getTableName())
+			->where(
+				$qb->expr()->lt('created_at', $qb->createNamedParameter($minCreationTimestamp, IQueryBuilder::PARAM_INT))
+			);
+		$qb->executeStatement();
+	}
+
+	/**
 	 * @return Session[]
 	 */
 	public function getSessions() {
