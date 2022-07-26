@@ -26,6 +26,9 @@
 		<admin-section>OCA\UserOIDC\Settings\Section</admin-section>
 	</settings>
 
+	<background-jobs>
+		<job>OCA\UserOIDC\Cron\CleanupSessions</job>
+	</background-jobs>
 	<commands>
 		<command>OCA\UserOIDC\Command\UpsertProvider</command>
 		<command>OCA\UserOIDC\Command\DeleteProvider</command>
