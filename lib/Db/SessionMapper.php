@@ -106,18 +106,6 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
-	 * @return Session[]
-	 */
-	public function getSessions() {
-		$qb = $this->db->getQueryBuilder();
-
-		$qb->select('*')
-			->from($this->getTableName());
-
-		return $this->findEntities($qb);
-	}
-
-	/**
 	 * Create a session
 	 *
 	 * @param string $sid
