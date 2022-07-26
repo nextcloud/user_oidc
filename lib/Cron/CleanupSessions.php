@@ -26,6 +26,7 @@ namespace OCA\UserOIDC\Cron;
 use DateTime;
 use OCA\UserOIDC\Db\SessionMapper;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IConfig;
 
@@ -45,9 +46,10 @@ class CleanupSessions extends TimedJob {
 								SessionMapper $sessionMapper) {
 		parent::__construct($time);
 		$this->sessionMapper = $sessionMapper;
+		$this->config = $config;
 		// daily
 		$this->setInterval(24 * 60 * 60);
-		$this->config = $config;
+		$this->setTimeSensitivity(IJob::TIME_INSENSITIVE);
 	}
 
 	/**

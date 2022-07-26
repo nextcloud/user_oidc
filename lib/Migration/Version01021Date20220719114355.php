@@ -60,6 +60,8 @@ class Version01021Date20220719114355 extends SimpleMigrationStep {
 		]);
 		$table->setPrimaryKey(['id']);
 		$table->addUniqueIndex(['sid']);
+		$table->addUniqueIndex(['created_at']);
+		$table->addUniqueIndex(['nc_session_id']);
 
 		return $schema;
 	}
