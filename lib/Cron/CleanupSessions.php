@@ -49,7 +49,9 @@ class CleanupSessions extends TimedJob {
 		$this->config = $config;
 		// daily
 		$this->setInterval(24 * 60 * 60);
-		$this->setTimeSensitivity(IJob::TIME_INSENSITIVE);
+		if (method_exists($this, 'setTimeSensitivity')) {
+			$this->setTimeSensitivity(IJob::TIME_INSENSITIVE);
+		}
 	}
 
 	/**
