@@ -27,6 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use OC\Authentication\Exceptions\InvalidTokenException;
+use OC\Authentication\Token\IProvider;
+use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
@@ -37,6 +40,8 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -105,6 +110,14 @@ class LoginController extends Controller {
 	 * @var LdapService
 	 */
 	private $ldapService;
+	/**
+	 * @var IProvider
+	 */
+	private $authTokenProvider;
+	/**
+	 * @var SessionMapper
+	 */
+	private $sessionMapper;
 
 	public function __construct(
 		IRequest $request,
@@ -122,6 +135,8 @@ class LoginController extends Controller {
 		ITimeFactory $timeFactory,
 		IEventDispatcher $eventDispatcher,
 		IConfig $config,
+		IProvider $authTokenProvider,
+		SessionMapper $sessionMapper,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -141,6 +156,8 @@ class LoginController extends Controller {
 		$this->logger = $logger;
 		$this->config = $config;
 		$this->ldapService = $ldapService;
+		$this->authTokenProvider = $authTokenProvider;
+		$this->sessionMapper = $sessionMapper;
 	}
 
 	/**
@@ -344,6 +361,20 @@ class LoginController extends Controller {
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 		$this->userSession->createRememberMeToken($user);
 
+		// for backchannel logout
+		try {
+			$authToken = $this->authTokenProvider->getToken($this->session->getId());
+			$this->sessionMapper->createSession(
+				$idTokenPayload->sid ?? 'fallback-sid',
+				$idTokenPayload->sub ?? 'fallback-sub',
+				$idTokenPayload->iss ?? 'fallback-iss',
+				$authToken->getId(),
+				$this->session->getId()
+			);
+		} catch (InvalidTokenException $e) {
+			$this->logger->debug('Auth token not found after login');
+		}
+
 		// if the user was provisioned by user_ldap, this is required to update and/or generate the avatar
 		if ($user->canChangeAvatar()) {
 			$this->logger->debug('$user->canChangeAvatar() is true');
@@ -431,6 +462,8 @@ class LoginController extends Controller {
 	}
 
 	/**
+	 * Endpoint called by NC to logout in the IdP before killing the current session
+	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @UseSession
@@ -449,9 +482,110 @@ class LoginController extends Controller {
 				$targetUrl .= '?post_logout_redirect_uri=' . $this->urlGenerator->getAbsoluteURL('/');
 			}
 		}
+		// cleanup related oidc session
+		$this->sessionMapper->deleteFromNcSessionId($this->session->getId());
+
 		$this->userSession->logout();
+
 		// make sure we clear the session to avoid messing with Backend::isSessionActive
 		$this->session->clear();
 		return new RedirectResponse($targetUrl);
+	}
+
+	/**
+	 * Endpoint called by the IdP (OP) when end_session_endpoint is called by another client
+	 * The logout token contains the sid for which we know the sessionId
+	 * which leads to the auth token that we can invalidate
+	 *
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 *
+	 * @param string $providerIdentifier
+	 * @param string $logout_token
+	 * @return void
+	 */
+	public function backChannelLogout(string $providerIdentifier, string $logout_token = ''): JSONResponse {
+		// get the provider
+		$provider = $this->providerService->getProviderByIdentifier($providerIdentifier);
+		if ($provider === null) {
+			return $this->getBackchannelLogoutErrorResponse('provider not found', 'The provider was not found in Nextcloud');
+		}
+
+		// decrypt the logout token
+		$jwks = $this->discoveryService->obtainJWK($provider);
+		JWT::$leeway = 60;
+		$logoutTokenPayload = JWT::decode($logout_token, $jwks, array_keys(JWT::$supported_algs));
+
+		$this->logger->debug('Parsed the logout JWT payload: ' . json_encode($logoutTokenPayload, JSON_THROW_ON_ERROR));
+
+		// check the audience
+		if (!(($logoutTokenPayload->aud === $provider->getClientId() || in_array($provider->getClientId(), $logoutTokenPayload->aud, true)))) {
+			return $this->getBackchannelLogoutErrorResponse('invalid audience', 'The audience of the logout token does not match the provider');
+		}
+
+		// check the event attr
+		if (!isset($logoutTokenPayload->events->{'http://schemas.openid.net/event/backchannel-logout'})) {
+			return $this->getBackchannelLogoutErrorResponse('invalid event', 'The backchannel-logout event was not found in the logout token');
+		}
+
+		// check the nonce attr
+		if (isset($logoutTokenPayload->nonce)) {
+			return $this->getBackchannelLogoutErrorResponse('invalid nonce', 'The logout token should not contain a nonce attribute');
+		}
+
+		// get the auth token ID associated with the logout token's sid attr
+		$sid = $logoutTokenPayload->sid;
+		try {
+			$oidcSession = $this->sessionMapper->findSessionBySid($sid);
+		} catch (DoesNotExistException $e) {
+			return $this->getBackchannelLogoutErrorResponse('invalid SID', 'The sid of the logout token was not found');
+		} catch (MultipleObjectsReturnedException $e) {
+			return $this->getBackchannelLogoutErrorResponse('invalid SID', 'The sid of the logout token was found multiple times');
+		}
+
+		$sub = $logoutTokenPayload->sub;
+		if ($oidcSession->getSub() !== $sub) {
+			return $this->getBackchannelLogoutErrorResponse('invalid SUB', 'The sub does not match the one from the login ID token');
+		}
+		$iss = $logoutTokenPayload->iss;
+		if ($oidcSession->getIss() !== $iss) {
+			return $this->getBackchannelLogoutErrorResponse('invalid ISS', 'The iss does not match the one from the login ID token');
+		}
+
+		// i don't know why but the cast is necessary
+		$authTokenId = (int)$oidcSession->getAuthtokenId();
+		try {
+			$authToken = $this->authTokenProvider->getTokenById($authTokenId);
+			// we could also get the auth token by nc session ID
+			// $authToken = $this->authTokenProvider->getToken($oidcSession->getNcSessionId());
+			$userId = $authToken->getUID();
+			$this->authTokenProvider->invalidateTokenById($userId, $authToken->getId());
+		} catch (InvalidTokenException $e) {
+			return $this->getBackchannelLogoutErrorResponse('nc session not found', 'The authentication session was not found in Nextcloud');
+		}
+
+		// cleanup
+		$this->sessionMapper->delete($oidcSession);
+
+		return new JSONResponse([], Http::STATUS_OK);
+	}
+
+	/**
+	 * Generate an error response according to the OIDC standard
+	 * Log the error
+	 *
+	 * @param string $error
+	 * @param string $description
+	 * @return JSONResponse
+	 */
+	private function getBackchannelLogoutErrorResponse(string $error, string $description): JSONResponse {
+		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
+		return new JSONResponse(
+			[
+				'error' => $error,
+				'error_description' => $description,
+			],
+			Http::STATUS_BAD_REQUEST,
+		);
 	}
 }
