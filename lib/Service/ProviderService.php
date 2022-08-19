@@ -40,9 +40,12 @@ class ProviderService {
 	public const SETTING_MAPPING_DISPLAYNAME = 'mappingDisplayName';
 	public const SETTING_MAPPING_EMAIL = 'mappingEmail';
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
+	public const SETTING_MAPPING_GROUPS = 'mappingGroups';
 	public const SETTING_EXTRA_CLAIMS = 'extraClaims';
 	public const SETTING_JWKS_CACHE = 'jwksCache';
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
+	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
+	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
 
 	/** @var IConfig */
 	private $config;
@@ -125,14 +128,17 @@ class ProviderService {
 			self::SETTING_MAPPING_EMAIL,
 			self::SETTING_MAPPING_QUOTA,
 			self::SETTING_MAPPING_UID,
+			self::SETTING_MAPPING_GROUPS,
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
 			self::SETTING_EXTRA_CLAIMS,
+			self::SETTING_PROVIDER_BASED_ID,
+			self::SETTING_GROUP_PROVISIONING
 		];
 	}
 
 	private function convertFromJSON(string $key, $value): string {
-		if ($key === self::SETTING_UNIQUE_UID || $key === self::SETTING_CHECK_BEARER) {
+		if ($key === self::SETTING_UNIQUE_UID || $key === self::SETTING_CHECK_BEARER || $key === self::SETTING_PROVIDER_BASED_ID || $key === self::SETTING_GROUP_PROVISIONING) {
 			$value = $value ? '1' : '0';
 		}
 		return (string)$value;
@@ -140,7 +146,7 @@ class ProviderService {
 
 	private function convertToJSON(string $key, $value) {
 		// default is disabled (if not set)
-		if ($key === self::SETTING_UNIQUE_UID || $key === self::SETTING_CHECK_BEARER) {
+		if ($key === self::SETTING_UNIQUE_UID || $key === self::SETTING_CHECK_BEARER || $key === self::SETTING_PROVIDER_BASED_ID || $key === self::SETTING_GROUP_PROVISIONING) {
 			return $value === '1';
 		}
 		return (string)$value;
