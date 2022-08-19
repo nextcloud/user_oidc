@@ -9,7 +9,7 @@
       "bamarni/composer-bin-plugin": true
     },
 	"platform": {
-      "php": "7.3"
+      "php": "7.4"
     }
   },
   "scripts": {
@@ -36,7 +36,8 @@
   "require-dev": {
     "nextcloud/coding-standard": "^1.0.0",
     "symfony/event-dispatcher": "^4",
-    "phpunit/phpunit": "^9.5"
+    "phpunit/phpunit": "^9.5",
+  	"christophwurst/nextcloud": "24"
   },
   "extra": {
     "mozart": {

@@ -161,7 +161,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		return $user->getDisplayName();
 	}
 
-	public function getDisplayNames($search = '', $limit = null, $offset = null) {
+	public function getDisplayNames($search = '', $limit = null, $offset = null): array {
 		return $this->userMapper->findDisplayNames($search, $limit, $offset);
 	}
 
@@ -189,7 +189,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @return boolean whether Apache reports a user as currently logged in.
 	 * @since 6.0.0
 	 */
-	public function isSessionActive() {
+	public function isSessionActive(): bool {
 		// if this returns true, getCurrentUserId is called
 		// not sure if we should rather to the validation in here as otherwise it might fail for other backends or bave other side effects
 		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
@@ -214,7 +214,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @return string
 	 * @since 6.0.0
 	 */
-	public function getCurrentUserId() {
+	public function getCurrentUserId(): string {
 		$providers = $this->providerMapper->getProviders();
 		if (count($providers) === 0) {
 			$this->logger->error('no OIDC providers');

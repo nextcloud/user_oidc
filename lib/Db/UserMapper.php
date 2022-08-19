@@ -25,21 +25,22 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Db;
 
-use OCA\UserOIDC\Service\ProviderService;
+use OCA\UserOIDC\Service\IdService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 use OC\Cache\CappedMemoryCache;
 
 class UserMapper extends QBMapper {
-	/** @var ProviderService */
-	private $providerService;
+	/** @var IdService */
+	private $idService;
+
 	/** @var CappedMemoryCache<User> */
 	private $userCache;
 
-	public function __construct(IDBConnection $db, ProviderService $providerService) {
+	public function __construct(IDBConnection $db, IdService $idService) {
 		parent::__construct($db, 'user_oidc', User::class);
-		$this->providerService = $providerService;
+		$this->idService = $idService;
 		$this->userCache = new CappedMemoryCache();
 	}
 
@@ -111,20 +112,7 @@ class UserMapper extends QBMapper {
 	}
 
 	public function getOrCreate(int $providerId, string $sub, bool $id4me = false): User {
-		if ($this->providerService->getSetting($providerId, ProviderService::SETTING_UNIQUE_UID, '1') === '1' || $id4me) {
-			$userId = $providerId . '_';
-
-			if ($id4me) {
-				$userId .= '1_';
-			} else {
-				$userId .= '0_';
-			}
-
-			$userId .= $sub;
-			$userId = hash('sha256', $userId);
-		} else {
-			$userId = $sub;
-		}
+		$userId = $this->idService->getId($providerId, $sub, $id4me);
 
 		if (strlen($userId) > 64) {
 			$userId = hash('sha256', $userId);
