@@ -101,12 +101,12 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import Modal from '@nextcloud/vue/dist/Components/Modal'
+import Actions from '@nextcloud/vue/dist/Components/Actions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/ActionButton.js'
+import Modal from '@nextcloud/vue/dist/Components/Modal.js'
 
-import logger from '../logger'
-import SettingsForm from './SettingsForm'
+import logger from '../logger.js'
+import SettingsForm from './SettingsForm.vue'
 
 export default {
 	name: 'AdminSettings',
