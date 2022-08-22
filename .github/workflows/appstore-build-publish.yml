@@ -27,7 +27,7 @@ jobs:
 
       - name: Set app env
         run: |
-          # Split and keep last 
+          # Split and keep last
           echo "APP_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
           echo "APP_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
@@ -50,8 +50,8 @@ jobs:
         continue-on-error: true
         with:
           path: ${{ env.APP_NAME }}
-          fallbackNode: "^12"
-          fallbackNpm: "^6"
+          fallbackNode: "^16"
+          fallbackNpm: "^7"
 
       - name: Set up node ${{ steps.versions.outputs.nodeVersion }}
         # Skip if no package.json
