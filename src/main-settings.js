@@ -23,7 +23,7 @@
 import { loadState } from '@nextcloud/initial-state'
 import Vue from 'vue'
 
-import App from './components/AdminSettings'
+import App from './components/AdminSettings.vue'
 
 Vue.prototype.t = t
 Vue.prototype.n = n
