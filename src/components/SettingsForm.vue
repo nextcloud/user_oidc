@@ -108,6 +108,12 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Do you want to allow API calls and WebDav request that are authenticated with an OIDC ID token or access token?') }}
 		</p>
+		<CheckboxRadioSwitch :checked.sync="localProvider.settings.sendIdTokenHint" wrapper-element="div">
+			{{ t('user_oidc', 'Send ID token hint on logout') }}
+		</CheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider.') }}
+		</p>
 		<input type="button" :value="t('user_oidc', 'Cancel')" @click="$emit('cancel')">
 		<input type="submit" :value="submitText">
 	</form>
