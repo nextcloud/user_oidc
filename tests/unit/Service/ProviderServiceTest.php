@@ -83,6 +83,7 @@ class ProviderServiceTest extends TestCase {
 					'mappingGroups' => '1',
 					'uniqueUid' => true,
 					'checkBearer' => true,
+					'sendIdTokenHint' => true,
 					'extraClaims' => '1',
 					'providerBasedId' => true,
 					'groupProvisioning' => true,
@@ -102,6 +103,7 @@ class ProviderServiceTest extends TestCase {
 					'mappingGroups' => '1',
 					'uniqueUid' => true,
 					'checkBearer' => true,
+					'sendIdTokenHint' => true,
 					'extraClaims' => '1',
 					'providerBasedId' => true,
 					'groupProvisioning' => true,
@@ -119,6 +121,7 @@ class ProviderServiceTest extends TestCase {
 			'mappingGroups' => 'groups',
 			'uniqueUid' => true,
 			'checkBearer' => false,
+			'sendIdTokenHint' => true,
 			'extraClaims' => 'claim1 claim2',
 			'providerBasedId' => false,
 			'groupProvisioning' => true,
@@ -133,6 +136,7 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_GROUPS, '', 'groups'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_UNIQUE_UID, '', '1'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_CHECK_BEARER, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_SEND_ID_TOKEN_HINT, '', '1'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_EXTRA_CLAIMS, '', 'claim1 claim2'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_PROVIDER_BASED_ID, '', '0'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_GROUP_PROVISIONING, '', '1'],
@@ -151,6 +155,11 @@ class ProviderServiceTest extends TestCase {
 		Assert::assertEquals(
 			array_merge($defaults, ['checkBearer' => '1']),
 			$this->providerService->setSettings(1, [ProviderService::SETTING_CHECK_BEARER => '1'])
+		);
+
+		Assert::assertEquals(
+			array_merge($defaults, ['sendIdTokenHint' => '0']),
+			$this->providerService->setSettings(1, [ProviderService::SETTING_SEND_ID_TOKEN_HINT => '0'])
 		);
 	}
 
@@ -200,6 +209,10 @@ class ProviderServiceTest extends TestCase {
 			[ProviderService::SETTING_CHECK_BEARER, true, '1', true],
 			[ProviderService::SETTING_CHECK_BEARER, false, '0', false],
 			[ProviderService::SETTING_CHECK_BEARER, 'test', '1', true],
+			// Setting sendIdTokenHint is a boolean
+			[ProviderService::SETTING_SEND_ID_TOKEN_HINT, true, '1', true],
+			[ProviderService::SETTING_SEND_ID_TOKEN_HINT, false, '0', false],
+			[ProviderService::SETTING_SEND_ID_TOKEN_HINT, 'test', '1', true],
 			// Any other values are just strings
 			[ProviderService::SETTING_MAPPING_EMAIL, false, '', false],
 			[ProviderService::SETTING_MAPPING_EMAIL, true, '1', true],

@@ -143,9 +143,7 @@ export default {
 				settings: {
 					uniqueUid: true,
 					checkBearer: false,
-					bearerProvisioning: false,
-					providerBasedId: false,
-					groupProvisioning: false,
+					sendIdTokenHint: true,
 				},
 			},
 			showNewProvider: false,

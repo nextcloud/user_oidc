@@ -34,27 +34,21 @@ use OCP\IConfig;
 
 class ProviderService {
 	public const SETTING_CHECK_BEARER = 'checkBearer';
-	public const SETTING_BEARER_PROVISIONING = 'bearerProvisioning';
+	public const SETTING_SEND_ID_TOKEN_HINT = 'sendIdTokenHint';
 	public const SETTING_UNIQUE_UID = 'uniqueUid';
 	public const SETTING_MAPPING_UID = 'mappingUid';
 	public const SETTING_MAPPING_UID_DEFAULT = 'sub';
 	public const SETTING_MAPPING_DISPLAYNAME = 'mappingDisplayName';
 	public const SETTING_MAPPING_EMAIL = 'mappingEmail';
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
-	public const SETTING_MAPPING_GROUPS = 'mappingGroups';
 	public const SETTING_EXTRA_CLAIMS = 'extraClaims';
 	public const SETTING_JWKS_CACHE = 'jwksCache';
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
-	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
-	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
-
-	private const BOOLEAN_KEYS = [
+	private const BOOLEAN_SETTINGS = array(
 		self::SETTING_UNIQUE_UID,
 		self::SETTING_CHECK_BEARER,
-		self::SETTING_BEARER_PROVISIONING,
-		self::SETTING_PROVIDER_BASED_ID,
-		self::SETTING_GROUP_PROVISIONING
-	];
+		self::SETTING_SEND_ID_TOKEN_HINT
+	);
 
 	/** @var IConfig */
 	private $config;
@@ -137,18 +131,15 @@ class ProviderService {
 			self::SETTING_MAPPING_EMAIL,
 			self::SETTING_MAPPING_QUOTA,
 			self::SETTING_MAPPING_UID,
-			self::SETTING_MAPPING_GROUPS,
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
-			self::SETTING_BEARER_PROVISIONING,
+			self::SETTING_SEND_ID_TOKEN_HINT,
 			self::SETTING_EXTRA_CLAIMS,
-			self::SETTING_PROVIDER_BASED_ID,
-			self::SETTING_GROUP_PROVISIONING
 		];
 	}
 
 	private function convertFromJSON(string $key, $value): string {
-		if (in_array($key, self::BOOLEAN_KEYS)) {
+		if (in_array($key, self::BOOLEAN_SETTINGS)) {
 			$value = $value ? '1' : '0';
 		}
 		return (string)$value;
@@ -156,7 +147,7 @@ class ProviderService {
 
 	private function convertToJSON(string $key, $value) {
 		// default is disabled (if not set)
-		if (in_array($key, self::BOOLEAN_KEYS)) {
+		if (in_array($key, self::BOOLEAN_SETTINGS)) {
 			return $value === '1';
 		}
 		return (string)$value;
