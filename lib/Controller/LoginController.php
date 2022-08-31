@@ -43,9 +43,12 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
@@ -57,6 +60,9 @@ use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
+use OCP\Session\Exceptions\SessionNotAvailableException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class LoginController extends Controller {
 	private const STATE = 'oidc.state';
@@ -158,16 +164,47 @@ class LoginController extends Controller {
 		$this->ldapService = $ldapService;
 		$this->authTokenProvider = $authTokenProvider;
 		$this->sessionMapper = $sessionMapper;
+		$this->request = $request;
+	}
+
+	/**
+	 * @return bool
+	 */
+	private function isSecure(): bool {
+		// no restriction in debug mode
+		return $this->config->getSystemValueBool('debug', false) || $this->request->getServerProtocol() === 'https';
+	}
+
+	/**
+	 * @return TemplateResponse
+	 */
+	private function generateProtocolErrorResponse(): TemplateResponse {
+		$response = new TemplateResponse('', 'error', [
+			'errors' => [
+				['error' => 'You must access Nextcloud with HTTPS to use OpenID Connect.']
+			]
+		], TemplateResponse::RENDER_AS_ERROR);
+		$response->setStatus(Http::STATUS_NOT_FOUND);
+		return $response;
 	}
 
 	/**
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 *
+	 * @param int $providerId
+	 * @param string|null $redirectUrl
+	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
 	 */
 	public function login(int $providerId, string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
+		}
+		if (!$this->isSecure()) {
+			return $this->generateProtocolErrorResponse();
 		}
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
 
@@ -243,12 +280,12 @@ class LoginController extends Controller {
 			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
 			$this->logger->error('Could not reach provider at URL ' . $provider->getDiscoveryEndpoint());
-			$response = new Http\TemplateResponse('', 'error', [
+			$response = new TemplateResponse('', 'error', [
 				'errors' => [
 					['error' => 'Could not the reach OpenID Connect provider.']
 				]
-			], Http\TemplateResponse::RENDER_AS_ERROR);
-			$response->setStatus(404);
+			], TemplateResponse::RENDER_AS_ERROR);
+			$response->setStatus(Http::STATUS_NOT_FOUND);
 			return $response;
 		}
 
@@ -260,7 +297,7 @@ class LoginController extends Controller {
 		// Workaround to avoid empty session on special conditions in Safari
 		// https://github.com/nextcloud/user_oidc/pull/358
 		if ($this->request->isUserAgent(['/Safari/']) && !$this->request->isUserAgent(['/Chrome/'])) {
-			return new Http\DataDisplayResponse('<meta http-equiv="refresh" content="0; url=' . $url . '" />');
+			return new DataDisplayResponse('<meta http-equiv="refresh" content="0; url=' . $url . '" />');
 		}
 
 		return new RedirectResponse($url);
@@ -270,8 +307,22 @@ class LoginController extends Controller {
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 *
+	 * @param string $state
+	 * @param string $code
+	 * @param string $scope
+	 * @param string $error
+	 * @param string $error_description
+	 * @return JSONResponse|RedirectResponse|TemplateResponse
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
+	 * @throws SessionNotAvailableException
+	 * @throws \JsonException
 	 */
-	public function code($state = '', $code = '', $scope = '', $error = '', $error_description = '') {
+	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
+		if (!$this->isSecure()) {
+			return $this->generateProtocolErrorResponse();
+		}
 		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
 
 		if ($error !== '') {
@@ -390,6 +441,15 @@ class LoginController extends Controller {
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
 	}
 
+	/**
+	 * @param string $userId
+	 * @param int $providerId
+	 * @param object $idTokenPayload
+	 * @return IUser|null
+	 * @throws Exception
+	 * @throws ContainerExceptionInterface
+	 * @throws NotFoundExceptionInterface
+	 */
 	private function provisionUser(string $userId, int $providerId, object $idTokenPayload): ?IUser {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
@@ -468,8 +528,12 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 *
-	 * @return Http\RedirectResponse
-	 * @throws Error
+	 * @return RedirectResponse
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
+	 * @throws \JsonException
+	 * @throws Exception
+	 * @throws SessionNotAvailableException
 	 */
 	public function singleLogoutService() {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
@@ -502,7 +566,9 @@ class LoginController extends Controller {
 	 *
 	 * @param string $providerIdentifier
 	 * @param string $logout_token
-	 * @return void
+	 * @return JSONResponse
+	 * @throws Exception
+	 * @throws \JsonException
 	 */
 	public function backChannelLogout(string $providerIdentifier, string $logout_token = ''): JSONResponse {
 		// get the provider

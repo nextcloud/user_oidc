@@ -105,6 +105,7 @@ jobs:
           ./occ user:list
           ./occ app:enable --force ${{ env.APP_NAME }}
           ./occ config:system:set allow_local_remote_servers --value true --type bool
+          ./occ config:system:set debug --value true --type bool
           ./occ user_oidc:provider nextcloudci -c nextcloud -s ff75b7c7-20f9-460b-b27c-16bd5d9b4cd0 -d http:/127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
           php -S localhost:8080 &
           curl -v http://127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
