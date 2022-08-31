@@ -30,21 +30,25 @@ namespace OCA\UserOIDC\Controller;
 use OC\Authentication\Exceptions\InvalidTokenException;
 use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\Db\SessionMapper;
+use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
-use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
@@ -52,9 +56,13 @@ use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
+use OCP\Session\Exceptions\SessionNotAvailableException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class LoginController extends Controller {
 	private const STATE = 'oidc.state';
@@ -73,6 +81,9 @@ class LoginController extends Controller {
 
 	/** @var IURLGenerator */
 	private $urlGenerator;
+
+	/** @var UserMapper */
+	private $userMapper;
 
 	/** @var IUserSession */
 	private $userSession;
@@ -97,21 +108,22 @@ class LoginController extends Controller {
 
 	/** @var DiscoveryService */
 	private $discoveryService;
-
-	/** @var IConfig */
+	/**
+	 * @var IConfig
+	 */
 	private $config;
-
-	/** @var LdapService */
+	/**
+	 * @var LdapService
+	 */
 	private $ldapService;
-
-	/** @var IProvider */
+	/**
+	 * @var IProvider
+	 */
 	private $authTokenProvider;
-
-	/** @var SessionMapper */
+	/**
+	 * @var SessionMapper
+	 */
 	private $sessionMapper;
-
-	/** @var ProvisioningService */
-	private $provisioningService;
 
 	public function __construct(
 		IRequest $request,
@@ -123,6 +135,7 @@ class LoginController extends Controller {
 		ISession $session,
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
+		UserMapper $userMapper,
 		IUserSession $userSession,
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
@@ -130,7 +143,6 @@ class LoginController extends Controller {
 		IConfig $config,
 		IProvider $authTokenProvider,
 		SessionMapper $sessionMapper,
-		ProvisioningService $provisioningService,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -140,6 +152,7 @@ class LoginController extends Controller {
 		$this->clientService = $clientService;
 		$this->discoveryService = $discoveryService;
 		$this->urlGenerator = $urlGenerator;
+		$this->userMapper = $userMapper;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
@@ -151,17 +164,47 @@ class LoginController extends Controller {
 		$this->ldapService = $ldapService;
 		$this->authTokenProvider = $authTokenProvider;
 		$this->sessionMapper = $sessionMapper;
-		$this->provisioningService = $provisioningService;
+		$this->request = $request;
+	}
+
+	/**
+	 * @return bool
+	 */
+	private function isSecure(): bool {
+		// no restriction in debug mode
+		return $this->config->getSystemValueBool('debug', false) || $this->request->getServerProtocol() === 'https';
+	}
+
+	/**
+	 * @return TemplateResponse
+	 */
+	private function generateProtocolErrorResponse(): TemplateResponse {
+		$response = new TemplateResponse('', 'error', [
+			'errors' => [
+				['error' => 'You must access Nextcloud with HTTPS to use OpenID Connect.']
+			]
+		], TemplateResponse::RENDER_AS_ERROR);
+		$response->setStatus(Http::STATUS_NOT_FOUND);
+		return $response;
 	}
 
 	/**
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 *
+	 * @param int $providerId
+	 * @param string|null $redirectUrl
+	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
 	 */
 	public function login(int $providerId, string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
+		}
+		if (!$this->isSecure()) {
+			return $this->generateProtocolErrorResponse();
 		}
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
 
@@ -183,7 +226,6 @@ class LoginController extends Controller {
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 
 		$claims = [
 			// more details about requesting claims:
@@ -194,13 +236,11 @@ class LoginController extends Controller {
 				$emailAttribute => null,
 				$displaynameAttribute => null,
 				$quotaAttribute => null,
-				$groupsAttribute => null,
 			],
 			'userinfo' => [
 				$emailAttribute => null,
 				$displaynameAttribute => null,
 				$quotaAttribute => null,
-				$groupsAttribute => null,
 			],
 		];
 
@@ -240,12 +280,12 @@ class LoginController extends Controller {
 			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
 			$this->logger->error('Could not reach provider at URL ' . $provider->getDiscoveryEndpoint());
-			$response = new Http\TemplateResponse('', 'error', [
+			$response = new TemplateResponse('', 'error', [
 				'errors' => [
 					['error' => 'Could not the reach OpenID Connect provider.']
 				]
-			], Http\TemplateResponse::RENDER_AS_ERROR);
-			$response->setStatus(404);
+			], TemplateResponse::RENDER_AS_ERROR);
+			$response->setStatus(Http::STATUS_NOT_FOUND);
 			return $response;
 		}
 
@@ -257,7 +297,7 @@ class LoginController extends Controller {
 		// Workaround to avoid empty session on special conditions in Safari
 		// https://github.com/nextcloud/user_oidc/pull/358
 		if ($this->request->isUserAgent(['/Safari/']) && !$this->request->isUserAgent(['/Chrome/'])) {
-			return new Http\DataDisplayResponse('<meta http-equiv="refresh" content="0; url=' . $url . '" />');
+			return new DataDisplayResponse('<meta http-equiv="refresh" content="0; url=' . $url . '" />');
 		}
 
 		return new RedirectResponse($url);
@@ -267,8 +307,22 @@ class LoginController extends Controller {
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 *
+	 * @param string $state
+	 * @param string $code
+	 * @param string $scope
+	 * @param string $error
+	 * @param string $error_description
+	 * @return JSONResponse|RedirectResponse|TemplateResponse
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
+	 * @throws SessionNotAvailableException
+	 * @throws \JsonException
 	 */
-	public function code($state = '', $code = '', $scope = '', $error = '', $error_description = '') {
+	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
+		if (!$this->isSecure()) {
+			return $this->generateProtocolErrorResponse();
+		}
 		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
 
 		if ($error !== '') {
@@ -346,23 +400,7 @@ class LoginController extends Controller {
 			return new JSONResponse(['Failed to provision user']);
 		}
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
-
-		// Provisioning
-		if ($autoProvisionAllowed) {
-			$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload);
-		} else {
-			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
-			// so new users will be directly available even if they were not synced before this login attempt
-			$this->userManager->search($userId);
-			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
-			$user = $this->userManager->get($userId);
-			if ($this->ldapService->isLdapDeletedUser($user)) {
-				$user = null;
-			}
-		}
-
+		$user = $this->provisionUser($userId, $providerId, $idTokenPayload);
 		if ($user === null) {
 			return new JSONResponse(['Failed to provision user']);
 		}
@@ -404,14 +442,98 @@ class LoginController extends Controller {
 	}
 
 	/**
+	 * @param string $userId
+	 * @param int $providerId
+	 * @param object $idTokenPayload
+	 * @return IUser|null
+	 * @throws Exception
+	 * @throws ContainerExceptionInterface
+	 * @throws NotFoundExceptionInterface
+	 */
+	private function provisionUser(string $userId, int $providerId, object $idTokenPayload): ?IUser {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+		if (!$autoProvisionAllowed) {
+			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
+			// so new users will be directly available even if they were not synced before this login attempt
+			$this->userManager->search($userId);
+			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
+			$user = $this->userManager->get($userId);
+			if ($this->ldapService->isLdapDeletedUser($user)) {
+				return null;
+			}
+			return $user;
+		}
+
+		// now we try to auto-provision
+
+		// get name/email/quota information from the token itself
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$email = $idTokenPayload->{$emailAttribute} ?? null;
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$userName = $idTokenPayload->{$displaynameAttribute} ?? null;
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $userId);
+		$this->eventDispatcher->dispatchTyped($event);
+
+		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
+		$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
+
+		$user = $this->userManager->get($backendUser->getUserId());
+		if ($user === null) {
+			return $user;
+		}
+
+		// Update displayname
+		if (isset($userName)) {
+			$newDisplayName = mb_substr($userName, 0, 255);
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload, $newDisplayName);
+		} else {
+			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload);
+		}
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Displayname mapping event dispatched');
+		if ($event->hasValue()) {
+			$newDisplayName = $event->getValue();
+			if ($newDisplayName != $backendUser->getDisplayName()) {
+				$backendUser->setDisplayName($newDisplayName);
+				$backendUser = $this->userMapper->update($backendUser);
+			}
+		}
+
+		// Update e-mail
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $idTokenPayload, $email);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Email mapping event dispatched');
+		if ($event->hasValue()) {
+			$user->setEMailAddress($event->getValue());
+		}
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $idTokenPayload, $quota);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Quota mapping event dispatched');
+		if ($event->hasValue()) {
+			$user->setQuota($event->getValue());
+		}
+
+		return $user;
+	}
+
+	/**
 	 * Endpoint called by NC to logout in the IdP before killing the current session
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @UseSession
 	 *
-	 * @return Http\RedirectResponse
-	 * @throws Error
+	 * @return RedirectResponse
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
+	 * @throws \JsonException
+	 * @throws Exception
+	 * @throws SessionNotAvailableException
 	 */
 	public function singleLogoutService() {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
@@ -444,7 +566,9 @@ class LoginController extends Controller {
 	 *
 	 * @param string $providerIdentifier
 	 * @param string $logout_token
-	 * @return void
+	 * @return JSONResponse
+	 * @throws Exception
+	 * @throws \JsonException
 	 */
 	public function backChannelLogout(string $providerIdentifier, string $logout_token = ''): JSONResponse {
 		// get the provider
