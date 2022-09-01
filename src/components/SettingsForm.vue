@@ -119,7 +119,7 @@
 			{{ t('user_oidc', 'Use group provisioning') }}
 		</CheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'Something Something group provisioning...') }}
+			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token') }}
 		</p>
 		<CheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
