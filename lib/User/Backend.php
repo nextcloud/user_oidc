@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\User;
 
+use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Event\TokenValidatedEvent;
 use OCA\UserOIDC\Controller\LoginController;
 use OCA\UserOIDC\Service\DiscoveryService;
@@ -268,7 +269,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_BEARER_PROVISIONING, '0') === '1') {
 								$provisioningStrategy = $validator->getProvisioningStrategy();
 								if ($provisioningStrategy) {
-									$this->provisionUser($validator->getProvisioningStrategy(), $backendUser->getUserId(), $provider->getId(), $headerToken);
+									$this->provisionUser($validator->getProvisioningStrategy(), $backendUser->getUserId(), $provider, $headerToken);
 								}
 							}
 
@@ -312,14 +313,15 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @return bool
 	 * @throws \OCP\Files\NotFoundException
 	 */
-	private function checkFirstLogin(IUser $user): bool {
-		if ($user === null) {
+	private function checkFirstLogin(string $userId): bool {
+		if ($userId === null) {
 			return false;
 		}
-		$userId = $user->getUID();
-		$firstLogin = $user->getLastLogin() === 0;
-		if ($firstLogin) {
-			$user->updateLastLoginTimestamp();
+		$this->logger->info('checkFirstLogin userId ' . $userId);
+		$user = $this->userManager->get($userId);
+		// $firstLogin = $user->getLastLogin() === 0;
+		if ($user) {
+			// $user->updateLastLoginTimestamp();
 			\OC_Util::setupFS($userId);
 			// trigger creation of user home and /files folder
 			$userFolder = \OC::$server->getUserFolder($userId);
@@ -333,7 +335,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			// trigger any other initialization
 			\OC::$server->getEventDispatcher()->dispatch(IUser::class . '::firstLogin', new GenericEvent($user));
 		}
-		return $firstLogin;
+		return true;
 	}
 
 	/**
@@ -345,8 +347,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @param string $headerToken
 	 * @return IUser|null
 	 */
-	private function provisionUser(string $provisioningStrategyClass, string $userId, int $providerId, string $headerToken): ?IUser {
+	private function provisionUser(string $provisioningStrategyClass, string $userId, Provider $provider, string $headerToken): ?IUser {
 		$provisioningStrategy = \OC::$server->get($provisioningStrategyClass);
-		return $provisioningStrategy->provisionUser($userId, $providerId, $headerToken);
+		return $provisioningStrategy->provisionUser($provider, $userId, $headerToken);
 	}
 }
