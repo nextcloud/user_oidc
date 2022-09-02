@@ -21,11 +21,12 @@
 	"dependencies": {
 		"@nextcloud/axios": "^2.0.0",
 		"@nextcloud/dialogs": "^3.2.0",
-		"@nextcloud/initial-state": "^1.2.1",
+		"@nextcloud/initial-state": "^2.0.0",
 		"@nextcloud/logger": "^2.3.0",
 		"@nextcloud/router": "^2.0.0",
-		"@nextcloud/vue": "^4.4.0",
-		"vue": "^2.7.9"
+		"@nextcloud/vue": "^5.4.0",
+		"vue": "^2.7.9",
+		"vue-material-design-icons": "^5.1.2"
 	},
 	"browserslist": [
 		"extends @nextcloud/browserslist-config"
