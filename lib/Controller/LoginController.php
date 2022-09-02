@@ -280,28 +280,38 @@ class LoginController extends Controller {
 		try {
 			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
-			$this->logger->error('Could not reach provider at URL ' . $provider->getDiscoveryEndpoint());
+			$this->logger->error('Could not reach the provider at URL ' . $provider->getDiscoveryEndpoint());
 			$response = new TemplateResponse('', 'error', [
 				'errors' => [
-					['error' => 'Could not the reach OpenID Connect provider.']
-				]
+					['error' => 'Could not reach the OpenID Connect provider.'],
+				],
 			], TemplateResponse::RENDER_AS_ERROR);
 			$response->setStatus(Http::STATUS_NOT_FOUND);
 			return $response;
 		}
 
-		//TODO verify discovery
+		$authorizationUrl = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
+		// check if the authorization_endpoint is a valid URL
+		if (filter_var($discovery['authorization_endpoint'], FILTER_VALIDATE_URL) === false) {
+			$this->logger->error('Invalid authorization_endpoint URL: ' . $discovery['authorization_endpoint']);
+			$response = new TemplateResponse('', 'error', [
+				'errors' => [
+					['error' => 'Invalid authorization_endpoint URL: ' . $discovery['authorization_endpoint']],
+				],
+			], TemplateResponse::RENDER_AS_ERROR);
+			$response->setStatus(Http::STATUS_NOT_FOUND);
+			return $response;
+		}
 
-		$url = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
-		$this->logger->debug('Redirecting user to: ' . $url);
+		$this->logger->debug('Redirecting user to: ' . $authorizationUrl);
 
 		// Workaround to avoid empty session on special conditions in Safari
 		// https://github.com/nextcloud/user_oidc/pull/358
 		if ($this->request->isUserAgent(['/Safari/']) && !$this->request->isUserAgent(['/Chrome/'])) {
-			return new DataDisplayResponse('<meta http-equiv="refresh" content="0; url=' . $url . '" />');
+			return new DataDisplayResponse('<meta http-equiv="refresh" content="0; url=' . $authorizationUrl . '" />');
 		}
 
-		return new RedirectResponse($url);
+		return new RedirectResponse($authorizationUrl);
 	}
 
 	/**
