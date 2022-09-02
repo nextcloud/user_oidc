@@ -69,6 +69,7 @@ class LoginController extends Controller {
 	private const NONCE = 'oidc.nonce';
 	public const PROVIDERID = 'oidc.providerid';
 	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
+	private const ID_TOKEN = 'oidc.id_token';
 
 	/** @var ISecureRandom */
 	private $random;
@@ -368,9 +369,10 @@ class LoginController extends Controller {
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
 		// TODO: proper error handling
+		$idTokenRaw = $data['id_token'];
 		$jwks = $this->discoveryService->obtainJWK($provider);
 		JWT::$leeway = 60;
-		$idTokenPayload = JWT::decode($data['id_token'], $jwks, array_keys(JWT::$supported_algs));
+		$idTokenPayload = JWT::decode($idTokenRaw, $jwks, array_keys(JWT::$supported_algs));
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
 
@@ -404,6 +406,8 @@ class LoginController extends Controller {
 		if ($user === null) {
 			return new JSONResponse(['Failed to provision user']);
 		}
+
+		$this->session->set(self::ID_TOKEN, $idTokenRaw);
 
 		$this->logger->debug('Logging user in');
 
@@ -539,13 +543,26 @@ class LoginController extends Controller {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
 		if (!isset($oidcSystemConfig['single_logout']) || $oidcSystemConfig['single_logout']) {
-			$providerId = (int)$this->session->get(self::PROVIDERID);
-			$provider = $this->providerMapper->getProvider($providerId);
-			$targetUrl = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'] ?? $this->urlGenerator->getAbsoluteURL('/');
-			if ($targetUrl) {
-				$targetUrl .= '?post_logout_redirect_uri=' . $this->urlGenerator->getAbsoluteURL('/');
+			$providerId = $this->session->get(self::PROVIDERID);
+			if ($providerId) {
+				$provider = $this->providerMapper->getProvider((int)$providerId);
+				$endSessionEndpoint = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'];
+				if ($endSessionEndpoint) {
+					$endSessionEndpoint .= '?post_logout_redirect_uri=' . $targetUrl;
+					$endSessionEndpoint .= '&client_id=' . $provider->getClientId();
+					$shouldSendIdToken = $this->providerService->getSetting(
+						$provider->getId(),
+						ProviderService::SETTING_SEND_ID_TOKEN_HINT, '0'
+					) === '1';
+					$idToken = $this->session->get(self::ID_TOKEN);
+					if ($shouldSendIdToken && $idToken) {
+						$endSessionEndpoint .= '&id_token_hint=' . $idToken;
+					}
+					$targetUrl = $endSessionEndpoint;
+				}
 			}
 		}
+
 		// cleanup related oidc session
 		$this->sessionMapper->deleteFromNcSessionId($this->session->getId());
 

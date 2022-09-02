@@ -143,6 +143,7 @@ export default {
 				settings: {
 					uniqueUid: true,
 					checkBearer: false,
+					sendIdTokenHint: true,
 				},
 			},
 			showNewProvider: false,
