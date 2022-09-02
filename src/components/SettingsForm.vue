@@ -119,13 +119,19 @@
 			{{ t('user_oidc', 'Use group provisioning') }}
 		</CheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token') }}
+			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token.') }}
 		</p>
 		<CheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
 		</CheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Do you want to allow API calls and WebDav request that are authenticated with an OIDC ID token or access token?') }}
+		</p>
+		<CheckboxRadioSwitch :checked.sync="localProvider.settings.bearerProvisioning" wrapper-element="div">
+			{{ t('user_oidc', 'Auto provision user when accessing API and WebDav with Bearer token') }}
+		</CheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'This automatically provisions the User, when sending API and WebDav Requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work.') }}
 		</p>
 		<input type="button" :value="t('user_oidc', 'Cancel')" @click="$emit('cancel')">
 		<input type="submit" :value="submitText">

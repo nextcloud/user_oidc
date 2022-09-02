@@ -2,13 +2,11 @@
 
 use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
-use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Service\IdService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\ILogger;
@@ -27,9 +25,6 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var ProvisioningService | MockObject */
 	private $providerService;
 
-	/** @var LdapService | MockObject */
-	private $ldapService;
-
 	/** @var UserMapper | MockObject */
 	private $userMapper;
 
@@ -41,9 +36,6 @@ class ProvisioningServiceTest extends TestCase {
 
 	/** @var IEventDispatcher | MockObject */
 	private $eventDispatcher;
-
-	/** @var IConfig | MockObject */
-	private $config;
 
 	/** @var ILogger | MockObject */
 	private $logger;
@@ -57,52 +49,17 @@ class ProvisioningServiceTest extends TestCase {
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->eventDispatcher = $this->createMock(IEventDispatcher::class);
-		$this->config = $this->createMock(IConfig::class);
 		$this->logger = $this->createMock(ILogger::class);
 
 		$this->provisioningService = new ProvisioningService(
 			$this->idService,
 			$this->providerService,
-			$this->ldapService,
 			$this->userMapper,
 			$this->userManager,
 			$this->groupManager,
 			$this->eventDispatcher,
-			$this->config,
 			$this->logger
 		);
-	}
-
-	public function dataUserLdap() {
-		return [
-			['1', true],
-			['2', false],
-		];
-	}
-
-	/** @dataProvider dataUserLdap */
-	public function testProvisionUserLdap(string $userId, bool $deletedUser): void {
-		$user = $this->createMock(IUser::class);
-
-		$this->config
-			->method('getSystemValue')->willReturn([
-				'auto_provision' => false
-			]);
-		$this->userManager->expects(self::once())
-			->method('search')
-			->with($userId);
-		$this->userManager->expects(self::once())
-			->method('get')
-			->with($userId)
-			->willReturn($user);
-		$this->ldapService
-			->method('isLdapDeletedUser')
-			->with($user)
-			->willReturn($deletedUser);
-
-		$result = $this->provisioningService->provisionUser($userId, 1, new stdClass());
-
-		$this->assertEquals($result, $deletedUser ? null : $user);
 	}
 
 	public function testProvisionUserAutoProvisioning(): void {
@@ -118,12 +75,6 @@ class ProvisioningServiceTest extends TestCase {
 			->getMock();
 		$backendUser->method('getUserId')
 			->willReturn($userId);
-
-		$this->config
-			->method('getSystemValue')
-			->willReturn([
-				'auto_provision' => true
-			]);
 
 		$this->providerService
 			->method('getSetting')

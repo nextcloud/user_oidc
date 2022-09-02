@@ -34,6 +34,7 @@ use OCP\IConfig;
 
 class ProviderService {
 	public const SETTING_CHECK_BEARER = 'checkBearer';
+	public const SETTING_BEARER_PROVISIONING = 'bearerProvisioning';
 	public const SETTING_UNIQUE_UID = 'uniqueUid';
 	public const SETTING_MAPPING_UID = 'mappingUid';
 	public const SETTING_MAPPING_UID_DEFAULT = 'sub';
@@ -46,6 +47,14 @@ class ProviderService {
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
 	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
+
+	private const BOOLEAN_KEYS = [
+		self::SETTING_UNIQUE_UID,
+		self::SETTING_CHECK_BEARER,
+		self::SETTING_BEARER_PROVISIONING,
+		self::SETTING_PROVIDER_BASED_ID,
+		self::SETTING_GROUP_PROVISIONING
+	];
 
 	/** @var IConfig */
 	private $config;
@@ -131,6 +140,7 @@ class ProviderService {
 			self::SETTING_MAPPING_GROUPS,
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
+			self::SETTING_BEARER_PROVISIONING,
 			self::SETTING_EXTRA_CLAIMS,
 			self::SETTING_PROVIDER_BASED_ID,
 			self::SETTING_GROUP_PROVISIONING
@@ -138,7 +148,7 @@ class ProviderService {
 	}
 
 	private function convertFromJSON(string $key, $value): string {
-		if ($key === self::SETTING_UNIQUE_UID || $key === self::SETTING_CHECK_BEARER || $key === self::SETTING_PROVIDER_BASED_ID || $key === self::SETTING_GROUP_PROVISIONING) {
+		if (in_array($key, self::BOOLEAN_KEYS)) {
 			$value = $value ? '1' : '0';
 		}
 		return (string)$value;
@@ -146,7 +156,7 @@ class ProviderService {
 
 	private function convertToJSON(string $key, $value) {
 		// default is disabled (if not set)
-		if ($key === self::SETTING_UNIQUE_UID || $key === self::SETTING_CHECK_BEARER || $key === self::SETTING_PROVIDER_BASED_ID || $key === self::SETTING_GROUP_PROVISIONING) {
+		if (in_array($key, self::BOOLEAN_KEYS)) {
 			return $value === '1';
 		}
 		return (string)$value;

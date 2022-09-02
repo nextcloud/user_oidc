@@ -2,11 +2,9 @@
 
 namespace OCA\UserOIDC\Service;
 
-use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\ILogger;
 use OCP\IUser;
@@ -34,51 +32,25 @@ class ProvisioningService {
 	/** @var ProviderService */
 	private $providerService;
 
-	/** @var IConfig */
-	private $config;
-
-	/** @var LdapService */
-	private $ldapService;
-
 	public function __construct(
 		IdService $idService,
 		ProviderService $providerService,
-		LdapService $ldapService,
 		UserMapper $userMapper,
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IEventDispatcher $eventDispatcher,
-		IConfig $config,
 		ILogger $logger
 	) {
 		$this->idService = $idService;
 		$this->providerService = $providerService;
-		$this->ldapService = $ldapService;
 		$this->userMapper = $userMapper;
 		$this->userManager = $userManager;
 		$this->groupManager = $groupManager;
 		$this->eventDispatcher = $eventDispatcher;
-		$this->config = $config;
 		$this->logger = $logger;
 	}
 
 	public function provisionUser(string $userId, int $providerId, object $idTokenPayload): ?IUser {
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
-		if (!$autoProvisionAllowed) {
-			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
-			// so new users will be directly available even if they were not synced before this login attempt
-			$this->userManager->search($userId);
-			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
-			$user = $this->userManager->get($userId);
-			if ($this->ldapService->isLdapDeletedUser($user)) {
-				return null;
-			}
-			return $user;
-		}
-
-		// now we try to auto-provision
-
 		// get name/email/quota information from the token itself
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$email = $idTokenPayload->{$emailAttribute} ?? null;
