@@ -75,4 +75,8 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 
 		return $payload->{$uidAttribute};
 	}
+
+	public function getProvisioningStrategy(): string {
+		return SelfEncodedValidator::class;
+	}
 }

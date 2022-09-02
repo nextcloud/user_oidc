@@ -32,6 +32,7 @@ use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
@@ -51,6 +52,7 @@ use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
+use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 
@@ -75,6 +77,9 @@ class LoginController extends Controller {
 	/** @var IUserSession */
 	private $userSession;
 
+	/** @var IUserManager */
+	private $userManager;
+
 	/** @var ITimeFactory */
 	private $timeFactory;
 
@@ -96,6 +101,9 @@ class LoginController extends Controller {
 	/** @var IConfig */
 	private $config;
 
+	/** @var LdapService */
+	private $ldapService;
+
 	/** @var IProvider */
 	private $authTokenProvider;
 
@@ -110,11 +118,13 @@ class LoginController extends Controller {
 		ProviderMapper $providerMapper,
 		ProviderService $providerService,
 		DiscoveryService $discoveryService,
+		LdapService $ldapService,
 		ISecureRandom $random,
 		ISession $session,
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		IUserSession $userSession,
+		IUserManager $userManager,
 		ITimeFactory $timeFactory,
 		IEventDispatcher $eventDispatcher,
 		IConfig $config,
@@ -131,12 +141,14 @@ class LoginController extends Controller {
 		$this->discoveryService = $discoveryService;
 		$this->urlGenerator = $urlGenerator;
 		$this->userSession = $userSession;
+		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
 		$this->providerMapper = $providerMapper;
 		$this->providerService = $providerService;
 		$this->eventDispatcher = $eventDispatcher;
 		$this->logger = $logger;
 		$this->config = $config;
+		$this->ldapService = $ldapService;
 		$this->authTokenProvider = $authTokenProvider;
 		$this->sessionMapper = $sessionMapper;
 		$this->provisioningService = $provisioningService;
@@ -334,7 +346,23 @@ class LoginController extends Controller {
 			return new JSONResponse(['Failed to provision user']);
 		}
 
-		$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload);
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+
+		// Provisioning
+		if ($autoProvisionAllowed) {
+			$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload);
+		} else {
+			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
+			// so new users will be directly available even if they were not synced before this login attempt
+			$this->userManager->search($userId);
+			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
+			$user = $this->userManager->get($userId);
+			if ($this->ldapService->isLdapDeletedUser($user)) {
+				$user = null;
+			}
+		}
+
 		if ($user === null) {
 			return new JSONResponse(['Failed to provision user']);
 		}
