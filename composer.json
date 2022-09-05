@@ -15,7 +15,7 @@
   "scripts": {
     "cs:fix": "php-cs-fixer fix",
     "cs:check": "php-cs-fixer fix --dry-run --diff",
-    "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;",
+    "lint": "find . -name \\*.php ! -path './vendor/*' ! -path './vendor-bin/*' ! -path './lib/Vendor/*' -exec php -l \"{}\" \\;",
     "test:unit": "phpunit -c tests/phpunit.xml",
     "post-install-cmd": [
       "@composer bin all install --ansi",
