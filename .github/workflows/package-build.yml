@@ -8,7 +8,7 @@ name: Build and publish app release
 on:
     push:
         tags:
-            - '[0-9]*'
+            - 'v[0-9]*'
 
 env:
   PHP_VERSION: 7.4

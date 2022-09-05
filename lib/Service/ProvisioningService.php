@@ -104,7 +104,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Email mapping event dispatched');
 		if ($event->hasValue()) {
-			$user->setSystemEMailAddress($event->getValue());
+			$user->setEMailAddress($event->getValue());
 		}
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $idTokenPayload, $quota);

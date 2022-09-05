@@ -30,7 +30,6 @@ namespace OCA\UserOIDC\Controller;
 use OC\Authentication\Exceptions\InvalidTokenException;
 use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\Db\SessionMapper;
-use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
@@ -56,13 +55,10 @@ use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
-use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 class LoginController extends Controller {
 	private const STATE = 'oidc.state';

@@ -99,7 +99,7 @@ class ProvisioningServiceTest extends TestCase {
 			->method('setDisplayName')
 			->with($name);
 		$user->expects(self::once())
-			->method('setSystemEMailAddress')
+			->method('setEMailAddress')
 			->with($email);
 		$user->expects(self::once())
 			->method('setQuota')
