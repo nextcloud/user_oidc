@@ -30,6 +30,7 @@ namespace OCA\UserOIDC\Controller;
 use OC\Authentication\Exceptions\InvalidTokenException;
 use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\Db\SessionMapper;
+use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
@@ -55,6 +56,7 @@ use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
@@ -466,86 +468,6 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
-	}
-
-	/**
-	 * @param string $userId
-	 * @param int $providerId
-	 * @param object $idTokenPayload
-	 * @return IUser|null
-	 * @throws Exception
-	 * @throws ContainerExceptionInterface
-	 * @throws NotFoundExceptionInterface
-	 */
-	private function provisionUser(string $userId, int $providerId, object $idTokenPayload): ?IUser {
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
-		if (!$autoProvisionAllowed) {
-			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
-			// so new users will be directly available even if they were not synced before this login attempt
-			$this->userManager->search($userId);
-			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
-			$user = $this->userManager->get($userId);
-			if ($this->ldapService->isLdapDeletedUser($user)) {
-				return null;
-			}
-			return $user;
-		}
-
-		// now we try to auto-provision
-
-		// get name/email/quota information from the token itself
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$email = $idTokenPayload->{$emailAttribute} ?? null;
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$userName = $idTokenPayload->{$displaynameAttribute} ?? null;
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
-
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $userId);
-		$this->eventDispatcher->dispatchTyped($event);
-
-		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
-		$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
-
-		$user = $this->userManager->get($backendUser->getUserId());
-		if ($user === null) {
-			return $user;
-		}
-
-		// Update displayname
-		if (isset($userName)) {
-			$newDisplayName = mb_substr($userName, 0, 255);
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload, $newDisplayName);
-		} else {
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload);
-		}
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Displayname mapping event dispatched');
-		if ($event->hasValue()) {
-			$newDisplayName = $event->getValue();
-			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($newDisplayName);
-				$backendUser = $this->userMapper->update($backendUser);
-			}
-		}
-
-		// Update e-mail
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $idTokenPayload, $email);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Email mapping event dispatched');
-		if ($event->hasValue()) {
-			$user->setEMailAddress($event->getValue());
-		}
-
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $idTokenPayload, $quota);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Quota mapping event dispatched');
-		if ($event->hasValue()) {
-			$user->setQuota($event->getValue());
-		}
-
-		return $user;
 	}
 
 	/**
