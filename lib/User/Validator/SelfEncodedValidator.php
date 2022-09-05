@@ -28,6 +28,7 @@ namespace OCA\UserOIDC\User\Validator;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
+use OCA\UserOIDC\User\Provisioning\SelfEncodedTokenProvisioning;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
@@ -77,6 +78,6 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 	}
 
 	public function getProvisioningStrategy(): string {
-		return SelfEncodedValidator::class;
+		return SelfEncodedTokenProvisioning::class;
 	}
 }

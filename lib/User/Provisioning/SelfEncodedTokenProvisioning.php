@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\UserOIDC\User\Validator;
+namespace OCA\UserOIDC\User\Provisioning;
 
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Service\DiscoveryService;
@@ -27,15 +27,15 @@ class SelfEncodedTokenProvisioning implements IProvisioningStrategy {
 		$this->logger = $logger;
 	}
 
-	public function provisionUser(Provider $provider, string $userId, string $bearerToken): ?IUser {
+	public function provisionUser(Provider $provider, string $sub, string $bearerToken): ?IUser {
 		JWT::$leeway = 60;
 		try {
 			$payload = JWT::decode($bearerToken, $this->discoveryService->obtainJWK($provider), array_keys(JWT::$supported_algs));
 		} catch (Throwable $e) {
-			$this->logger->error('MY BAD! Impossible to decode OIDC token:' . $e->getMessage());
+			$this->logger->error('Impossible to decode OIDC token:' . $e->getMessage());
 			return null;
 		}
 
-		return $this->provisioningService->provisionUser($userId, $provider->getId(), $payload);
+		return $this->provisioningService->provisionUser($sub, $provider->getId(), $payload);
 	}
 }

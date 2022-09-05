@@ -110,7 +110,7 @@
 			{{ t('user_oidc', 'By default every user will get a unique userid that is a hashed value of the provider and user id. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then.') }}
 		</p>
 		<CheckboxRadioSwitch :checked.sync="localProvider.settings.providerBasedId" wrapper-element="div">
-			{{ t('user_oidc', 'Use provider as prefix for ids') }}
+			{{ t('user_oidc', 'Use provider identifier as prefix for ids') }}
 		</CheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'To keep ids in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added.') }}
@@ -131,7 +131,7 @@
 			{{ t('user_oidc', 'Auto provision user when accessing API and WebDav with Bearer token') }}
 		</CheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'This automatically provisions the User, when sending API and WebDav Requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work.') }}
+			{{ t('user_oidc', 'This automatically provisions the user, when sending API and WebDav Requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work.') }}
 		</p>
 		<input type="button" :value="t('user_oidc', 'Cancel')" @click="$emit('cancel')">
 		<input type="submit" :value="submitText">
