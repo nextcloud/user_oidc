@@ -4,11 +4,14 @@ namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
+use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroupManager;
 use OCP\ILogger;
 use OCP\IUser;
 use OCP\IUserManager;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class ProvisioningService {
 	/** @var UserMapper */
@@ -50,6 +53,15 @@ class ProvisioningService {
 		$this->logger = $logger;
 	}
 
+	/**
+	 * @param string $sub
+	 * @param int $providerId
+	 * @param object $idTokenPayload
+	 * @return IUser|null
+	 * @throws Exception
+	 * @throws ContainerExceptionInterface
+	 * @throws NotFoundExceptionInterface
+	 */
 	public function provisionUser(string $sub, int $providerId, object $idTokenPayload): ?IUser {
 		// get name/email/quota information from the token itself
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
