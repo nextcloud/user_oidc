@@ -50,7 +50,7 @@ class ProvisioningService {
 		$this->logger = $logger;
 	}
 
-	public function provisionUser(string $userId, int $providerId, object $idTokenPayload): ?IUser {
+	public function provisionUser(string $sub, int $providerId, object $idTokenPayload): ?IUser {
 		// get name/email/quota information from the token itself
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$email = $idTokenPayload->{$emailAttribute} ?? null;
@@ -59,7 +59,7 @@ class ProvisioningService {
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
 
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $userId);
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $sub);
 		$this->eventDispatcher->dispatchTyped($event);
 
 		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
@@ -67,7 +67,7 @@ class ProvisioningService {
 
 		$user = $this->userManager->get($backendUser->getUserId());
 		if ($user === null) {
-			return $user;
+			return null;
 		}
 
 		// Update displayname

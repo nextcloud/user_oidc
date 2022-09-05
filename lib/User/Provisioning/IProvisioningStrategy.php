@@ -9,11 +9,12 @@ interface IProvisioningStrategy
 {
 
 	/**
-	 * TODO
+	 * Defines a way to provision a user.
+	 *
 	 * @param Provider $provider
-	 * @param string $userId
+	 * @param string $sub
 	 * @param string $bearerToken
 	 * @return IUser|null
 	 */
-	public function provisionUser(Provider $provider, string $userId, string $bearerToken): ?IUser;
+	public function provisionUser(Provider $provider, string $sub, string $bearerToken): ?IUser;
 }
