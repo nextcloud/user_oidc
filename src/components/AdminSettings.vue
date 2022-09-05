@@ -27,30 +27,33 @@
 				{{ t('user_oidc', 'Allows users to authenticate via OpenID Connect providers.') }}
 			</p>
 			<p>
-				<input id="user-oidc-id4me"
-					v-model="id4meState"
-					type="checkbox"
-					class="checkbox"
-					:disabled="loadingId4Me"
-					@change="onId4MeChange">
-				<label for="user-oidc-id4me">{{ t('user_oidc', 'Enable ID4me') }}</label>
+				<CheckboxRadioSwitch :checked.sync="id4meState"
+					wrapper-element="div"
+					@update:checked="onId4MeChange">
+					{{ t('user_oidc', 'Enable ID4me') }}
+				</CheckboxRadioSwitch>
 			</p>
 		</div>
 		<div class="section">
 			<h2>
 				{{ t('user_oidc', 'Registered Providers') }}
 				<Actions>
-					<ActionButton icon="icon-add" @click="showNewProvider=true">
+					<ActionButton @click="showNewProvider=true">
+						<template #icon>
+							<PlusIcon :size="20" />
+						</template>
 						{{ t('user_oidc', 'Register new provider') }}
 					</ActionButton>
 				</Actions>
 			</h2>
 
-			<Modal v-if="showNewProvider" :can-close="false">
+			<Modal v-if="showNewProvider"
+				size="large"
+				:can-close="false">
 				<div class="providermodal__wrapper">
 					<h3>{{ t('user_oids', 'Register a new provider') }}</h3>
 					<p class="settings-hint">
-						{{ t('user_oidc', 'Configure your provider to redirect back to {url}', {url: redirectUrl}) }}
+						{{ t('user_oidc', 'Configure your provider to redirect back to {url}', { url: redirectUrl }) }}
 					</p>
 					<SettingsForm :provider="newProvider" @submit="onSubmit" @cancel="showNewProvider=false" />
 				</div>
@@ -65,25 +68,33 @@
 					:key="provider.id"
 					class="oidcproviders__provider">
 					<div class="oidcproviders__details">
-						<b>{{ provider.identifier }}</b><br>
+						<strong>{{ provider.identifier }}</strong><br>
 						{{ t('user_oidc', 'Client ID') }}: {{ provider.clientId }}<br>
 						{{ t('user_oidc', 'Discovery endpoint') }}: {{ provider.discoveryEndpoint }}<br>
 						{{ t('user_oidc', 'Backchannel Logout URL') }}: {{ getBackchannelUrl(provider) }}
 					</div>
 					<Actions>
-						<ActionButton icon="icon-rename" @click="updateProvider(provider)">
+						<ActionButton @click="updateProvider(provider)">
+							<template #icon>
+								<PencilIcon :size="20" />
+							</template>
 							{{ t('user_oidc', 'Update') }}
 						</ActionButton>
 					</Actions>
 					<Actions>
-						<ActionButton icon="icon-delete" @click="onRemove(provider)">
+						<ActionButton @click="onRemove(provider)">
+							<template #icon>
+								<DeleteIcon :size="20" />
+							</template>
 							{{ t('user_oidc', 'Remove') }}
 						</ActionButton>
 					</Actions>
 				</div>
 			</div>
 
-			<Modal v-if="editProvider" :can-close="false">
+			<Modal v-if="editProvider"
+				size="large"
+				:can-close="false">
 				<div class="providermodal__wrapper">
 					<h3>{{ t('user_oidc', 'Update provider settings') }}</h3>
 					<SettingsForm :provider="editProvider"
@@ -98,15 +109,20 @@
 </template>
 
 <script>
+import DeleteIcon from 'vue-material-design-icons/Delete.vue'
+import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import PlusIcon from 'vue-material-design-icons/Plus.vue'
+
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import Actions from '@nextcloud/vue/dist/Components/Actions'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
-import Modal from '@nextcloud/vue/dist/Components/Modal'
+import Actions from '@nextcloud/vue/dist/Components/Actions.js'
+import ActionButton from '@nextcloud/vue/dist/Components/ActionButton.js'
+import Modal from '@nextcloud/vue/dist/Components/Modal.js'
+import CheckboxRadioSwitch from '@nextcloud/vue/dist/Components/CheckboxRadioSwitch.js'
 
-import logger from '../logger'
-import SettingsForm from './SettingsForm'
+import logger from '../logger.js'
+import SettingsForm from './SettingsForm.vue'
 
 export default {
 	name: 'AdminSettings',
@@ -115,6 +131,10 @@ export default {
 		Actions,
 		ActionButton,
 		Modal,
+		CheckboxRadioSwitch,
+		PencilIcon,
+		DeleteIcon,
+		PlusIcon,
 	},
 	props: {
 		initialId4MeState: {
@@ -143,6 +163,7 @@ export default {
 				settings: {
 					uniqueUid: true,
 					checkBearer: false,
+					sendIdTokenHint: true,
 					bearerProvisioning: false,
 					providerBasedId: false,
 					groupProvisioning: false,
@@ -153,17 +174,16 @@ export default {
 		}
 	},
 	methods: {
-		async onId4MeChange() {
-			logger.info('ID4me state changed', { enabled: this.id4meState })
+		async onId4MeChange(newValue) {
+			logger.info('ID4me state changed', { enabled: newValue })
 
 			this.loadingId4Me = true
 			try {
 				const url = generateUrl('/apps/user_oidc/provider/id4me')
 
 				await axios.post(url, {
-					enabled: this.id4meState,
-				}
-				)
+					enabled: newValue,
+				})
 			} catch (error) {
 				logger.error('Could not save ID4me state: ' + error.message, { error })
 				showError(t('user_oidc', 'Could not save ID4me state: ' + error.message))
@@ -261,11 +281,6 @@ h3 {
 }
 
 .providermodal__wrapper {
-	min-width: 320px;
-	width: 50vw;
-	max-width: 800px;
-	height: calc(80vh - 40px);
 	margin: 20px;
-	overflow: scroll;
 }
 </style>
