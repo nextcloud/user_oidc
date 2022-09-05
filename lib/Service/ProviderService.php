@@ -34,6 +34,7 @@ use OCP\IConfig;
 
 class ProviderService {
 	public const SETTING_CHECK_BEARER = 'checkBearer';
+	public const SETTING_SEND_ID_TOKEN_HINT = 'sendIdTokenHint';
 	public const SETTING_BEARER_PROVISIONING = 'bearerProvisioning';
 	public const SETTING_UNIQUE_UID = 'uniqueUid';
 	public const SETTING_MAPPING_UID = 'mappingUid';
@@ -48,13 +49,14 @@ class ProviderService {
 	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
 
-	private const BOOLEAN_KEYS = [
+	private const BOOLEAN_SETTINGS = array(
 		self::SETTING_UNIQUE_UID,
 		self::SETTING_CHECK_BEARER,
+		self::SETTING_SEND_ID_TOKEN_HINT,
 		self::SETTING_BEARER_PROVISIONING,
 		self::SETTING_PROVIDER_BASED_ID,
 		self::SETTING_GROUP_PROVISIONING
-	];
+	);
 
 	/** @var IConfig */
 	private $config;
@@ -141,6 +143,7 @@ class ProviderService {
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
 			self::SETTING_BEARER_PROVISIONING,
+			self::SETTING_SEND_ID_TOKEN_HINT,
 			self::SETTING_EXTRA_CLAIMS,
 			self::SETTING_PROVIDER_BASED_ID,
 			self::SETTING_GROUP_PROVISIONING
@@ -148,7 +151,7 @@ class ProviderService {
 	}
 
 	private function convertFromJSON(string $key, $value): string {
-		if (in_array($key, self::BOOLEAN_KEYS)) {
+		if (in_array($key, self::BOOLEAN_SETTINGS)) {
 			$value = $value ? '1' : '0';
 		}
 		return (string)$value;
@@ -156,7 +159,7 @@ class ProviderService {
 
 	private function convertToJSON(string $key, $value) {
 		// default is disabled (if not set)
-		if (in_array($key, self::BOOLEAN_KEYS)) {
+		if (in_array($key, self::BOOLEAN_SETTINGS)) {
 			return $value === '1';
 		}
 		return (string)$value;
