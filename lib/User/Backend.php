@@ -40,6 +40,7 @@ use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -302,15 +303,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	/**
 	 * Inspired by lib/private/User/Session.php::prepareUserLogin()
 	 *
-	 * @param IUser $user
+	 * @param string $userId
 	 * @return void
-	 * @throws \OCP\Files\NotFoundException
+	 * @throws NotFoundException
 	 */
-	private function checkFirstLogin(IUser $user): void {
-		if ($user === null) {
-			return;
-		}
-		$userId = $user->getUID();
+	private function checkFirstLogin(string $userId): void {
+		$user = $this->userManager->get($userId);
 		$firstLogin = $user->getLastLogin() === 0;
 		if ($firstLogin) {
 			$user->updateLastLoginTimestamp();
