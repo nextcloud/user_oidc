@@ -313,7 +313,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 *
 	 * @param string $userId
 	 * @return bool
-	 * @throws \OCP\Files\NotFoundException
+	 * @throws NotFoundException
 	 */
 	private function checkFirstLogin(string $userId): bool {
 		$user = $this->userManager->get($userId);
