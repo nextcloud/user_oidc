@@ -100,17 +100,42 @@
 				type="text"
 				placeholder="quota">
 		</p>
+		<p>
+			<label for="mapping-quota">{{ t('user_oidc', 'Groups mapping') }}</label>
+			<input id="mapping-quota"
+				v-model="localProvider.settings.mappingGroups"
+				type="text"
+				placeholder="groups">
+		</p>
 		<CheckboxRadioSwitch :checked.sync="localProvider.settings.uniqueUid" wrapper-element="div">
 			{{ t('user_oidc', 'Use unique user id') }}
 		</CheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'By default every user will get a unique userid that is a hashed value of the provider and user id. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then.') }}
 		</p>
+		<CheckboxRadioSwitch :checked.sync="localProvider.settings.providerBasedId" wrapper-element="div">
+			{{ t('user_oidc', 'Use provider identifier as prefix for ids') }}
+		</CheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'To keep ids in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added.') }}
+		</p>
+		<CheckboxRadioSwitch :checked.sync="localProvider.settings.groupProvisioning" wrapper-element="div">
+			{{ t('user_oidc', 'Use group provisioning') }}
+		</CheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token.') }}
+		</p>
 		<CheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
 		</CheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Do you want to allow API calls and WebDav request that are authenticated with an OIDC ID token or access token?') }}
+		</p>
+		<CheckboxRadioSwitch :checked.sync="localProvider.settings.bearerProvisioning" wrapper-element="div">
+			{{ t('user_oidc', 'Auto provision user when accessing API and WebDav with Bearer token') }}
+		</CheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'This automatically provisions the user, when sending API and WebDav Requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work.') }}
 		</p>
 		<CheckboxRadioSwitch :checked.sync="localProvider.settings.sendIdTokenHint" wrapper-element="div">
 			{{ t('user_oidc', 'Send ID token hint on logout') }}

@@ -30,15 +30,14 @@ namespace OCA\UserOIDC\Controller;
 use OC\Authentication\Exceptions\InvalidTokenException;
 use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\Db\SessionMapper;
-use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
+use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
@@ -56,13 +55,10 @@ use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
-use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 class LoginController extends Controller {
 	private const STATE = 'oidc.state';
@@ -82,9 +78,6 @@ class LoginController extends Controller {
 
 	/** @var IURLGenerator */
 	private $urlGenerator;
-
-	/** @var UserMapper */
-	private $userMapper;
 
 	/** @var IUserSession */
 	private $userSession;
@@ -109,22 +102,21 @@ class LoginController extends Controller {
 
 	/** @var DiscoveryService */
 	private $discoveryService;
-	/**
-	 * @var IConfig
-	 */
+
+	/** @var IConfig */
 	private $config;
-	/**
-	 * @var LdapService
-	 */
+
+	/** @var LdapService */
 	private $ldapService;
-	/**
-	 * @var IProvider
-	 */
+
+	/** @var IProvider */
 	private $authTokenProvider;
-	/**
-	 * @var SessionMapper
-	 */
+
+	/** @var SessionMapper */
 	private $sessionMapper;
+
+	/** @var ProvisioningService */
+	private $provisioningService;
 
 	public function __construct(
 		IRequest $request,
@@ -136,7 +128,6 @@ class LoginController extends Controller {
 		ISession $session,
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
-		UserMapper $userMapper,
 		IUserSession $userSession,
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
@@ -144,6 +135,7 @@ class LoginController extends Controller {
 		IConfig $config,
 		IProvider $authTokenProvider,
 		SessionMapper $sessionMapper,
+		ProvisioningService $provisioningService,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -153,7 +145,6 @@ class LoginController extends Controller {
 		$this->clientService = $clientService;
 		$this->discoveryService = $discoveryService;
 		$this->urlGenerator = $urlGenerator;
-		$this->userMapper = $userMapper;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->timeFactory = $timeFactory;
@@ -165,6 +156,7 @@ class LoginController extends Controller {
 		$this->ldapService = $ldapService;
 		$this->authTokenProvider = $authTokenProvider;
 		$this->sessionMapper = $sessionMapper;
+		$this->provisioningService = $provisioningService;
 		$this->request = $request;
 	}
 
@@ -227,6 +219,7 @@ class LoginController extends Controller {
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 
 		$claims = [
 			// more details about requesting claims:
@@ -237,11 +230,13 @@ class LoginController extends Controller {
 				$emailAttribute => null,
 				$displaynameAttribute => null,
 				$quotaAttribute => null,
+				$groupsAttribute => null,
 			],
 			'userinfo' => [
 				$emailAttribute => null,
 				$displaynameAttribute => null,
 				$quotaAttribute => null,
+				$groupsAttribute => null,
 			],
 		];
 
@@ -412,7 +407,23 @@ class LoginController extends Controller {
 			return new JSONResponse(['Failed to provision user']);
 		}
 
-		$user = $this->provisionUser($userId, $providerId, $idTokenPayload);
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+
+		// Provisioning
+		if ($autoProvisionAllowed) {
+			$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload);
+		} else {
+			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
+			// so new users will be directly available even if they were not synced before this login attempt
+			$this->userManager->search($userId);
+			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
+			$user = $this->userManager->get($userId);
+			if ($this->ldapService->isLdapDeletedUser($user)) {
+				$user = null;
+			}
+		}
+
 		if ($user === null) {
 			return new JSONResponse(['Failed to provision user']);
 		}
@@ -453,86 +464,6 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
-	}
-
-	/**
-	 * @param string $userId
-	 * @param int $providerId
-	 * @param object $idTokenPayload
-	 * @return IUser|null
-	 * @throws Exception
-	 * @throws ContainerExceptionInterface
-	 * @throws NotFoundExceptionInterface
-	 */
-	private function provisionUser(string $userId, int $providerId, object $idTokenPayload): ?IUser {
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
-		if (!$autoProvisionAllowed) {
-			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
-			// so new users will be directly available even if they were not synced before this login attempt
-			$this->userManager->search($userId);
-			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
-			$user = $this->userManager->get($userId);
-			if ($this->ldapService->isLdapDeletedUser($user)) {
-				return null;
-			}
-			return $user;
-		}
-
-		// now we try to auto-provision
-
-		// get name/email/quota information from the token itself
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$email = $idTokenPayload->{$emailAttribute} ?? null;
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$userName = $idTokenPayload->{$displaynameAttribute} ?? null;
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
-
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $userId);
-		$this->eventDispatcher->dispatchTyped($event);
-
-		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue());
-		$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
-
-		$user = $this->userManager->get($backendUser->getUserId());
-		if ($user === null) {
-			return $user;
-		}
-
-		// Update displayname
-		if (isset($userName)) {
-			$newDisplayName = mb_substr($userName, 0, 255);
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload, $newDisplayName);
-		} else {
-			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload);
-		}
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Displayname mapping event dispatched');
-		if ($event->hasValue()) {
-			$newDisplayName = $event->getValue();
-			if ($newDisplayName != $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($newDisplayName);
-				$backendUser = $this->userMapper->update($backendUser);
-			}
-		}
-
-		// Update e-mail
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $idTokenPayload, $email);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Email mapping event dispatched');
-		if ($event->hasValue()) {
-			$user->setEMailAddress($event->getValue());
-		}
-
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $idTokenPayload, $quota);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Quota mapping event dispatched');
-		if ($event->hasValue()) {
-			$user->setQuota($event->getValue());
-		}
-
-		return $user;
 	}
 
 	/**

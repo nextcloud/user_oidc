@@ -9,13 +9,13 @@
       "bamarni/composer-bin-plugin": true
     },
 	"platform": {
-      "php": "7.3"
+      "php": "7.4"
     }
   },
   "scripts": {
     "cs:fix": "php-cs-fixer fix",
     "cs:check": "php-cs-fixer fix --dry-run --diff",
-    "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;",
+    "lint": "find . -name \\*.php ! -path './vendor/*' ! -path './vendor-bin/*' ! -path './lib/Vendor/*' -exec php -l \"{}\" \\;",
     "test:unit": "phpunit -c tests/phpunit.xml",
     "post-install-cmd": [
       "@composer bin all install --ansi",
@@ -36,7 +36,8 @@
   "require-dev": {
     "nextcloud/coding-standard": "^1.0.0",
     "symfony/event-dispatcher": "^4",
-    "phpunit/phpunit": "^9.5"
+    "phpunit/phpunit": "^9.5",
+  	"christophwurst/nextcloud": "24"
   },
   "extra": {
     "mozart": {

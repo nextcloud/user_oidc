@@ -59,4 +59,9 @@ class UserInfoValidator implements IBearerTokenValidator {
 
 		return $userInfo[$uidAttribute];
 	}
+
+	public function getProvisioningStrategy(): string {
+		// TODO implement provisioning over user info endpoint
+		return '';
+	}
 }

@@ -5,6 +5,7 @@
 /build/
 node_modules/
 /.php_cs.cache
+/.php-cs-fixer.cache
 /lib/Vendor
 tests/.phpunit.result.cache
 /vendor-bin/mozart/vendor
