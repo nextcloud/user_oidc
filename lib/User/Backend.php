@@ -296,7 +296,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			}
 		}
 
-		$this->logger->error('Could not find unique token validation');
+		$this->logger->debug('Could not find unique token validation');
 		return '';
 	}
 
