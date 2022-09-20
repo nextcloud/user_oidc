@@ -80,10 +80,14 @@ class ProviderServiceTest extends TestCase {
 					'mappingEmail' => '1',
 					'mappingQuota' => '1',
 					'mappingUid' => '1',
+					'mappingGroups' => '1',
 					'uniqueUid' => true,
 					'checkBearer' => true,
+					'bearerProvisioning' => true,
 					'sendIdTokenHint' => true,
 					'extraClaims' => '1',
+					'providerBasedId' => true,
+					'groupProvisioning' => true,
 				],
 			],
 			[
@@ -97,10 +101,14 @@ class ProviderServiceTest extends TestCase {
 					'mappingEmail' => '1',
 					'mappingQuota' => '1',
 					'mappingUid' => '1',
+					'mappingGroups' => '1',
 					'uniqueUid' => true,
 					'checkBearer' => true,
+					'bearerProvisioning' => true,
 					'sendIdTokenHint' => true,
 					'extraClaims' => '1',
+					'providerBasedId' => true,
+					'groupProvisioning' => true,
 				],
 			],
 		], $this->providerService->getProvidersWithSettings());
@@ -112,10 +120,14 @@ class ProviderServiceTest extends TestCase {
 			'mappingEmail' => 'mail',
 			'mappingQuota' => '1g',
 			'mappingUid' => 'uid',
+			'mappingGroups' => 'groups',
 			'uniqueUid' => true,
 			'checkBearer' => false,
+			'bearerProvisioning' => false,
 			'sendIdTokenHint' => true,
 			'extraClaims' => 'claim1 claim2',
+			'providerBasedId' => false,
+			'groupProvisioning' => true,
 		];
 		$this->config->expects(self::any())
 			->method('getAppValue')
@@ -124,10 +136,14 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_EMAIL, '', 'mail'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_QUOTA, '', '1g'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_UID, '', 'uid'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_GROUPS, '', 'groups'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_UNIQUE_UID, '', '1'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_CHECK_BEARER, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_BEARER_PROVISIONING, '', '0'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_SEND_ID_TOKEN_HINT, '', '1'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_EXTRA_CLAIMS, '', 'claim1 claim2'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_PROVIDER_BASED_ID, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_GROUP_PROVISIONING, '', '1'],
 			]);
 
 		Assert::assertEquals(
