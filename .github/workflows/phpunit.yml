@@ -20,10 +20,12 @@ jobs:
       matrix:
         php-versions: ['7.3', '7.4', "8.0", "8.1"]
         databases: ['mysql']
-        server-versions: ['stable21', 'stable22', 'stable23', 'stable24', 'master']
+        server-versions: ['stable21', 'stable22', 'stable23', 'stable24', 'stable25', 'master']
         exclude:
           - php-versions: 7.3
             server-versions: master
+          - php-versions: 7.3
+            server-versions: stable25
           - php-versions: 7.3
             server-versions: stable24
           - php-versions: 8.1
