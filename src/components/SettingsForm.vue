@@ -100,21 +100,21 @@
 				type="text"
 				placeholder="quota">
 		</p>
-		<CheckboxRadioSwitch :checked.sync="localProvider.settings.uniqueUid" wrapper-element="div">
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.uniqueUid" wrapper-element="div">
 			{{ t('user_oidc', 'Use unique user id') }}
-		</CheckboxRadioSwitch>
+		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'By default every user will get a unique userid that is a hashed value of the provider and user id. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then.') }}
 		</p>
-		<CheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
-		</CheckboxRadioSwitch>
+		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Do you want to allow API calls and WebDav request that are authenticated with an OIDC ID token or access token?') }}
 		</p>
-		<CheckboxRadioSwitch :checked.sync="localProvider.settings.sendIdTokenHint" wrapper-element="div">
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.sendIdTokenHint" wrapper-element="div">
 			{{ t('user_oidc', 'Send ID token hint on logout') }}
-		</CheckboxRadioSwitch>
+		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider.') }}
 		</p>
@@ -136,13 +136,13 @@
 import AlertOutlineIcon from 'vue-material-design-icons/AlertOutline.vue'
 import CheckIcon from 'vue-material-design-icons/Check.vue'
 
-import CheckboxRadioSwitch from '@nextcloud/vue/dist/Components/CheckboxRadioSwitch.js'
-import NcButton from '@nextcloud/vue/dist/Components/Button.js'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 
 export default {
 	name: 'SettingsForm',
 	components: {
-		CheckboxRadioSwitch,
+		NcCheckboxRadioSwitch,
 		NcButton,
 		AlertOutlineIcon,
 		CheckIcon,

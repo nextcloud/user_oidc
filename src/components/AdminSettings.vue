@@ -27,27 +27,27 @@
 				{{ t('user_oidc', 'Allows users to authenticate via OpenID Connect providers.') }}
 			</p>
 			<p>
-				<CheckboxRadioSwitch :checked.sync="id4meState"
+				<NcCheckboxRadioSwitch :checked.sync="id4meState"
 					wrapper-element="div"
 					@update:checked="onId4MeChange">
 					{{ t('user_oidc', 'Enable ID4me') }}
-				</CheckboxRadioSwitch>
+				</NcCheckboxRadioSwitch>
 			</p>
 		</div>
 		<div class="section">
 			<h2>
 				{{ t('user_oidc', 'Registered Providers') }}
-				<Actions>
-					<ActionButton @click="showNewProvider=true">
+				<NcActions>
+					<NcActionButton @click="showNewProvider=true">
 						<template #icon>
 							<PlusIcon :size="20" />
 						</template>
 						{{ t('user_oidc', 'Register new provider') }}
-					</ActionButton>
-				</Actions>
+					</NcActionButton>
+				</NcActions>
 			</h2>
 
-			<Modal v-if="showNewProvider"
+			<NcModal v-if="showNewProvider"
 				size="large"
 				:can-close="false">
 				<div class="providermodal__wrapper">
@@ -57,7 +57,7 @@
 					</p>
 					<SettingsForm :provider="newProvider" @submit="onSubmit" @cancel="showNewProvider=false" />
 				</div>
-			</Modal>
+			</NcModal>
 
 			<div class="oidcproviders">
 				<p v-if="providers.length === 0">
@@ -73,26 +73,26 @@
 						{{ t('user_oidc', 'Discovery endpoint') }}: {{ provider.discoveryEndpoint }}<br>
 						{{ t('user_oidc', 'Backchannel Logout URL') }}: {{ getBackchannelUrl(provider) }}
 					</div>
-					<Actions>
-						<ActionButton @click="updateProvider(provider)">
+					<NcActions :style="customActionsStyle">
+						<NcActionButton @click="updateProvider(provider)">
 							<template #icon>
 								<PencilIcon :size="20" />
 							</template>
 							{{ t('user_oidc', 'Update') }}
-						</ActionButton>
-					</Actions>
-					<Actions>
-						<ActionButton @click="onRemove(provider)">
+						</NcActionButton>
+					</NcActions>
+					<NcActions :style="customActionsStyle">
+						<NcActionButton @click="onRemove(provider)">
 							<template #icon>
 								<DeleteIcon :size="20" />
 							</template>
 							{{ t('user_oidc', 'Remove') }}
-						</ActionButton>
-					</Actions>
+						</NcActionButton>
+					</NcActions>
 				</div>
 			</div>
 
-			<Modal v-if="editProvider"
+			<NcModal v-if="editProvider"
 				size="large"
 				:can-close="false">
 				<div class="providermodal__wrapper">
@@ -103,7 +103,7 @@
 						@submit="onUpdate"
 						@cancel="editProvider=null" />
 				</div>
-			</Modal>
+			</NcModal>
 		</div>
 	</div>
 </template>
@@ -116,10 +116,10 @@ import PlusIcon from 'vue-material-design-icons/Plus.vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import Actions from '@nextcloud/vue/dist/Components/Actions.js'
-import ActionButton from '@nextcloud/vue/dist/Components/ActionButton.js'
-import Modal from '@nextcloud/vue/dist/Components/Modal.js'
-import CheckboxRadioSwitch from '@nextcloud/vue/dist/Components/CheckboxRadioSwitch.js'
+import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
+import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
+import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 
 import logger from '../logger.js'
 import SettingsForm from './SettingsForm.vue'
@@ -128,10 +128,10 @@ export default {
 	name: 'AdminSettings',
 	components: {
 		SettingsForm,
-		Actions,
-		ActionButton,
-		Modal,
-		CheckboxRadioSwitch,
+		NcActions,
+		NcActionButton,
+		NcModal,
+		NcCheckboxRadioSwitch,
 		PencilIcon,
 		DeleteIcon,
 		PlusIcon,
@@ -168,6 +168,9 @@ export default {
 			},
 			showNewProvider: false,
 			editProvider: null,
+			customActionsStyle: {
+				'--color-background-hover': 'var(--color-background-darker)',
+			},
 		}
 	},
 	methods: {
@@ -268,6 +271,7 @@ h3 {
 	border-bottom: 1px solid var(--color-border);
 	padding: 10px;
 	display: flex;
+	align-items: start;
 
 	&:hover {
 		background-color: var(--color-background-hover);
