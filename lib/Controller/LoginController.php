@@ -270,10 +270,10 @@ class LoginController extends Controller {
 		];
 		// pass discovery query parameters also on to the authentication
 		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
-		if (isset($discoveryUrl["query"])) {
-			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl["query"]);
+		if (isset($discoveryUrl['query'])) {
+			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl['query']);
 			$discoveryQuery = [];
-			parse_str($discoveryUrl["query"], $discoveryQuery);
+			parse_str($discoveryUrl['query'], $discoveryQuery);
 			$data += $discoveryQuery;
 		}
 
@@ -290,18 +290,9 @@ class LoginController extends Controller {
 			return $response;
 		}
 
-		$authorizationUrl = $discovery['authorization_endpoint'] . '?' . http_build_query($data);
-		// check if the authorization_endpoint is a valid URL
-		if (filter_var($discovery['authorization_endpoint'], FILTER_VALIDATE_URL) === false) {
-			$this->logger->error('Invalid authorization_endpoint URL: ' . $discovery['authorization_endpoint']);
-			$response = new TemplateResponse('', 'error', [
-				'errors' => [
-					['error' => 'Invalid authorization_endpoint URL: ' . $discovery['authorization_endpoint']],
-				],
-			], TemplateResponse::RENDER_AS_ERROR);
-			$response->setStatus(Http::STATUS_NOT_FOUND);
-			return $response;
-		}
+		// sanitize the authorization_endpoint
+		$authorizationEndpoint = htmlentities(filter_var($discovery['authorization_endpoint'], FILTER_SANITIZE_URL), ENT_QUOTES);
+		$authorizationUrl = $authorizationEndpoint . '?' . http_build_query($data);
 
 		$this->logger->debug('Redirecting user to: ' . $authorizationUrl);
 
