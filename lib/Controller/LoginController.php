@@ -290,9 +290,7 @@ class LoginController extends Controller {
 			return $response;
 		}
 
-		// sanitize the authorization_endpoint
-		$authorizationEndpoint = htmlentities(filter_var($discovery['authorization_endpoint'], FILTER_SANITIZE_URL), ENT_QUOTES);
-		$authorizationUrl = $authorizationEndpoint . '?' . http_build_query($data);
+		$authorizationUrl = $this->buildAuthorizationUrl($discovery['authorization_endpoint'], $data);
 
 		$this->logger->debug('Redirecting user to: ' . $authorizationUrl);
 
@@ -303,6 +301,32 @@ class LoginController extends Controller {
 		}
 
 		return new RedirectResponse($authorizationUrl);
+	}
+
+	/**
+	 * @param string $authorizationEndpoint
+	 * @param array $extraGetParameters
+	 * @return string
+	 */
+	private function buildAuthorizationUrl(string $authorizationEndpoint, array $extraGetParameters = []): string {
+		$parsedUrl = parse_url($authorizationEndpoint);
+
+		$urlWithoutParams =
+			(isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '')
+			. ($parsedUrl['host'] ?? '')
+			. (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '')
+			. ($parsedUrl['path'] ?? '');
+
+		$queryParams = $extraGetParameters;
+		if (isset($parsedUrl['query'])) {
+			parse_str($parsedUrl['query'], $parsedQueryParams);
+			$queryParams = array_merge($queryParams, $parsedQueryParams);
+		}
+
+		// sanitize everything before the query parameters
+		// and trust http_build_query to sanitize the query parameters
+		return htmlentities(filter_var($urlWithoutParams, FILTER_SANITIZE_URL), ENT_QUOTES)
+			. (empty($queryParams) ? '' : '?' . http_build_query($queryParams));
 	}
 
 	/**
