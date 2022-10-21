@@ -5,6 +5,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## 1.2.1
+
+### Added
+
+- Support for Nextcloud 26 @nickvergessen [#504](https://github.com/nextcloud/user_oidc/pull/504)
+- Support backchannel logout @julien-nc [#464](https://github.com/nextcloud/user_oidc/pull/464)
+- New endpoint to pre-provision users @julien-nc [#450](https://github.com/nextcloud/user_oidc/pull/450)
+- Create and populate user storage if necessary on bearer token validation @julien-nc [#443](https://github.com/nextcloud/user_oidc/pull/443)
+
+### Fixed
+
+- Fix crash on bearer token validation before first login @julien-nc [#498](https://github.com/nextcloud/user_oidc/pull/498)
+- Potential XSS with Safari @julien-nc [#496](https://github.com/nextcloud/user_oidc/pull/496)
+- Fix single logout when using Keycloak >= 18 @ubipo [#493](https://github.com/nextcloud/user_oidc/pull/493)
+- Enforce HTTPS @julien-nc [#495](https://github.com/nextcloud/user_oidc/pull/495)
+- Check if user was deleted in LDAP if necessary @julien-nc [#451](https://github.com/nextcloud/user_oidc/pull/451)
+- Perform a user search before login to make sure LDAP users are synced @julien-nc [#436](https://github.com/nextcloud/user_oidc/pull/436)
+- Make sure the user avatar is generated on login @julien-nc [#437](https://github.com/nextcloud/user_oidc/pull/437)
+- Fix upsert command resetting the scope if none provided @julien-nc [#433](https://github.com/nextcloud/user_oidc/pull/433)
+- Fix upsert command not printing the provider when no parameter given @julien-nc [#431](https://github.com/nextcloud/user_oidc/pull/431)
+- Fix single logout with non-auto provisioned users @julien-nc [#429](https://github.com/nextcloud/user_oidc/pull/429)
+
+### Other
+
+- Modernize settings frontend (use `@nextcloud/vue`, bump js libs...) @julien-nc [#497](https://github.com/nextcloud/user_oidc/pull/497)
+
 ## 1.2.0
 
 ### Added
