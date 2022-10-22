@@ -1,0 +1,141 @@
+<?php
+/**
+ * @copyright Copyright (c) 2022 Julien Veyssier <eneiluj@posteo.net>
+ *
+ * @author Julien Veyssier <eneiluj@posteo.net>
+ *
+ * @license GNU AGPL version 3 or any later version
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+declare(strict_types=1);
+
+
+use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\ProviderService;
+use OCP\Http\Client\IClientService;
+use OCP\ICacheFactory;
+use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+
+class DiscoveryServiceTest extends TestCase {
+
+	/**
+	 * @var MockObject|LoggerInterface
+	 */
+	private $logger;
+	/**
+	 * @var IClientService|MockObject
+	 */
+	private $clientService;
+	/**
+	 * @var ProviderService|MockObject
+	 */
+	private $providerService;
+	/**
+	 * @var ICacheFactory|MockObject
+	 */
+	private $cacheFactory;
+	/**
+	 * @var DiscoveryService
+	 */
+	private $discoveryService;
+
+	public function setUp(): void {
+		parent::setUp();
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->clientService = $this->createMock(IClientService::class);
+		$this->providerService = $this->createMock(ProviderService::class);
+		$this->cacheFactory = $this->createMock(ICacheFactory::class);
+		$this->discoveryService = new DiscoveryService($this->logger, $this->clientService, $this->providerService, $this->cacheFactory);
+	}
+
+	public function testBuildAuthorizationUrl() {
+		$xss1 = '\'"http-equiv=><svg/onload=alert(1)>';
+		$cleanedXss1 = '&#039;&quot;http-equiv=&gt;&lt;svg/onload=alert(1)&gt;';
+		$cleanAuthorizationEndpoint = 'https://test.org:9999/path1/path2';
+		$stringQueryParams = 'param1=value1&param2=value2';
+		$extraParams = [
+			'extraParam1' => 'extraValue1',
+			'extraParam2' => 'extraValue2',
+		];
+		$stringExtraParams = 'extraParam1=extraValue1&extraParam2=extraValue2';
+
+		$extraParamsWithXssValue = [
+			'extraParam1' => $xss1,
+		];
+		$extraParamsWithXssKey = [
+			$xss1 => 'extraValue1',
+		];
+
+		$testValues = [
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint,
+				'extra_params' => [],
+				'expected_result' => $cleanAuthorizationEndpoint,
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint . $xss1,
+				'extra_params' => [],
+				'expected_result' => $cleanAuthorizationEndpoint . $cleanedXss1,
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint . '?' . $stringQueryParams,
+				'extra_params' => [],
+				'expected_result' => $cleanAuthorizationEndpoint . '?' . $stringQueryParams,
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint,
+				'extra_params' => $extraParams,
+				'expected_result' => $cleanAuthorizationEndpoint . '?' . $stringExtraParams,
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint . '?' . $stringQueryParams,
+				'extra_params' => $extraParams,
+				'expected_result' => $cleanAuthorizationEndpoint . '?' . $stringExtraParams . '&' . $stringQueryParams,
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint,
+				'extra_params' => $extraParamsWithXssKey,
+				'expected_result' => $cleanAuthorizationEndpoint . '?' . urlencode($xss1) . '=extraValue1',
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint,
+				'extra_params' => $extraParamsWithXssValue,
+				'expected_result' => $cleanAuthorizationEndpoint . '?extraParam1=' . urlencode($xss1),
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint . '?' . $stringQueryParams,
+				'extra_params' => $extraParamsWithXssKey,
+				'expected_result' => $cleanAuthorizationEndpoint . '?' . urlencode($xss1) . '=extraValue1' . '&' . $stringQueryParams,
+			],
+			[
+				'authorization_endpoint' => $cleanAuthorizationEndpoint . '?' . $stringQueryParams,
+				'extra_params' => $extraParamsWithXssValue,
+				'expected_result' => $cleanAuthorizationEndpoint . '?' . 'extraParam1=' . urlencode($xss1) . '&' . $stringQueryParams,
+			],
+		];
+
+		foreach ($testValues as $test) {
+			Assert::assertEquals(
+				$test['expected_result'],
+				$this->discoveryService->buildAuthorizationUrl($test['authorization_endpoint'], $test['extra_params'])
+			);
+		}
+	}
+}

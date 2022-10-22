@@ -91,4 +91,30 @@ class DiscoveryService {
 		$this->logger->debug('Parsed the jwks');
 		return $jwks;
 	}
+
+	/**
+	 * @param string $authorizationEndpoint
+	 * @param array $extraGetParameters
+	 * @return string
+	 */
+	public function buildAuthorizationUrl(string $authorizationEndpoint, array $extraGetParameters = []): string {
+		$parsedUrl = parse_url($authorizationEndpoint);
+
+		$urlWithoutParams =
+			(isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '')
+			. ($parsedUrl['host'] ?? '')
+			. (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '')
+			. ($parsedUrl['path'] ?? '');
+
+		$queryParams = $extraGetParameters;
+		if (isset($parsedUrl['query'])) {
+			parse_str($parsedUrl['query'], $parsedQueryParams);
+			$queryParams = array_merge($queryParams, $parsedQueryParams);
+		}
+
+		// sanitize everything before the query parameters
+		// and trust http_build_query to sanitize the query parameters
+		return htmlentities(filter_var($urlWithoutParams, FILTER_SANITIZE_URL), ENT_QUOTES)
+			. (empty($queryParams) ? '' : '?' . http_build_query($queryParams));
+	}
 }
