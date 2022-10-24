@@ -290,9 +290,7 @@ class LoginController extends Controller {
 			return $response;
 		}
 
-		// sanitize the authorization_endpoint
-		$authorizationEndpoint = htmlentities(filter_var($discovery['authorization_endpoint'], FILTER_SANITIZE_URL), ENT_QUOTES);
-		$authorizationUrl = $authorizationEndpoint . '?' . http_build_query($data);
+		$authorizationUrl = $this->discoveryService->buildAuthorizationUrl($discovery['authorization_endpoint'], $data);
 
 		$this->logger->debug('Redirecting user to: ' . $authorizationUrl);
 
