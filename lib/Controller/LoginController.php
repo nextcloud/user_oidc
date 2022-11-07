@@ -505,6 +505,11 @@ class LoginController extends Controller {
 			if ($newDisplayName !== $oldDisplayName) {
 				$backendUser->setDisplayName($newDisplayName);
 				$this->userMapper->update($backendUser);
+			}
+			// 2 reasons why we should update the display name: It does not match the one
+			// - of our backend
+			// - returned by the user manager (outdated one before the fix in https://github.com/nextcloud/user_oidc/pull/530)
+			if ($newDisplayName !== $oldDisplayName || $newDisplayName !== $this->userManager->getDisplayName($user->getUID())) {
 				$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
 			}
 		}
