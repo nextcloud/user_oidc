@@ -61,6 +61,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
+use OCP\User\Events\UserChangedEvent;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -499,10 +500,12 @@ class LoginController extends Controller {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Displayname mapping event dispatched');
 		if ($event->hasValue()) {
+			$oldDisplayName = $backendUser->getDisplayName();
 			$newDisplayName = $event->getValue();
-			if ($newDisplayName != $backendUser->getDisplayName()) {
+			if ($newDisplayName !== $oldDisplayName) {
 				$backendUser->setDisplayName($newDisplayName);
-				$backendUser = $this->userMapper->update($backendUser);
+				$this->userMapper->update($backendUser);
+				$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
 			}
 		}
 
