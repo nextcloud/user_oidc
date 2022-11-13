@@ -61,6 +61,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
+use OCP\User\Events\UserChangedEvent;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -499,10 +500,17 @@ class LoginController extends Controller {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Displayname mapping event dispatched');
 		if ($event->hasValue()) {
+			$oldDisplayName = $backendUser->getDisplayName();
 			$newDisplayName = $event->getValue();
-			if ($newDisplayName != $backendUser->getDisplayName()) {
+			if ($newDisplayName !== $oldDisplayName) {
 				$backendUser->setDisplayName($newDisplayName);
-				$backendUser = $this->userMapper->update($backendUser);
+				$this->userMapper->update($backendUser);
+			}
+			// 2 reasons why we should update the display name: It does not match the one
+			// - of our backend
+			// - returned by the user manager (outdated one before the fix in https://github.com/nextcloud/user_oidc/pull/530)
+			if ($newDisplayName !== $oldDisplayName || $newDisplayName !== $this->userManager->getDisplayName($user->getUID())) {
+				$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
 			}
 		}
 
