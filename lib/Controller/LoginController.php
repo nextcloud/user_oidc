@@ -461,6 +461,7 @@ class LoginController extends Controller {
 			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
 			// so new users will be directly available even if they were not synced before this login attempt
 			$this->userManager->search($userId);
+			$this->ldapService->syncUser($userId);
 			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
 			$user = $this->userManager->get($userId);
 			if ($this->ldapService->isLdapDeletedUser($user)) {
