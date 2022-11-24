@@ -121,10 +121,10 @@
 			{{ t('user_oidc', 'To keep ids in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added.') }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.groupProvisioning" wrapper-element="div">
-			{{ t('user_oidc', 'Use group provisioning. Format of the groups claim value should be [{gid: "1", displayName: "group1"}, ...] or ["group1", "group2", ...]') }}
+			{{ t('user_oidc', 'Use group provisioning.') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token.') }}
+			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token. The Format of the groups claim value should be [{gid: "1", displayName: "group1"}, ...] or ["group1", "group2", ...]') }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
