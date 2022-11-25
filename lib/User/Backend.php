@@ -218,7 +218,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	public function getCurrentUserId() {
 		$providers = $this->providerMapper->getProviders();
 		if (count($providers) === 0) {
-			$this->logger->error('no OIDC providers');
+			$this->logger->debug('no OIDC providers');
 			return '';
 		}
 
