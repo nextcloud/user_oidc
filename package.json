@@ -24,7 +24,7 @@
 		"@nextcloud/initial-state": "^2.0.0",
 		"@nextcloud/logger": "^2.4.0",
 		"@nextcloud/router": "^2.0.0",
-		"@nextcloud/vue": "^7.0.0",
+		"@nextcloud/vue": "^7.1.0",
 		"vue": "^2.7.13",
 		"vue-material-design-icons": "^5.1.2"
 	},
