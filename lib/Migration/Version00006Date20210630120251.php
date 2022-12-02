@@ -15,7 +15,7 @@ class Version00006Date20210630120251 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		$table = $schema->getTable('user_oidc_providers');
-		$table->addUniqueIndex(['identifier']);
+		$table->addUniqueIndex(['identifier'], 'user_oidc_prov_idtf');
 
 		return $schema;
 	}
