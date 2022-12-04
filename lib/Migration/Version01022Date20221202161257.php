@@ -7,7 +7,6 @@ namespace OCA\UserOIDC\Migration;
 use Closure;
 use Doctrine\DBAL\Schema\SchemaException;
 use OCP\DB\ISchemaWrapper;
-use OCP\DB\Types;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
@@ -24,6 +23,7 @@ class Version01022Date20221202161257 extends SimpleMigrationStep {
 	 * @throws SchemaException
 	 */
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options) {
+		$somethingChanged = false;
 
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
@@ -36,13 +36,16 @@ class Version01022Date20221202161257 extends SimpleMigrationStep {
 				if ($index->isUnique() && $index->hasColumnAtPosition('created_at')) {
 					$table->dropIndex($index->getName());
 					$table->addIndex(['created_at'], 'user_oidc_sess_crat');
+					$somethingChanged = true;
 				}
 				// rename indexes on sid and nc_session_id if needed
 				if ($index->isUnique() && $index->hasColumnAtPosition('sid') && $index->getName() !== 'user_oidc_sess_sid') {
 					$table->renameIndex($index->getName(), 'user_oidc_sess_sid');
+					$somethingChanged = true;
 				}
 				if ($index->isUnique() && $index->hasColumnAtPosition('nc_session_id') && $index->getName() !== 'user_oidc_sess_sess_id') {
 					$table->renameIndex($index->getName(), 'user_oidc_sess_sess_id');
+					$somethingChanged = true;
 				}
 			}
 		}
@@ -54,10 +57,11 @@ class Version01022Date20221202161257 extends SimpleMigrationStep {
 				// rename index on identifier if needed
 				if ($index->isUnique() && $index->hasColumnAtPosition('identifier') && $index->getName() !== 'user_oidc_prov_idtf') {
 					$table->renameIndex($index->getName(), 'user_oidc_prov_idtf');
+					$somethingChanged = true;
 				}
 			}
 		}
 
-		return $schema;
+		return $somethingChanged ? $schema : null;
 	}
 }
