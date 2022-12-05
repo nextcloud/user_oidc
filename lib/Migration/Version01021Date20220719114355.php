@@ -59,9 +59,9 @@ class Version01021Date20220719114355 extends SimpleMigrationStep {
 			'unsigned' => true,
 		]);
 		$table->setPrimaryKey(['id']);
-		$table->addUniqueIndex(['sid']);
-		$table->addUniqueIndex(['created_at']);
-		$table->addUniqueIndex(['nc_session_id']);
+		$table->addIndex(['created_at'], 'user_oidc_sess_crat');
+		$table->addUniqueIndex(['sid'], 'user_oidc_sess_sid');
+		$table->addUniqueIndex(['nc_session_id'], 'user_oidc_sess_sess_id');
 
 		return $schema;
 	}
