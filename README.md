@@ -141,6 +141,19 @@ it is possible to disable the classic "self-encoded" validation:
 ],
 ```
 
+### External SSL termination
+
+If your Nextcloud instance is accessed via HTTP by a proxy or a load balancer
+but the user-facing service is accessed via HTTPS,
+you should set the `user_oidc.` flag to true in `config.php` to allow using this app in such context
+and make sure the redirection URL passed to the OpenID service are secure and your users are redirected correctly:
+
+``` php
+'user_oidc' => [
+    'external_ssl_termination' => true,
+],
+```
+
 ## Building the app
 
 Requirements for building:

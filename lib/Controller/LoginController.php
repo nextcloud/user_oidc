@@ -205,7 +205,9 @@ class LoginController extends Controller {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
 		}
-		if (!$this->isSecure()) {
+		$appSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$externalSslTermination = $appSystemConfig['external_ssl_termination'] ?? false;
+		if (!$externalSslTermination && !$this->isSecure()) {
 			return $this->generateProtocolErrorResponse();
 		}
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
@@ -260,11 +262,15 @@ class LoginController extends Controller {
 			}
 		}
 
+		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code');
+		if ($externalSslTermination) {
+			$redirectUrl = preg_replace('/^http:\/\//i', 'https://', $redirectUrl);
+		}
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => $provider->getScope(),
-			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
+			'redirect_uri' => $redirectUrl,
 			'claims' => json_encode($claims),
 			'state' => $state,
 			'nonce' => $nonce,
