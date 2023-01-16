@@ -63,7 +63,7 @@ class Provider extends Entity implements \JsonSerializable {
 			'identifier' => $this->identifier,
 			'clientId' => $this->clientId,
 			'discoveryEndpoint' => $this->discoveryEndpoint,
-			'scope' => $this->scope,
+			'scope' => trim($this->scope),
 		];
 	}
 }

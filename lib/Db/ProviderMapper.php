@@ -114,7 +114,7 @@ class ProviderMapper extends QBMapper {
 			$provider->setClientId($clientid);
 			$provider->setClientSecret($clientsecret);
 			$provider->setDiscoveryEndpoint($discoveryuri);
-			$provider->setScope($scope);
+			$provider->setScope($scope ?: ' ');
 			return $this->insert($provider);
 		} else {
 			if ($clientid !== null) {
@@ -126,7 +126,7 @@ class ProviderMapper extends QBMapper {
 			if ($discoveryuri !== null) {
 				$provider->setDiscoveryEndpoint($discoveryuri);
 			}
-			$provider->setScope($scope);
+			$provider->setScope($scope ?: ' ');
 			return $this->update($provider);
 		}
 	}
