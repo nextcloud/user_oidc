@@ -281,7 +281,7 @@ class LoginController extends Controller {
 		try {
 			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
-			$this->logger->error('Could not reach the provider at URL ' . $provider->getDiscoveryEndpoint());
+			$this->logger->error('Could not reach the provider at URL ' . $provider->getDiscoveryEndpoint(), ['exception' => $e]);
 			$response = new TemplateResponse('', 'error', [
 				'errors' => [
 					['error' => 'Could not reach the OpenID Connect provider.'],
