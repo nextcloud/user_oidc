@@ -35,7 +35,10 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
@@ -75,11 +78,19 @@ class Id4meController extends Controller {
 	/** @var Service */
 	private $id4me;
 
+	/** @var IConfig */
+	private $config;
+
+	/** @var IL10N */
+	private $l10n;
+
 
 	public function __construct(
 		IRequest $request,
 		ISecureRandom $random,
 		ISession $session,
+		IConfig $config,
+		IL10N $l10n,
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
@@ -99,6 +110,8 @@ class Id4meController extends Controller {
 		$this->userManager = $userManager;
 		$this->id4me = new Service($clientHelper);
 		$this->id4MeMapper = $id4MeMapper;
+		$this->config = $config;
+		$this->l10n = $l10n;
 	}
 
 	/**
@@ -173,11 +186,22 @@ class Id4meController extends Controller {
 		$params = $this->request->getParams();
 
 		if ($this->session->get(self::STATE) !== $state) {
-			// TODO show page with forbidden
-			return new JSONResponse([
-				'got' => $state,
-				'expected' => $this->session->get(self::STATE),
-			], Http::STATUS_FORBIDDEN);
+			$message = $this->l10n->t('The received state does not match the expected value.');
+			$responseData = [
+				'error' => 'invalid_state',
+				'error_description' => $message,
+			];
+			if ($this->config->getSystemValueBool('debug', false)) {
+				$responseData['got'] = $state;
+				$responseData['expected'] = $this->session->get(self::STATE);
+				return new JSONResponse($responseData, Http::STATUS_FORBIDDEN);
+			}
+			return new TemplateResponse(
+				'core',
+				'403',
+				['message' => $message],
+				TemplateResponse::RENDER_AS_ERROR
+			);
 		}
 
 		$authorityName = $this->session->get(self::AUTHNAME);
