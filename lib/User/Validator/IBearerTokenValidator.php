@@ -37,4 +37,12 @@ interface IBearerTokenValidator {
 	 * @return string|null user id or null if the token was not valid
 	 */
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string;
+
+	/**
+	 * Selects the provisioning strategy for this validation method.
+	 * This is used, when auto_provision and bearerProvisioning are activated.
+	 *
+	 * @return string the class name of the provisioning strategy
+	 */
+	public function getProvisioningStrategy(): string;
 }

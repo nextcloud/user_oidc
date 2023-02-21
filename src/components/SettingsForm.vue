@@ -100,17 +100,43 @@
 				type="text"
 				placeholder="quota">
 		</p>
+		<p>
+			<label for="mapping-quota">{{ t('user_oidc', 'Groups mapping') }}</label>
+			<input id="mapping-quota"
+				v-model="localProvider.settings.mappingGroups"
+				type="text"
+				placeholder="groups"
+				:disabled="!localProvider.settings.groupProvisioning">
+		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.uniqueUid" wrapper-element="div">
 			{{ t('user_oidc', 'Use unique user id') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'By default every user will get a unique userid that is a hashed value of the provider and user id. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then.') }}
 		</p>
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.providerBasedId" wrapper-element="div">
+			{{ t('user_oidc', 'Use provider identifier as prefix for ids') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'To keep ids in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added.') }}
+		</p>
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.groupProvisioning" wrapper-element="div">
+			{{ t('user_oidc', 'Use group provisioning.') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token. The Format of the groups claim value should be [{gid: "1", displayName: "group1"}, ...] or ["group1", "group2", ...]') }}
+		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Do you want to allow API calls and WebDav request that are authenticated with an OIDC ID token or access token?') }}
+		</p>
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.bearerProvisioning" wrapper-element="div" :disabled="!localProvider.settings.checkBearer">
+			{{ t('user_oidc', 'Auto provision user when accessing API and WebDav with Bearer token') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'This automatically provisions the user, when sending API and WebDav Requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work.') }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.sendIdTokenHint" wrapper-element="div">
 			{{ t('user_oidc', 'Send ID token hint on logout') }}
