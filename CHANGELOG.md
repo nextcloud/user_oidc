@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.0
+
+### Added
+
+- Group provisioning @MarvinOehlerkingCap [#502](https://github.com/nextcloud/user_oidc/pull/502)
+- Group mapping @MarvinOehlerkingCap [#502](https://github.com/nextcloud/user_oidc/pull/502)
+- Prefix user ID with provider ID @MarvinOehlerkingCap [#502](https://github.com/nextcloud/user_oidc/pull/502)
+- User provisioning on API requests authenticated with a Bearer token @MarvinOehlerkingCap [#502](https://github.com/nextcloud/user_oidc/pull/502)
+- DiscoveryService tests @julien-nc [#518](https://github.com/nextcloud/user_oidc/pull/518)
+
+### Fixed
+
+- Expected code being exposed when the received one does not match @julien-nc [#580](https://github.com/nextcloud/user_oidc/pull/580)
+- Non-unique database indexes @julien-nc [#541](https://github.com/nextcloud/user_oidc/pull/541)
+- User display name change propagation @julien-nc [#530](https://github.com/nextcloud/user_oidc/pull/530)
+- Fix discovery URL generation with GET parameters @julien-nc [#518](https://github.com/nextcloud/user_oidc/pull/518)
+
+### Other
+
+- Safer user sync with LDAP user provisioning @julien-nc [#535](https://github.com/nextcloud/user_oidc/pull/535)
 
 ## 1.2.1
 
