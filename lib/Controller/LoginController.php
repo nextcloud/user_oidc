@@ -51,6 +51,7 @@ use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
+use OCP\IL10N;
 use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
@@ -118,6 +119,9 @@ class LoginController extends Controller {
 	/** @var ProvisioningService */
 	private $provisioningService;
 
+	/** @var IL10N */
+	private $l10n;
+
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
@@ -136,6 +140,7 @@ class LoginController extends Controller {
 		IProvider $authTokenProvider,
 		SessionMapper $sessionMapper,
 		ProvisioningService $provisioningService,
+		IL10N $l10n,
 		ILogger $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -158,6 +163,7 @@ class LoginController extends Controller {
 		$this->sessionMapper = $sessionMapper;
 		$this->provisioningService = $provisioningService;
 		$this->request = $request;
+		$this->l10n = $l10n;
 	}
 
 	/**
@@ -330,11 +336,22 @@ class LoginController extends Controller {
 		if ($this->session->get(self::STATE) !== $state) {
 			$this->logger->debug('state does not match');
 
-			// TODO show page with forbidden
-			return new JSONResponse([
-				'got' => $state,
-				'expected' => $this->session->get(self::STATE),
-			], Http::STATUS_FORBIDDEN);
+			$message = $this->l10n->t('The received state does not match the expected value.');
+			$responseData = [
+				'error' => 'invalid_state',
+				'error_description' => $message,
+			];
+			if ($this->config->getSystemValueBool('debug', false)) {
+				$responseData['got'] = $state;
+				$responseData['expected'] = $this->session->get(self::STATE);
+				return new JSONResponse($responseData, Http::STATUS_FORBIDDEN);
+			}
+			return new TemplateResponse(
+				'core',
+				'403',
+				['message' => $message],
+				TemplateResponse::RENDER_AS_ERROR
+			);
 		}
 
 		$providerId = (int)$this->session->get(self::PROVIDERID);
