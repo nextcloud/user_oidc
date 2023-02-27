@@ -7,6 +7,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @author Roeland Jago Douma <roeland@famdouma.nl>
+ * @author Kate Döen <kate.doeen@nextcloud.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -192,11 +193,17 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 *
-	 * @param int $providerId
-	 * @param string|null $redirectUrl
-	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
+	 * Login the user
+	 *
+	 * @param int $providerId ID of the provider
+	 * @param string|null $redirectUrl URL to redirect to after the user logged in
+	 * @return DataDisplayResponse<Http::STATUS_OK>|RedirectResponse|TemplateResponse<Http::STATUS_NOT_FOUND>
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
+	 *
+	 * 200: Redirect to login URL
+	 * 303: Redirect to login URL
+	 * 404: Provider not reachable
 	 */
 	public function login(int $providerId, string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
@@ -309,16 +316,22 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 *
-	 * @param string $state
-	 * @param string $code
-	 * @param string $scope
-	 * @param string $error
-	 * @param string $error_description
-	 * @return JSONResponse|RedirectResponse|TemplateResponse
+	 * Render the flow result
+	 *
+	 * @param string $state State of the flow
+	 * @param string $code Code of the flow
+	 * @param string $scope Scope of the flow
+	 * @param string $error Error for the flow
+	 * @param string $error_description Error description for the flow
+	 * @return JSONResponse<string[], Http::STATUS_OK>|TemplateResponse<Http::STATUS_OK>|RedirectResponse|JSONResponse<array{error: string, error_description: string, got: ?string, expected: ?string}, Http::STATUS_FORBIDDEN>
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
 	 * @throws SessionNotAvailableException
 	 * @throws \JsonException
+	 *
+	 * 200: Login failed
+	 * 303: Redirect to login URL
+	 * 403: Login failed
 	 */
 	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
 		if (!$this->isSecure()) {
@@ -486,6 +499,8 @@ class LoginController extends Controller {
 	 * @throws \JsonException
 	 * @throws Exception
 	 * @throws SessionNotAvailableException
+	 *
+	 * 303: Redirect to logout URL
 	 */
 	public function singleLogoutService() {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
@@ -529,11 +544,14 @@ class LoginController extends Controller {
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 *
-	 * @param string $providerIdentifier
-	 * @param string $logout_token
-	 * @return JSONResponse
+	 * @param string $providerIdentifier ID of the provider
+	 * @param string $logout_token Token to log out
+	 * @return JSONResponse<array, Http::STATUS_OK>|JSONResponse<array{error: string, error_description: string}, Http::STATUS_BAD_REQUEST>
 	 * @throws Exception
 	 * @throws \JsonException
+	 *
+	 * 200: Logged out successfully
+	 * 400: Logging out is not possible
 	 */
 	public function backChannelLogout(string $providerIdentifier, string $logout_token = ''): JSONResponse {
 		// get the provider
@@ -607,7 +625,7 @@ class LoginController extends Controller {
 	 *
 	 * @param string $error
 	 * @param string $description
-	 * @return JSONResponse
+	 * @return JSONResponse<array{error: string, error_description: string}, Http::STATUS_BAD_REQUEST>
 	 */
 	private function getBackchannelLogoutErrorResponse(string $error, string $description): JSONResponse {
 		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);

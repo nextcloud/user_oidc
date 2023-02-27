@@ -1,0 +1,533 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "user_oidc",
+        "description": "Use an OpenID Connect backend to login to your Nextcloud",
+        "license": {
+            "name": "agpl"
+        },
+        "version": "1.3.1"
+    },
+    "paths": {
+        "/index.php/apps/user_oidc/login/{providerId}": {
+            "parameters": [
+                {
+                    "name": "providerId",
+                    "in": "path",
+                    "description": "ID of the provider",
+                    "required": true,
+                    "schema": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            ],
+            "get": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Login the user",
+                "operationId": "login-login",
+                "parameters": [
+                    {
+                        "name": "redirectUrl",
+                        "in": "query",
+                        "description": "URL to redirect to after the user logged in",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Redirect to login URL",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "303": {
+                        "description": "Redirect to login URL",
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Provider not reachable",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/user_oidc/code": {
+            "get": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Render the flow result",
+                "operationId": "login-code",
+                "parameters": [
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "description": "State of the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Code of the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "description": "Scope of the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "error",
+                        "in": "query",
+                        "description": "Error for the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "error_description",
+                        "in": "query",
+                        "description": "Error description for the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "303": {
+                        "description": "Redirect to login URL",
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Login failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "error",
+                                        "error_description"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "error_description": {
+                                            "type": "string"
+                                        },
+                                        "got": {
+                                            "type": "string"
+                                        },
+                                        "expected": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/user_oidc/sls": {
+            "get": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Endpoint called by NC to logout in the IdP before killing the current session",
+                "operationId": "login-single-logout-service",
+                "responses": {
+                    "303": {
+                        "description": "Redirect to logout URL",
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/user_oidc/backchannel-logout/{providerIdentifier}": {
+            "parameters": [
+                {
+                    "name": "providerIdentifier",
+                    "in": "path",
+                    "description": "ID of the provider",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Endpoint called by the IdP (OP) when end_session_endpoint is called by another client The logout token contains the sid for which we know the sessionId which leads to the auth token that we can invalidate",
+                "operationId": "login-back-channel-logout",
+                "parameters": [
+                    {
+                        "name": "logout_token",
+                        "in": "query",
+                        "description": "Token to log out",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Logging out is not possible",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "error",
+                                        "error_description"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "error_description": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/user_oidc/user": {
+            "post": {
+                "tags": [
+                    "api"
+                ],
+                "summary": "Create a user",
+                "description": "This endpoint requires admin access",
+                "operationId": "api-create-user",
+                "parameters": [
+                    {
+                        "name": "providerId",
+                        "in": "query",
+                        "description": "ID of the provider",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "ID of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "displayName",
+                        "in": "query",
+                        "description": "Display name of the user",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "E-mail of the user",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "quota",
+                        "in": "query",
+                        "description": "Quota of the user",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "user_id"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/user_oidc/id4me": {
+            "get": {
+                "tags": [
+                    "id4me"
+                ],
+                "summary": "Show the login page",
+                "operationId": "id4me-show-login",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/user_oidc/id4me/code": {
+            "get": {
+                "tags": [
+                    "id4me"
+                ],
+                "summary": "Render the flow result",
+                "operationId": "id4me-code",
+                "parameters": [
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "description": "State of the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Code of the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "description": "Scope of the flow",
+                        "schema": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "303": {
+                        "description": "Redirect to login URL",
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Login failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "required": [
+                                        "error",
+                                        "error_description",
+                                        "got",
+                                        "expected"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "error_description": {
+                                            "type": "string"
+                                        },
+                                        "got": {
+                                            "type": "string"
+                                        },
+                                        "expected": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {},
+        "securitySchemes": {
+            "basic_auth": {
+                "type": "http",
+                "scheme": "basic"
+            },
+            "bearer_auth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "security": [
+        {
+            "basic_auth": []
+        },
+        {
+            "bearer_auth": []
+        }
+    ],
+    "tags": []
+}

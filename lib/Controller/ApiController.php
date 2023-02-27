@@ -5,6 +5,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2022, Julien Veyssier <eneiluj@posteo.net>
  *
  * @author Julien Veyssier <eneiluj@posteo.net>
+ * @author Kate Döen <kate.doeen@nextcloud.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -60,12 +61,14 @@ class ApiController extends Controller {
 	/**
 	 * @NoCSRFRequired
 	 *
-	 * @param int $providerId
-	 * @param string $userId
-	 * @param string|null $displayName
-	 * @param string|null $email
-	 * @param string|null $quota
-	 * @return DataResponse
+	 * Create a user
+	 *
+	 * @param int $providerId ID of the provider
+	 * @param string $userId ID of the user
+	 * @param string|null $displayName Display name of the user
+	 * @param string|null $email E-mail of the user
+	 * @param string|null $quota Quota of the user
+	 * @return DataResponse<array{user_id: string}, Http::STATUS_OK>
 	 */
 	public function createUser(int $providerId, string  $userId, ?string $displayName = null,
 								  ?string $email = null, ?string $quota = null): DataResponse {

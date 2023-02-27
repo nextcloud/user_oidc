@@ -5,6 +5,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @author Roeland Jago Douma <roeland@famdouma.nl>
+ * @author Kate Döen <kate.doeen@nextcloud.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -123,6 +124,10 @@ class Id4meController extends Controller {
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 *
+	 * Show the login page
+	 *
+	 * @return TemplateResponse<Http::STATUS_OK>
 	 */
 	public function showLogin() {
 		$response = new Http\TemplateResponse('user_oidc', 'id4me/login', [], 'guest');
@@ -196,6 +201,17 @@ class Id4meController extends Controller {
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 *
+	 * Render the flow result
+	 *
+	 * @param string $state State of the flow
+	 * @param string $code Code of the flow
+	 * @param string $scope Scope of the flow
+	 * @return JSONResponse<string[], Http::STATUS_OK>|TemplateResponse<Http::STATUS_OK>|RedirectResponse|JSONResponse<array{error: string, error_description: string, got: string, expected: string}, Http::STATUS_FORBIDDEN>
+	 *
+	 * 200: Login failed
+	 * 303: Redirect to login URL
+	 * 403: Login failed
 	 */
 	public function code($state = '', $code = '', $scope = '') {
 		$params = $this->request->getParams();
