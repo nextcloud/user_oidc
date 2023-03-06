@@ -25,8 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Helper;
 
-use Id4me\RP\HttpClient;
 use OCP\Http\Client\IClientService;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+use Id4me\RP\HttpClient;
 
 class HttpClientHelper implements HttpClient {
 

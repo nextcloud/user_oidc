@@ -46,6 +46,11 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 
+require_once __DIR__ . '/../../vendor/autoload.php';
+use Id4me\RP\Service;
+use Id4me\RP\Exception\InvalidOpenIdDomainException;
+use Id4me\RP\Model\OpenIdConfig;
+
 class Id4meController extends Controller {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
@@ -135,7 +140,17 @@ class Id4meController extends Controller {
 	 * @UseSession
 	 */
 	public function login(string $domain) {
-		$authorityName = $this->id4me->discover($domain);
+		try {
+			$authorityName = $this->id4me->discover($domain);
+		} catch (InvalidOpenIdDomainException $e) {
+			$response = new TemplateResponse('', 'error', [
+				'errors' => [
+					['error' => 'Invalid OpenID domain'],
+				],
+			], TemplateResponse::RENDER_AS_ERROR);
+			$response->setStatus(Http::STATUS_BAD_REQUEST);
+			return $response;
+		}
 		$openIdConfig = $this->id4me->getOpenIdConfig($authorityName);
 
 		try {
