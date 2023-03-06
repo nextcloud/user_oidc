@@ -9,6 +9,7 @@
 /.travis.yml
 /.tx
 /.scrutinizer.yml
+/.nextcloudignore
 /babel.config.js
 /CONTRIBUTING.md
 /composer.json
