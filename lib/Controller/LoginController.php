@@ -263,7 +263,7 @@ class LoginController extends Controller {
 		$data = [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
-			'scope' => $provider->getScope(),
+			'scope' => trim($provider->getScope()),
 			'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 			'claims' => json_encode($claims),
 			'state' => $state,
