@@ -69,7 +69,7 @@ class SettingsController extends Controller {
 		$provider->setClientId($clientId);
 		$provider->setClientSecret($clientSecret);
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
-		$provider->setScope($scope ?: ' ');
+		$provider->setScope($scope);
 		$provider = $this->providerMapper->insert($provider);
 
 		$providerSettings = $this->providerService->setSettings($provider->getId(), $settings);
@@ -91,7 +91,7 @@ class SettingsController extends Controller {
 			$provider->setClientSecret($clientSecret);
 		}
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
-		$provider->setScope($scope ?: ' ');
+		$provider->setScope($scope);
 		$provider = $this->providerMapper->update($provider);
 
 		$providerSettings = $this->providerService->setSettings($providerId, $settings);
