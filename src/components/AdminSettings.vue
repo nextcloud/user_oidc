@@ -68,10 +68,15 @@
 					:key="provider.id"
 					class="oidcproviders__provider">
 					<div class="oidcproviders__details">
-						<strong>{{ provider.identifier }}</strong><br>
-						{{ t('user_oidc', 'Client ID') }}: {{ provider.clientId }}<br>
-						{{ t('user_oidc', 'Discovery endpoint') }}: {{ provider.discoveryEndpoint }}<br>
-						{{ t('user_oidc', 'Backchannel Logout URL') }}: {{ getBackchannelUrl(provider) }}
+						<h3>{{ provider.identifier }}</h3>
+						<label>{{ t('user_oidc', 'Client ID') }}</label>
+						<span>{{ provider.clientId }}</span>
+						<label>{{ t('user_oidc', 'Discovery endpoint') }}</label>
+						<span>{{ provider.discoveryEndpoint }}</span>
+						<label>{{ t('user_oidc', 'Backchannel Logout URL') }}</label>
+						<span>{{ getBackchannelUrl(provider) }}</span>
+						<label>{{ t('user_oidc', 'Redirect URI (to be authorized in the provider client configuration)') }}</label>
+						<span>{{ redirectUri }}</span>
 					</div>
 					<NcActions :style="customActionsStyle">
 						<NcActionButton @click="updateProvider(provider)">
@@ -174,6 +179,7 @@ export default {
 			customActionsStyle: {
 				'--color-background-hover': 'var(--color-background-darker)',
 			},
+			redirectUri: window.location.protocol + '//' + window.location.host + generateUrl('/apps/user_oidc/code'),
 		}
 	},
 	methods: {
@@ -281,6 +287,14 @@ h3 {
 	}
 	.oidcproviders__details {
 		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		h3 {
+			text-align: center;
+		}
+		label {
+			font-weight: bold;
+		}
 	}
 }
 
