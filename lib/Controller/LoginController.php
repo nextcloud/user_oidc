@@ -169,21 +169,82 @@ class LoginController extends Controller {
 	/**
 	 * @return bool
 	 */
-	private function isSecure(): bool {
-		// no restriction in debug mode
-		return $this->config->getSystemValueBool('debug', false) || $this->request->getServerProtocol() === 'https';
+	private function isDebugModeEnabled(): bool {
+		return $this->config->getSystemValueBool('debug', false);
 	}
 
 	/**
+	 * @return bool
+	 */
+	private function isSecure(): bool {
+		// no restriction in debug mode
+		return $this->isDebugModeEnabled() || $this->request->getServerProtocol() === 'https';
+	}
+
+	/**
+	 * @param bool|null $throttle
 	 * @return TemplateResponse
 	 */
-	private function generateProtocolErrorResponse(): TemplateResponse {
-		$response = new TemplateResponse('', 'error', [
+	private function buildProtocolErrorResponse(?bool $throttle = null): TemplateResponse {
+		$params = [
 			'errors' => [
-				['error' => 'You must access Nextcloud with HTTPS to use OpenID Connect.']
-			]
-		], TemplateResponse::RENDER_AS_ERROR);
-		$response->setStatus(Http::STATUS_NOT_FOUND);
+				['error' => $this->l10n->t('You must access Nextcloud with HTTPS to use OpenID Connect.')],
+			],
+		];
+		$throttleMetadata = ['reason' => 'insecure connection'];
+		return $this->buildFailureTemplateResponse('', 'error', $params, Http::STATUS_NOT_FOUND, $throttleMetadata, $throttle);
+	}
+
+	/**
+	 * @param string $message
+	 * @param int $statusCode
+	 * @param array $throttleMetadata
+	 * @param bool|null $throttle
+	 * @return TemplateResponse
+	 */
+	private function buildErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+		$params = [
+			'errors' => [
+				['error' => $message],
+			],
+		];
+		return $this->buildFailureTemplateResponse('', 'error', $params, $statusCode, $throttleMetadata, $throttle);
+	}
+
+	/**
+	 * @param string $message
+	 * @param int $statusCode
+	 * @param array $throttleMetadata
+	 * @param bool|null $throttle
+	 * @return TemplateResponse
+	 */
+	private function build403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+		$params = ['message' => $message];
+		return $this->buildFailureTemplateResponse('core', '403', $params, $statusCode, $throttleMetadata, $throttle);
+	}
+
+	/**
+	 * @param string $appName
+	 * @param string $templateName
+	 * @param array $params
+	 * @param int $statusCode
+	 * @param array $throttleMetadata
+	 * @param bool|null $throttle
+	 * @return TemplateResponse
+	 */
+	private function buildFailureTemplateResponse(string $appName, string $templateName, array $params, int $statusCode,
+										   array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+		$response = new TemplateResponse(
+			$appName,
+			$templateName,
+			$params,
+			TemplateResponse::RENDER_AS_ERROR
+		);
+		$response->setStatus($statusCode);
+		// if not specified, throttle if debug mode is off
+		if (($throttle === null && !$this->isDebugModeEnabled()) || $throttle) {
+			$response->throttle($throttleMetadata);
+		}
 		return $response;
 	}
 
@@ -191,24 +252,27 @@ class LoginController extends Controller {
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 * @BruteForceProtection(action=userOidcLogin)
 	 *
 	 * @param int $providerId
 	 * @param string|null $redirectUrl
 	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
-	 * @throws DoesNotExistException
-	 * @throws MultipleObjectsReturnedException
 	 */
 	public function login(int $providerId, string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
 		}
 		if (!$this->isSecure()) {
-			return $this->generateProtocolErrorResponse();
+			return $this->buildProtocolErrorResponse();
 		}
 		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
 
-		//TODO: handle exceptions
-		$provider = $this->providerMapper->getProvider($providerId);
+		try {
+			$provider = $this->providerMapper->getProvider($providerId);
+		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
+			$message = $this->l10n->t('There is not such OpenID Connect provider.');
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_not_found' => $providerId]);
+		}
 
 		$state = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::STATE, $state);
@@ -282,13 +346,8 @@ class LoginController extends Controller {
 			$discovery = $this->discoveryService->obtainDiscovery($provider);
 		} catch (\Exception $e) {
 			$this->logger->error('Could not reach the provider at URL ' . $provider->getDiscoveryEndpoint(), ['exception' => $e]);
-			$response = new TemplateResponse('', 'error', [
-				'errors' => [
-					['error' => 'Could not reach the OpenID Connect provider.'],
-				],
-			], TemplateResponse::RENDER_AS_ERROR);
-			$response->setStatus(Http::STATUS_NOT_FOUND);
-			return $response;
+			$message = $this->l10n->t('Could not reach the OpenID Connect provider.');
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['reason' => 'provider unreachable']);
 		}
 
 		$authorizationUrl = $this->discoveryService->buildAuthorizationUrl($discovery['authorization_endpoint'], $data);
@@ -308,6 +367,7 @@ class LoginController extends Controller {
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
+	 * @BruteForceProtection(action=userOidcCode)
 	 *
 	 * @param string $state
 	 * @param string $code
@@ -322,7 +382,7 @@ class LoginController extends Controller {
 	 */
 	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
 		if (!$this->isSecure()) {
-			return $this->generateProtocolErrorResponse();
+			return $this->buildProtocolErrorResponse();
 		}
 		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
 
@@ -341,17 +401,13 @@ class LoginController extends Controller {
 				'error' => 'invalid_state',
 				'error_description' => $message,
 			];
-			if ($this->config->getSystemValueBool('debug', false)) {
+			if ($this->isDebugModeEnabled()) {
 				$responseData['got'] = $state;
 				$responseData['expected'] = $this->session->get(self::STATE);
 				return new JSONResponse($responseData, Http::STATUS_FORBIDDEN);
 			}
-			return new TemplateResponse(
-				'core',
-				'403',
-				['message' => $message],
-				TemplateResponse::RENDER_AS_ERROR
-			);
+			// we know debug mode is off, always throttle
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'state does not match'], true);
 		}
 
 		$providerId = (int)$this->session->get(self::PROVIDERID);
@@ -389,28 +445,29 @@ class LoginController extends Controller {
 
 		if ($idTokenPayload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
-			// TODO: error properly
-			return new JSONResponse(['token expired']);
+			$message = $this->l10n->t('The received token is expired.');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'token expired']);
 		}
 
 		// Verify audience
 		if (!(($idTokenPayload->aud === $provider->getClientId() || in_array($provider->getClientId(), $idTokenPayload->aud, true)))) {
 			$this->logger->debug('This token is not for us');
-			// TODO: error properly
-			return new JSONResponse(['audience does not match']);
+			$message = $this->l10n->t('The audience does not match ours');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud]);
 		}
 
 		if (isset($idTokenPayload->nonce) && $idTokenPayload->nonce !== $this->session->get(self::NONCE)) {
 			$this->logger->debug('Nonce does not match');
-			// TODO: error properly
-			return new JSONResponse(['invalid nonce']);
+			$message = $this->l10n->t('The nonce does not match');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'invalid nonce']);
 		}
 
 		// get user ID attribute
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
 		$userId = $idTokenPayload->{$uidAttribute} ?? null;
 		if ($userId === null) {
-			return new JSONResponse(['Failed to provision user']);
+			$message = $this->l10n->t('Failed to provision the user');
+			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
@@ -432,7 +489,8 @@ class LoginController extends Controller {
 		}
 
 		if ($user === null) {
-			return new JSONResponse(['Failed to provision user']);
+			$message = $this->l10n->t('Failed to provision the user');
+			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
 
 		$this->session->set(self::ID_TOKEN, $idTokenRaw);
@@ -479,21 +537,26 @@ class LoginController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @UseSession
+	 * @BruteForceProtection(action=userOidcSingleLogout)
 	 *
-	 * @return RedirectResponse
-	 * @throws DoesNotExistException
-	 * @throws MultipleObjectsReturnedException
-	 * @throws \JsonException
+	 * @return RedirectResponse|TemplateResponse
 	 * @throws Exception
 	 * @throws SessionNotAvailableException
+	 * @throws \JsonException
 	 */
 	public function singleLogoutService() {
+		// TODO throttle in all failing cases
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
 		if (!isset($oidcSystemConfig['single_logout']) || $oidcSystemConfig['single_logout']) {
 			$providerId = $this->session->get(self::PROVIDERID);
 			if ($providerId) {
-				$provider = $this->providerMapper->getProvider((int)$providerId);
+				try {
+					$provider = $this->providerMapper->getProvider((int)$providerId);
+				} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
+					$message = $this->l10n->t('There is not such OpenID Connect provider.');
+					return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_id' => $providerId]);
+				}
 				$endSessionEndpoint = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'];
 				if ($endSessionEndpoint) {
 					$endSessionEndpoint .= '?post_logout_redirect_uri=' . $targetUrl;
@@ -525,9 +588,11 @@ class LoginController extends Controller {
 	 * Endpoint called by the IdP (OP) when end_session_endpoint is called by another client
 	 * The logout token contains the sid for which we know the sessionId
 	 * which leads to the auth token that we can invalidate
+	 * Implemented according to https://openid.net/specs/openid-connect-backchannel-1_0.html
 	 *
 	 * @PublicPage
 	 * @NoCSRFRequired
+	 * @BruteForceProtection(action=userOidcBackchannelLogout)
 	 *
 	 * @param string $providerIdentifier
 	 * @param string $logout_token
@@ -539,7 +604,11 @@ class LoginController extends Controller {
 		// get the provider
 		$provider = $this->providerService->getProviderByIdentifier($providerIdentifier);
 		if ($provider === null) {
-			return $this->getBackchannelLogoutErrorResponse('provider not found', 'The provider was not found in Nextcloud');
+			return $this->getBackchannelLogoutErrorResponse(
+				'provider not found',
+				'The provider was not found in Nextcloud',
+				['provider_not_found' => $providerIdentifier]
+			);
 		}
 
 		// decrypt the logout token
@@ -551,17 +620,29 @@ class LoginController extends Controller {
 
 		// check the audience
 		if (!(($logoutTokenPayload->aud === $provider->getClientId() || in_array($provider->getClientId(), $logoutTokenPayload->aud, true)))) {
-			return $this->getBackchannelLogoutErrorResponse('invalid audience', 'The audience of the logout token does not match the provider');
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid audience',
+				'The audience of the logout token does not match the provider',
+				['invalid_audience' => $logoutTokenPayload->aud]
+			);
 		}
 
 		// check the event attr
 		if (!isset($logoutTokenPayload->events->{'http://schemas.openid.net/event/backchannel-logout'})) {
-			return $this->getBackchannelLogoutErrorResponse('invalid event', 'The backchannel-logout event was not found in the logout token');
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid event',
+				'The backchannel-logout event was not found in the logout token',
+				['invalid_event' => true]
+			);
 		}
 
 		// check the nonce attr
 		if (isset($logoutTokenPayload->nonce)) {
-			return $this->getBackchannelLogoutErrorResponse('invalid nonce', 'The logout token should not contain a nonce attribute');
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid nonce',
+				'The logout token should not contain a nonce attribute',
+				['nonce_should_not_be_set' => true]
+			);
 		}
 
 		// get the auth token ID associated with the logout token's sid attr
@@ -569,18 +650,34 @@ class LoginController extends Controller {
 		try {
 			$oidcSession = $this->sessionMapper->findSessionBySid($sid);
 		} catch (DoesNotExistException $e) {
-			return $this->getBackchannelLogoutErrorResponse('invalid SID', 'The sid of the logout token was not found');
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid SID',
+				'The sid of the logout token was not found',
+				['session_sid_not_found' => $sid]
+			);
 		} catch (MultipleObjectsReturnedException $e) {
-			return $this->getBackchannelLogoutErrorResponse('invalid SID', 'The sid of the logout token was found multiple times');
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid SID',
+				'The sid of the logout token was found multiple times',
+				['multiple_logout_tokens_found' => $sid]
+			);
 		}
 
 		$sub = $logoutTokenPayload->sub;
 		if ($oidcSession->getSub() !== $sub) {
-			return $this->getBackchannelLogoutErrorResponse('invalid SUB', 'The sub does not match the one from the login ID token');
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid SUB',
+				'The sub does not match the one from the login ID token',
+				['invalid_sub' => $sub]
+			);
 		}
 		$iss = $logoutTokenPayload->iss;
 		if ($oidcSession->getIss() !== $iss) {
-			return $this->getBackchannelLogoutErrorResponse('invalid ISS', 'The iss does not match the one from the login ID token');
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid ISS',
+				'The iss does not match the one from the login ID token',
+				['invalid_iss' => $iss]
+			);
 		}
 
 		// i don't know why but the cast is necessary
@@ -592,7 +689,11 @@ class LoginController extends Controller {
 			$userId = $authToken->getUID();
 			$this->authTokenProvider->invalidateTokenById($userId, $authToken->getId());
 		} catch (InvalidTokenException $e) {
-			return $this->getBackchannelLogoutErrorResponse('nc session not found', 'The authentication session was not found in Nextcloud');
+			return $this->getBackchannelLogoutErrorResponse(
+				'nc session not found',
+				'The authentication session was not found in Nextcloud',
+				['nc_auth_session_not_found' => $authTokenId]
+			);
 		}
 
 		// cleanup
@@ -607,16 +708,23 @@ class LoginController extends Controller {
 	 *
 	 * @param string $error
 	 * @param string $description
+	 * @param array $throttleMetadata
+	 * @param bool|null $throttle
 	 * @return JSONResponse
 	 */
-	private function getBackchannelLogoutErrorResponse(string $error, string $description): JSONResponse {
+	private function getBackchannelLogoutErrorResponse(string $error, string $description,
+													   array $throttleMetadata = [], ?bool $throttle = null): JSONResponse {
 		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
-		return new JSONResponse(
+		$response = new JSONResponse(
 			[
 				'error' => $error,
 				'error_description' => $description,
 			],
 			Http::STATUS_BAD_REQUEST,
 		);
+		if (($throttle === null && !$this->isDebugModeEnabled()) || $throttle) {
+			$response->throttle($throttleMetadata);
+		}
+		return $response;
 	}
 }
