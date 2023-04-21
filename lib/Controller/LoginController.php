@@ -202,7 +202,7 @@ class LoginController extends Controller {
 	 * @param bool|null $throttle
 	 * @return TemplateResponse
 	 */
-	private function buildErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+	public function buildErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
 		$params = [
 			'errors' => [
 				['error' => $message],
@@ -218,7 +218,7 @@ class LoginController extends Controller {
 	 * @param bool|null $throttle
 	 * @return TemplateResponse
 	 */
-	private function build403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+	public function build403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
 		$params = ['message' => $message];
 		return $this->buildFailureTemplateResponse('core', '403', $params, $statusCode, $throttleMetadata, $throttle);
 	}
@@ -232,7 +232,7 @@ class LoginController extends Controller {
 	 * @param bool|null $throttle
 	 * @return TemplateResponse
 	 */
-	private function buildFailureTemplateResponse(string $appName, string $templateName, array $params, int $statusCode,
+	public function buildFailureTemplateResponse(string $appName, string $templateName, array $params, int $statusCode,
 										   array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
 		$response = new TemplateResponse(
 			$appName,
@@ -397,13 +397,13 @@ class LoginController extends Controller {
 			$this->logger->debug('state does not match');
 
 			$message = $this->l10n->t('The received state does not match the expected value.');
-			$responseData = [
-				'error' => 'invalid_state',
-				'error_description' => $message,
-			];
 			if ($this->isDebugModeEnabled()) {
-				$responseData['got'] = $state;
-				$responseData['expected'] = $this->session->get(self::STATE);
+				$responseData = [
+					'error' => 'invalid_state',
+					'error_description' => $message,
+					'got' => $state,
+					'expected' => $this->session->get(self::STATE),
+				];
 				return new JSONResponse($responseData, Http::STATUS_FORBIDDEN);
 			}
 			// we know debug mode is off, always throttle
