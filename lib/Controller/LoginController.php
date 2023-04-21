@@ -38,7 +38,6 @@ use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
-use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -61,7 +60,7 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
 
-class LoginController extends Controller {
+class LoginController extends BaseOidcController {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	public const PROVIDERID = 'oidc.providerid';
@@ -143,7 +142,7 @@ class LoginController extends Controller {
 		IL10N $l10n,
 		ILogger $logger
 	) {
-		parent::__construct(Application::APP_ID, $request);
+		parent::__construct($request, $config);
 
 		$this->random = $random;
 		$this->session = $session;
@@ -169,13 +168,6 @@ class LoginController extends Controller {
 	/**
 	 * @return bool
 	 */
-	private function isDebugModeEnabled(): bool {
-		return $this->config->getSystemValueBool('debug', false);
-	}
-
-	/**
-	 * @return bool
-	 */
 	private function isSecure(): bool {
 		// no restriction in debug mode
 		return $this->isDebugModeEnabled() || $this->request->getServerProtocol() === 'https';
@@ -193,59 +185,6 @@ class LoginController extends Controller {
 		];
 		$throttleMetadata = ['reason' => 'insecure connection'];
 		return $this->buildFailureTemplateResponse('', 'error', $params, Http::STATUS_NOT_FOUND, $throttleMetadata, $throttle);
-	}
-
-	/**
-	 * @param string $message
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	public function buildErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
-		$params = [
-			'errors' => [
-				['error' => $message],
-			],
-		];
-		return $this->buildFailureTemplateResponse('', 'error', $params, $statusCode, $throttleMetadata, $throttle);
-	}
-
-	/**
-	 * @param string $message
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	public function build403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
-		$params = ['message' => $message];
-		return $this->buildFailureTemplateResponse('core', '403', $params, $statusCode, $throttleMetadata, $throttle);
-	}
-
-	/**
-	 * @param string $appName
-	 * @param string $templateName
-	 * @param array $params
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	public function buildFailureTemplateResponse(string $appName, string $templateName, array $params, int $statusCode,
-										   array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
-		$response = new TemplateResponse(
-			$appName,
-			$templateName,
-			$params,
-			TemplateResponse::RENDER_AS_ERROR
-		);
-		$response->setStatus($statusCode);
-		// if not specified, throttle if debug mode is off
-		if (($throttle === null && !$this->isDebugModeEnabled()) || $throttle) {
-			$response->throttle($throttleMetadata);
-		}
-		return $response;
 	}
 
 	/**

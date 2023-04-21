@@ -32,7 +32,6 @@ use OCA\UserOIDC\Db\Id4Me;
 use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
-use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -55,7 +54,7 @@ use Id4me\RP\Exception\InvalidOpenIdDomainException;
 use Id4me\RP\Model\OpenIdConfig;
 use Psr\Log\LoggerInterface;
 
-class Id4meController extends Controller {
+class Id4meController extends BaseOidcController {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	private const AUTHNAME = 'oidc.authname';
@@ -87,20 +86,12 @@ class Id4meController extends Controller {
 	/** @var Service */
 	private $id4me;
 
-	/** @var IConfig */
-	private $config;
-
 	/** @var IL10N */
 	private $l10n;
-	/**
-	 * @var LoginController
-	 */
-	private $loginController;
 	/**
 	 * @var LoggerInterface
 	 */
 	private $logger;
-
 
 	public function __construct(
 		IRequest $request,
@@ -115,10 +106,9 @@ class Id4meController extends Controller {
 		IUserManager $userManager,
 		HttpClientHelper $clientHelper,
 		Id4MeMapper $id4MeMapper,
-		LoggerInterface $logger,
-		LoginController $loginController
+		LoggerInterface $logger
 	) {
-		parent::__construct(Application::APP_ID, $request);
+		parent::__construct($request, $config);
 
 		$this->random = $random;
 		$this->session = $session;
@@ -129,9 +119,7 @@ class Id4meController extends Controller {
 		$this->userManager = $userManager;
 		$this->id4me = new Service($clientHelper);
 		$this->id4MeMapper = $id4MeMapper;
-		$this->config = $config;
 		$this->l10n = $l10n;
-		$this->loginController = $loginController;
 		$this->logger = $logger;
 	}
 
@@ -164,13 +152,13 @@ class Id4meController extends Controller {
 			$authorityName = $this->id4me->discover($domain);
 		} catch (InvalidOpenIdDomainException | OpenIdDnsRecordNotFoundException $e) {
 			$message = $this->l10n->t('Invalid OpenID domain');
-			return $this->loginController->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['invalid_openid_domain' => $domain]);
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['invalid_openid_domain' => $domain]);
 		}
 		try {
 			$openIdConfig = $this->id4me->getOpenIdConfig($authorityName);
 		} catch (InvalidAuthorityIssuerException $e) {
 			$message = $this->l10n->t('Invalid authority issuer');
-			return $this->loginController->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['invalid_authority_issuer' => $authorityName]);
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['invalid_authority_issuer' => $authorityName]);
 		}
 
 		try {
@@ -179,7 +167,7 @@ class Id4meController extends Controller {
 			$id4Me = $this->registerClient($authorityName, $openIdConfig);
 		} catch (MultipleObjectsReturnedException $e) {
 			$message = $this->l10n->t('Multiple authority found');
-			return $this->loginController->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['multiple_authority_found' => $authorityName]);
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['multiple_authority_found' => $authorityName]);
 		}
 
 		$state = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
@@ -232,7 +220,7 @@ class Id4meController extends Controller {
 			$this->logger->debug('state does not match');
 
 			$message = $this->l10n->t('The received state does not match the expected value.');
-			if ($this->config->getSystemValueBool('debug', false)) {
+			if ($this->isDebugModeEnabled()) {
 				$responseData = [
 					'error' => 'invalid_state',
 					'error_description' => $message,
@@ -242,7 +230,7 @@ class Id4meController extends Controller {
 				return new JSONResponse($responseData, Http::STATUS_FORBIDDEN);
 			}
 			// we know debug mode is off, always throttle
-			return $this->loginController->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'state does not match'], true);
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'state does not match'], true);
 		}
 
 		$authorityName = $this->session->get(self::AUTHNAME);
@@ -250,14 +238,14 @@ class Id4meController extends Controller {
 			$openIdConfig = $this->id4me->getOpenIdConfig($authorityName);
 		} catch (InvalidAuthorityIssuerException $e) {
 			$message = $this->l10n->t('Invalid authority issuer');
-			return $this->loginController->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['invalid_authority_issuer' => $authorityName]);
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['invalid_authority_issuer' => $authorityName]);
 		}
 
 		try {
 			$id4Me = $this->id4MeMapper->findByIdentifier($authorityName);
 		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
 			$message = $this->l10n->t('Authority not found');
-			return $this->loginController->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['authority_not_found' => $authorityName]);
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['authority_not_found' => $authorityName]);
 		}
 
 		$client = $this->clientService->newClient();
@@ -291,7 +279,7 @@ class Id4meController extends Controller {
 		// Verify audience
 		if ($plainPayload['aud'] !== $id4Me->getClientId()) {
 			$message = $this->l10n->t('The audience does not match ours');
-			return $this->loginController->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $plainPayload['aud']]);
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $plainPayload['aud']]);
 		}
 
 		// TODO: VALIDATE NONCE (if set)
