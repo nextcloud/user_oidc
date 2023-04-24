@@ -14,7 +14,7 @@ env:
 
 jobs:
   integration:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -43,8 +43,10 @@ jobs:
             server-versions: stable23
         include:
           - php-versions: 8.2
+            databases: mysql
             server-versions: stable26
           - php-versions: 8.2
+            databases: mysql
             server-versions: master
 
     name: php${{ matrix.php-versions }}-${{ matrix.databases }}-${{ matrix.server-versions }}
