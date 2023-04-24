@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 use OC\Authentication\Exceptions\InvalidTokenException;
 use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\Db\SessionMapper;
@@ -357,18 +359,40 @@ class LoginController extends BaseOidcController {
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
 
 		$client = $this->clientService->newClient();
-		$result = $client->post(
-			$discovery['token_endpoint'],
-			[
-				'body' => [
-					'code' => $code,
-					'client_id' => $provider->getClientId(),
-					'client_secret' => $provider->getClientSecret(),
-					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
-					'grant_type' => 'authorization_code',
-				],
-			]
-		);
+		try {
+			$result = $client->post(
+				$discovery['token_endpoint'],
+				[
+					'body' => [
+						'code' => $code,
+						'client_id' => $provider->getClientId(),
+						'client_secret' => $provider->getClientSecret(),
+						'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
+						'grant_type' => 'authorization_code',
+					],
+				]
+			);
+		} catch (ClientException | ServerException $e) {
+			$response = $e->getResponse();
+			$body = (string) $response->getBody();
+			$responseBodyArray = json_decode($body, true);
+			if ($responseBodyArray !== null && isset($responseBodyArray['error'], $responseBodyArray['error_description'])) {
+				$this->logger->debug('Failed to contact the OIDC provider token endpoint', [
+					'exception' => $e,
+					'error' => $responseBodyArray['error'],
+					'error_description' => $responseBodyArray['error_description'],
+				]);
+				$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint') . ': ' . $responseBodyArray['error_description'];
+			} else {
+				$this->logger->debug('Failed to contact the OIDC provider token endpoint', ['exception' => $e]);
+				$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			}
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
+		} catch (\Exception $e) {
+			$this->logger->debug('Failed to contact the OIDC provider token endpoint', ['exception' => $e]);
+			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
+		}
 
 		$data = json_decode($result->getBody(), true);
 		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
