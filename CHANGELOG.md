@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.2
+
+### Fixed
+
+- fix Oracle database support by avoiding empty strings that are replaced with null @julien-nc [#563](https://github.com/nextcloud/user_oidc/pull/563)
+- use more recent Ubuntu image for PhpUnit tests as the old ones are not picked up by runners @julien-nc [#619](https://github.com/nextcloud/user_oidc/pull/619)
+- better error handling and throttling in Id4Me and login controllers @julien-nc [#615](https://github.com/nextcloud/user_oidc/pull/615) [#618](https://github.com/nextcloud/user_oidc/pull/618)
+
+### Other
+
+- show redirect URI to help configuring the client on the provider side @julien-nc [#598](https://github.com/nextcloud/user_oidc/pull/598)
+- add Nextcloud 27 support @julien-nc [#616](https://github.com/nextcloud/user_oidc/pull/616)
+
 ## 1.3.1
 
 ### Fixed
