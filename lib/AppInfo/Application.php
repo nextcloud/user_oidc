@@ -28,7 +28,9 @@ namespace OCA\UserOIDC\AppInfo;
 use Exception;
 use OC_App;
 use OC_User;
+use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Listener\TimezoneHandlingListener;
 use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\User\Backend;
@@ -62,6 +64,8 @@ class Application extends App implements IBootstrap {
 		$this->backend = $this->getContainer()->get(Backend::class);
 		$userManager->registerBackend($this->backend);
 		OC_User::useBackend($this->backend);
+
+		$context->registerEventListener(LoadAdditionalScriptsEvent::class, TimezoneHandlingListener::class);
 	}
 
 	public function boot(IBootContext $context): void {
