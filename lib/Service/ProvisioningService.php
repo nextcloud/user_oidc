@@ -152,7 +152,7 @@ class ProvisioningService {
 					$group = $v;
 				} elseif (is_string($v)) {
 					// Handle array of strings, e.g. ["group1", "group2", ...]
-					$group = (object)['gid' => $v];
+					$group = (object)['gid' => $v, 'displayName' => $v];
 				} else {
 					continue;
 				}
