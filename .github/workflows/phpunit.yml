@@ -21,12 +21,16 @@ jobs:
       matrix:
         php-versions: ['7.3', '7.4', '8.0', '8.1']
         databases: ['mysql']
-        server-versions: ['stable21', 'stable22', 'stable23', 'stable24', 'stable25', 'stable26', 'master']
+        server-versions: ['stable21', 'stable22', 'stable23', 'stable24', 'stable25', 'stable26', 'stable27', 'master']
         exclude:
           - php-versions: 7.3
             server-versions: master
           - php-versions: 7.4
             server-versions: master
+          - php-versions: 7.3
+            server-versions: stable27
+          - php-versions: 7.4
+            server-versions: stable27
           - php-versions: 7.3
             server-versions: stable26
           - php-versions: 7.4
@@ -45,6 +49,9 @@ jobs:
           - php-versions: 8.2
             databases: mysql
             server-versions: stable26
+          - php-versions: 8.2
+            databases: mysql
+            server-versions: stable27
           - php-versions: 8.2
             databases: mysql
             server-versions: master
