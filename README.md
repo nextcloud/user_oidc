@@ -38,7 +38,7 @@ Attribute mappings can be optionally specified. For more details refer to `occ u
 
 To delete a provider, use:
 ```
-sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider:remove demoprovider
+sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider:delete demoprovider
   Are you sure you want to delete OpenID Provider demoprovider
   and may invalidate all assiciated user accounts.
 ```
