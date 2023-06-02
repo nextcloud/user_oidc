@@ -59,6 +59,7 @@ use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
 
@@ -122,6 +123,10 @@ class LoginController extends BaseOidcController {
 
 	/** @var IL10N */
 	private $l10n;
+	/**
+	 * @var ICrypto
+	 */
+	private $crypto;
 
 	public function __construct(
 		IRequest $request,
@@ -142,7 +147,8 @@ class LoginController extends BaseOidcController {
 		SessionMapper $sessionMapper,
 		ProvisioningService $provisioningService,
 		IL10N $l10n,
-		ILogger $logger
+		ILogger $logger,
+		ICrypto $crypto
 	) {
 		parent::__construct($request, $config);
 
@@ -165,6 +171,7 @@ class LoginController extends BaseOidcController {
 		$this->provisioningService = $provisioningService;
 		$this->request = $request;
 		$this->l10n = $l10n;
+		$this->crypto = $crypto;
 	}
 
 	/**
@@ -353,6 +360,13 @@ class LoginController extends BaseOidcController {
 
 		$providerId = (int)$this->session->get(self::PROVIDERID);
 		$provider = $this->providerMapper->getProvider($providerId);
+		try {
+			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
+		} catch (\Exception $e) {
+			$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
+			$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+		}
 
 		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
@@ -366,7 +380,7 @@ class LoginController extends BaseOidcController {
 					'body' => [
 						'code' => $code,
 						'client_id' => $provider->getClientId(),
-						'client_secret' => $provider->getClientSecret(),
+						'client_secret' => $providerClientSecret,
 						'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 						'grant_type' => 'authorization_code',
 					],

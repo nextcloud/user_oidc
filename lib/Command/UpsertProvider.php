@@ -26,6 +26,7 @@ namespace OCA\UserOIDC\Command;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+use OCP\Security\ICrypto;
 use \Symfony\Component\Console\Command\Command;
 use OCA\UserOIDC\Db\ProviderMapper;
 use Symfony\Component\Console\Helper\Table;
@@ -40,11 +41,18 @@ class UpsertProvider extends Command {
 	private $providerService;
 	/** @var ProviderMapper */
 	private $providerMapper;
+	/** @var ICrypto */
+	private $crypto;
 
-	public function __construct(ProviderService $providerService, ProviderMapper $providerMapper) {
+	public function __construct(
+		ProviderService $providerService,
+		ProviderMapper $providerMapper,
+		ICrypto $crypto
+	) {
 		parent::__construct();
 		$this->providerService = $providerService;
 		$this->providerMapper = $providerMapper;
+		$this->crypto = $crypto;
 	}
 
 	protected function configure() {
@@ -82,6 +90,9 @@ class UpsertProvider extends Command {
 		$identifier = $input->getArgument('identifier');
 		$clientid = $input->getOption('clientid');
 		$clientsecret = $input->getOption('clientsecret');
+		if ($clientsecret !== null) {
+			$clientsecret = $this->crypto->encrypt($clientsecret);
+		}
 		$discoveryuri = $input->getOption('discoveryuri');
 		$scope = $input->getOption('scope');
 
@@ -128,10 +139,7 @@ class UpsertProvider extends Command {
 
 		$provider = $this->providerService->getProviderByIdentifier($identifier);
 		if ($provider !== null) {
-			// existing provider, keep values that are not set
-			$clientid = $clientid ?? $provider->getClientId();
-			$clientsecret = $clientsecret ?? $provider->getClientSecret();
-			$discoveryuri = $discoveryuri ?? $provider->getDiscoveryEndpoint();
+			// existing provider, keep values that are not set, the scope has to be set anyway
 			$scope = $scope ?? $provider->getScope();
 		} else {
 			// new provider default scope value
