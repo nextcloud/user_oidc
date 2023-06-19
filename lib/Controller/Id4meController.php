@@ -129,6 +129,7 @@ class Id4meController extends BaseOidcController {
 	 * @UseSession
 	 */
 	public function showLogin() {
+		Util::addStyle(Application::APP_ID, 'id4me-login');
 		$response = new Http\TemplateResponse('user_oidc', 'id4me/login', [], 'guest');
 
 		$csp = new Http\ContentSecurityPolicy();
