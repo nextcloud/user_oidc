@@ -35,6 +35,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\Security\ICrypto;
 
 class SettingsController extends Controller {
 
@@ -44,18 +45,22 @@ class SettingsController extends Controller {
 	private $id4meService;
 	/** @var ProviderService */
 	private $providerService;
+	/** @var ICrypto */
+	private $crypto;
 
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
 		ID4MeService $id4meService,
-		ProviderService $providerService
+		ProviderService $providerService,
+		ICrypto $crypto
 		) {
 		parent::__construct(Application::APP_ID, $request);
 
 		$this->providerMapper = $providerMapper;
 		$this->id4meService = $id4meService;
 		$this->providerService = $providerService;
+		$this->crypto = $crypto;
 	}
 
 	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
@@ -67,7 +72,8 @@ class SettingsController extends Controller {
 		$provider = new Provider();
 		$provider->setIdentifier($identifier);
 		$provider->setClientId($clientId);
-		$provider->setClientSecret($clientSecret);
+		$encryptedClientSecret = $this->crypto->encrypt($clientSecret);
+		$provider->setClientSecret($encryptedClientSecret);
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
 		$provider->setScope($scope);
 		$provider = $this->providerMapper->insert($provider);
@@ -88,7 +94,8 @@ class SettingsController extends Controller {
 		$provider->setIdentifier($identifier);
 		$provider->setClientId($clientId);
 		if ($clientSecret) {
-			$provider->setClientSecret($clientSecret);
+			$encryptedClientSecret = $this->crypto->encrypt($clientSecret);
+			$provider->setClientSecret($encryptedClientSecret);
 		}
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
 		$provider->setScope($scope);

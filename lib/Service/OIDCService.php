@@ -27,6 +27,7 @@ namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\Provider;
 use OCP\Http\Client\IClientService;
+use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -34,14 +35,21 @@ class OIDCService {
 
 	/** @var LoggerInterface */
 	private $logger;
-
 	/** @var IClientService */
 	private $clientService;
+	/** @var ICrypto */
+	private $crypto;
 
-	public function __construct(DiscoveryService $discoveryService, LoggerInterface $logger, IClientService $clientService) {
+	public function __construct(
+		DiscoveryService $discoveryService,
+		LoggerInterface $logger,
+		IClientService $clientService,
+		ICrypto $crypto
+	) {
 		$this->discoveryService = $discoveryService;
 		$this->logger = $logger;
 		$this->clientService = $clientService;
+		$this->crypto = $crypto;
 	}
 
 	public function userinfo(Provider $provider, string $accessToken): array {
@@ -65,6 +73,12 @@ class OIDCService {
 	}
 
 	public function introspection(Provider $provider, string $accessToken): array {
+		try {
+			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
+		} catch (\Exception $e) {
+			$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
+			return [];
+		}
 		$url = $this->discoveryService->obtainDiscovery($provider)['introspection_endpoint'] ?? null;
 		if ($url === null) {
 			return [];
@@ -74,7 +88,7 @@ class OIDCService {
 		$this->logger->debug('Fetching user info endpoint');
 		$options = [
 			'headers' => [
-				'Authorization' => base64_encode($provider->getClientId() . ':' . $provider->getClientSecret()),
+				'Authorization' => base64_encode($provider->getClientId() . ':' . $providerClientSecret),
 			],
 			'body' => [
 				'token' => $accessToken,

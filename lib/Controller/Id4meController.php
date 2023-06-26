@@ -46,6 +46,7 @@ use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -61,37 +62,28 @@ class Id4meController extends BaseOidcController {
 
 	/** @var ISecureRandom */
 	private $random;
-
 	/** @var ISession */
 	private $session;
-
 	/** @var IClientService */
 	private $clientService;
-
 	/** @var IURLGenerator */
 	private $urlGenerator;
-
 	/** @var UserMapper */
 	private $userMapper;
-
 	/** @var IUserSession */
 	private $userSession;
-
 	/** @var IUserManager */
 	private $userManager;
-
 	/** @var Id4MeMapper */
 	private $id4MeMapper;
-
 	/** @var Service */
 	private $id4me;
-
 	/** @var IL10N */
 	private $l10n;
-	/**
-	 * @var LoggerInterface
-	 */
+	/** @var LoggerInterface */
 	private $logger;
+	/** @var ICrypto */
+	private $crypto;
 
 	public function __construct(
 		IRequest $request,
@@ -106,7 +98,8 @@ class Id4meController extends BaseOidcController {
 		IUserManager $userManager,
 		HttpClientHelper $clientHelper,
 		Id4MeMapper $id4MeMapper,
-		LoggerInterface $logger
+		LoggerInterface $logger,
+		ICrypto $crypto
 	) {
 		parent::__construct($request, $config);
 
@@ -121,6 +114,7 @@ class Id4meController extends BaseOidcController {
 		$this->id4MeMapper = $id4MeMapper;
 		$this->l10n = $l10n;
 		$this->logger = $logger;
+		$this->crypto = $crypto;
 	}
 
 	/**
@@ -198,7 +192,8 @@ class Id4meController extends BaseOidcController {
 		$id4Me = new Id4Me();
 		$id4Me->setIdentifier($authorityName);
 		$id4Me->setClientId($client->getClientId());
-		$id4Me->setClientSecret($client->getClientSecret());
+		$encryptedClientSecret = $this->crypto->encrypt($client->getClientSecret());
+		$id4Me->setClientSecret($encryptedClientSecret);
 
 		return $this->id4MeMapper->insert($id4Me);
 	}
@@ -248,17 +243,25 @@ class Id4meController extends BaseOidcController {
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['authority_not_found' => $authorityName]);
 		}
 
+		try {
+			$id4meClientSecret = $this->crypto->decrypt($id4Me->getClientSecret());
+		} catch (\Exception $e) {
+			$this->logger->error('Failed to decrypt the id4me client secret', ['exception' => $e]);
+			$message = $this->l10n->t('Failed to decrypt the ID4ME provider client secret');
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+		}
+
 		$client = $this->clientService->newClient();
 		$result = $client->post(
 			$openIdConfig->getTokenEndpoint(),
 			[
 				'headers' => [
-					'Authorization' => 'Basic ' . base64_encode($id4Me->getClientId() . ':' . $id4Me->getClientSecret())
+					'Authorization' => 'Basic ' . base64_encode($id4Me->getClientId() . ':' . $id4meClientSecret)
 				],
 				'body' => [
 					'code' => $code,
 					'client_id' => $id4Me->getClientId(),
-					'client_secret' => $id4Me->getClientSecret(),
+					'client_secret' => $id4meClientSecret,
 					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.id4me.code'),
 					'grant_type' => 'authorization_code',
 				],
