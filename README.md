@@ -3,7 +3,7 @@
 OpenID Connect user backend for Nextcloud
 
 ## General usage
-See [Nextcloud and OpenID-Connect](https://www.schiessle.org/articles/2020/07/26/nextcloud-and-openid-connect/)
+See [Nextcloud and OpenID-Connect](https://www.schiessle.org/articles/2023/07/04/nextcloud-and-openid-connect/)
 for a proper jumpstart.
 
 ### User IDs
