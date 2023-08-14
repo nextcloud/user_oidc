@@ -30,7 +30,7 @@
   },
   "require": {
     "id4me/id4me-rp": "^1.2",
-    "firebase/php-jwt": "^5.2",
+    "firebase/php-jwt": "^6.4",
     "bamarni/composer-bin-plugin": "^1.4"
   },
   "require-dev": {
