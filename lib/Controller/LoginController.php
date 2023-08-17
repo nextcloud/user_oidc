@@ -502,6 +502,9 @@ class LoginController extends BaseOidcController {
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 		$this->userSession->createRememberMeToken($user);
 
+		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
+		$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+
 		// for backchannel logout
 		try {
 			$authToken = $this->authTokenProvider->getToken($this->session->getId());

@@ -295,6 +295,9 @@ class Id4meController extends BaseOidcController {
 		$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
 		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 
+		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
+		$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
 	}
 }
