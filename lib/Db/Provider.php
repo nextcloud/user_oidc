@@ -55,6 +55,9 @@ class Provider extends Entity implements \JsonSerializable {
 	/** @var string */
 	protected $scope;
 
+	/** @var string */
+	protected $bearerSecret;
+
 	/**
 	 * @return string
 	 */

@@ -73,8 +73,8 @@ class UpsertProvider extends Command {
 			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
 			->addOption('mapping-uid', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the user id')
 			->addOption('extra-claims', null, InputOption::VALUE_OPTIONAL, 'Extra claims to request when getting tokens')
-
-			->addOption(
+			->addOption('bearersecret', 'bs', InputOption::VALUE_OPTIONAL, 'Telekom bearer token requires a different client secret for bearer tokens')
+            ->addOption(
 				'output',
 				null,
 				InputOption::VALUE_OPTIONAL,
@@ -100,11 +100,18 @@ class UpsertProvider extends Command {
 			return $this->listProviders($input, $output);
 		}
 
+		// bearersecret is usually base64 encoded, but SAM delivers it non-encoded
+        // by default; so always encode/decode for this field
+		$bearersecret = $input->getOption('bearersecret');
+		if ($bearersecret !== null) {
+			$bearersecret = $this->crypto->encrypt(\Base64Url\Base64Url::encode($bearersecret));
+		}
+
 		// check if any option for updating is provided
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
-				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-				'scope', 'unique-uid', 'check-bearer',
+				'identifier', 'clientid', 'clientsecret', 'discoveryuri', 
+				'scope', 'unique-uid', 'check-bearer', 'bearersecret',
 				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
 				'extra-claims'
 			]) && $value !== null;
@@ -146,7 +153,7 @@ class UpsertProvider extends Command {
 			$scope = $scope ?? 'openid email profile';
 		}
 		try {
-			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope);
+			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope, $bearersecret);
 			// invalidate JWKS cache (even if it was just created)
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, '');
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');
