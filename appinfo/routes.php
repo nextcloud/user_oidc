@@ -30,7 +30,8 @@ return [
 		['name' => 'login#singleLogoutService', 'url' => '/sls', 'verb' => 'GET'],
 		['name' => 'login#backChannelLogout', 'url' => '/backchannel-logout/{providerIdentifier}', 'verb' => 'POST'],
 
-		['name' => 'api#createUser', 'url' => '/user', 'verb' => 'POST'],
+        // this is a security problem combined with Telekom provisioning, so we habe to disable the endpoint
+		// ['name' => 'api#createUser', 'url' => '/user', 'verb' => 'POST'],
 
 		['name' => 'id4me#showLogin', 'url' => '/id4me', 'verb' => 'GET'],
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],
