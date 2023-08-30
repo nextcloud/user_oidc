@@ -416,7 +416,7 @@ class LoginController extends BaseOidcController {
 		$idTokenRaw = $data['id_token'];
 		$jwks = $this->discoveryService->obtainJWK($provider);
 		JWT::$leeway = 60;
-		$idTokenPayload = JWT::decode($idTokenRaw, $jwks, array_keys(JWT::$supported_algs));
+		$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
 
@@ -617,7 +617,7 @@ class LoginController extends BaseOidcController {
 		// decrypt the logout token
 		$jwks = $this->discoveryService->obtainJWK($provider);
 		JWT::$leeway = 60;
-		$logoutTokenPayload = JWT::decode($logout_token, $jwks, array_keys(JWT::$supported_algs));
+		$logoutTokenPayload = JWT::decode($logout_token, $jwks);
 
 		$this->logger->debug('Parsed the logout JWT payload: ' . json_encode($logoutTokenPayload, JSON_THROW_ON_ERROR));
 

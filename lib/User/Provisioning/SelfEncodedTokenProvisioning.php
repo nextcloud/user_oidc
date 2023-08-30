@@ -30,7 +30,7 @@ class SelfEncodedTokenProvisioning implements IProvisioningStrategy {
 	public function provisionUser(Provider $provider, string $tokenUserId, string $bearerToken): ?IUser {
 		JWT::$leeway = 60;
 		try {
-			$payload = JWT::decode($bearerToken, $this->discoveryService->obtainJWK($provider), array_keys(JWT::$supported_algs));
+			$payload = JWT::decode($bearerToken, $this->discoveryService->obtainJWK($provider));
 		} catch (Throwable $e) {
 			$this->logger->error('Impossible to decode OIDC token:' . $e->getMessage());
 			return null;
