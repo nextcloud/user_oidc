@@ -669,14 +669,14 @@ class LoginController extends BaseOidcController {
 			);
 		}
 
-        // handle sub only if it is available; session is enough to identify a logout, though
-        if (isset($logoutTokenPayload->sub) &&  ($oidcSession->getSub() !== $logoutTokenPayload->sub)) {
-            return $this->getBackchannelLogoutErrorResponse(
-                'invalid SUB',
-                'The sub does not match the one from the login ID token',
-                ['invalid_sub' => $sub]
-            );
-        }
+		// handle sub only if it is available; session is enough to identify a logout, though
+		if (isset($logoutTokenPayload->sub) && ($oidcSession->getSub() !== $logoutTokenPayload->sub)) {
+			return $this->getBackchannelLogoutErrorResponse(
+				'invalid SUB',
+				'The sub does not match the one from the login ID token',
+				['invalid_sub' => $sub]
+			);
+		}
 		$iss = $logoutTokenPayload->iss;
 		if ($oidcSession->getIss() !== $iss) {
 			return $this->getBackchannelLogoutErrorResponse(
@@ -696,7 +696,7 @@ class LoginController extends BaseOidcController {
 			$this->authTokenProvider->invalidateTokenById($userId, $authToken->getId());
 		} catch (InvalidTokenException $e) {
 			//it is not a problem if the auth token is already deleted, so no error
-            //return $this->getBackchannelLogoutErrorResponse(
+			//return $this->getBackchannelLogoutErrorResponse(
 			//	'nc session not found',
 			//	'The authentication session was not found in Nextcloud',
 			//	['nc_auth_session_not_found' => $authTokenId]
