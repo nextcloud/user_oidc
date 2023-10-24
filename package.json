@@ -29,7 +29,7 @@
 		"@nextcloud/router": "^2.2.0",
 		"@nextcloud/vue": "^7.12.6",
 		"jstz": "^2.1.1",
-		"vue": "^2.7.14",
+		"vue": "^2.7.15",
 		"vue-material-design-icons": "^5.2.0"
 	},
 	"browserslist": [
@@ -45,6 +45,6 @@
 		"@nextcloud/eslint-config": "^8.3.0",
 		"@nextcloud/stylelint-config": "^2.3.1",
 		"@nextcloud/webpack-vue-config": "^5.5.1",
-		"vue-template-compiler": "^2.7.14"
+		"vue-template-compiler": "^2.7.15"
 	}
 }
