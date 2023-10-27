@@ -69,6 +69,7 @@ class LoginController extends BaseOidcController {
 	public const PROVIDERID = 'oidc.providerid';
 	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
 	private const ID_TOKEN = 'oidc.id_token';
+	private const CODE_VERIFIER = 'oidc.code_verifier';
 
 	/** @var ISecureRandom */
 	private $random;
@@ -229,6 +230,10 @@ class LoginController extends BaseOidcController {
 		$nonce = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::NONCE, $nonce);
 
+		// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
+		$code_verifier = $this->random->generage(128, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER);
+		$this->session->set(self::CODE_VERIFIER, $code_verifier);
+
 		$this->session->set(self::PROVIDERID, $providerId);
 		$this->session->close();
 
@@ -280,6 +285,8 @@ class LoginController extends BaseOidcController {
 			'claims' => json_encode($claims),
 			'state' => $state,
 			'nonce' => $nonce,
+			'code_challenge' => $this->toCodeChallenge($code_verifier),
+			'code_challenge_method' => 'S256',
 		];
 		// pass discovery query parameters also on to the authentication
 		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
@@ -368,6 +375,8 @@ class LoginController extends BaseOidcController {
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
 
+		$code_verifier = $this->session->get(self::CODE_VERIFIER);
+
 		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
@@ -383,6 +392,7 @@ class LoginController extends BaseOidcController {
 						'client_secret' => $providerClientSecret,
 						'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 						'grant_type' => 'authorization_code',
+						'code_verifier' => $code_verifier, // Set for the PKCE flow
 					],
 				]
 			);
@@ -729,5 +739,15 @@ class LoginController extends BaseOidcController {
 			$response->throttle($throttleMetadata);
 		}
 		return $response;
+	}
+
+	private function toCodeChallenge(string $data): string {
+		// Basically one big work around for the base64url decode being weird
+		$h = pack('H*', hash('sha256', $data));
+		$s = base64_encode($h); // Regular base64 encoder
+		$s = explode('=', $s)[0]; // Remove any trailing '='s
+		$s = str_replace('+', '-', $s); // 62nd char of encoding
+		$s = str_replace('/', '_', $s); // 63rd char of encoding
+		return $s;
 	}
 }
