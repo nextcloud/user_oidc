@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.4
+
+### Changed
+
+- Bump min NC to 24 @julien-nc (https://github.com/nextcloud/user_oidc/pull/675)
+- Upgrade php-jwt, adjust implementation @julien-nc (https://github.com/nextcloud/user_oidc/pull/675)
+
+### Fixed
+
+- Disable password confirmation for SSO @juliushaertl (https://github.com/nextcloud/user_oidc/pull/668)
+
 ## 1.3.3
 
 ### Changed
