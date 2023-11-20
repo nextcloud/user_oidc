@@ -414,7 +414,7 @@ class LoginController extends BaseOidcController {
 
 		// TODO: proper error handling
 		$idTokenRaw = $data['id_token'];
-		$jwks = $this->discoveryService->obtainJWK($provider);
+		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
 		$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
 
@@ -615,7 +615,7 @@ class LoginController extends BaseOidcController {
 		}
 
 		// decrypt the logout token
-		$jwks = $this->discoveryService->obtainJWK($provider);
+		$jwks = $this->discoveryService->obtainJWK($provider, $logout_token);
 		JWT::$leeway = 60;
 		$logoutTokenPayload = JWT::decode($logout_token, $jwks);
 

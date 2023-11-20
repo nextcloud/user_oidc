@@ -57,7 +57,8 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		// try to decode the bearer token
 		JWT::$leeway = 60;
 		try {
-			$payload = JWT::decode($bearerToken, $this->discoveryService->obtainJWK($provider));
+			$jwks = $this->discoveryService->obtainJWK($provider, $bearerToken);
+			$payload = JWT::decode($bearerToken, $jwks);
 		} catch (Throwable $e) {
 			$this->logger->error('Impossible to decode OIDC token:' . $e->getMessage());
 			return null;
