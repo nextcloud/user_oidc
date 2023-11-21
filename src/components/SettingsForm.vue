@@ -28,6 +28,7 @@
 				v-model="localProvider.identifier"
 				type="text"
 				:placeholder="t('user_oidc', 'Display name to identify the provider')"
+				:disabled="identifierInitiallySet"
 				required>
 		</p>
 		<p>
@@ -194,7 +195,8 @@ export default {
 	},
 	created() {
 		this.localProvider = this.provider
-	},
+		this.identifierInitiallySet = !!this.localProvider.identifier
+	}
 }
 </script>
 
