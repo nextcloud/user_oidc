@@ -38,6 +38,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -53,6 +54,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use Id4me\RP\Service;
 use Id4me\RP\Exception\InvalidOpenIdDomainException;
 use Id4me\RP\Model\OpenIdConfig;
+use OCP\Util;
 use Psr\Log\LoggerInterface;
 
 class Id4meController extends BaseOidcController {
@@ -84,6 +86,8 @@ class Id4meController extends BaseOidcController {
 	private $logger;
 	/** @var ICrypto */
 	private $crypto;
+	/** @var ITimeFactory */
+	private $timeFactory;
 
 	public function __construct(
 		IRequest $request,
@@ -91,6 +95,7 @@ class Id4meController extends BaseOidcController {
 		ISession $session,
 		IConfig $config,
 		IL10N $l10n,
+		ITimeFactory $timeFactory,
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
@@ -115,6 +120,7 @@ class Id4meController extends BaseOidcController {
 		$this->l10n = $l10n;
 		$this->logger = $logger;
 		$this->crypto = $crypto;
+		$this->timeFactory = $timeFactory;
 	}
 
 	/**
@@ -123,6 +129,7 @@ class Id4meController extends BaseOidcController {
 	 * @UseSession
 	 */
 	public function showLogin() {
+		Util::addStyle(Application::APP_ID, 'id4me-login');
 		$response = new Http\TemplateResponse('user_oidc', 'id4me/login', [], 'guest');
 
 		$csp = new Http\ContentSecurityPolicy();
@@ -270,6 +277,10 @@ class Id4meController extends BaseOidcController {
 
 		$data = json_decode($result->getBody(), true);
 
+		// documentation about token validation:
+		// https://gitlab.com/ID4me/documentation/blob/master/id4ME%20Relying%20Party%20Implementation%20Guide.pdf
+		// section 4.5.3. ID Token Validation
+
 		// Decode header and token
 		[$header, $payload, $signature] = explode('.', $data['id_token']);
 		$plainHeaders = json_decode(base64_decode($header), true);
@@ -277,15 +288,44 @@ class Id4meController extends BaseOidcController {
 
 		/** TODO: VALIATE SIGNATURE! */
 
-		// TODO: validate expiration
+		// Check expiration
+		if ($plainPayload['exp'] < $this->timeFactory->getTime()) {
+			$this->logger->debug('Token expired');
+			$message = $this->l10n->t('The received token is expired.');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'token expired']);
+		}
 
 		// Verify audience
-		if ($plainPayload['aud'] !== $id4Me->getClientId()) {
+		if (!(
+			$plainPayload['aud'] === $id4Me->getClientId()
+			|| (is_array($plainPayload['aud']) && in_array($id4Me->getClientId(), $plainPayload['aud'], true))
+		)) {
+			$this->logger->debug('This token is not for us');
 			$message = $this->l10n->t('The audience does not match ours');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $plainPayload['aud']]);
 		}
 
-		// TODO: VALIDATE NONCE (if set)
+		// If the ID Token contains multiple audiences, the Client SHOULD verify that an azp Claim is present.
+		// If an azp (authorized party) Claim is present, the Client SHOULD verify that its client_id is the Claim Value.
+		if (is_array($plainPayload['aud']) && count($plainPayload['aud']) > 1) {
+			if (isset($plainPayload['azp'])) {
+				if ($plainPayload['azp'] !== $id4Me->getClientId()) {
+					$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
+					$message = $this->l10n->t('The authorized party does not match ours');
+					return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_azp' => $plainPayload['azp']]);
+				}
+			} else {
+				$this->logger->debug('Multiple audiences but no authorized party (azp) in the id token');
+				$message = $this->l10n->t('No authorized party');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['missing_azp']);
+			}
+		}
+
+		// Check nonce
+		if (isset($plainPayload['nonce']) && $plainPayload['nonce'] !== $this->session->get(self::NONCE)) {
+			$message = $this->l10n->t('The nonce does not match');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_nonce' => $plainPayload['nonce']]);
+		}
 
 		// Insert or update user
 		$backendUser = $this->userMapper->getOrCreate($id4Me->getId(), $plainPayload['sub'], true);
