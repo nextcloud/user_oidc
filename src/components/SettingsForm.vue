@@ -20,16 +20,17 @@
   -
   -->
 
-<template>
+  <template>
 	<form class="provider-edit">
 		<p>
-			<label for="oidc-identifier">{{ t('user_oidc', 'Identifier') }}</label>
+			<label for="oidc-identifier">{{ t('user_oidc', 'Identifier') }} <span class="identifier-length-indicator" :style="identifierIndicatorStyle">({{ identifierLength }}/{{ maxIdentifierLength }})</span></label>
 			<input id="oidc-identifier"
 				v-model="localProvider.identifier"
 				type="text"
 				:placeholder="t('user_oidc', 'Display name to identify the provider')"
 				:disabled="identifierInitiallySet"
-				required>
+				required
+				:maxlength="maxIdentifierLength">
 		</p>
 		<p>
 			<label for="oidc-client-id">{{ t('user_oidc', 'Client ID') }}</label>
@@ -166,6 +167,8 @@ import CheckIcon from 'vue-material-design-icons/Check.vue'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 
+import { showWarning } from '@nextcloud/dialogs'
+
 export default {
 	name: 'SettingsForm',
 	components: {
@@ -191,12 +194,30 @@ export default {
 	data() {
 		return {
 			localProvider: null,
+			maxIdentifierLength: 128,
+			identifierLength: 0,
+		}
+	},
+	watch: {
+		'localProvider.identifier': function(newVal) {
+			this.identifierLength = newVal.length;
+			if( newVal.length > this.maxIdentifierLength ) {
+				showWarning(t('user_oidc', 'The identifier exceeds the limit of maximum characters'))
+			}
+		}
+	},
+	computed: {
+		identifierIndicatorStyle() {
+			return {
+				color: this.identifierLength === this.maxIdentifierLength ? 'var(--color-warning)' : 'var(--color-text-maxcontrast)'
+			};
 		}
 	},
 	created() {
-		this.localProvider = this.provider
-		this.identifierInitiallySet = !!this.localProvider.identifier
-	}
+		this.localProvider = this.provider;
+		this.identifierInitiallySet = !!this.localProvider.identifier;
+		this.identifierLength = this.localProvider.identifier ? this.localProvider.identifier.length : 0;
+	},
 }
 </script>
 
@@ -233,6 +254,11 @@ export default {
 			min-width: 200px;
 			flex-grow: 1;
 		}
+	}
+	
+	.identifier-length-indicator {
+		color: var(--color-text-maxcontrast);
+		font-size: small;
 	}
 }
 </style>
