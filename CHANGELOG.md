@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.5 – 2023-11-24
+
+### Changed
+
+- improve id4me token validation [#715](https://github.com/nextcloud/user_oidc/pull/715) @julien-nc
+
+### Fixed
+
+- fix potentially missing alg in jwks [#713](https://github.com/nextcloud/user_oidc/pull/713) @julien-nc
+
 ## 1.3.4
 
 ### Changed
