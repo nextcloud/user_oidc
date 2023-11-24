@@ -231,7 +231,7 @@ class LoginController extends BaseOidcController {
 		$this->session->set(self::NONCE, $nonce);
 
 		// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
-		$code_verifier = $this->random->generage(128, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER);
+		$code_verifier = $this->random->generate(128, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER);
 		$this->session->set(self::CODE_VERIFIER, $code_verifier);
 
 		$this->session->set(self::PROVIDERID, $providerId);
