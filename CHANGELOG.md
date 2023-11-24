@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.3.5 – 2023-11-24
 
+### Added
+
+- PKCE support [#697](https://github.com/nextcloud/user_oidc/pull/697) @rullzer @nc-fkl
+
 ### Changed
 
 - improve id4me token validation [#715](https://github.com/nextcloud/user_oidc/pull/715) @julien-nc
