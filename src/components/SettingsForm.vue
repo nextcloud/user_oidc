@@ -20,10 +20,13 @@
   -
   -->
 
-  <template>
+<template>
 	<form class="provider-edit">
 		<p>
+			<!--
 			<label for="oidc-identifier">{{ t('user_oidc', 'Identifier') }} <span class="identifier-length-indicator" :style="identifierIndicatorStyle">({{ identifierLength }}/{{ maxIdentifierLength }})</span></label>
+			-->
+			<label for="oidc-identifier" :class="{ warning: identifierLength >= maxIdentifierLength }">{{ t('user_oidc', 'Identifier') }} ({{ identifierLength }}/{{ maxIdentifierLength }})</label>
 			<input id="oidc-identifier"
 				v-model="localProvider.identifier"
 				type="text"
@@ -195,28 +198,29 @@ export default {
 		return {
 			localProvider: null,
 			maxIdentifierLength: 128,
-			identifierLength: 0,
-		}
-	},
-	watch: {
-		'localProvider.identifier': function(newVal) {
-			this.identifierLength = newVal.length;
-			if( newVal.length > this.maxIdentifierLength ) {
-				showWarning(t('user_oidc', 'The identifier exceeds the limit of maximum characters'))
-			}
 		}
 	},
 	computed: {
+		identifierLength() {
+			return this.localProvider.identifier.length
+		},
 		identifierIndicatorStyle() {
 			return {
-				color: this.identifierLength === this.maxIdentifierLength ? 'var(--color-warning)' : 'var(--color-text-maxcontrast)'
-			};
-		}
+				color: this.identifierLength === this.maxIdentifierLength ? 'var(--color-warning)' : 'var(--color-text-maxcontrast)',
+			}
+		},
+	},
+	watch: {
+		'localProvider.identifier'(newVal) {
+			this.identifierLength = newVal.length
+			if (newVal.length > this.maxIdentifierLength) {
+				showWarning(t('user_oidc', 'The identifier exceeds the limit of maximum characters'))
+			}
+		},
 	},
 	created() {
-		this.localProvider = this.provider;
-		this.identifierInitiallySet = !!this.localProvider.identifier;
-		this.identifierLength = this.localProvider.identifier ? this.localProvider.identifier.length : 0;
+		this.localProvider = this.provider
+		this.identifierInitiallySet = !!this.localProvider.identifier
 	},
 }
 </script>
@@ -255,7 +259,7 @@ export default {
 			flex-grow: 1;
 		}
 	}
-	
+
 	.identifier-length-indicator {
 		color: var(--color-text-maxcontrast);
 		font-size: small;
