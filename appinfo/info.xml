@@ -19,7 +19,7 @@
 	<bugs>https://github.com/nextcloud/user_oidc/issues</bugs>
 	<repository>https://github.com/nextcloud/user_oidc</repository>
 	<dependencies>
-		<nextcloud min-version="24" max-version="28"/>
+		<nextcloud min-version="24" max-version="29"/>
 	</dependencies>
 	<settings>
 		<admin>OCA\UserOIDC\Settings\AdminSettings</admin>
