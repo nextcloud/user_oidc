@@ -60,13 +60,13 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 			$jwks = $this->discoveryService->obtainJWK($provider, $bearerToken);
 			$payload = JWT::decode($bearerToken, $jwks);
 		} catch (Throwable $e) {
-			$this->logger->error('Impossible to decode OIDC token:' . $e->getMessage());
+			$this->logger->debug('Impossible to decode OIDC token:' . $e->getMessage());
 			return null;
 		}
 
 		// check if the token has expired
 		if ($payload->exp < $this->timeFactory->getTime()) {
-			$this->logger->error('OIDC token has expired');
+			$this->logger->debug('OIDC token has expired');
 			return null;
 		}
 
