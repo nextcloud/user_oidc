@@ -80,6 +80,16 @@ class DiscoveryService {
 			$client = $this->clientService->newClient();
 			$response = $client->get($url);
 			$cachedDiscovery = $response->getBody();
+
+			// Manipulate the response with the custom endpoint url
+			$endpointData = json_encode($this->providerService->getProviderWithSettings($provider->getId()));
+			$endpointData = json_decode($endpointData)->endSessionEndpoint;
+			if($endpointData) {
+				$discoveryData = json_decode($cachedDiscovery);
+				$discoveryData->end_session_endpoint = $endpointData;
+				$cachedDiscovery = json_encode($discoveryData);
+			}
+			
 			$this->cache->set($cacheKey, $cachedDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
 		}
 

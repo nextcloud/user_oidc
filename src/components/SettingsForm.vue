@@ -60,6 +60,14 @@
 				required>
 		</p>
 		<p>
+			<label for="oidc-end-session-endpoint">{{ t('user_oidc', 'End session endpoint') }}</label>
+			<input id="oidc-end-session-endpoint"
+				v-model="localProvider.endSessionEndpoint"
+				class="italic-placeholder"
+				type="text"
+				placeholder="(Optional)">
+		</p>
+		<p>
 			<label for="oidc-scope">{{ t('user_oidc', 'Scope') }}</label>
 			<input id="oidc-scope"
 				v-model="localProvider.scope"
@@ -239,6 +247,9 @@ export default {
 		input[type=text] {
 			min-width: 200px;
 			flex-grow: 1;
+		}
+		input[type="text"].italic-placeholder::placeholder {
+			font-style: italic;
 		}
 	}
 }
