@@ -66,7 +66,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 
 		// check if the token has expired
 		if ($payload->exp < $this->timeFactory->getTime()) {
-			$this->logger->error('OIDC token has expired');
+			$this->logger->debug('OIDC token has expired');
 			return null;
 		}
 
