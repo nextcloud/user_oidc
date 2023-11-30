@@ -23,10 +23,7 @@
 <template>
 	<form class="provider-edit">
 		<p>
-			<!--
-			<label for="oidc-identifier">{{ t('user_oidc', 'Identifier') }} <span class="identifier-length-indicator" :style="identifierIndicatorStyle">({{ identifierLength }}/{{ maxIdentifierLength }})</span></label>
-			-->
-			<label for="oidc-identifier" :class="{ warning: identifierLength >= maxIdentifierLength }">{{ t('user_oidc', 'Identifier') }} ({{ identifierLength }}/{{ maxIdentifierLength }})</label>
+			<label for="oidc-identifier" :class="{ warning: identifierLength >= maxIdentifierLength }">{{ t('user_oidc', 'Identifier (max 128 characters)') }}</label>
 			<input id="oidc-identifier"
 				v-model="localProvider.identifier"
 				type="text"
@@ -170,8 +167,6 @@ import CheckIcon from 'vue-material-design-icons/Check.vue'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 
-import { showWarning } from '@nextcloud/dialogs'
-
 export default {
 	name: 'SettingsForm',
 	components: {
@@ -203,19 +198,6 @@ export default {
 	computed: {
 		identifierLength() {
 			return this.localProvider.identifier.length
-		},
-		identifierIndicatorStyle() {
-			return {
-				color: this.identifierLength === this.maxIdentifierLength ? 'var(--color-warning)' : 'var(--color-text-maxcontrast)',
-			}
-		},
-	},
-	watch: {
-		'localProvider.identifier'(newVal) {
-			this.identifierLength = newVal.length
-			if (newVal.length > this.maxIdentifierLength) {
-				showWarning(t('user_oidc', 'The identifier exceeds the limit of maximum characters'))
-			}
 		},
 	},
 	created() {
@@ -258,11 +240,6 @@ export default {
 			min-width: 200px;
 			flex-grow: 1;
 		}
-	}
-
-	.identifier-length-indicator {
-		color: var(--color-text-maxcontrast);
-		font-size: small;
 	}
 }
 </style>
