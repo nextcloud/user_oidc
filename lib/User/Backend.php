@@ -230,12 +230,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		$tks = \explode('.', $headerToken);
-        if (\count($tks) !== 3) {
-			$this->logger->debug('Bearer token is no JWT');
-			return '';
-		}
-
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		// check if we should use UserInfoValidator (default is false)
 		if (!isset($oidcSystemConfig['userinfo_bearer_validation']) || !$oidcSystemConfig['userinfo_bearer_validation']) {
