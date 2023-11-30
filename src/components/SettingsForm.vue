@@ -248,7 +248,7 @@ export default {
 			min-width: 200px;
 			flex-grow: 1;
 		}
-		input[type="text"].italic-placeholder::placeholder {
+		input[type=text].italic-placeholder::placeholder {
 			font-style: italic;
 		}
 	}
