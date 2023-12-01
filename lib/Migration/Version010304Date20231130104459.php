@@ -30,6 +30,7 @@ use Closure;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
+use OCP\DB\Types;
 
 /**
  * Auto-generated migration step: Please modify to your needs!
@@ -45,11 +46,15 @@ class Version010304Date20231130104459 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->getTable('user_oidc_providers');
-		$table->addColumn('end_session_endpoint', 'string', [
-			'notnull' => false,
-			'length' => 255,
-		]);
+		if ($schema->hasTable('user_oidc_providers')) {
+			$table = $schema->getTable('user_oidc_providers');
+			if (!$table->hasColumn('end_session_endpoint')) {
+				$table->addColumn('end_session_endpoint', Types::STRING, [
+					'notnull' => false,
+					'length' => 255,
+				]);
+			}
+		}
 
 		return $schema;
 	}

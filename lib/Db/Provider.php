@@ -36,6 +36,7 @@ use OCP\AppFramework\Db\Entity;
  * @method void setClientSecret(string $clientSecret)
  * @method string getDiscoveryEndpoint()
  * @method void setDiscoveryEndpoint(string $discoveryEndpoint)
+ * @method string getEndSessionEndpoint()
  * @method void setEndSessionEndpoint(string $endSessionEndpoint)
  * @method void setScope(string $scope)
  */
