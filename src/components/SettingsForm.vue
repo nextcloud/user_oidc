@@ -23,12 +23,14 @@
 <template>
 	<form class="provider-edit">
 		<p>
-			<label for="oidc-identifier">{{ t('user_oidc', 'Identifier') }}</label>
+			<label for="oidc-identifier" :class="{ warning: identifierLength >= maxIdentifierLength }">{{ t('user_oidc', 'Identifier (max 128 characters)') }}</label>
 			<input id="oidc-identifier"
 				v-model="localProvider.identifier"
 				type="text"
 				:placeholder="t('user_oidc', 'Display name to identify the provider')"
-				required>
+				:disabled="identifierInitiallySet"
+				required
+				:maxlength="maxIdentifierLength">
 		</p>
 		<p>
 			<label for="oidc-client-id">{{ t('user_oidc', 'Client ID') }}</label>
@@ -190,10 +192,17 @@ export default {
 	data() {
 		return {
 			localProvider: null,
+			maxIdentifierLength: 128,
 		}
+	},
+	computed: {
+		identifierLength() {
+			return this.localProvider.identifier.length
+		},
 	},
 	created() {
 		this.localProvider = this.provider
+		this.identifierInitiallySet = !!this.localProvider.identifier
 	},
 }
 </script>
