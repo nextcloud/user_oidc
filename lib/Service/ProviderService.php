@@ -43,6 +43,16 @@ class ProviderService {
 	public const SETTING_MAPPING_EMAIL = 'mappingEmail';
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
 	public const SETTING_MAPPING_GROUPS = 'mappingGroups';
+	public const SETTING_MAPPING_ADDRESS = 'address';
+	public const SETTING_MAPPING_WEBSITE = 'website';
+	public const SETTING_MAPPING_AVATAR = 'avatar';
+	public const SETTING_MAPPING_TWITTER = 'twitter';
+	public const SETTING_MAPPING_FEDIVERSE = 'fediverse';
+	public const SETTING_MAPPING_ORGANISATION = 'organisation';
+	public const SETTING_MAPPING_ROLE = 'role';
+	public const SETTING_MAPPING_HEADLINE = 'headline';
+	public const SETTING_MAPPING_BIOGRAPHY = 'biography';
+	public const SETTING_MAPPING_PHONE = 'phone_number';
 	public const SETTING_EXTRA_CLAIMS = 'extraClaims';
 	public const SETTING_JWKS_CACHE = 'jwksCache';
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
@@ -139,6 +149,8 @@ class ProviderService {
 			self::SETTING_MAPPING_DISPLAYNAME,
 			self::SETTING_MAPPING_EMAIL,
 			self::SETTING_MAPPING_QUOTA,
+			self::SETTING_MAPPING_PHONE,
+			self::SETTING_MAPPING_WEBSITE,
 			self::SETTING_MAPPING_UID,
 			self::SETTING_MAPPING_GROUPS,
 			self::SETTING_UNIQUE_UID,
