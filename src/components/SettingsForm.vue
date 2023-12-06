@@ -112,8 +112,8 @@
 				placeholder="quota">
 		</p>
 		<p>
-			<label for="mapping-quota">{{ t('user_oidc', 'Groups mapping') }}</label>
-			<input id="mapping-quota"
+			<label for="mapping-groups">{{ t('user_oidc', 'Groups mapping') }}</label>
+			<input id="mapping-groups"
 				v-model="localProvider.settings.mappingGroups"
 				type="text"
 				placeholder="groups"
