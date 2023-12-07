@@ -157,7 +157,7 @@
 				placeholder="postal_code">
 		</p>
 		<p>
-			<label for="mapping-locality">{{ t('user_oidc', 'Locality/City mapping') }}</label>
+			<label for="mapping-locality">{{ t('user_oidc', 'Locality mapping') }}</label>
 			<input id="mapping-locality"
 				v-model="localProvider.settings.mappingLocality"
 				type="text"

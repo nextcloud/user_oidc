@@ -98,7 +98,7 @@ class ProvisioningService {
 
 		$regionAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_REGION, 'region');
 		$region = $idTokenPayload->{$regionAttribute} ?? null;
-
+		
 		$countryAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country');
 		$country = $idTokenPayload->{$countryAttribute} ?? null;
 
@@ -132,12 +132,13 @@ class ProvisioningService {
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $tokenUserId);
 		$this->eventDispatcher->dispatchTyped($event);
 
-		$backendUser = $this->userMapper->getOrCreate($providerId, (string)$event->getValue());
+		// Casting to get empty string if value is null
+		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue() ?? '');
 		$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
 
 		$user = $this->userManager->get($backendUser->getUserId());
 		$account = $this->accountManager->getAccount($user);
-		$scope='v2-local';
+		$scope = 'v2-local';
 
 		if ($user === null || $account === null) {
 			return null;
@@ -201,7 +202,7 @@ class ProvisioningService {
 			$addressArray = json_decode(json_encode($address), true);
 			$addressParts = [
 				$addressArray[$streetAttribute],
-				$addressArray[$postalcodeAttribute] . ' ' . $localityAttribute,
+				$addressArray[$postalcodeAttribute] . ' ' . $addressArray[$localityAttribute],
 				$addressArray[$regionAttribute],
 				$addressArray[$countryAttribute]
 			];
@@ -215,12 +216,8 @@ class ProvisioningService {
 			];
 		}
 
-		// filter out empty values
-		$addressParts = array_filter($addressParts, function($value) {
-			return !empty($value);
-		});
 		// concatenate them back together into a string and remove unsused ', '
-		$address = preg_replace('/^, |, $/', '', str_replace('  ', ' ', implode(', ', $addressParts)));
+		$address = str_replace('  ', ' ', implode(', ', $addressParts));
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ADDRESS, $idTokenPayload, $address);
 		$this->eventDispatcher->dispatchTyped($event);

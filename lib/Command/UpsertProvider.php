@@ -221,31 +221,31 @@ class UpsertProvider extends Command {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_COUNTRY, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-website')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_WEBSITE, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_WEBSITE, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-avatar')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_AVATAR, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_AVATAR, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-twitter')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_TWITTER, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_TWITTER, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-organisation')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ORGANISATION, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ORGANISATION, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-role')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ROLE, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ROLE, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-headline')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_HEADLINE, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_HEADLINE, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-biography')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_BIOGRAPHY, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_BIOGRAPHY, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-phone')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_PHONE, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_PHONE, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-gender')) {
-				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_GENDER, $mapping);
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_GENDER, $mapping);
 		}
 		if ($extraClaims = $input->getOption('extra-claims')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_EXTRA_CLAIMS, $extraClaims);
