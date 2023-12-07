@@ -49,7 +49,7 @@ class ProvisioningService {
 		IGroupManager    $groupManager,
 		IEventDispatcher $eventDispatcher,
 		ILogger          $logger,
-		IAccountManager $accountManager,
+		IAccountManager $accountManager
 	) {
 		$this->idService = $idService;
 		$this->providerService = $providerService;
