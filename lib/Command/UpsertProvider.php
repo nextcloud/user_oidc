@@ -74,7 +74,22 @@ class UpsertProvider extends Command {
 			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
 			->addOption('mapping-uid', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the user id')
 			->addOption('extra-claims', null, InputOption::VALUE_OPTIONAL, 'Extra claims to request when getting tokens')
-
+			->addOption('mapping-website', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the website')
+			->addOption('mapping-avatar', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the avatar')
+			->addOption('mapping-twitter', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of twitter')
+			->addOption('mapping-fediverse', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the fediverse')
+			->addOption('mapping-organisation', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the organisation')
+			->addOption('mapping-role', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the role')
+			->addOption('mapping-headline', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the headline')
+			->addOption('mapping-biography', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the biography')
+			->addOption('mapping-phone', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the phone')
+			->addOption('mapping-gender', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the gender')
+			->addOption('mapping-address', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the address')
+			->addOption('mapping-street_address', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the street address')
+			->addOption('mapping-postal_code', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the postal code')
+			->addOption('mapping-locality', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the locality')
+			->addOption('mapping-region', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the region')
+			->addOption('mapping-country', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the country')
 			->addOption(
 				'output',
 				null,
@@ -106,8 +121,12 @@ class UpsertProvider extends Command {
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
 				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-				'scope', 'unique-uid', 'check-bearer', 'endsessionendpointuri',
-				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
+				'scope', 'unique-uid', 'check-bearer', 'endsessionendpointuri', 'mapping-uid',
+				'mapping-display-name', 'mapping-email', 'mapping-quota', 'mapping-fediverse',
+				'mapping-address', 'mapping-street_address', 'mapping-postal_code', 'mapping-website',
+				'mapping-avatar', 'mapping-twitter', 'mapping-locality', 'mapping-region',
+				'mapping-country', 'mapping-organisation', 'mapping-role', 'mapping-headline',
+				'mapping-biography', 'mapping-phone', 'mapping-gender',
 				'extra-claims'
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
@@ -165,7 +184,6 @@ class UpsertProvider extends Command {
 		if (($uniqueUid = $input->getOption('unique-uid')) !== null) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_UNIQUE_UID, (string)$uniqueUid === '0' ? '0' : '1');
 		}
-
 		if ($mapping = $input->getOption('mapping-display-name')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, $mapping);
 		}
@@ -177,6 +195,57 @@ class UpsertProvider extends Command {
 		}
 		if ($mapping = $input->getOption('mapping-uid')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-fediverse')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_FEDIVERSE, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-groups')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_GROUPS, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-address')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ADDRESS, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-street_address')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_STREETADDRESS, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-postal_code')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_POSTALCODE, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-locality')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_LOCALITY, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-region')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_REGION, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-country')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_COUNTRY, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-website')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_WEBSITE, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-avatar')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_AVATAR, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-twitter')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_TWITTER, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-organisation')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ORGANISATION, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-role')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ROLE, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-headline')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_HEADLINE, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-biography')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_BIOGRAPHY, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-phone')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_PHONE, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-gender')) {
+				$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_GENDER, $mapping);
 		}
 		if ($extraClaims = $input->getOption('extra-claims')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_EXTRA_CLAIMS, $extraClaims);

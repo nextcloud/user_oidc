@@ -43,16 +43,22 @@ class ProviderService {
 	public const SETTING_MAPPING_EMAIL = 'mappingEmail';
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
 	public const SETTING_MAPPING_GROUPS = 'mappingGroups';
-	public const SETTING_MAPPING_ADDRESS = 'address';
-	public const SETTING_MAPPING_WEBSITE = 'website';
-	public const SETTING_MAPPING_AVATAR = 'avatar';
-	public const SETTING_MAPPING_TWITTER = 'twitter';
-	public const SETTING_MAPPING_FEDIVERSE = 'fediverse';
-	public const SETTING_MAPPING_ORGANISATION = 'organisation';
-	public const SETTING_MAPPING_ROLE = 'role';
-	public const SETTING_MAPPING_HEADLINE = 'headline';
-	public const SETTING_MAPPING_BIOGRAPHY = 'biography';
-	public const SETTING_MAPPING_PHONE = 'phone_number';
+	public const SETTING_MAPPING_ADDRESS = 'mappingAddress';
+	public const SETTING_MAPPING_STREETADDRESS = 'mappingStreetaddress';
+	public const SETTING_MAPPING_POSTALCODE = 'mappingPostalcode';
+	public const SETTING_MAPPING_LOCALITY = 'mappingLocality';
+	public const SETTING_MAPPING_REGION = 'mappingRegion';
+	public const SETTING_MAPPING_COUNTRY = 'mappingCountry';
+	public const SETTING_MAPPING_WEBSITE = 'mappingWebsite';
+	public const SETTING_MAPPING_AVATAR = 'mappingAvatar';
+	public const SETTING_MAPPING_TWITTER = 'mappingTwitter';
+	public const SETTING_MAPPING_FEDIVERSE = 'mappingFediverse';
+	public const SETTING_MAPPING_ORGANISATION = 'mappingOrganisation';
+	public const SETTING_MAPPING_ROLE = 'mappingRole';
+	public const SETTING_MAPPING_HEADLINE = 'mappingHeadline';
+	public const SETTING_MAPPING_BIOGRAPHY = 'mappingBiography';
+	public const SETTING_MAPPING_PHONE = 'mappingPhonenumber';
+	public const SETTING_MAPPING_GENDER = 'mappingGender';
 	public const SETTING_EXTRA_CLAIMS = 'extraClaims';
 	public const SETTING_JWKS_CACHE = 'jwksCache';
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
@@ -149,10 +155,24 @@ class ProviderService {
 			self::SETTING_MAPPING_DISPLAYNAME,
 			self::SETTING_MAPPING_EMAIL,
 			self::SETTING_MAPPING_QUOTA,
-			self::SETTING_MAPPING_PHONE,
-			self::SETTING_MAPPING_WEBSITE,
 			self::SETTING_MAPPING_UID,
 			self::SETTING_MAPPING_GROUPS,
+			self::SETTING_MAPPING_ADDRESS,
+			self::SETTING_MAPPING_STREETADDRESS,
+			self::SETTING_MAPPING_POSTALCODE,
+			self::SETTING_MAPPING_LOCALITY,
+			self::SETTING_MAPPING_REGION,
+			self::SETTING_MAPPING_COUNTRY,
+			self::SETTING_MAPPING_WEBSITE,
+			self::SETTING_MAPPING_AVATAR,
+			self::SETTING_MAPPING_TWITTER,
+			self::SETTING_MAPPING_FEDIVERSE,
+			self::SETTING_MAPPING_ORGANISATION,
+			self::SETTING_MAPPING_ROLE,
+			self::SETTING_MAPPING_HEADLINE,
+			self::SETTING_MAPPING_BIOGRAPHY,
+			self::SETTING_MAPPING_PHONE,
+			self::SETTING_MAPPING_GENDER,
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
 			self::SETTING_SEND_ID_TOKEN_HINT,

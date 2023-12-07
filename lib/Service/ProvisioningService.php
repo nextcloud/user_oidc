@@ -72,7 +72,6 @@ class ProvisioningService {
 	 */
 	public function provisionUser(string $tokenUserId, int $providerId, object $idTokenPayload): ?IUser {
 		// get name/email/quota information from the token itself
-		
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$email = $idTokenPayload->{$emailAttribute} ?? null;
 		
@@ -82,13 +81,31 @@ class ProvisioningService {
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
 
+		$genderAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender');
+		$gender = $idTokenPayload->{$genderAttribute} ?? null;
+
 		$addressAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address');
 		$address = $idTokenPayload->{$addressAttribute} ?? null;
+
+		$postalcodeAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code');
+		$postalcode = $idTokenPayload->{$postalcodeAttribute} ?? null;
+
+		$streetAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address');
+		$street = $idTokenPayload->{$streetAttribute} ?? null;
+
+		$localityAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_LOCALITY, 'locality');
+		$locality = $idTokenPayload->{$localityAttribute} ?? null;
+
+		$regionAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_REGION, 'region');
+		$region = $idTokenPayload->{$regionAttribute} ?? null;
+
+		$countryAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country');
+		$country = $idTokenPayload->{$countryAttribute} ?? null;
 
 		$websiteAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_WEBSITE, 'website');
 		$website = $idTokenPayload->{$websiteAttribute} ?? null;
 
-		$avatarAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_AVATAR, 'picture');
+		$avatarAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_AVATAR, 'avatar');
 		$avatar = $idTokenPayload->{$avatarAttribute} ?? null;
 
 		$phoneAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number');
@@ -179,21 +196,31 @@ class ProvisioningService {
 			$account->setProperty('phone', $phone, $scope, '1', '');
 		}
 
-		// Update the location/address
-		$addressArray = json_decode(json_encode($address), true);
-		// Concatenate the address components
-		$addressParts = [
-			$addressArray['street_address'],
-			$addressArray['postal_code'] . ' ' . $addressArray['locality'],
-			$addressArray['region'],
-			$addressArray['country']
-		];
-		//filter out empty values
+		if (is_object($address)) {
+			// Update the location/address
+			$addressArray = json_decode(json_encode($address), true);
+			$addressParts = [
+				$addressArray[$streetAttribute],
+				$addressArray[$postalcodeAttribute] . ' ' . $localityAttribute,
+				$addressArray[$regionAttribute],
+				$addressArray[$countryAttribute]
+			];
+		} else {
+			// Concatenate the address components
+			$addressParts = [
+				$street,
+				$postalcode . ' ' . $locality,
+				$region,
+				$country
+			];
+		}
+
+		// filter out empty values
 		$addressParts = array_filter($addressParts, function($value) {
 			return !empty($value);
 		});
-		// concatenate them back together into a string
-		$address = implode(', ', $addressParts);
+		// concatenate them back together into a string and remove unsused ', '
+		$address = preg_replace('/^, |, $/', '', str_replace('  ', ' ', implode(', ', $addressParts)));
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ADDRESS, $idTokenPayload, $address);
 		$this->eventDispatcher->dispatchTyped($event);
@@ -205,7 +232,7 @@ class ProvisioningService {
 		// Update the website
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_WEBSITE, $idTokenPayload, $website);
 		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Address mapping event dispatched');
+		$this->logger->debug('Website mapping event dispatched');
 		if ($event->hasValue()) {
 			$account->setProperty('website', $website, $scope, '1', '');
 		}
