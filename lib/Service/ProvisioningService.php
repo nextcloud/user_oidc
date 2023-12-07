@@ -306,7 +306,8 @@ class ProvisioningService {
 		$this->logger->debug('Group mapping event dispatched');
 
 		if ($event->hasValue() && $event->getValue() !== null) {
-			$groups = json_decode($event->getValue());
+			// casted to null if empty value
+			$groups = json_decode($event->getValue() ?? '');
 			$userGroups = $this->groupManager->getUserGroups($user);
 			$syncGroups = [];
 
