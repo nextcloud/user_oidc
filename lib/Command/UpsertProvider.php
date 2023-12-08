@@ -90,6 +90,7 @@ class UpsertProvider extends Command {
 			->addOption('mapping-locality', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the locality')
 			->addOption('mapping-region', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the region')
 			->addOption('mapping-country', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the country')
+			->addOption('mapping-groups', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the groups')
 			->addOption(
 				'output',
 				null,
@@ -126,7 +127,7 @@ class UpsertProvider extends Command {
 				'mapping-address', 'mapping-street_address', 'mapping-postal_code', 'mapping-website',
 				'mapping-avatar', 'mapping-twitter', 'mapping-locality', 'mapping-region',
 				'mapping-country', 'mapping-organisation', 'mapping-role', 'mapping-headline',
-				'mapping-biography', 'mapping-phone', 'mapping-gender',
+				'mapping-biography', 'mapping-phone', 'mapping-gender', 'mapping-groups',
 				'extra-claims'
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
