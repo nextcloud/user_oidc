@@ -160,9 +160,9 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Displayname mapping event dispatched');
 		if ($event->hasValue()) {
+			$newDisplayName = $event->getValue();
 			if ($existingLocalUser === null) {
 				$oldDisplayName = $backendUser->getDisplayName();
-				$newDisplayName = $event->getValue();
 				if ($newDisplayName !== $oldDisplayName) {
 					$backendUser->setDisplayName($newDisplayName);
 					$this->userMapper->update($backendUser);
@@ -174,7 +174,10 @@ class ProvisioningService {
 					$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
 				}
 			} else {
-				$user->setDisplayName($newDisplayName);
+				$oldDisplayName = $user->getDisplayName();
+				if ($newDisplayName !== $oldDisplayName) {
+					$user->setDisplayName($newDisplayName);
+				}
 			}
 		}
 
