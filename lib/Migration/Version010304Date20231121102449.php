@@ -40,6 +40,9 @@ class Version010304Date20231121102449 extends SimpleMigrationStep {
 				if ($table->hasColumn('client_secret')) {
 					$column = $table->getColumn('client_secret');
 					$column->setLength(2048);
+					$schemaChanged = true;
+				}
+				if ($table->hasColumn('client_id')) {
 					$column = $table->getColumn('client_id');
 					$column->setLength(2048);
 					$schemaChanged = true;
