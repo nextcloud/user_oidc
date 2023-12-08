@@ -574,7 +574,7 @@ class LoginController extends BaseOidcController {
 				// Check if a custom end_session_endpoint is deposited otherwise use the default one provided by the openid-configuration
 				$discoveryData = $this->discoveryService->obtainDiscovery($provider);
 				$defaultEndSessionEndpoint = $discoveryData['end_session_endpoint'];
-				$customEndSessionEndpoint = json_decode(json_encode($provider), true)['endSessionEndpoint'];
+				$customEndSessionEndpoint = $provider->getEndSessionEndpoint();
 				$endSessionEndpoint = $customEndSessionEndpoint ?? $defaultEndSessionEndpoint;
 
 				if ($endSessionEndpoint) {

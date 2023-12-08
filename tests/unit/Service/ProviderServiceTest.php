@@ -74,6 +74,7 @@ class ProviderServiceTest extends TestCase {
 				'identifier' => null,
 				'clientId' => null,
 				'discoveryEndpoint' => null,
+				'endSessionEndpoint' => null,
 				'scope' => null,
 				'settings' => [
 					'mappingDisplayName' => '1',
@@ -95,6 +96,7 @@ class ProviderServiceTest extends TestCase {
 				'identifier' => null,
 				'clientId' => null,
 				'discoveryEndpoint' => null,
+				'endSessionEndpoint' => null,
 				'scope' => null,
 				'settings' => [
 					'mappingDisplayName' => '1',

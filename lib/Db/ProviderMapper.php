@@ -97,8 +97,8 @@ class ProviderMapper extends QBMapper {
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
 	public function createOrUpdateProvider(string $identifier, string $clientid = null,
-									string $clientsecret = null, string $discoveryuri = null,
-									string $endsessionendpointuri = null, string $scope = 'openid email profile') {
+									string $clientsecret = null, string $discoveryuri = null, string $scope = 'openid email profile',
+									string $endsessionendpointuri = null) {
 		try {
 			$provider = $this->findProviderByIdentifier($identifier);
 		} catch (DoesNotExistException $eNotExist) {
@@ -128,7 +128,7 @@ class ProviderMapper extends QBMapper {
 				$provider->setDiscoveryEndpoint($discoveryuri);
 			}
 			if ($endsessionendpointuri !== null) {
-				$provider->setEndSessionEndpoint($endsessionendpointuri);
+				$provider->setEndSessionEndpoint($endsessionendpointuri ?: null);
 			}
 			$provider->setScope($scope);
 			return $this->update($provider);

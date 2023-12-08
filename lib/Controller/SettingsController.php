@@ -85,7 +85,7 @@ class SettingsController extends Controller {
 	}
 
 	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null,
-								   array $settings = [], string $scope = 'openid email profile', string $endSessionEndpoint): JSONResponse {
+								   array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
 
 		if ($this->providerService->getProviderByIdentifier($identifier) === null) {
