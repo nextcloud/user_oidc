@@ -27,7 +27,7 @@ class SelfEncodedTokenProvisioning implements IProvisioningStrategy {
 		$this->logger = $logger;
 	}
 
-	public function provisionUser(Provider $provider, string $tokenUserId, string $bearerToken): ?IUser {
+	public function provisionUser(Provider $provider, string $tokenUserId, string $bearerToken, ?IUser $userFromOtherBackend): ?IUser {
 		JWT::$leeway = 60;
 		try {
 			$jwks = $this->discoveryService->obtainJWK($provider, $bearerToken);
@@ -37,6 +37,6 @@ class SelfEncodedTokenProvisioning implements IProvisioningStrategy {
 			return null;
 		}
 
-		return $this->provisioningService->provisionUser($tokenUserId, $provider->getId(), $payload);
+		return $this->provisioningService->provisionUser($tokenUserId, $provider->getId(), $payload, $userFromOtherBackend);
 	}
 }
