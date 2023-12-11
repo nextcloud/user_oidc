@@ -290,6 +290,14 @@ class ProvisioningService {
 			$account->setProperty('biography', $biography, $scope, '1', '');
 		}
 
+		// Update the gender
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_BIOGRAPHY, $idTokenPayload, $biography);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Gender mapping event dispatched');
+		if ($event->hasValue()) {
+			$account->setProperty('gender', $gender, $scope, '1', '');
+		}
+
 		if ($account !== null) {
 			$this->accountManager->updateAccount($account);
 		}
