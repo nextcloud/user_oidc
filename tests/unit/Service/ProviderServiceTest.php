@@ -162,6 +162,22 @@ class ProviderServiceTest extends TestCase {
 			'extraClaims' => 'claim1 claim2',
 			'providerBasedId' => false,
 			'groupProvisioning' => true,
+			'mappingAddress' => 'address',
+			'mappingStreetaddress' => 'street_address',
+			'mappingPostalcode' => 'postal_code',
+			'mappingLocality' => 'locality',
+			'mappingRegion' => 'region',
+			'mappingCountry' => 'country',
+			'mappingWebsite' => 'website',
+			'mappingAvatar' => 'avatar',
+			'mappingTwitter' => 'twitter',
+			'mappingFediverse' => 'fediverse',
+			'mappingOrganisation' => 'organisation',
+			'mappingRole' => 'role',
+			'mappingHeadline' => 'headline',
+			'mappingBiography' => 'biography',
+			'mappingPhonenumber' => 'phone',
+			'mappingGender' => 'gender',
 		];
 		$this->config->expects(self::any())
 			->method('getAppValue')
