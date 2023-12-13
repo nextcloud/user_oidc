@@ -570,7 +570,13 @@ class LoginController extends BaseOidcController {
 					$message = $this->l10n->t('There is not such OpenID Connect provider.');
 					return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_id' => $providerId]);
 				}
-				$endSessionEndpoint = $this->discoveryService->obtainDiscovery($provider)['end_session_endpoint'];
+
+				// Check if a custom end_session_endpoint is deposited otherwise use the default one provided by the openid-configuration
+				$discoveryData = $this->discoveryService->obtainDiscovery($provider);
+				$defaultEndSessionEndpoint = $discoveryData['end_session_endpoint'];
+				$customEndSessionEndpoint = $provider->getEndSessionEndpoint();
+				$endSessionEndpoint = $customEndSessionEndpoint ?: $defaultEndSessionEndpoint;
+
 				if ($endSessionEndpoint) {
 					$endSessionEndpoint .= '?post_logout_redirect_uri=' . $targetUrl;
 					$endSessionEndpoint .= '&client_id=' . $provider->getClientId();

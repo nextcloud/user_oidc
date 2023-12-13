@@ -80,6 +80,7 @@ class DiscoveryService {
 			$client = $this->clientService->newClient();
 			$response = $client->get($url);
 			$cachedDiscovery = $response->getBody();
+
 			$this->cache->set($cacheKey, $cachedDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
 		}
 

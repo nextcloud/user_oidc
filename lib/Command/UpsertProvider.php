@@ -63,6 +63,7 @@ class UpsertProvider extends Command {
 			->addOption('clientid', 'c', InputOption::VALUE_REQUIRED, 'OpenID client identifier')
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
 			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
+			->addOption('endsessionendpointuri', 'e', InputOption::VALUE_OPTIONAL, 'OpenID end session endpoint uri')
 
 			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"')
 			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable')
@@ -94,6 +95,7 @@ class UpsertProvider extends Command {
 			$clientsecret = $this->crypto->encrypt($clientsecret);
 		}
 		$discoveryuri = $input->getOption('discoveryuri');
+		$endsessionendpointuri = $input->getOption('endsessionendpointuri');
 		$scope = $input->getOption('scope');
 
 		if ($identifier === null) {
@@ -104,7 +106,7 @@ class UpsertProvider extends Command {
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
 				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-				'scope', 'unique-uid', 'check-bearer',
+				'scope', 'unique-uid', 'check-bearer', 'endsessionendpointuri',
 				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
 				'extra-claims'
 			]) && $value !== null;
@@ -131,7 +133,7 @@ class UpsertProvider extends Command {
 			$provider['settings'][ProviderService::SETTING_UNIQUE_UID] = $provider['settings'][ProviderService::SETTING_UNIQUE_UID] ? '1' : '0';
 			$provider['settings'] = json_encode($provider['settings']);
 			$table = new Table($output);
-			$table->setHeaders(['ID', 'Identifier', 'Client ID', 'Discovery endpoint', 'Advanced settings']);
+			$table->setHeaders(['ID', 'Identifier', 'Client ID', 'Discovery endpoint', 'End session endpoint', 'Advanced settings']);
 			$table->addRow($provider);
 			$table->render();
 			return 0;
@@ -146,7 +148,7 @@ class UpsertProvider extends Command {
 			$scope = $scope ?? 'openid email profile';
 		}
 		try {
-			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope);
+			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope, $endsessionendpointuri);
 			// invalidate JWKS cache (even if it was just created)
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, '');
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');
@@ -179,13 +181,11 @@ class UpsertProvider extends Command {
 		if ($extraClaims = $input->getOption('extra-claims')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_EXTRA_CLAIMS, $extraClaims);
 		}
-
 		return 0;
 	}
 
 	private function listProviders(InputInterface $input, OutputInterface $output) {
 		$outputFormat = $input->getOption('output') ?? 'table';
-
 		$providers = $this->providerMapper->getProviders();
 
 		if ($outputFormat === 'json') {
@@ -204,12 +204,13 @@ class UpsertProvider extends Command {
 		}
 
 		$table = new Table($output);
-		$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'Client ID']);
+		$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'End session endpoint', 'Client ID']);
 		$providers = array_map(function ($provider) {
 			return [
 				$provider->getId(),
 				$provider->getIdentifier(),
 				$provider->getDiscoveryEndpoint(),
+				$provider->getEndSessionEndpoint(),
 				$provider->getClientId()
 			];
 		}, $providers);
