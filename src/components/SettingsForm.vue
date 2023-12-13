@@ -60,11 +60,12 @@
 				required>
 		</p>
 		<p>
-			<label for="oidc-end-session-endpoint">{{ t('user_oidc', 'End session endpoint') }}</label>
+			<label for="oidc-end-session-endpoint">{{ t('user_oidc', 'Custom end session endpoint') }}</label>
 			<input id="oidc-end-session-endpoint"
 				v-model="localProvider.endSessionEndpoint"
 				class="italic-placeholder"
 				type="text"
+				maxlength="255"
 				placeholder="(Optional)">
 		</p>
 		<p>

@@ -63,8 +63,8 @@ class SettingsController extends Controller {
 		$this->crypto = $crypto;
 	}
 
-	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint, string $endSessionEndpoint,
-								   array $settings = [], string $scope = 'openid email profile'): JSONResponse {
+	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
+								   array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
 		}

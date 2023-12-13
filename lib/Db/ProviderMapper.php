@@ -25,7 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Db;
 
+use OCP\AppFramework\Db\Entity;
+use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\Exception;
 use OCP\IDBConnection;
 
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -88,13 +91,16 @@ class ProviderMapper extends QBMapper {
 	/**
 	 * Create or update provider settings
 	 *
-	 * @param string identifier
+	 * @param string $identifier
 	 * @param string|null $clientid
 	 * @param string|null $clientsecret
 	 * @param string|null $discoveryuri
-	 * @param string scope
-	 * @throws \OCP\AppFramework\Db\DoesNotExistException
-	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 * @param string $scope
+	 * @param string|null $endsessionendpointuri
+	 * @return Provider|Entity
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
+	 * @throws Exception
 	 */
 	public function createOrUpdateProvider(string $identifier, string $clientid = null,
 									string $clientsecret = null, string $discoveryuri = null, string $scope = 'openid email profile',

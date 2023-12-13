@@ -575,7 +575,7 @@ class LoginController extends BaseOidcController {
 				$discoveryData = $this->discoveryService->obtainDiscovery($provider);
 				$defaultEndSessionEndpoint = $discoveryData['end_session_endpoint'];
 				$customEndSessionEndpoint = $provider->getEndSessionEndpoint();
-				$endSessionEndpoint = $customEndSessionEndpoint ?? $defaultEndSessionEndpoint;
+				$endSessionEndpoint = $customEndSessionEndpoint ?: $defaultEndSessionEndpoint;
 
 				if ($endSessionEndpoint) {
 					$endSessionEndpoint .= '?post_logout_redirect_uri=' . $targetUrl;
