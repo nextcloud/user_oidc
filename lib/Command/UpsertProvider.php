@@ -72,6 +72,7 @@ class UpsertProvider extends Command {
 			->addOption('mapping-display-name', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the display name')
 			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
 			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
+			->addOption('mapping-groups', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the groups')
 			->addOption('mapping-uid', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the user id')
 			->addOption('extra-claims', null, InputOption::VALUE_OPTIONAL, 'Extra claims to request when getting tokens')
 
@@ -107,7 +108,7 @@ class UpsertProvider extends Command {
 			return in_array($option, [
 				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
 				'scope', 'unique-uid', 'check-bearer', 'endsessionendpointuri',
-				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota',
+				'mapping-uid', 'mapping-display-name', 'mapping-email', 'mapping-quota', 'mapping-groups',
 				'extra-claims'
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
@@ -174,6 +175,9 @@ class UpsertProvider extends Command {
 		}
 		if ($mapping = $input->getOption('mapping-quota')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_QUOTA, $mapping);
+		}
+		if ($mapping = $input->getOption('mapping-groups')) {
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_GROUPS, $mapping);
 		}
 		if ($mapping = $input->getOption('mapping-uid')) {
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, $mapping);
