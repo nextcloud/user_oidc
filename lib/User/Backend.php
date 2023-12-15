@@ -49,12 +49,13 @@ use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\User\Backend\ABackend;
+use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
 use Psr\Log\LoggerInterface;
 
-class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout {
+class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend {
 	private $tokenValidators = [
 		SelfEncodedValidator::class,
 		UserInfoValidator::class,
@@ -129,6 +130,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 	public function getBackendName(): string {
 		return Application::APP_ID;
+	}
+
+	public function countUsers(): int {
+		$uids = $this->getUsers();
+		return count($uids);
 	}
 
 	public function deleteUser($uid): bool {

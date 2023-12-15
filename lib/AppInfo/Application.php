@@ -62,7 +62,9 @@ class Application extends App implements IBootstrap {
 
 		/* Register our own user backend */
 		$this->backend = $this->getContainer()->get(Backend::class);
-		$userManager->registerBackend($this->backend);
+		// this was done before but OC_User::useBackend calls OC::$server->getUserManager()->registerBackend anyway
+		// so the backend was registered twice, leading to wrong user count (double)
+		// $userManager->registerBackend($this->backend);
 		OC_User::useBackend($this->backend);
 
 		$context->registerEventListener(LoadAdditionalScriptsEvent::class, TimezoneHandlingListener::class);
