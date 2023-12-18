@@ -34,6 +34,7 @@ class Version010304Date20231121102449 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
+		$schemaChanged = false;
 		foreach (['user_oidc_providers', 'user_oidc_id4me'] as $tableName) {
 			if ($schema->hasTable($tableName)) {
 				$table = $schema->getTable($tableName);
