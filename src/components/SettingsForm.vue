@@ -110,8 +110,8 @@
 		<h3>
 			<NcButton type="secondary" @click="toggleProfileAttributes">
 				<template #icon>
-					<ExpandAllIcon v-if="!showProfileAttributes" :size="20" />
-					<CollapseAllIcon v-else :size="20" />
+					<ChevronRightIcon v-if="!showProfileAttributes" :size="20" />
+					<ChevronDownIcon v-else :size="20" />
 				</template>
 				{{ t('user_oidc', 'Extra attributes mapping') }}
 			</NcButton>
@@ -292,8 +292,8 @@
 <script>
 import AlertOutlineIcon from 'vue-material-design-icons/AlertOutline.vue'
 import CheckIcon from 'vue-material-design-icons/Check.vue'
-import ExpandAllIcon from 'vue-material-design-icons/ExpandAll.vue'
-import CollapseAllIcon from 'vue-material-design-icons/CollapseAll.vue'
+import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
+import ChevronDownIcon from 'vue-material-design-icons/ChevronDown.vue'
 
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
@@ -305,8 +305,8 @@ export default {
 		NcButton,
 		AlertOutlineIcon,
 		CheckIcon,
-		ExpandAllIcon,
-		CollapseAllIcon,
+		ChevronRightIcon,
+		ChevronDownIcon,
 	},
 	props: {
 		submitText: {
