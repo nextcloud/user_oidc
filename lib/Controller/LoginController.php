@@ -230,9 +230,13 @@ class LoginController extends BaseOidcController {
 		$nonce = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::NONCE, $nonce);
 
-		// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
-		$code_verifier = $this->random->generate(128, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER);
-		$this->session->set(self::CODE_VERIFIER, $code_verifier);
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$isPkceEnabled = isset($oidcSystemConfig['use_pkce']) && $oidcSystemConfig['use_pkce'];
+		if ($isPkceEnabled) {
+			// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
+			$code_verifier = $this->random->generate(128, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER);
+			$this->session->set(self::CODE_VERIFIER, $code_verifier);
+		}
 
 		$this->session->set(self::PROVIDERID, $providerId);
 		$this->session->close();
@@ -285,9 +289,11 @@ class LoginController extends BaseOidcController {
 			'claims' => json_encode($claims),
 			'state' => $state,
 			'nonce' => $nonce,
-			'code_challenge' => $this->toCodeChallenge($code_verifier),
-			'code_challenge_method' => 'S256',
 		];
+		if ($isPkceEnabled) {
+			$data['code_challenge'] = $this->toCodeChallenge($code_verifier);
+			$data['code_challenge_method'] = 'S256';
+		}
 		// pass discovery query parameters also on to the authentication
 		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
 		if (isset($discoveryUrl['query'])) {
@@ -375,7 +381,8 @@ class LoginController extends BaseOidcController {
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
 
-		$code_verifier = $this->session->get(self::CODE_VERIFIER);
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$isPkceEnabled = isset($oidcSystemConfig['use_pkce']) && $oidcSystemConfig['use_pkce'];
 
 		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
@@ -383,17 +390,20 @@ class LoginController extends BaseOidcController {
 
 		$client = $this->clientService->newClient();
 		try {
+			$requestBody = [
+				'code' => $code,
+				'client_id' => $provider->getClientId(),
+				'client_secret' => $providerClientSecret,
+				'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
+				'grant_type' => 'authorization_code',
+			];
+			if ($isPkceEnabled) {
+				$requestBody['code_verifier'] = $this->session->get(self::CODE_VERIFIER); // Set for the PKCE flow
+			}
 			$result = $client->post(
 				$discovery['token_endpoint'],
 				[
-					'body' => [
-						'code' => $code,
-						'client_id' => $provider->getClientId(),
-						'client_secret' => $providerClientSecret,
-						'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
-						'grant_type' => 'authorization_code',
-						'code_verifier' => $code_verifier, // Set for the PKCE flow
-					],
+					'body' => $requestBody,
 				]
 			);
 		} catch (ClientException | ServerException $e) {
@@ -480,7 +490,6 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
 
 		// Provisioning

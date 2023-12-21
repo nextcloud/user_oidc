@@ -64,6 +64,17 @@ parameter to the login URL.
 sudo -u www-data php var/www/nextcloud/occ config:app:set --value=0 user_oidc allow_multiple_user_backends
 ```
 
+### PKCE
+
+This app supports PKCE (Proof Key for Code Exchange).
+https://datatracker.ietf.org/doc/html/rfc7636
+It is disabled by default and can be enabled in `config.php`:
+``` php
+'user_oidc' => [
+    'use_pkce' => true,
+],
+```
+
 ### Single logout
 
 Single logout is enabled by default. When logging out of Nextcloud,
