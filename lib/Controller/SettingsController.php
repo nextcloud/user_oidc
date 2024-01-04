@@ -63,10 +63,57 @@ class SettingsController extends Controller {
 		$this->crypto = $crypto;
 	}
 
+	public function isDiscoveryEndpointValid($url) {
+		// Initialize cURL session
+		$ch = curl_init($url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HEADER, false);
+		$response = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+	
+		$result = [
+			'isReachable' => false,
+			'missingFields' => [],
+		];
+	
+		// Check if the request was successful
+		if ($httpCode == 200 && !empty($response)) {
+			$result['isReachable'] = true;
+			$data = json_decode($response, true);
+	
+			// Check for necessary fields in the response
+			$requiredFields = [
+				'issuer', 'authorization_endpoint', 'token_endpoint', 'jwks_uri',
+				'response_types_supported', 'subject_types_supported', 'id_token_signing_alg_values_supported',
+			];
+			
+			foreach ($requiredFields as $field) {
+				if (!isset($data[$field])) {
+					$result['missingFields'][] = $field;
+				}
+			}
+		} else {
+			// Set isReachable to false if http code wasnt 200
+			$result['isReachable'] = false;
+		}
+	
+		return $result;
+	}
+
 	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
 		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
+		}
+
+		$result = $this->isDiscoveryEndpointValid($discoveryEndpoint);
+		if (!$result['isReachable']) {
+			$message = 'The discovery endpoint is not reachable.';
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
+		} elseif (!empty($result['missingFields'])) {
+			$message = 'Invalid discovery endpoint. Missing fields: ' . implode(', ', $result['missingFields']);
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
 		}
 
 		$provider = new Provider();
@@ -90,6 +137,15 @@ class SettingsController extends Controller {
 
 		if ($this->providerService->getProviderByIdentifier($identifier) === null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier does not exist'], Http::STATUS_NOT_FOUND);
+		}
+
+		$result = $this->isDiscoveryEndpointValid($discoveryEndpoint);
+		if (!$result['isReachable']) {
+			$message = 'The discovery endpoint is not reachable.';
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
+		} elseif (!empty($result['missingFields'])) {
+			$message = 'Invalid discovery endpoint. Missing fields: ' . implode(', ', $result['missingFields']);
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
 		}
 
 		$provider->setIdentifier($identifier);
