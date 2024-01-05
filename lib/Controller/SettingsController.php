@@ -38,6 +38,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\Http\Client\IClientService;
 use OCP\IRequest;
 use OCP\Security\ICrypto;
+use Psr\Log\LoggerInterface;
 
 class SettingsController extends Controller {
 
@@ -51,6 +52,8 @@ class SettingsController extends Controller {
 	private $crypto;
 	/** @var IClientService */
 	private $clientService;
+	/** @var LoggerInterface */
+	private $logger;
 
 	public function __construct(
 		IRequest $request,
@@ -58,7 +61,8 @@ class SettingsController extends Controller {
 		ID4MeService $id4meService,
 		ProviderService $providerService,
 		ICrypto $crypto,
-		IClientService $clientService
+		IClientService $clientService,
+		LoggerInterface $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -67,6 +71,7 @@ class SettingsController extends Controller {
 		$this->providerService = $providerService;
 		$this->crypto = $crypto;
 		$this->clientService = $clientService;
+		$this->logger = $logger;
 	}
 
 	public function isDiscoveryEndpointValid($url) {
@@ -97,12 +102,9 @@ class SettingsController extends Controller {
 						$result['missingFields'][] = $field;
 					}
 				}
-			} else {
-				// Set isReachable to false if http code wasn't 200
-				$result['isReachable'] = false;
 			}
 		} catch (Exception $e) {
-			$result['isReachable'] = false;
+			$this->logger->error('Error - discovery endpoint validation: ' . $e);
 		}
 
 		return $result;
