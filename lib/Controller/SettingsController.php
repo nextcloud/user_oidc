@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use Exception;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
@@ -34,6 +35,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Http\Client\IClientService;
 use OCP\IRequest;
 use OCP\Security\ICrypto;
 
@@ -47,13 +49,16 @@ class SettingsController extends Controller {
 	private $providerService;
 	/** @var ICrypto */
 	private $crypto;
+	/** @var IClientService */
+	private $clientService;
 
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
 		ID4MeService $id4meService,
 		ProviderService $providerService,
-		ICrypto $crypto
+		ICrypto $crypto,
+		IClientService $clientService
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -61,43 +66,45 @@ class SettingsController extends Controller {
 		$this->id4meService = $id4meService;
 		$this->providerService = $providerService;
 		$this->crypto = $crypto;
+		$this->clientService = $clientService;
 	}
 
 	public function isDiscoveryEndpointValid($url) {
-		// Initialize cURL session
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HEADER, false);
-		$response = curl_exec($ch);
-		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		curl_close($ch);
-	
 		$result = [
 			'isReachable' => false,
 			'missingFields' => [],
 		];
-	
-		// Check if the request was successful
-		if ($httpCode == 200 && !empty($response)) {
-			$result['isReachable'] = true;
-			$data = json_decode($response, true);
-	
-			// Check for necessary fields in the response
-			$requiredFields = [
-				'issuer', 'authorization_endpoint', 'token_endpoint', 'jwks_uri',
-				'response_types_supported', 'subject_types_supported', 'id_token_signing_alg_values_supported',
-			];
-			
-			foreach ($requiredFields as $field) {
-				if (!isset($data[$field])) {
-					$result['missingFields'][] = $field;
+
+		try {
+			$client = $this->clientService->newClient();
+			$response = $client->get($url);
+			$httpCode = $response->getStatusCode();
+			$body = $response->getBody();
+
+			// Check if the request was successful
+			if ($httpCode == 200 && !empty($body)) {
+				$result['isReachable'] = true;
+				$data = json_decode($body, true);
+
+				// Check for required fields as defined in: https://openid.net/specs/openid-connect-discovery-1_0.html
+				$requiredFields = [
+					'issuer', 'authorization_endpoint', 'token_endpoint', 'jwks_uri',
+					'response_types_supported', 'subject_types_supported', 'id_token_signing_alg_values_supported',
+				];
+
+				foreach ($requiredFields as $field) {
+					if (!isset($data[$field])) {
+						$result['missingFields'][] = $field;
+					}
 				}
+			} else {
+				// Set isReachable to false if http code wasn't 200
+				$result['isReachable'] = false;
 			}
-		} else {
-			// Set isReachable to false if http code wasnt 200
+		} catch (Exception $e) {
 			$result['isReachable'] = false;
 		}
-	
+
 		return $result;
 	}
 
