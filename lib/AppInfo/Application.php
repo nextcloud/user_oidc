@@ -87,6 +87,10 @@ class Application extends App implements IBootstrap {
 	}
 
 	private function registerRedirect(IRequest $request, IURLGenerator $urlGenerator, SettingsService $settings, ProviderMapper $providerMapper): void {
+		// TODO when min supported version is >=28 :
+		// run this in a listener of OCP\AppFramework\Http\Events\BeforeLoginTemplateRenderedEvent
+		// to avoid doing useless stuff on data requests and template requests that are not the login page
+
 		$providers = $this->getCachedProviders($providerMapper);
 		$redirectUrl = $request->getParam('redirect_url');
 
