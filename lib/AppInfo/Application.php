@@ -101,7 +101,8 @@ class Application extends App implements IBootstrap {
 			// To avoid login/logout loop if the IdP session is still alive:
 			// if the login page's redirect_url GET param is the logout page, just use the base URL instead
 			$logoutUrl = $urlGenerator->linkToRoute('core.login.logout');
-			if (strpos($redirectUrl, $logoutUrl) !== false) {
+			$userOidcLogoutUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.singleLogoutService');
+			if (strpos($redirectUrl, $logoutUrl) !== false || strpos($redirectUrl, $userOidcLogoutUrl) !== false) {
 				$redirectUrl = $urlGenerator->getBaseUrl();
 			}
 			$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
