@@ -497,7 +497,6 @@ class LoginController extends BaseOidcController {
 		// so new users will be directly available even if they were not synced before this login attempt
 		$this->userManager->search($userId);
 		$this->ldapService->syncUser($userId);
-		// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
 		$userFromOtherBackend = $this->userManager->get($userId);
 		if ($userFromOtherBackend !== null && $this->ldapService->isLdapDeletedUser($userFromOtherBackend)) {
 			$userFromOtherBackend = null;
@@ -509,11 +508,12 @@ class LoginController extends BaseOidcController {
 				// if soft auto-provisioning is disabled,
 				// we refuse login for a user that already exists in another backend
 				$message = $this->l10n->t('User conflict');
-				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict']);
+				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict'], false);
 			}
-			// use potential user from other backend, create it in out backend if it does not exist
+			// use potential user from other backend, create it in our backend if it does not exist
 			$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $userFromOtherBackend);
 		} else {
+			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
 			$user = $userFromOtherBackend;
 		}
 
