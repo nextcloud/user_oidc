@@ -21,6 +21,7 @@
  */
 
 import { loadState } from '@nextcloud/initial-state'
+import '@nextcloud/dialogs/style.css'
 import Vue from 'vue'
 
 import App from './components/AdminSettings.vue'
