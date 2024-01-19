@@ -4,16 +4,16 @@ namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
+use OCP\Accounts\IAccountManager;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroupManager;
 use OCP\ILogger;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\User\Events\UserChangedEvent;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use OCP\User\Events\UserChangedEvent;
-use OCP\Accounts\IAccountManager;
 
 class ProvisioningService {
 	/** @var UserMapper */
@@ -74,10 +74,10 @@ class ProvisioningService {
 		// get name/email/quota information from the token itself
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$email = $idTokenPayload->{$emailAttribute} ?? null;
-		
+
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
 		$userName = $idTokenPayload->{$displaynameAttribute} ?? null;
-		
+
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
 
@@ -98,7 +98,7 @@ class ProvisioningService {
 
 		$regionAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_REGION, 'region');
 		$region = $idTokenPayload->{$regionAttribute} ?? null;
-		
+
 		$countryAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country');
 		$country = $idTokenPayload->{$countryAttribute} ?? null;
 
@@ -137,12 +137,12 @@ class ProvisioningService {
 		$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
 
 		$user = $this->userManager->get($backendUser->getUserId());
-		$account = $this->accountManager->getAccount($user);
-		$scope = 'v2-local';
-
-		if ($user === null || $account === null) {
+		if ($user === null) {
 			return null;
 		}
+
+		$account = $this->accountManager->getAccount($user);
+		$scope = 'v2-local';
 
 		// Update displayname
 		if (isset($userName)) {
@@ -298,10 +298,7 @@ class ProvisioningService {
 			$account->setProperty('gender', $gender, $scope, '1', '');
 		}
 
-		if ($account !== null) {
-			$this->accountManager->updateAccount($account);
-		}
-
+		$this->accountManager->updateAccount($account);
 		return $user;
 	}
 

@@ -24,9 +24,6 @@ jobs:
         include:
             - php-versions: 8.1
               databases: mysql
-              server-versions: stable24
-            - php-versions: 8.1
-              databases: mysql
               server-versions: stable25
             - php-versions: 8.1
               databases: mysql

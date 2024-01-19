@@ -25,22 +25,23 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\User;
 
-use OCA\UserOIDC\Db\Provider;
-use OCA\UserOIDC\Event\TokenValidatedEvent;
+use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Controller\LoginController;
+use OCA\UserOIDC\Db\Provider;
+use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Db\UserMapper;
+use OCA\UserOIDC\Event\TokenValidatedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
-use OCA\UserOIDC\AppInfo\Application;
-use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -103,17 +104,17 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	private $ldapService;
 
 	public function __construct(IConfig $config,
-								UserMapper $userMapper,
-								LoggerInterface $logger,
-								IRequest $request,
-								ISession $session,
-								IURLGenerator $urlGenerator,
-								IEventDispatcher $eventDispatcher,
-								DiscoveryService $discoveryService,
-								ProviderMapper $providerMapper,
-								ProviderService $providerService,
-								LdapService $ldapService,
-								IUserManager $userManager) {
+		UserMapper $userMapper,
+		LoggerInterface $logger,
+		IRequest $request,
+		ISession $session,
+		IURLGenerator $urlGenerator,
+		IEventDispatcher $eventDispatcher,
+		DiscoveryService $discoveryService,
+		ProviderMapper $providerMapper,
+		ProviderService $providerService,
+		LdapService $ldapService,
+		IUserManager $userManager) {
 		$this->config = $config;
 		$this->userMapper = $userMapper;
 		$this->logger = $logger;

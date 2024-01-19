@@ -39,7 +39,7 @@ class BaseOidcController extends Controller {
 	private $config;
 
 	public function __construct(IRequest $request,
-								IConfig $config) {
+		IConfig $config) {
 		parent::__construct(Application::APP_ID, $request);
 		$this->config = $config;
 	}
@@ -89,7 +89,7 @@ class BaseOidcController extends Controller {
 	 * @return TemplateResponse
 	 */
 	protected function buildFailureTemplateResponse(string $appName, string $templateName, array $params, int $statusCode,
-												 array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+		array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
 		$response = new TemplateResponse(
 			$appName,
 			$templateName,

@@ -23,19 +23,19 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Command;
 
+use OC\Core\Command\Base;
+use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\Security\ICrypto;
-use \Symfony\Component\Console\Command\Command;
-use OCA\UserOIDC\Db\ProviderMapper;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class UpsertProvider extends Command {
+class UpsertProvider extends Base {
 
 	/** @var ProviderService */
 	private $providerService;
@@ -90,14 +90,7 @@ class UpsertProvider extends Command {
 			->addOption('mapping-locality', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the locality')
 			->addOption('mapping-region', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the region')
 			->addOption('mapping-country', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the country')
-			->addOption('mapping-groups', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the groups')
-			->addOption(
-				'output',
-				null,
-				InputOption::VALUE_OPTIONAL,
-				'Output format (table, json or json_pretty)',
-				'table'
-			);
+			->addOption('mapping-groups', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the groups');
 		parent::configure();
 	}
 

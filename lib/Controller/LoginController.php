@@ -31,6 +31,9 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
 use OC\Authentication\Exceptions\InvalidTokenException;
 use OC\Authentication\Token\IProvider;
+use OC\User\Session as OC_UserSession;
+use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
@@ -38,8 +41,6 @@ use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
-use OCA\UserOIDC\AppInfo\Application;
-use OCA\UserOIDC\Db\ProviderMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -517,9 +518,11 @@ class LoginController extends BaseOidcController {
 		$this->logger->debug('Logging user in');
 
 		$this->userSession->setUser($user);
-		$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
-		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
-		$this->userSession->createRememberMeToken($user);
+		if ($this->userSession instanceof OC_UserSession) {
+			$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
+			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
+			$this->userSession->createRememberMeToken($user);
+		}
 
 		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
 		$this->session->set('last-password-confirm', strtotime('+4 year', time()));
@@ -741,7 +744,7 @@ class LoginController extends BaseOidcController {
 	 * @return JSONResponse
 	 */
 	private function getBackchannelLogoutErrorResponse(string $error, string $description,
-													   array $throttleMetadata = [], ?bool $throttle = null): JSONResponse {
+		array $throttleMetadata = [], ?bool $throttle = null): JSONResponse {
 		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
 		$response = new JSONResponse(
 			[

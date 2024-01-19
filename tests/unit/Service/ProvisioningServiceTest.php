@@ -2,8 +2,8 @@
 
 use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
-use OCA\UserOIDC\Service\LocalIdService;
 use OCA\UserOIDC\Service\LdapService;
+use OCA\UserOIDC\Service\LocalIdService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCP\Accounts\IAccountManager;
