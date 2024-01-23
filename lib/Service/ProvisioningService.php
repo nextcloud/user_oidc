@@ -8,12 +8,12 @@ use OCP\Accounts\IAccountManager;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroupManager;
-use OCP\ILogger;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\User\Events\UserChangedEvent;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Psr\Log\LoggerInterface;
 
 class ProvisioningService {
 	/** @var UserMapper */
@@ -31,7 +31,7 @@ class ProvisioningService {
 	/** @var IEventDispatcher */
 	private $eventDispatcher;
 
-	/** @var ILogger */
+	/** @var LoggerInterface */
 	private $logger;
 
 	/** @var ProviderService */
@@ -42,13 +42,13 @@ class ProvisioningService {
 
 
 	public function __construct(
-		LocalIdService   $idService,
-		ProviderService  $providerService,
-		UserMapper       $userMapper,
-		IUserManager     $userManager,
-		IGroupManager    $groupManager,
+		LocalIdService $idService,
+		ProviderService $providerService,
+		UserMapper $userMapper,
+		IUserManager $userManager,
+		IGroupManager $groupManager,
 		IEventDispatcher $eventDispatcher,
-		ILogger          $logger,
+		LoggerInterface $logger,
 		IAccountManager $accountManager
 	) {
 		$this->idService = $idService;

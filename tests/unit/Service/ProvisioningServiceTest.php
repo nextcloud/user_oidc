@@ -10,11 +10,11 @@ use OCP\Accounts\IAccountManager;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroup;
 use OCP\IGroupManager;
-use OCP\ILogger;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class ProvisioningServiceTest extends TestCase {
 	/** @var ProvisioningService | MockObject */
@@ -38,7 +38,7 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var IEventDispatcher | MockObject */
 	private $eventDispatcher;
 
-	/** @var ILogger | MockObject */
+	/** @var LoggerInterface | MockObject */
 	private $logger;
 
 	/** @var IAccountManager | MockObject */
@@ -53,7 +53,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->eventDispatcher = $this->createMock(IEventDispatcher::class);
-		$this->logger = $this->createMock(ILogger::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->accountManager = $this->createMock(IAccountManager::class);
 
 		$this->provisioningService = new ProvisioningService(

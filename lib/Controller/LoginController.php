@@ -54,7 +54,6 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
-use OCP\ILogger;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
@@ -63,6 +62,7 @@ use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
+use Psr\Log\LoggerInterface;
 
 class LoginController extends BaseOidcController {
 	private const STATE = 'oidc.state';
@@ -99,7 +99,7 @@ class LoginController extends BaseOidcController {
 	/** @var IEventDispatcher */
 	private $eventDispatcher;
 
-	/** @var ILogger */
+	/** @var LoggerInterface */
 	private $logger;
 
 	/** @var ProviderService */
@@ -149,7 +149,7 @@ class LoginController extends BaseOidcController {
 		SessionMapper $sessionMapper,
 		ProvisioningService $provisioningService,
 		IL10N $l10n,
-		ILogger $logger,
+		LoggerInterface $logger,
 		ICrypto $crypto
 	) {
 		parent::__construct($request, $config);
