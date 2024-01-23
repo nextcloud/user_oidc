@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use Exception;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
@@ -34,8 +35,10 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Http\Client\IClientService;
 use OCP\IRequest;
 use OCP\Security\ICrypto;
+use Psr\Log\LoggerInterface;
 
 class SettingsController extends Controller {
 
@@ -47,13 +50,19 @@ class SettingsController extends Controller {
 	private $providerService;
 	/** @var ICrypto */
 	private $crypto;
+	/** @var IClientService */
+	private $clientService;
+	/** @var LoggerInterface */
+	private $logger;
 
 	public function __construct(
 		IRequest $request,
 		ProviderMapper $providerMapper,
 		ID4MeService $id4meService,
 		ProviderService $providerService,
-		ICrypto $crypto
+		ICrypto $crypto,
+		IClientService $clientService,
+		LoggerInterface $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -61,12 +70,59 @@ class SettingsController extends Controller {
 		$this->id4meService = $id4meService;
 		$this->providerService = $providerService;
 		$this->crypto = $crypto;
+		$this->clientService = $clientService;
+		$this->logger = $logger;
+	}
+
+	public function isDiscoveryEndpointValid($url) {
+		$result = [
+			'isReachable' => false,
+			'missingFields' => [],
+		];
+
+		try {
+			$client = $this->clientService->newClient();
+			$response = $client->get($url);
+			$httpCode = $response->getStatusCode();
+			$body = $response->getBody();
+
+			// Check if the request was successful
+			if ($httpCode === Http::STATUS_OK && !empty($body)) {
+				$result['isReachable'] = true;
+				$data = json_decode($body, true);
+
+				// Check for required fields as defined in: https://openid.net/specs/openid-connect-discovery-1_0.html
+				$requiredFields = [
+					'issuer', 'authorization_endpoint', 'token_endpoint', 'jwks_uri',
+					'response_types_supported', 'subject_types_supported', 'id_token_signing_alg_values_supported',
+				];
+
+				foreach ($requiredFields as $field) {
+					if (!isset($data[$field])) {
+						$result['missingFields'][] = $field;
+					}
+				}
+			}
+		} catch (Exception $e) {
+			$this->logger->error('Discovery endpoint validation error', ['exception' => $e]);
+		}
+
+		return $result;
 	}
 
 	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
 		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
+		}
+
+		$result = $this->isDiscoveryEndpointValid($discoveryEndpoint);
+		if (!$result['isReachable']) {
+			$message = 'The discovery endpoint is not reachable.';
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
+		} elseif (!empty($result['missingFields'])) {
+			$message = 'Invalid discovery endpoint. Missing fields: ' . implode(', ', $result['missingFields']);
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
 		}
 
 		$provider = new Provider();
@@ -90,6 +146,15 @@ class SettingsController extends Controller {
 
 		if ($this->providerService->getProviderByIdentifier($identifier) === null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier does not exist'], Http::STATUS_NOT_FOUND);
+		}
+
+		$result = $this->isDiscoveryEndpointValid($discoveryEndpoint);
+		if (!$result['isReachable']) {
+			$message = 'The discovery endpoint is not reachable.';
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
+		} elseif (!empty($result['missingFields'])) {
+			$message = 'Invalid discovery endpoint. Missing fields: ' . implode(', ', $result['missingFields']);
+			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
 		}
 
 		$provider->setIdentifier($identifier);
