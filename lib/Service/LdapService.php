@@ -26,17 +26,15 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCP\AppFramework\QueryException;
-use OCP\ILogger;
 use OCP\IUser;
+use Psr\Log\LoggerInterface;
 
 class LdapService {
 
-	/**
-	 * @var ILogger
-	 */
+	/** @var LoggerInterface */
 	private $logger;
 
-	public function __construct(ILogger $logger) {
+	public function __construct(LoggerInterface $logger) {
 		$this->logger = $logger;
 	}
 

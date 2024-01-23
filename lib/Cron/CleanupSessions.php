@@ -42,8 +42,8 @@ class CleanupSessions extends TimedJob {
 	private $config;
 
 	public function __construct(ITimeFactory  $time,
-								IConfig $config,
-								SessionMapper $sessionMapper) {
+		IConfig $config,
+		SessionMapper $sessionMapper) {
 		parent::__construct($time);
 		$this->sessionMapper = $sessionMapper;
 		$this->config = $config;

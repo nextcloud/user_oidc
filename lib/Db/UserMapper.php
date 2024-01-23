@@ -28,9 +28,12 @@ namespace OCA\UserOIDC\Db;
 use OCA\UserOIDC\Service\LocalIdService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\Cache\CappedMemoryCache;
 use OCP\IDBConnection;
-use OC\Cache\CappedMemoryCache;
 
+/**
+ * @extends QBMapper<User>
+ */
 class UserMapper extends QBMapper {
 	/** @var LocalIdService */
 	private $idService;
@@ -51,11 +54,12 @@ class UserMapper extends QBMapper {
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
 	public function getUser(string $uid): User {
-		if ($this->userCache->hasKey($uid)) {
-			return $this->userCache->get($uid);
+		$cachedUser = $this->userCache->get($uid);
+		if ($cachedUser !== null) {
+			return $cachedUser;
 		}
-		$qb = $this->db->getQueryBuilder();
 
+		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')
 			->from($this->getTableName())
 			->where(

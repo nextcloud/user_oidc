@@ -68,7 +68,7 @@ class ApiController extends Controller {
 	 * @return DataResponse
 	 */
 	public function createUser(int $providerId, string  $userId, ?string $displayName = null,
-								  ?string $email = null, ?string $quota = null): DataResponse {
+		?string $email = null, ?string $quota = null): DataResponse {
 		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
 		$user = $this->userManager->get($backendUser->getUserId());
 

@@ -31,24 +31,23 @@ use OCP\ISession;
 use OCP\IUserSession;
 use OCP\Util;
 
+/**
+ * @implements IEventListener<LoadAdditionalScriptsEvent|Event>
+ */
 class TimezoneHandlingListener implements IEventListener {
 
-	/**
-	 * @var IUserSession
-	 */
+	/** @var IUserSession */
 	private $userSession;
-	/**
-	 * @var ISession
-	 */
+	/** @var ISession */
 	private $session;
-	/**
-	 * @var IConfig
-	 */
+	/** @var IConfig */
 	private $config;
 
-	public function __construct(IUserSession $userSession,
-								ISession     $session,
-								IConfig      $config) {
+	public function __construct(
+		IUserSession $userSession,
+		ISession $session,
+		IConfig $config
+	) {
 		$this->userSession = $userSession;
 		$this->session = $session;
 		$this->config = $config;

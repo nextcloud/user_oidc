@@ -54,7 +54,7 @@ class SettingsController extends Controller {
 		ID4MeService $id4meService,
 		ProviderService $providerService,
 		ICrypto $crypto
-		) {
+	) {
 		parent::__construct(Application::APP_ID, $request);
 
 		$this->providerMapper = $providerMapper;
@@ -64,7 +64,7 @@ class SettingsController extends Controller {
 	}
 
 	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
-								   array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
+		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
 		}
@@ -85,7 +85,7 @@ class SettingsController extends Controller {
 	}
 
 	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null,
-								   array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
+		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
 
 		if ($this->providerService->getProviderByIdentifier($identifier) === null) {
@@ -128,12 +128,12 @@ class SettingsController extends Controller {
 		return new JSONResponse($this->providerService->getProvidersWithSettings());
 	}
 
-	public function getID4ME(): JSONResponse {
-		return new JSONResponse($this->id4meService->getID4ME());
+	public function getID4ME(): bool {
+		return $this->id4meService->getID4ME();
 	}
 
 	public function setID4ME(bool $enabled): JSONResponse {
 		$this->id4meService->setID4ME($enabled);
-		return $this->getID4ME();
+		return new JSONResponse(['enabled' => $this->getID4ME()]);
 	}
 }

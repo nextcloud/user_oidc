@@ -27,6 +27,7 @@ namespace OCA\UserOIDC\Controller;
 
 use Id4me\RP\Exception\InvalidAuthorityIssuerException;
 use Id4me\RP\Exception\OpenIdDnsRecordNotFoundException;
+use OC\User\Session as OC_UserSession;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Id4Me;
 use OCA\UserOIDC\Db\Id4MeMapper;
@@ -51,9 +52,9 @@ use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
-use Id4me\RP\Service;
 use Id4me\RP\Exception\InvalidOpenIdDomainException;
 use Id4me\RP\Model\OpenIdConfig;
+use Id4me\RP\Service;
 use OCP\Util;
 use Psr\Log\LoggerInterface;
 
@@ -332,8 +333,10 @@ class Id4meController extends BaseOidcController {
 		$user = $this->userManager->get($backendUser->getUserId());
 
 		$this->userSession->setUser($user);
-		$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
-		$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
+		if ($this->userSession instanceof OC_UserSession) {
+			$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
+			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
+		}
 
 		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
 		$this->session->set('last-password-confirm', strtotime('+4 year', time()));

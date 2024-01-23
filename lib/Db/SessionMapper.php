@@ -26,13 +26,16 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Db;
 
 use DateTime;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+
 use OCP\IDBConnection;
 
-use OCP\AppFramework\Db\DoesNotExistException;
-
+/**
+ * @extends QBMapper<Session>
+ */
 class SessionMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
 		parent::__construct($db, 'user_oidc_sessions', Session::class);

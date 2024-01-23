@@ -28,9 +28,9 @@ namespace OCA\UserOIDC\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
+use OCP\DB\Types;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
-use OCP\DB\Types;
 
 /**
  * Auto-generated migration step: Please modify to your needs!
@@ -38,7 +38,7 @@ use OCP\DB\Types;
 class Version010304Date20231130104459 extends SimpleMigrationStep {
 	/**
 	 * @param IOutput $output
-	 * @param Closure(): ISchemaWrapper $schemaClosure
+	 * @param Closure $schemaClosure
 	 * @param array $options
 	 * @return null|ISchemaWrapper
 	 */

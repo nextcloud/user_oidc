@@ -39,6 +39,8 @@ class OIDCService {
 	private $clientService;
 	/** @var ICrypto */
 	private $crypto;
+	/** @var DiscoveryService */
+	private $discoveryService;
 
 	public function __construct(
 		DiscoveryService $discoveryService,
