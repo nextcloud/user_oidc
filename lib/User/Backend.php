@@ -379,8 +379,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @param IUser|null $userFromOtherBackend
 	 * @return IUser|null
 	 */
-	private function provisionUser(string $provisioningStrategyClass, Provider $provider, string $tokenUserId, string $headerToken,
-								   ?IUser $userFromOtherBackend): ?IUser {
+	private function provisionUser(
+		string $provisioningStrategyClass, Provider $provider, string $tokenUserId, string $headerToken,
+		?IUser $userFromOtherBackend
+	): ?IUser {
 		$provisioningStrategy = \OC::$server->get($provisioningStrategyClass);
 		return $provisioningStrategy->provisionUser($provider, $tokenUserId, $headerToken, $userFromOtherBackend);
 	}
