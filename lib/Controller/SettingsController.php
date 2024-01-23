@@ -87,7 +87,7 @@ class SettingsController extends Controller {
 			$body = $response->getBody();
 
 			// Check if the request was successful
-			if ($httpCode == 200 && !empty($body)) {
+			if ($httpCode === Http::STATUS_OK && !empty($body)) {
 				$result['isReachable'] = true;
 				$data = json_decode($body, true);
 
@@ -104,7 +104,7 @@ class SettingsController extends Controller {
 				}
 			}
 		} catch (Exception $e) {
-			$this->logger->error('Error - discovery endpoint validation: ' . $e);
+			$this->logger->error('Discovery endpoint validation error', ['exception' => $e]);
 		}
 
 		return $result;
