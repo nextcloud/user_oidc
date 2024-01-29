@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.6 – 2024-01-29
+
+### Added
+
+- Customizeable end session endpoint @nc-fkl [#724](https://github.com/nextcloud/user_oidc/pull/724)
+- Implement ICountUsersBackend to give a user count in 'occ user:report' @julien-nc [#733](https://github.com/nextcloud/user_oidc/pull/733)
+- Many additional user attribute mapping @nc-fkl [#729](https://github.com/nextcloud/user_oidc/pull/729)
+- Psalm checks @julien-nc [#765](https://github.com/nextcloud/user_oidc/pull/765)
+- Ensure the discovery endpoint result is valid @nc-fkl [#750](https://github.com/nextcloud/user_oidc/pull/750)
+
+### Changed
+
+- Bump max NC version to 29 @julien-nc [#717](https://github.com/nextcloud/user_oidc/pull/717)
+- Bump min NC version to 25 @julien-nc [#765](https://github.com/nextcloud/user_oidc/pull/765)
+- Increased database column length for client id and secret @nc-fkl [#711](https://github.com/nextcloud/user_oidc/pull/711)
+- Make PKCE optional @julien-nc [#740](https://github.com/nextcloud/user_oidc/pull/740)
+- Update nextcloud/vue to v8 @julien-nc [#763](https://github.com/nextcloud/user_oidc/pull/763)
+
+### Fixed
+
+- Avoid a lot of error log on token validation failure @aro-lew [#721](https://github.com/nextcloud/user_oidc/pull/721)
+- Avoid identifier edition when editing a provider @nc-fkl [#714](https://github.com/nextcloud/user_oidc/pull/714)
+
 ## 1.3.5 – 2023-11-24
 
 ### Added
@@ -22,12 +45,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bump min NC to 24 @julien-nc (https://github.com/nextcloud/user_oidc/pull/675)
-- Upgrade php-jwt, adjust implementation @julien-nc (https://github.com/nextcloud/user_oidc/pull/675)
+- Bump min NC to 24 @julien-nc [#675](https://github.com/nextcloud/user_oidc/pull/675)
+- Upgrade php-jwt, adjust implementation @julien-nc [#675](https://github.com/nextcloud/user_oidc/pull/675)
 
 ### Fixed
 
-- Disable password confirmation for SSO @juliushaertl (https://github.com/nextcloud/user_oidc/pull/668)
+- Disable password confirmation for SSO @juliushaertl [#668](https://github.com/nextcloud/user_oidc/pull/668)
 
 ## 1.3.3
 
