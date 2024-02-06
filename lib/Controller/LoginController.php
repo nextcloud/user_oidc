@@ -503,7 +503,7 @@ class LoginController extends BaseOidcController {
 			$this->ldapService->syncUser($userId);
 			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
 			$user = $this->userManager->get($userId);
-			if ($this->ldapService->isLdapDeletedUser($user)) {
+			if ($user !== null && $this->ldapService->isLdapDeletedUser($user)) {
 				$user = null;
 			}
 		}
