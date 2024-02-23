@@ -493,19 +493,28 @@ class LoginController extends BaseOidcController {
 
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
 
-		// Provisioning
+		// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
+		// so new users will be directly available even if they were not synced before this login attempt
+		$this->userManager->search($userId);
+		$this->ldapService->syncUser($userId);
+		$userFromOtherBackend = $this->userManager->get($userId);
+		if ($userFromOtherBackend !== null && $this->ldapService->isLdapDeletedUser($userFromOtherBackend)) {
+			$userFromOtherBackend = null;
+		}
+
 		if ($autoProvisionAllowed) {
-			$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload);
-		} else {
-			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
-			// so new users will be directly available even if they were not synced before this login attempt
-			$this->userManager->search($userId);
-			$this->ldapService->syncUser($userId);
-			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
-			$user = $this->userManager->get($userId);
-			if ($user !== null && $this->ldapService->isLdapDeletedUser($user)) {
-				$user = null;
+			$softAutoProvisionAllowed = (!isset($oidcSystemConfig['soft_auto_provision']) || $oidcSystemConfig['soft_auto_provision']);
+			if (!$softAutoProvisionAllowed && $userFromOtherBackend !== null) {
+				// if soft auto-provisioning is disabled,
+				// we refuse login for a user that already exists in another backend
+				$message = $this->l10n->t('User conflict');
+				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict'], false);
 			}
+			// use potential user from other backend, create it in our backend if it does not exist
+			$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $userFromOtherBackend);
+		} else {
+			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
+			$user = $userFromOtherBackend;
 		}
 
 		if ($user === null) {

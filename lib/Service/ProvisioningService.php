@@ -11,8 +11,6 @@ use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\User\Events\UserChangedEvent;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 class ProvisioningService {
@@ -65,12 +63,11 @@ class ProvisioningService {
 	 * @param string $tokenUserId
 	 * @param int $providerId
 	 * @param object $idTokenPayload
+	 * @param IUser|null $existingLocalUser
 	 * @return IUser|null
 	 * @throws Exception
-	 * @throws ContainerExceptionInterface
-	 * @throws NotFoundExceptionInterface
 	 */
-	public function provisionUser(string $tokenUserId, int $providerId, object $idTokenPayload): ?IUser {
+	public function provisionUser(string $tokenUserId, int $providerId, object $idTokenPayload, ?IUser $existingLocalUser = null): ?IUser {
 		// get name/email/quota information from the token itself
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$email = $idTokenPayload->{$emailAttribute} ?? null;
@@ -132,9 +129,18 @@ class ProvisioningService {
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $tokenUserId);
 		$this->eventDispatcher->dispatchTyped($event);
 
-		// Casting to get empty string if value is null
-		$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue() ?? '');
-		$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
+		// use an existing user (from another backend) when soft auto provisioning is enabled
+		if ($existingLocalUser !== null) {
+			$user = $existingLocalUser;
+		} else {
+			$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue() ?? '');
+			$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
+
+			$user = $this->userManager->get($backendUser->getUserId());
+			if ($user === null) {
+				return null;
+			}
+		}
 
 		$user = $this->userManager->get($backendUser->getUserId());
 		if ($user === null) {
@@ -154,17 +160,24 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Displayname mapping event dispatched');
 		if ($event->hasValue()) {
-			$oldDisplayName = $backendUser->getDisplayName();
 			$newDisplayName = $event->getValue();
-			if ($newDisplayName !== $oldDisplayName) {
-				$backendUser->setDisplayName($newDisplayName);
-				$this->userMapper->update($backendUser);
-			}
-			// 2 reasons why we should update the display name: It does not match the one
-			// - of our backend
-			// - returned by the user manager (outdated one before the fix in https://github.com/nextcloud/user_oidc/pull/530)
-			if ($newDisplayName !== $oldDisplayName || $newDisplayName !== $user->getDisplayName()) {
-				$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
+			if ($existingLocalUser === null) {
+				$oldDisplayName = $backendUser->getDisplayName();
+				if ($newDisplayName !== $oldDisplayName) {
+					$backendUser->setDisplayName($newDisplayName);
+					$this->userMapper->update($backendUser);
+				}
+				// 2 reasons why we should update the display name: It does not match the one
+				// - of our backend
+				// - returned by the user manager (outdated one before the fix in https://github.com/nextcloud/user_oidc/pull/530)
+				if ($newDisplayName !== $oldDisplayName || $newDisplayName !== $user->getDisplayName()) {
+					$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
+				}
+			} else {
+				$oldDisplayName = $user->getDisplayName();
+				if ($newDisplayName !== $oldDisplayName) {
+					$user->setDisplayName($newDisplayName);
+				}
 			}
 		}
 

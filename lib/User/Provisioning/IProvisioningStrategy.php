@@ -13,7 +13,8 @@ interface IProvisioningStrategy {
 	 * @param Provider $provider
 	 * @param string $tokenUserId
 	 * @param string $bearerToken
+	 * @param IUser|null $userFromOtherBackend
 	 * @return IUser|null
 	 */
-	public function provisionUser(Provider $provider, string $tokenUserId, string $bearerToken): ?IUser;
+	public function provisionUser(Provider $provider, string $tokenUserId, string $bearerToken, ?IUser $userFromOtherBackend): ?IUser;
 }
