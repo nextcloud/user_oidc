@@ -30,12 +30,14 @@ use OCA\UserOIDC\Db\Id4Me;
 use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
+use OCA\UserOIDC\Service\ID4MeService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\Http\Client\IClientService;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
@@ -75,6 +77,12 @@ class Id4meController extends Controller {
 	/** @var Service */
 	private $id4me;
 
+	/** @var ID4MeService */
+	private $id4MeService;
+
+	/** @var IL10N */
+	private $l10n;
+
 
 	public function __construct(
 		IRequest $request,
@@ -86,7 +94,9 @@ class Id4meController extends Controller {
 		IUserSession $userSession,
 		IUserManager $userManager,
 		HttpClientHelper $clientHelper,
-		Id4MeMapper $id4MeMapper
+		Id4MeMapper $id4MeMapper,
+		ID4MeService $id4MeService,
+		IL10N $l10n
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -99,6 +109,19 @@ class Id4meController extends Controller {
 		$this->userManager = $userManager;
 		$this->id4me = new Service($clientHelper);
 		$this->id4MeMapper = $id4MeMapper;
+		$this->id4MeService = $id4MeService;
+		$this->l10n = $l10n;
+	}
+
+	private function build403TemplateResponse(): Http\TemplateResponse {
+		$response = new Http\TemplateResponse(
+			'core',
+			'403',
+			['message' => $this->l10n->t('ID4Me is disabled')],
+			Http\TemplateResponse::RENDER_AS_ERROR
+		);
+		$response->setStatus(Http::STATUS_FORBIDDEN);
+		return $response;
 	}
 
 	/**
@@ -107,6 +130,9 @@ class Id4meController extends Controller {
 	 * @UseSession
 	 */
 	public function showLogin() {
+		if (!$this->id4MeService->getID4ME()) {
+			return $this->build403TemplateResponse();
+		}
 		$response = new Http\TemplateResponse('user_oidc', 'id4me/login', [], 'guest');
 
 		$csp = new Http\ContentSecurityPolicy();
@@ -122,6 +148,9 @@ class Id4meController extends Controller {
 	 * @UseSession
 	 */
 	public function login(string $domain) {
+		if (!$this->id4MeService->getID4ME()) {
+			return $this->build403TemplateResponse();
+		}
 		$authorityName = $this->id4me->discover($domain);
 		$openIdConfig = $this->id4me->getOpenIdConfig($authorityName);
 
@@ -170,6 +199,9 @@ class Id4meController extends Controller {
 	 * @UseSession
 	 */
 	public function code($state = '', $code = '', $scope = '') {
+		if (!$this->id4MeService->getID4ME()) {
+			return $this->build403TemplateResponse();
+		}
 		$params = $this->request->getParams();
 
 		if ($this->session->get(self::STATE) !== $state) {
