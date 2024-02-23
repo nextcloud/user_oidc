@@ -32,6 +32,7 @@ use OCA\UserOIDC\Db\Id4Me;
 use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
+use OCA\UserOIDC\Service\ID4MeService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -88,6 +89,8 @@ class Id4meController extends BaseOidcController {
 	private $crypto;
 	/** @var ITimeFactory */
 	private $timeFactory;
+	/** @var ID4MeService */
+	private $id4MeService;
 
 	public function __construct(
 		IRequest $request,
@@ -103,6 +106,7 @@ class Id4meController extends BaseOidcController {
 		IUserManager $userManager,
 		HttpClientHelper $clientHelper,
 		Id4MeMapper $id4MeMapper,
+		ID4MeService $id4MeService,
 		LoggerInterface $logger,
 		ICrypto $crypto
 	) {
@@ -121,6 +125,7 @@ class Id4meController extends BaseOidcController {
 		$this->logger = $logger;
 		$this->crypto = $crypto;
 		$this->timeFactory = $timeFactory;
+		$this->id4MeService = $id4MeService;
 	}
 
 	/**
@@ -129,6 +134,10 @@ class Id4meController extends BaseOidcController {
 	 * @UseSession
 	 */
 	public function showLogin() {
+		if (!$this->id4MeService->getID4ME()) {
+			$message = $this->l10n->t('ID4Me is disabled');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
+		}
 		Util::addStyle(Application::APP_ID, 'id4me-login');
 		$response = new Http\TemplateResponse('user_oidc', 'id4me/login', [], 'guest');
 
@@ -149,6 +158,10 @@ class Id4meController extends BaseOidcController {
 	 * @return RedirectResponse|TemplateResponse
 	 */
 	public function login(string $domain) {
+		if (!$this->id4MeService->getID4ME()) {
+			$message = $this->l10n->t('ID4Me is disabled');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
+		}
 		try {
 			$authorityName = $this->id4me->discover($domain);
 		} catch (InvalidOpenIdDomainException | OpenIdDnsRecordNotFoundException $e) {
@@ -218,6 +231,10 @@ class Id4meController extends BaseOidcController {
 	 * @throws \Exception
 	 */
 	public function code(string $state = '', string $code = '', string $scope = '') {
+		if (!$this->id4MeService->getID4ME()) {
+			$message = $this->l10n->t('ID4Me is disabled');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
+		}
 		if ($this->session->get(self::STATE) !== $state) {
 			$this->logger->debug('state does not match');
 
