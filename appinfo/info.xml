@@ -4,7 +4,7 @@
 	<name>OpenID Connect user backend</name>
 	<summary>Use an OpenID Connect backend to login to your Nextcloud</summary>
 	<description>Allows flexible configuration of an OIDC server as Nextcloud login user backend.</description>
-	<version>1.3.3</version>
+	<version>3.0.0</version>
 	<licence>agpl</licence>
 	<author>Roeland Jago Douma</author>
 	<author>Julius Härtl</author>
@@ -19,7 +19,7 @@
 	<bugs>https://github.com/nextcloud/user_oidc/issues</bugs>
 	<repository>https://github.com/nextcloud/user_oidc</repository>
 	<dependencies>
-		<nextcloud min-version="21" max-version="28"/>
+		<nextcloud min-version="21" max-version="23"/>
 	</dependencies>
 	<settings>
 		<admin>OCA\UserOIDC\Settings\AdminSettings</admin>
