@@ -142,11 +142,6 @@ class ProvisioningService {
 			}
 		}
 
-		$user = $this->userManager->get($backendUser->getUserId());
-		if ($user === null) {
-			return null;
-		}
-
 		$account = $this->accountManager->getAccount($user);
 		$scope = 'v2-local';
 
