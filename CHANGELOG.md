@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.0.0 – 2024-02-28
+
+### Added
+
+- Soft auto-provisioning @julien-nc [#730](https://github.com/nextcloud/user_oidc/pull/730)
+
+### Fixed
+
+- Prevent using ID4ME routes if ID4ME is disabled @julien-nc
+- Fix(login): user get null check @skjnldsv [#789](https://github.com/nextcloud/user_oidc/pull/789)
+
 ## 1.3.6 – 2024-01-29
 
 ### Added
