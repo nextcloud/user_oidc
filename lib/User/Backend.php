@@ -363,7 +363,9 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			}
 
 			// trigger any other initialization
-			\OC::$server->getEventDispatcher()->dispatch(IUser::class . '::firstLogin', new GenericEvent($user));
+			$this->eventDispatcher->dispatch(IUser::class . '::firstLogin', new GenericEvent($user));
+			// TODO add this when user_oidc min NC version is >= 28
+			// $this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
 		}
 		$user->updateLastLoginTimestamp();
 		return $firstLogin;
