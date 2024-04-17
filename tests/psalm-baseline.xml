@@ -1,3 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="5.17.0@c620f6e80d0abfca532b00bda366062aaedf6e5d">
+<files psalm-version="5.23.1@8471a896ccea3526b26d082f4461eeea467f10a4">
+  <file src="lib/Service/ProvisioningService.php">
+    <MissingDependency>
+      <code><![CDATA[Image]]></code>
+    </MissingDependency>
+  </file>
 </files>
