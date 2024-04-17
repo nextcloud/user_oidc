@@ -47,6 +47,12 @@ To skip the confirmation, use `--force`.
 ***Warning***: be careful with the deletion of a provider because in some setup, this invalidates access to all
 NextCloud accounts associated with this provider.
 
+#### Avatar support
+
+The avatar attribute on your IdP side may contain a URL pointing to an image file or directly a base64 encoded image.
+The base64 should start with `data:image/png;base64,` or `data:image/jpeg;base64,`.
+The image should be in JPG or PNG format and have the same width and height.
+
 ### Disable default claims
 
 Even if you don't map any attribute for quota, display name, email or groups, this application will
