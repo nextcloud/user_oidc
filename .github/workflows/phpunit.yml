@@ -31,6 +31,8 @@ jobs:
             server-versions: stable27
           - php-versions: 7.4
             server-versions: stable26
+          - php-versions: 8.0
+            server-versions: master
         include:
           - php-versions: 8.2
             databases: mysql
