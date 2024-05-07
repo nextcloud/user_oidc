@@ -24,6 +24,9 @@ namespace OC\Core\Command {
 		public function setName(string $name) {
 		}
 
+		public function addOption(string $name, $shortcut = null, int $mode = null, string $description = '', $default = null) {
+		}
+
 		public function getApplication(): ?Application {
 		}
 
