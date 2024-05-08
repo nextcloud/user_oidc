@@ -44,6 +44,113 @@ class UpsertProvider extends Base {
 	/** @var ICrypto */
 	private $crypto;
 
+	private const EXTRA_OPTIONS = [
+		'unique-uid' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_UNIQUE_UID,
+			'description' => 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable',
+		],
+		'check-bearer' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_CHECK_BEARER,
+			'description' => 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable',
+		],
+		'send-id-token-hint' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_SEND_ID_TOKEN_HINT,
+			'description' => 'Flag if ID token should be included as a parameter to the end_session_endpoint URL when using unified logout. 1 to enable (default), 0 to disable',
+		],
+		'mapping-display-name' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_DISPLAYNAME,
+			'description' => 'Attribute mapping of the display name',
+		],
+		'mapping-email' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_EMAIL,
+			'description' => 'Attribute mapping of the email address',
+		],
+		'mapping-quota' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_QUOTA,
+			'description' => 'Attribute mapping of the quota',
+		],
+		'mapping-uid' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_UID,
+			'description' => 'Attribute mapping of the user id',
+		],
+		'extra-claims' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_EXTRA_CLAIMS,
+			'description' => 'Extra claims to request when getting tokens',
+		],
+		'mapping-website' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_WEBSITE,
+			'description' => 'Attribute mapping of the website',
+		],
+		'mapping-avatar' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_AVATAR,
+			'description' => 'Attribute mapping of the avatar',
+		],
+		'mapping-twitter' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_TWITTER,
+			'description' => 'Attribute mapping of twitter',
+		],
+		'mapping-fediverse' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_FEDIVERSE,
+			'description' => 'Attribute mapping of the fediverse',
+		],
+		'mapping-organisation' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ORGANISATION,
+			'description' => 'Attribute mapping of the organisation',
+		],
+		'mapping-role' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ROLE,
+			'description' => 'Attribute mapping of the role',
+		],
+		'mapping-headline' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_HEADLINE,
+			'description' => 'Attribute mapping of the headline',
+		],
+		'mapping-biography' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_BIOGRAPHY,
+			'description' => 'Attribute mapping of the biography',
+		],
+		'mapping-phone' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_PHONE,
+			'description' => 'Attribute mapping of the phone',
+		],
+		'mapping-gender' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_GENDER,
+			'description' => 'Attribute mapping of the gender',
+		],
+		'mapping-address' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ADDRESS,
+			'description' => 'Attribute mapping of the address',
+		],
+		'mapping-street_address' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_STREETADDRESS,
+			'description' => 'Attribute mapping of the street address',
+		],
+		'mapping-postal_code' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_POSTALCODE,
+			'description' => 'Attribute mapping of the postal code',
+		],
+		'mapping-locality' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_LOCALITY,
+			'description' => 'Attribute mapping of the locality',
+		],
+		'mapping-region' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_REGION,
+			'description' => 'Attribute mapping of the region',
+		],
+		'mapping-country' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_COUNTRY,
+			'description' => 'Attribute mapping of the country',
+		],
+		'group-provisioning' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_GROUP_PROVISIONING,
+			'description' => 'Flag to toggle group provisioning. 1 to enable, 0 to disable (default)',
+		],
+		'mapping-groups' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_GROUPS,
+			'description' => 'Attribute mapping of the groups',
+		],
+	];
+
 	public function __construct(
 		ProviderService $providerService,
 		ProviderMapper $providerMapper,
@@ -64,33 +171,10 @@ class UpsertProvider extends Base {
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
 			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
 			->addOption('endsessionendpointuri', 'e', InputOption::VALUE_OPTIONAL, 'OpenID end session endpoint uri')
-
-			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"')
-			->addOption('unique-uid', null, InputOption::VALUE_OPTIONAL, 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable')
-			->addOption('check-bearer', null, InputOption::VALUE_OPTIONAL, 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable')
-			->addOption('send-id-token-hint', null, InputOption::VALUE_OPTIONAL, 'Flag if ID token should be included as a parameter to the end_session_endpoint URL when using unified logout. 1 to enable (default), 0 to disable')
-			->addOption('mapping-display-name', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the display name')
-			->addOption('mapping-email', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the email address')
-			->addOption('mapping-quota', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the quota')
-			->addOption('mapping-uid', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the user id')
-			->addOption('extra-claims', null, InputOption::VALUE_OPTIONAL, 'Extra claims to request when getting tokens')
-			->addOption('mapping-website', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the website')
-			->addOption('mapping-avatar', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the avatar')
-			->addOption('mapping-twitter', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of twitter')
-			->addOption('mapping-fediverse', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the fediverse')
-			->addOption('mapping-organisation', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the organisation')
-			->addOption('mapping-role', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the role')
-			->addOption('mapping-headline', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the headline')
-			->addOption('mapping-biography', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the biography')
-			->addOption('mapping-phone', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the phone')
-			->addOption('mapping-gender', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the gender')
-			->addOption('mapping-address', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the address')
-			->addOption('mapping-street_address', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the street address')
-			->addOption('mapping-postal_code', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the postal code')
-			->addOption('mapping-locality', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the locality')
-			->addOption('mapping-region', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the region')
-			->addOption('mapping-country', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the country')
-			->addOption('mapping-groups', null, InputOption::VALUE_OPTIONAL, 'Attribute mapping of the groups');
+			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"');
+		foreach (self::EXTRA_OPTIONS as $name => $option) {
+			$this->addOption($name, $option['shortcut'], $option['mode'], $option['description'], $option['default']);
+		}
 		parent::configure();
 	}
 
@@ -114,14 +198,8 @@ class UpsertProvider extends Base {
 		// check if any option for updating is provided
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
-				'identifier', 'clientid', 'clientsecret', 'discoveryuri',
-				'scope', 'unique-uid', 'check-bearer', 'endsessionendpointuri', 'mapping-uid',
-				'mapping-display-name', 'mapping-email', 'mapping-quota', 'mapping-fediverse',
-				'mapping-address', 'mapping-street_address', 'mapping-postal_code', 'mapping-website',
-				'mapping-avatar', 'mapping-twitter', 'mapping-locality', 'mapping-region',
-				'mapping-country', 'mapping-organisation', 'mapping-role', 'mapping-headline',
-				'mapping-biography', 'mapping-phone', 'mapping-gender', 'mapping-groups',
-				'extra-claims'
+				'identifier', 'clientid', 'clientsecret', 'discoveryuri', 'scope',
+				...array_keys(self::EXTRA_OPTIONS),
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
 
@@ -129,7 +207,7 @@ class UpsertProvider extends Base {
 			try {
 				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
 			} catch (DoesNotExistException $e) {
-				$output->writeln('Provider not found.');
+				$output->writeln('Provider not found');
 				return -1;
 			}
 			$provider = $this->providerService->getProviderWithSettings($provider->getId());
@@ -143,7 +221,6 @@ class UpsertProvider extends Base {
 				return 0;
 			}
 
-			$provider['settings'][ProviderService::SETTING_UNIQUE_UID] = $provider['settings'][ProviderService::SETTING_UNIQUE_UID] ? '1' : '0';
 			$provider['settings'] = json_encode($provider['settings']);
 			$table = new Table($output);
 			$table->setHeaders(['ID', 'Identifier', 'Client ID', 'Discovery endpoint', 'End session endpoint', 'Advanced settings']);
@@ -169,80 +246,15 @@ class UpsertProvider extends Base {
 			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return -1;
 		}
-		if (($checkBearer = $input->getOption('check-bearer')) !== null) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_CHECK_BEARER, (string)$checkBearer === '0' ? '0' : '1');
-		}
-		if (($sendIdTokenHint = $input->getOption('send-id-token-hint')) !== null) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_SEND_ID_TOKEN_HINT, (string)$sendIdTokenHint === '0' ? '0' : '1');
-		}
-		if (($uniqueUid = $input->getOption('unique-uid')) !== null) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_UNIQUE_UID, (string)$uniqueUid === '0' ? '0' : '1');
-		}
-		if ($mapping = $input->getOption('mapping-display-name')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_DISPLAYNAME, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-email')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_EMAIL, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-quota')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_QUOTA, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-uid')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-fediverse')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_FEDIVERSE, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-groups')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_GROUPS, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-address')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ADDRESS, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-street_address')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_STREETADDRESS, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-postal_code')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_POSTALCODE, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-locality')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_LOCALITY, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-region')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_REGION, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-country')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_COUNTRY, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-website')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_WEBSITE, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-avatar')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_AVATAR, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-twitter')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_TWITTER, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-organisation')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ORGANISATION, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-role')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_ROLE, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-headline')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_HEADLINE, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-biography')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_BIOGRAPHY, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-phone')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_PHONE, $mapping);
-		}
-		if ($mapping = $input->getOption('mapping-gender')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_MAPPING_GENDER, $mapping);
-		}
-		if ($extraClaims = $input->getOption('extra-claims')) {
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_EXTRA_CLAIMS, $extraClaims);
+		foreach (self::EXTRA_OPTIONS as $name => $option) {
+			if (($value = $input->getOption($name)) !== null) {
+				if (array_key_exists($option['setting_key'], ProviderService::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
+					$value = (string)$value === '0' ? '0' : '1';
+				} else {
+					$value = (string)$value;
+				}
+				$this->providerService->setSetting($provider->getId(), $option['setting_key'], $value);
+			}
 		}
 		return 0;
 	}

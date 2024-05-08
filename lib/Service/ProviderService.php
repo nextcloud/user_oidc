@@ -65,14 +65,14 @@ class ProviderService {
 	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
 
-	private const BOOLEAN_SETTINGS = array(
-		self::SETTING_GROUP_PROVISIONING,
-		self::SETTING_PROVIDER_BASED_ID,
-		self::SETTING_BEARER_PROVISIONING,
-		self::SETTING_UNIQUE_UID,
-		self::SETTING_CHECK_BEARER,
-		self::SETTING_SEND_ID_TOKEN_HINT
-	);
+	public const BOOLEAN_SETTINGS_DEFAULT_VALUES = [
+		self::SETTING_GROUP_PROVISIONING => false,
+		self::SETTING_PROVIDER_BASED_ID => false,
+		self::SETTING_BEARER_PROVISIONING => false,
+		self::SETTING_UNIQUE_UID => true,
+		self::SETTING_CHECK_BEARER => false,
+		self::SETTING_SEND_ID_TOKEN_HINT => false,
+	];
 
 
 	/** @var IConfig */
@@ -132,6 +132,8 @@ class ProviderService {
 		foreach ($this->getSupportedSettings() as $setting) {
 			$this->config->deleteAppValue(Application::APP_ID, $this->getSettingsKey($providerId, $setting));
 		}
+		$this->config->deleteAppValue(Application::APP_ID, $this->getSettingsKey($providerId, self::SETTING_JWKS_CACHE));
+		$this->config->deleteAppValue(Application::APP_ID, $this->getSettingsKey($providerId, self::SETTING_JWKS_CACHE_TIMESTAMP));
 	}
 
 	public function setSetting(int $providerId, string $key, string $value): void {
@@ -184,15 +186,17 @@ class ProviderService {
 	}
 
 	private function convertFromJSON(string $key, $value): string {
-		if (in_array($key, self::BOOLEAN_SETTINGS)) {
-			$value = $value ? '1' : '0';
+		if (array_key_exists($key, self::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
+			return $value ? '1' : '0';
 		}
 		return (string)$value;
 	}
 
 	private function convertToJSON(string $key, $value) {
-		// default is disabled (if not set)
-		if (in_array($key, self::BOOLEAN_SETTINGS)) {
+		if (array_key_exists($key, self::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
+			if ($value === '') {
+				return self::BOOLEAN_SETTINGS_DEFAULT_VALUES[$key];
+			}
 			return $value === '1';
 		}
 		return (string)$value;
