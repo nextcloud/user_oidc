@@ -45,32 +45,110 @@ class UpsertProvider extends Base {
 	private $crypto;
 
 	private const EXTRA_OPTIONS = [
-		'unique-uid' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable', 'default' => null, 'setting_key' => ProviderService::SETTING_UNIQUE_UID],
-		'check-bearer' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable', 'default' => null, 'setting_key' => ProviderService::SETTING_CHECK_BEARER],
-		'send-id-token-hint' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Flag if ID token should be included as a parameter to the end_session_endpoint URL when using unified logout. 1 to enable (default), 0 to disable', 'default' => null, 'setting_key' => ProviderService::SETTING_SEND_ID_TOKEN_HINT],
-		'mapping-display-name' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the display name', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_DISPLAYNAME],
-		'mapping-email' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the email address', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_EMAIL],
-		'mapping-quota' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the quota', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_QUOTA],
-		'mapping-uid' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the user id', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_UID],
-		'extra-claims' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Extra claims to request when getting tokens', 'default' => null, 'setting_key' => ProviderService::SETTING_EXTRA_CLAIMS],
-		'mapping-website' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the website', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_WEBSITE],
-		'mapping-avatar' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the avatar', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_AVATAR],
-		'mapping-twitter' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of twitter', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_TWITTER],
-		'mapping-fediverse' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the fediverse', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_FEDIVERSE],
-		'mapping-organisation' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the organisation', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ORGANISATION],
-		'mapping-role' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the role', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ROLE],
-		'mapping-headline' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the headline', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_HEADLINE],
-		'mapping-biography' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the biography', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_BIOGRAPHY],
-		'mapping-phone' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the phone', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_PHONE],
-		'mapping-gender' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the gender', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_GENDER],
-		'mapping-address' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the address', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ADDRESS],
-		'mapping-street_address' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the street address', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_STREETADDRESS],
-		'mapping-postal_code' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the postal code', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_POSTALCODE],
-		'mapping-locality' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the locality', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_LOCALITY],
-		'mapping-region' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the region', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_REGION],
-		'mapping-country' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the country', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_COUNTRY],
-		'group-provisioning' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Flag to toggle group provisioning. 1 to enable, 0 to disable (default)', 'default' => null, 'setting_key' => ProviderService::SETTING_GROUP_PROVISIONING],
-		'mapping-groups' => ['shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'description' => 'Attribute mapping of the groups', 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_GROUPS],
+		'unique-uid' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_UNIQUE_UID,
+			'description' => 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable',
+		],
+		'check-bearer' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_CHECK_BEARER,
+			'description' => 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable',
+		],
+		'send-id-token-hint' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_SEND_ID_TOKEN_HINT,
+			'description' => 'Flag if ID token should be included as a parameter to the end_session_endpoint URL when using unified logout. 1 to enable (default), 0 to disable',
+		],
+		'mapping-display-name' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_DISPLAYNAME,
+			'description' => 'Attribute mapping of the display name',
+		],
+		'mapping-email' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_EMAIL,
+			'description' => 'Attribute mapping of the email address',
+		],
+		'mapping-quota' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_QUOTA,
+			'description' => 'Attribute mapping of the quota',
+		],
+		'mapping-uid' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_UID,
+			'description' => 'Attribute mapping of the user id',
+		],
+		'extra-claims' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_EXTRA_CLAIMS,
+			'description' => 'Extra claims to request when getting tokens',
+		],
+		'mapping-website' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_WEBSITE,
+			'description' => 'Attribute mapping of the website',
+		],
+		'mapping-avatar' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_AVATAR,
+			'description' => 'Attribute mapping of the avatar',
+		],
+		'mapping-twitter' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_TWITTER,
+			'description' => 'Attribute mapping of twitter',
+		],
+		'mapping-fediverse' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_FEDIVERSE,
+			'description' => 'Attribute mapping of the fediverse',
+		],
+		'mapping-organisation' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ORGANISATION,
+			'description' => 'Attribute mapping of the organisation',
+		],
+		'mapping-role' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ROLE,
+			'description' => 'Attribute mapping of the role',
+		],
+		'mapping-headline' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_HEADLINE,
+			'description' => 'Attribute mapping of the headline',
+		],
+		'mapping-biography' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_BIOGRAPHY,
+			'description' => 'Attribute mapping of the biography',
+		],
+		'mapping-phone' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_PHONE,
+			'description' => 'Attribute mapping of the phone',
+		],
+		'mapping-gender' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_GENDER,
+			'description' => 'Attribute mapping of the gender',
+		],
+		'mapping-address' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_ADDRESS,
+			'description' => 'Attribute mapping of the address',
+		],
+		'mapping-street_address' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_STREETADDRESS,
+			'description' => 'Attribute mapping of the street address',
+		],
+		'mapping-postal_code' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_POSTALCODE,
+			'description' => 'Attribute mapping of the postal code',
+		],
+		'mapping-locality' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_LOCALITY,
+			'description' => 'Attribute mapping of the locality',
+		],
+		'mapping-region' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_REGION,
+			'description' => 'Attribute mapping of the region',
+		],
+		'mapping-country' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_COUNTRY,
+			'description' => 'Attribute mapping of the country',
+		],
+		'group-provisioning' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_GROUP_PROVISIONING,
+			'description' => 'Flag to toggle group provisioning. 1 to enable, 0 to disable (default)',
+		],
+		'mapping-groups' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_MAPPING_GROUPS,
+			'description' => 'Attribute mapping of the groups',
+		],
 	];
 
 	public function __construct(
