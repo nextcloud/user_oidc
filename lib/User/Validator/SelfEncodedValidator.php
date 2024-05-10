@@ -31,6 +31,7 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Provisioning\SelfEncodedTokenProvisioning;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -42,11 +43,19 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 	private $logger;
 	/** @var ITimeFactory */
 	private $timeFactory;
+	/** @var IConfig */
+	private $config;
 
-	public function __construct(DiscoveryService $discoveryService, LoggerInterface $logger, ITimeFactory $timeFactory) {
+	public function __construct(
+		DiscoveryService $discoveryService,
+		LoggerInterface $logger,
+		ITimeFactory $timeFactory,
+		IConfig $config
+	) {
 		$this->discoveryService = $discoveryService;
 		$this->logger = $logger;
 		$this->timeFactory = $timeFactory;
+		$this->config = $config;
 	}
 
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {
@@ -68,6 +77,36 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		if ($payload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('OIDC token has expired');
 			return null;
+		}
+
+		$discovery = $this->discoveryService->obtainDiscovery($provider);
+		if ($payload->iss !== $discovery['issuer']) {
+			$this->logger->debug('This token is issued by the wrong issuer, it does not match the one from the discovery endpoint');
+			return null;
+		}
+
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$checkAudience = !isset($oidcSystemConfig['selfencoded_bearer_validation_audience_check'])
+			|| !in_array($oidcSystemConfig['selfencoded_bearer_validation_audience_check'], [false, 'false', 0, '0'], true);
+		if ($checkAudience) {
+			if (!($payload->aud === $provider->getClientId() || in_array($provider->getClientId(), $payload->aud, true))) {
+				$this->logger->debug('This token is not for us, the audience does not match the client ID');
+				return null;
+			}
+
+			// If the ID Token contains multiple audiences, the Client SHOULD verify that an azp Claim is present.
+			// If an azp (authorized party) Claim is present, the Client SHOULD verify that its client_id is the Claim Value.
+			if (is_array($payload->aud) && count($payload->aud) > 1) {
+				if (isset($payload->azp)) {
+					if ($payload->azp !== $provider->getClientId()) {
+						$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
+						return null;
+					}
+				} else {
+					$this->logger->debug('Multiple audiences but no authorized party (azp) in the id token');
+					return null;
+				}
+			}
 		}
 
 		// find the user ID
