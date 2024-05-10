@@ -21,7 +21,16 @@ namespace OC\Core\Command {
 		protected function configure() {
 		}
 
+		/**
+		 * @return $this
+		 */
 		public function setName(string $name) {
+		}
+
+		/**
+		 * @return $this
+		 */
+		public function setDescription(string $description) {
 		}
 
 		/**
