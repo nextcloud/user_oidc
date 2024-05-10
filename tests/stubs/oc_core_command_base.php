@@ -24,6 +24,9 @@ namespace OC\Core\Command {
 		public function setName(string $name) {
 		}
 
+		/**
+		 * @return $this
+		 */
 		public function addOption(string $name, $shortcut = null, int $mode = null, string $description = '', $default = null) {
 		}
 
@@ -36,6 +39,9 @@ namespace OC\Core\Command {
 		public function getHelper(string $name) {
 		}
 
+		/**
+		 * @return $this
+		 */
 		public function addArgument(string $name, int $mode = null, string $description = '', $default = null) {
 		}
 
