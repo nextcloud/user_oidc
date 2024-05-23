@@ -89,16 +89,21 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		$checkAudience = !isset($oidcSystemConfig['selfencoded_bearer_validation_audience_check'])
 			|| !in_array($oidcSystemConfig['selfencoded_bearer_validation_audience_check'], [false, 'false', 0, '0'], true);
 		if ($checkAudience) {
-			if (!($payload->aud === $provider->getClientId() || in_array($provider->getClientId(), $payload->aud, true))) {
+			$tokenAudience = $payload->aud;
+			$providerClientId = $provider->getClientId();
+			if (
+				(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
+					|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
+			) {
 				$this->logger->debug('This token is not for us, the audience does not match the client ID');
 				return null;
 			}
 
 			// If the ID Token contains multiple audiences, the Client SHOULD verify that an azp Claim is present.
 			// If an azp (authorized party) Claim is present, the Client SHOULD verify that its client_id is the Claim Value.
-			if (is_array($payload->aud) && count($payload->aud) > 1) {
+			if (is_array($tokenAudience) && count($tokenAudience) > 1) {
 				if (isset($payload->azp)) {
-					if ($payload->azp !== $provider->getClientId()) {
+					if ($payload->azp !== $providerClientId) {
 						$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
 						return null;
 					}

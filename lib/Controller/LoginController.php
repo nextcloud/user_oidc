@@ -455,7 +455,12 @@ class LoginController extends BaseOidcController {
 		}
 
 		// Verify audience
-		if (!($idTokenPayload->aud === $provider->getClientId() || in_array($provider->getClientId(), $idTokenPayload->aud, true))) {
+		$tokenAudience = $idTokenPayload->aud;
+		$providerClientId = $provider->getClientId();
+		if (
+			(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
+				|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
+		) {
 			$this->logger->debug('This token is not for us');
 			$message = $this->l10n->t('The audience does not match ours');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud]);
