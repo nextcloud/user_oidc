@@ -154,7 +154,7 @@ class ProvisioningServiceTest extends TestCase {
 			],
 			[
 				'1',
-				'',
+				'group2',
 				(object)[
 					'groups' => [
 						'group2'
