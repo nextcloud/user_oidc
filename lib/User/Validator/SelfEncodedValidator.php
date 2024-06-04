@@ -99,18 +99,11 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 				return null;
 			}
 
-			// If the ID Token contains multiple audiences, the Client SHOULD verify that an azp Claim is present.
-			// If an azp (authorized party) Claim is present, the Client SHOULD verify that its client_id is the Claim Value.
-			if (is_array($tokenAudience) && count($tokenAudience) > 1) {
-				if (isset($payload->azp)) {
-					if ($payload->azp !== $providerClientId) {
-						$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
-						return null;
-					}
-				} else {
-					$this->logger->debug('Multiple audiences but no authorized party (azp) in the id token');
-					return null;
-				}
+			// ref https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
+			// If the azp claim is present, it should be the client ID
+			if (isset($payload->azp) && $payload->azp !== $providerClientId) {
+				$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
+				return null;
 			}
 		}
 
