@@ -31,6 +31,7 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\User\Provisioning\SelfEncodedTokenProvisioning;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -42,11 +43,19 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 	private $logger;
 	/** @var ITimeFactory */
 	private $timeFactory;
+	/** @var IConfig */
+	private $config;
 
-	public function __construct(DiscoveryService $discoveryService, LoggerInterface $logger, ITimeFactory $timeFactory) {
+	public function __construct(
+		DiscoveryService $discoveryService,
+		LoggerInterface $logger,
+		ITimeFactory $timeFactory,
+		IConfig $config
+	) {
 		$this->discoveryService = $discoveryService;
 		$this->logger = $logger;
 		$this->timeFactory = $timeFactory;
+		$this->config = $config;
 	}
 
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {
@@ -68,6 +77,34 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		if ($payload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('OIDC token has expired');
 			return null;
+		}
+
+		$discovery = $this->discoveryService->obtainDiscovery($provider);
+		if ($payload->iss !== $discovery['issuer']) {
+			$this->logger->debug('This token is issued by the wrong issuer, it does not match the one from the discovery endpoint');
+			return null;
+		}
+
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$checkAudience = !isset($oidcSystemConfig['selfencoded_bearer_validation_audience_check'])
+			|| !in_array($oidcSystemConfig['selfencoded_bearer_validation_audience_check'], [false, 'false', 0, '0'], true);
+		if ($checkAudience) {
+			$tokenAudience = $payload->aud;
+			$providerClientId = $provider->getClientId();
+			if (
+				(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
+					|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
+			) {
+				$this->logger->debug('This token is not for us, the audience does not match the client ID');
+				return null;
+			}
+
+			// ref https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
+			// If the azp claim is present, it should be the client ID
+			if (isset($payload->azp) && $payload->azp !== $providerClientId) {
+				$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
+				return null;
+			}
 		}
 
 		// find the user ID

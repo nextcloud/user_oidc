@@ -175,6 +175,16 @@ it is possible to disable the classic "self-encoded" validation:
 ],
 ```
 
+### Disable audience check in bearer token validation
+
+The `audience` and `azp` token claims will be checked when validating a bearer token for authenticated API requests.
+You can disable this check with this config value:
+``` php
+'user_oidc' => [
+    'selfencoded_bearer_validation_audience_check' => false,
+],
+```
+
 ## Building the app
 
 Requirements for building:
