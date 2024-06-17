@@ -314,7 +314,7 @@ class ProvisioningService {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $idTokenPayload->{$groupsAttribute} ?? null;
 
-		$groupsWhitelistRegexAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, 'whitelist');
+		$groupsWhitelistRegexAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');
 		$groupsWhitelistRegex = $groupsWhitelistRegexAttribute ?? null;
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GROUPS, $idTokenPayload, json_encode($groupsData));
@@ -357,7 +357,7 @@ class ProvisioningService {
 	}
 
 	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
-		$groupsWhitelistRegexAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, 'whitelist');
+		$groupsWhitelistRegexAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');
 		$groupsWhitelistRegex = $groupsWhitelistRegexAttribute ?? null;
 
 		$syncGroups = $this->getSyncGroupsOfToken($providerId, $idTokenPayload);
