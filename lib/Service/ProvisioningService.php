@@ -310,7 +310,7 @@ class ProvisioningService {
 		return $user;
 	}
 
-	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
+	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload) {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $idTokenPayload->{$groupsAttribute} ?? null;
 
@@ -324,7 +324,6 @@ class ProvisioningService {
 		if ($event->hasValue() && $event->getValue() !== null) {
 			// casted to null if empty value
 			$groups = json_decode($event->getValue() ?? '');
-			$userGroups = $this->groupManager->getUserGroups($user);
 			$syncGroups = [];
 
 			foreach ($groups as $k => $v) {
@@ -351,6 +350,21 @@ class ProvisioningService {
 				$syncGroups[] = $group;
 			}
 
+			return $syncGroups;
+		}
+
+		return null;
+	}
+
+	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
+		$groupsWhitelistRegexAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, 'whitelist');
+		$groupsWhitelistRegex = $groupsWhitelistRegexAttribute ?? null;
+
+		$syncGroups = $this->getSyncGroupsOfToken($providerId, $idTokenPayload);
+
+		if($syncGroups !== null) {
+
+			$userGroups = $this->groupManager->getUserGroups($user);
 			foreach ($userGroups as $group) {
 				if (!in_array($group->getGID(), array_column($syncGroups, 'gid'))) {
 					if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->getGID())) {
