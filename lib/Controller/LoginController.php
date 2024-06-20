@@ -256,8 +256,7 @@ class LoginController extends BaseOidcController {
 
 		// by default: default claims are ENABLED
 		// default claims are historically for quota, email, displayName and groups
-		$isDefaultClaimsEnabled = !isset($oidcSystemConfig['enable_default_claims'])
-			|| in_array($oidcSystemConfig['enable_default_claims'], [true, 'true', 1, '1'], true);
+		$isDefaultClaimsEnabled = !isset($oidcSystemConfig['enable_default_claims']) || $oidcSystemConfig['enable_default_claims'] !== false;
 		if ($isDefaultClaimsEnabled) {
 			// default claims for quota, email, displayName and groups is ENABLED
 			$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
