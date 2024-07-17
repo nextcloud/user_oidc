@@ -414,10 +414,33 @@ class LoginController extends BaseOidcController {
 			if ($isPkceEnabled) {
 				$requestBody['code_verifier'] = $this->session->get(self::CODE_VERIFIER); // Set for the PKCE flow
 			}
+
+			// token_endpoint_auth_method client_secret_post does not require additional headers
+			$headers = [];
+
+			// Support for client_secret_basic only token_endpoint_auth_method
+			if (array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
+				is_array($discovery['token_endpoint_auth_methods_supported']) &&
+				in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported']) &&
+				!in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'])) {
+
+				// We need to provide Authorization header
+				$credentials = base64_encode($provider->getClientId() . ':' . $providerClientSecret);
+				$headers = [
+					'Authorization' => 'Basic ' . $credentials,
+					'Content-Type' => 'application/x-www-form-urlencoded',
+				];
+
+				// We must not send client_id and client_secret in the body
+				unset($requestBody['client_id']);
+				unset($requestBody['client_secret']);
+			}
+
 			$result = $client->post(
 				$discovery['token_endpoint'],
 				[
 					'body' => $requestBody,
+					'headers' => $headers,
 				]
 			);
 		} catch (ClientException | ServerException $e) {
