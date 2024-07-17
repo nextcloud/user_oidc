@@ -406,8 +406,6 @@ class LoginController extends BaseOidcController {
 		try {
 			$requestBody = [
 				'code' => $code,
-				'client_id' => $provider->getClientId(),
-				'client_secret' => $providerClientSecret,
 				'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 				'grant_type' => 'authorization_code',
 			];
@@ -415,25 +413,26 @@ class LoginController extends BaseOidcController {
 				$requestBody['code_verifier'] = $this->session->get(self::CODE_VERIFIER); // Set for the PKCE flow
 			}
 
-			// token_endpoint_auth_method client_secret_post does not require additional headers
 			$headers = [];
-
-			// Support for client_secret_basic only token_endpoint_auth_method
+			$tokenEndpointAuthMethod = 'client_secret_basic';
+			// Use POST only if client_secret_basic is not available
 			if (array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
 				is_array($discovery['token_endpoint_auth_methods_supported']) &&
-				in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported']) &&
-				!in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'])) {
+				in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported']) &&
+				!in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported'])) {
+				$tokenEndpointAuthMethod = 'client_secret_post';
+			}
 
-				// We need to provide Authorization header
+			if ($tokenEndpointAuthMethod == 'client_secret_basic') {
 				$credentials = base64_encode($provider->getClientId() . ':' . $providerClientSecret);
 				$headers = [
 					'Authorization' => 'Basic ' . $credentials,
 					'Content-Type' => 'application/x-www-form-urlencoded',
 				];
-
-				// We must not send client_id and client_secret in the body
-				unset($requestBody['client_id']);
-				unset($requestBody['client_secret']);
+			} else {
+				// Assuming client_secret_post as no other option is supported currently
+				$requestBody['client_id'] = $provider->getClientId();
+				$requestBody['client_secret'] = $providerClientSecret;
 			}
 
 			$result = $client->post(
