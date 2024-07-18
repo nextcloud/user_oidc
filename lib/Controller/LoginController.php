@@ -415,7 +415,7 @@ class LoginController extends BaseOidcController {
 
 			$headers = [];
 			$tokenEndpointAuthMethod = 'client_secret_basic';
-			// Use POST only if client_secret_basic is not available
+			// Use POST only if client_secret_basic is not available as supported by the endpoint
 			if (array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
 				is_array($discovery['token_endpoint_auth_methods_supported']) &&
 				in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported']) &&
@@ -424,9 +424,8 @@ class LoginController extends BaseOidcController {
 			}
 
 			if ($tokenEndpointAuthMethod == 'client_secret_basic') {
-				$credentials = base64_encode($provider->getClientId() . ':' . $providerClientSecret);
 				$headers = [
-					'Authorization' => 'Basic ' . $credentials,
+					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
 					'Content-Type' => 'application/x-www-form-urlencoded',
 				];
 			} else {
