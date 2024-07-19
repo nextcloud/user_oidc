@@ -406,18 +406,39 @@ class LoginController extends BaseOidcController {
 		try {
 			$requestBody = [
 				'code' => $code,
-				'client_id' => $provider->getClientId(),
-				'client_secret' => $providerClientSecret,
 				'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 				'grant_type' => 'authorization_code',
 			];
 			if ($isPkceEnabled) {
 				$requestBody['code_verifier'] = $this->session->get(self::CODE_VERIFIER); // Set for the PKCE flow
 			}
+
+			$headers = [];
+			$tokenEndpointAuthMethod = 'client_secret_basic';
+			// Use POST only if client_secret_basic is not available as supported by the endpoint
+			if (array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
+				is_array($discovery['token_endpoint_auth_methods_supported']) &&
+				in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported']) &&
+				!in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported'])) {
+				$tokenEndpointAuthMethod = 'client_secret_post';
+			}
+
+			if ($tokenEndpointAuthMethod == 'client_secret_basic') {
+				$headers = [
+					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
+					'Content-Type' => 'application/x-www-form-urlencoded',
+				];
+			} else {
+				// Assuming client_secret_post as no other option is supported currently
+				$requestBody['client_id'] = $provider->getClientId();
+				$requestBody['client_secret'] = $providerClientSecret;
+			}
+
 			$result = $client->post(
 				$discovery['token_endpoint'],
 				[
 					'body' => $requestBody,
+					'headers' => $headers,
 				]
 			);
 		} catch (ClientException | ServerException $e) {
