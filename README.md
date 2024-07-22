@@ -47,6 +47,20 @@ To skip the confirmation, use `--force`.
 ***Warning***: be careful with the deletion of a provider because in some setup, this invalidates access to all
 NextCloud accounts associated with this provider.
 
+### Disable default claims
+
+Even if you don't map any attribute for quota, display name, email or groups, this application will
+ask for the 'quota', 'name', 'email', 'groups' claims and map them to an attribute with the same name.
+
+To change this behaviour and disable the default claims, you can change this value in `config.php`:
+``` php
+'user_oidc' => [
+    'enable_default_claims' => false,
+],
+```
+
+When default claims are disabled, each claim will be asked for only if there is an attribute explicitely mapped
+in the OpenId client settings (in Nextcloud's admin settings).
 
 ### ID4me option
 ID4me is an application setting switch which is configurable as normal Nextcloud app setting:

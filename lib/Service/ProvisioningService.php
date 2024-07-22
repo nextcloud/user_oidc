@@ -299,7 +299,7 @@ class ProvisioningService {
 		}
 
 		// Update the gender
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_BIOGRAPHY, $idTokenPayload, $biography);
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GENDER, $idTokenPayload, $gender);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Gender mapping event dispatched');
 		if ($event->hasValue()) {

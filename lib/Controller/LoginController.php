@@ -244,29 +244,42 @@ class LoginController extends BaseOidcController {
 
 		// get attribute mapping settings
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 
 		$claims = [
 			// more details about requesting claims:
 			// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
-			'id_token' => [
-				// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
-				// null means we want it
-				$emailAttribute => null,
-				$displaynameAttribute => null,
-				$quotaAttribute => null,
-				$groupsAttribute => null,
-			],
-			'userinfo' => [
-				$emailAttribute => null,
-				$displaynameAttribute => null,
-				$quotaAttribute => null,
-				$groupsAttribute => null,
-			],
+			// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
+			// null means we want it
+			'id_token' => [],
+			'userinfo' => [],
 		];
+
+		// by default: default claims are ENABLED
+		// default claims are historically for quota, email, displayName and groups
+		$isDefaultClaimsEnabled = !isset($oidcSystemConfig['enable_default_claims']) || $oidcSystemConfig['enable_default_claims'] !== false;
+		if ($isDefaultClaimsEnabled) {
+			// default claims for quota, email, displayName and groups is ENABLED
+			$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+			$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+			$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+			$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
+			foreach ([$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute] as $claim) {
+				$claims['id_token'][$claim] = null;
+				$claims['userinfo'][$claim] = null;
+			}
+		} else {
+			// No default claim, we only set the claims if an attribute is mapped
+			$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL);
+			$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME);
+			$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA);
+			$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS);
+			foreach ([$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute] as $claim) {
+				if ($claim !== '') {
+					$claims['id_token'][$claim] = null;
+					$claims['userinfo'][$claim] = null;
+				}
+			}
+		}
 
 		if ($uidAttribute !== 'sub') {
 			$claims['id_token'][$uidAttribute] = ['essential' => true];
@@ -393,18 +406,39 @@ class LoginController extends BaseOidcController {
 		try {
 			$requestBody = [
 				'code' => $code,
-				'client_id' => $provider->getClientId(),
-				'client_secret' => $providerClientSecret,
 				'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.code'),
 				'grant_type' => 'authorization_code',
 			];
 			if ($isPkceEnabled) {
 				$requestBody['code_verifier'] = $this->session->get(self::CODE_VERIFIER); // Set for the PKCE flow
 			}
+
+			$headers = [];
+			$tokenEndpointAuthMethod = 'client_secret_basic';
+			// Use POST only if client_secret_basic is not available as supported by the endpoint
+			if (array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
+				is_array($discovery['token_endpoint_auth_methods_supported']) &&
+				in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported']) &&
+				!in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported'])) {
+				$tokenEndpointAuthMethod = 'client_secret_post';
+			}
+
+			if ($tokenEndpointAuthMethod == 'client_secret_basic') {
+				$headers = [
+					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
+					'Content-Type' => 'application/x-www-form-urlencoded',
+				];
+			} else {
+				// Assuming client_secret_post as no other option is supported currently
+				$requestBody['client_id'] = $provider->getClientId();
+				$requestBody['client_secret'] = $providerClientSecret;
+			}
+
 			$result = $client->post(
 				$discovery['token_endpoint'],
 				[
 					'body' => $requestBody,
+					'headers' => $headers,
 				]
 			);
 		} catch (ClientException | ServerException $e) {

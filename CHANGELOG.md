@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.0.3 – 2024-06-21
+
+### Added
+
+- Support search by email in the user backend @tcoupin [#815](https://github.com/nextcloud/user_oidc/pull/815)
+
+### Changed
+
+- Improve the stub so it's not confusing IDEs @nickvergessen @julien-nc [#862](https://github.com/nextcloud/user_oidc/pull/862) [#863](https://github.com/nextcloud/user_oidc/pull/863)
+- Set group displayname when provisioning @towo @julien-nc [#880](https://github.com/nextcloud/user_oidc/pull/880)
+- Add issuer, audience and azp checks in bearer token validator @julien-nc [#864](https://github.com/nextcloud/user_oidc/pull/864)
+- Allow to disable default quota, displayName, groups and email claims @julien-nc [#883](https://github.com/nextcloud/user_oidc/pull/883)
+
+### Fixed
+
+- Fix, improve and refactor the upsert occ command @julien-nc [#860](https://github.com/nextcloud/user_oidc/pull/860)
+- Fix biography attr being used to set the account gender @julien-nc [#888](https://github.com/nextcloud/user_oidc/pull/888)
+
 ## 5.0.2 – 2024-03-18
 
 ### Changed
