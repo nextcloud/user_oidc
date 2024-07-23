@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 6.0.0 – 2024-07-23
+
+### Changed
+
+- Update npm pkgs
+- Use nextcloud/vue 8.15.0
+- Support more token endpoint authentication methods @xataxxx [#897](https://github.com/nextcloud/user_oidc/pull/897)
+
+### Fixed
+
+- Set avatar on login @julien-nc [#838](https://github.com/nextcloud/user_oidc/pull/838)
+- Fix small accessibility issue with NcModal @julien-nc
+
 ## 5.0.3 – 2024-06-21
 
 ### Added
