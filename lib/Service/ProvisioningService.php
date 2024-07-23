@@ -7,11 +7,15 @@ use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCP\Accounts\IAccountManager;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Http\Client\IClientService;
+use OCP\IAvatarManager;
 use OCP\IGroupManager;
+use OCP\Image;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\User\Events\UserChangedEvent;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class ProvisioningService {
 	/** @var UserMapper */
@@ -37,6 +41,14 @@ class ProvisioningService {
 
 	/** @var IAccountManager */
 	private $accountManager;
+	/**
+	 * @var IClientService
+	 */
+	private $clientService;
+	/**
+	 * @var IAvatarManager
+	 */
+	private $avatarManager;
 
 
 	public function __construct(
@@ -47,7 +59,9 @@ class ProvisioningService {
 		IGroupManager $groupManager,
 		IEventDispatcher $eventDispatcher,
 		LoggerInterface $logger,
-		IAccountManager $accountManager
+		IAccountManager $accountManager,
+		IClientService $clientService,
+		IAvatarManager $avatarManager
 	) {
 		$this->idService = $idService;
 		$this->providerService = $providerService;
@@ -57,6 +71,8 @@ class ProvisioningService {
 		$this->eventDispatcher = $eventDispatcher;
 		$this->logger = $logger;
 		$this->accountManager = $accountManager;
+		$this->clientService = $clientService;
+		$this->avatarManager = $avatarManager;
 	}
 
 	/**
@@ -247,7 +263,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Avatar mapping event dispatched');
 		if ($event->hasValue()) {
-			$account->setProperty('avatar', $avatar, $scope, '1', '');
+			$this->setUserAvatar($user->getUID(), $avatar);
 		}
 
 		// Update twitter/X
@@ -308,6 +324,59 @@ class ProvisioningService {
 
 		$this->accountManager->updateAccount($account);
 		return $user;
+	}
+
+	/**
+	 * @param string $userId
+	 * @param string $avatarAttribute
+	 * @return void
+	 */
+	private function setUserAvatar(string $userId, string $avatarAttribute): void {
+		if (filter_var($avatarAttribute, FILTER_VALIDATE_URL)) {
+			$client = $this->clientService->newClient();
+			try {
+				$avatarContent = $client->get($avatarAttribute)->getBody();
+			} catch (Throwable $e) {
+				$this->logger->warning('Failed to get remote avatar for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
+				return;
+			}
+		} elseif (str_starts_with($avatarAttribute, 'data:image/png;base64,')) {
+			$avatarContent = base64_decode(str_replace('data:image/png;base64,', '', $avatarAttribute));
+		} elseif (str_starts_with($avatarAttribute, 'data:image/jpeg;base64,')) {
+			$avatarContent = base64_decode(str_replace('data:image/jpeg;base64,', '', $avatarAttribute));
+		}
+
+		try {
+			// inspired from OC\Core\Controller\AvatarController::postAvatar()
+			$image = new Image();
+			$image->loadFromData($avatarContent);
+			$image->readExif($avatarContent);
+			$image->fixOrientation();
+
+			if ($image->valid()) {
+				$mimeType = $image->mimeType();
+				if ($mimeType !== 'image/jpeg' && $mimeType !== 'image/png') {
+					$this->logger->warning('Failed to set remote avatar for user ' . $userId, ['error' => 'Unknown filetype']);
+					return;
+				}
+
+				if ($image->width() === $image->height()) {
+					try {
+						$avatar = $this->avatarManager->getAvatar($userId);
+						$avatar->set($image);
+						return;
+					} catch (Throwable $e) {
+						$this->logger->error('Failed to set remote avatar for user ' . $userId, ['exception' => $e]);
+						return;
+					}
+				}
+				$this->logger->warning('Failed to set remote avatar for user ' . $userId, ['error' => 'Image is not square']);
+			} else {
+				$this->logger->warning('Failed to set remote avatar for user ' . $userId, ['error' => 'Invalid image']);
+			}
+		} catch (\Exception $e) {
+			$this->logger->error('Failed to set remote avatar for user ' . $userId, ['exception' => $e]);
+		}
 	}
 
 	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
