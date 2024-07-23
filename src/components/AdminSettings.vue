@@ -49,9 +49,10 @@
 
 			<NcModal v-if="showNewProvider"
 				size="large"
+				:name="t('user_oidc', 'Register a new provider')"
 				:can-close="false">
 				<div class="providermodal__wrapper">
-					<h3>{{ t('user_oids', 'Register a new provider') }}</h3>
+					<h3>{{ t('user_oidc', 'Register a new provider') }}</h3>
 					<p class="settings-hint">
 						{{ t('user_oidc', 'Configure your provider to redirect back to {url}', { url: redirectUrl }) }}
 					</p>
@@ -99,6 +100,7 @@
 
 			<NcModal v-if="editProvider"
 				size="large"
+				:name="t('user_oidc', 'Update provider settings')"
 				:can-close="false">
 				<div class="providermodal__wrapper">
 					<h3>{{ t('user_oidc', 'Update provider settings') }}</h3>
