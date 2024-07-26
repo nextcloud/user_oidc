@@ -170,7 +170,7 @@ class ProvisioningService {
 		}
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Displayname mapping event dispatched');
-		if ($event->hasValue()) {
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
 			$newDisplayName = $event->getValue();
 			if ($existingLocalUser === null) {
 				$oldDisplayName = $backendUser->getDisplayName();
@@ -196,15 +196,15 @@ class ProvisioningService {
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_EMAIL, $idTokenPayload, $email);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Email mapping event dispatched');
-		if ($event->hasValue()) {
-			$user->setEMailAddress($event->getValue());
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$user->setSystemEMailAddress($event->getValue());
 		}
 
 		// Update the quota
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_QUOTA, $idTokenPayload, $quota);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Quota mapping event dispatched');
-		if ($event->hasValue()) {
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
 			$user->setQuota($event->getValue());
 		}
 
@@ -218,108 +218,116 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Phone mapping event dispatched');
 		if ($event->hasValue()) {
-			$account->setProperty('phone', $phone, $scope, '1', '');
+			$account->setProperty('phone', $event->getValue(), $scope, '1', '');
 		}
 
+		$addressParts = null;
 		if (is_object($address)) {
 			// Update the location/address
 			$addressArray = json_decode(json_encode($address), true);
-			$addressParts = [
-				$addressArray[$streetAttribute],
-				$addressArray[$postalcodeAttribute] . ' ' . $addressArray[$localityAttribute],
-				$addressArray[$regionAttribute],
-				$addressArray[$countryAttribute]
-			];
-		} else {
+			if (is_array($addressArray)
+				&& (isset($addressArray[$streetAttribute]) || isset($addressArray[$postalcodeAttribute]) || isset($addressArray[$localityAttribute])
+				|| isset($addressArray[$regionAttribute]) || isset($addressArray[$countryAttribute]))
+			) {
+				$addressParts = [
+					$addressArray[$streetAttribute] ?? '',
+					($addressArray[$postalcodeAttribute] ?? '') . ' ' . ($addressArray[$localityAttribute] ?? ''),
+					$addressArray[$regionAttribute] ?? '',
+					$addressArray[$countryAttribute] ?? '',
+				];
+			}
+		} elseif ($street !== null || $postalcode !== null || $locality !== null || $region !== null || $country !== null) {
 			// Concatenate the address components
 			$addressParts = [
-				$street,
-				$postalcode . ' ' . $locality,
-				$region,
-				$country
+				$street ?? '',
+				($postalcode ?? '') . ' ' . ($locality ?? ''),
+				$region ?? '',
+				$country ?? '',
 			];
 		}
 
-		// concatenate them back together into a string and remove unsused ', '
-		$address = str_replace('  ', ' ', implode(', ', $addressParts));
+		if ($addressParts !== null) {
+			// concatenate them back together into a string and remove unused ', '
+			$address = str_replace('  ', ' ', implode(', ', $addressParts));
+		}
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ADDRESS, $idTokenPayload, $address);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Address mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('address', $address, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('address', $event->getValue(), $scope, '1', '');
 		}
 
 		// Update the website
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_WEBSITE, $idTokenPayload, $website);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Website mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('website', $website, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('website', $event->getValue(), $scope, '1', '');
 		}
 
 		// Update the avatar
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_AVATAR, $idTokenPayload, $avatar);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Avatar mapping event dispatched');
-		if ($event->hasValue()) {
-			$this->setUserAvatar($user->getUID(), $avatar);
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$this->setUserAvatar($user->getUID(), $event->getValue());
 		}
 
 		// Update twitter/X
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_TWITTER, $idTokenPayload, $twitter);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Twitter mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('twitter', $twitter, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('twitter', $event->getValue(), $scope, '1', '');
 		}
 
 		// Update fediverse
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_FEDIVERSE, $idTokenPayload, $fediverse);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Fediverse mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('fediverse', $fediverse, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('fediverse', $event->getValue(), $scope, '1', '');
 		}
 
 		// Update the organisation
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ORGANISATION, $idTokenPayload, $organisation);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Organisation mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('organisation', $organisation, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('organisation', $event->getValue(), $scope, '1', '');
 		}
 
 		// Update role
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ROLE, $idTokenPayload, $role);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Role mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('role', $role, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('role', $role, $event->getValue(), '1', '');
 		}
 
 		// Update the headline
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_HEADLINE, $idTokenPayload, $headline);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Headline mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('headline', $headline, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('headline', $event->getValue(), $scope, '1', '');
 		}
 
 		// Update the biography
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_BIOGRAPHY, $idTokenPayload, $biography);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Biography mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('biography', $biography, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('biography', $event->getValue(), $scope, '1', '');
 		}
 
 		// Update the gender
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GENDER, $idTokenPayload, $gender);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Gender mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('gender', $gender, $scope, '1', '');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty('gender', $event->getValue(), $scope, '1', '');
 		}
 
 		$this->accountManager->updateAccount($account);
@@ -332,18 +340,39 @@ class ProvisioningService {
 	 * @return void
 	 */
 	private function setUserAvatar(string $userId, string $avatarAttribute): void {
+		$avatarContent = null;
 		if (filter_var($avatarAttribute, FILTER_VALIDATE_URL)) {
 			$client = $this->clientService->newClient();
 			try {
 				$avatarContent = $client->get($avatarAttribute)->getBody();
+				if (is_resource($avatarContent)) {
+					$avatarContent = stream_get_contents($avatarContent);
+				}
+				if ($avatarContent === false) {
+					$this->logger->warning('Failed to read remote avatar response for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
+					return;
+				}
 			} catch (Throwable $e) {
 				$this->logger->warning('Failed to get remote avatar for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
 				return;
 			}
 		} elseif (str_starts_with($avatarAttribute, 'data:image/png;base64,')) {
 			$avatarContent = base64_decode(str_replace('data:image/png;base64,', '', $avatarAttribute));
+			if ($avatarContent === false) {
+				$this->logger->warning('Failed to decode base64 PNG avatar for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
+				return;
+			}
 		} elseif (str_starts_with($avatarAttribute, 'data:image/jpeg;base64,')) {
 			$avatarContent = base64_decode(str_replace('data:image/jpeg;base64,', '', $avatarAttribute));
+			if ($avatarContent === false) {
+				$this->logger->warning('Failed to decode base64 JPEG avatar for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
+				return;
+			}
+		}
+
+		if ($avatarContent === null || $avatarContent === '') {
+			$this->logger->warning('Failed to set avatar for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
+			return;
 		}
 
 		try {
