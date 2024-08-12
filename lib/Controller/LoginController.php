@@ -209,6 +209,16 @@ class LoginController extends BaseOidcController {
 	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
 	 */
 	public function login(int $providerId, string $redirectUrl = null) {
+		// to be safe, avoid redirecting to logout or single-logout
+		$logoutUrl = $this->urlGenerator->linkToRoute('core.login.logout');
+		$userOidcLogoutUrl = $this->urlGenerator->linkToRoute(Application::APP_ID . '.login.singleLogoutService');
+		if (
+			$redirectUrl
+			&& (strpos($redirectUrl, $logoutUrl) !== false || strpos($redirectUrl, $userOidcLogoutUrl) !== false)
+		) {
+			$redirectUrl = $this->urlGenerator->getBaseUrl();
+		}
+
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
 		}

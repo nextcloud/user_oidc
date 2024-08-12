@@ -87,6 +87,10 @@ class Application extends App implements IBootstrap {
 	}
 
 	private function registerRedirect(IRequest $request, IURLGenerator $urlGenerator, SettingsService $settings, ProviderMapper $providerMapper): void {
+		// TODO when min supported version is >=28 :
+		// run this in a listener of OCP\AppFramework\Http\Events\BeforeLoginTemplateRenderedEvent
+		// to avoid doing useless stuff on data requests and template requests that are not the login page
+
 		$providers = $this->getCachedProviders($providerMapper);
 		$redirectUrl = $request->getParam('redirect_url');
 
@@ -98,6 +102,16 @@ class Application extends App implements IBootstrap {
 			// in case any errors happen when checking for the path do not apply redirect logic as it is only needed for the login
 		}
 		if ($isDefaultLogin && !$settings->getAllowMultipleUserBackEnds() && count($providers) === 1) {
+			// To avoid login/logout loop if the IdP session is still alive:
+			// if the login page's redirect_url GET param is the logout page, just use the base URL instead
+			$logoutUrl = $urlGenerator->linkToRoute('core.login.logout');
+			$userOidcLogoutUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.singleLogoutService');
+			if (
+				$redirectUrl
+				&& (strpos($redirectUrl, $logoutUrl) !== false || strpos($redirectUrl, $userOidcLogoutUrl) !== false)
+			) {
+				$redirectUrl = $urlGenerator->getBaseUrl();
+			}
 			$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
 				'providerId' => $providers[0]->getId(),
 				'redirectUrl' => $redirectUrl
