@@ -208,7 +208,7 @@ class LoginController extends BaseOidcController {
 	 * @param string|null $redirectUrl
 	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
 	 */
-	public function login(int $providerId, string $redirectUrl = null) {
+	public function login(int $providerId, ?string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
 		}
