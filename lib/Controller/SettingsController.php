@@ -140,7 +140,7 @@ class SettingsController extends Controller {
 		return new JSONResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
 
-	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, string $clientSecret = null,
+	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, ?string $clientSecret = null,
 		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
 
