@@ -98,7 +98,11 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 				$this->logger->debug('This token is not for us, the audience does not match the client ID');
 				return null;
 			}
+		}
 
+		$checkAzp = !isset($oidcSystemConfig['selfencoded_bearer_validation_azp_check'])
+			|| !in_array($oidcSystemConfig['selfencoded_bearer_validation_azp_check'], [false, 'false', 0, '0'], true);
+		if ($checkAzp) {
 			// ref https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
 			// If the azp claim is present, it should be the client ID
 			if (isset($payload->azp) && $payload->azp !== $providerClientId) {
