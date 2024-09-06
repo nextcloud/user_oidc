@@ -489,23 +489,31 @@ class LoginController extends BaseOidcController {
 		}
 
 		// Verify audience
-		$tokenAudience = $idTokenPayload->aud;
-		$providerClientId = $provider->getClientId();
-		if (
-			(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
+		$checkAudience = !isset($oidcSystemConfig['login_validation_audience_check'])
+			|| !in_array($oidcSystemConfig['login_validation_audience_check'], [false, 'false', 0, '0'], true);
+		if ($checkAudience) {
+			$tokenAudience = $idTokenPayload->aud;
+			$providerClientId = $provider->getClientId();
+			if (
+				(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
 				|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
-		) {
-			$this->logger->debug('This token is not for us');
-			$message = $this->l10n->t('The audience does not match ours');
-			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud]);
+			) {
+				$this->logger->debug('This token is not for us');
+				$message = $this->l10n->t('The audience does not match ours');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud]);
+			}
 		}
 
-		// ref https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
-		// If the azp claim is present, it should be the client ID
-		if (isset($idTokenPayload->azp) && $idTokenPayload->azp !== $provider->getClientId()) {
-			$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
-			$message = $this->l10n->t('The authorized party does not match ours');
-			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_azp' => $idTokenPayload->azp]);
+		$checkAzp = !isset($oidcSystemConfig['login_validation_azp_check'])
+			|| !in_array($oidcSystemConfig['login_validation_azp_check'], [false, 'false', 0, '0'], true);
+		if ($checkAzp) {
+			// ref https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
+			// If the azp claim is present, it should be the client ID
+			if (isset($idTokenPayload->azp) && $idTokenPayload->azp !== $provider->getClientId()) {
+				$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
+				$message = $this->l10n->t('The authorized party does not match ours');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_azp' => $idTokenPayload->azp]);
+			}
 		}
 
 		if (isset($idTokenPayload->nonce) && $idTokenPayload->nonce !== $this->session->get(self::NONCE)) {
