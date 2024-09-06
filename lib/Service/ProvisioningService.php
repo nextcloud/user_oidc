@@ -303,7 +303,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Role mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('role', $role, $event->getValue(), '1', '');
+			$account->setProperty('role', $event->getValue(), '1', '');
 		}
 
 		// Update the headline
