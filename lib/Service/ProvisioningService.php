@@ -205,6 +205,8 @@ class ProvisioningService {
 					$addressArray[$regionAttribute] ?? '',
 					$addressArray[$countryAttribute] ?? '',
 				];
+			} else {
+				$address = null;
 			}
 		} elseif ($street !== null || $postalcode !== null || $locality !== null || $region !== null || $country !== null) {
 			// Concatenate the address components
