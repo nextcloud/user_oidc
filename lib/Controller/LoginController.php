@@ -414,13 +414,13 @@ class LoginController extends BaseOidcController {
 			}
 
 			$headers = [];
-			$tokenEndpointAuthMethod = 'client_secret_basic';
-			// Use POST only if client_secret_basic is not available as supported by the endpoint
+			$tokenEndpointAuthMethod = 'client_secret_post';
+			// Use Basic only if client_secret_post is not available as supported by the endpoint
 			if (array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
 				is_array($discovery['token_endpoint_auth_methods_supported']) &&
-				in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported']) &&
-				!in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported'])) {
-				$tokenEndpointAuthMethod = 'client_secret_post';
+				in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported']) &&
+				!in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'])) {
+				$tokenEndpointAuthMethod = 'client_secret_basic';
 			}
 
 			if ($tokenEndpointAuthMethod == 'client_secret_basic') {
