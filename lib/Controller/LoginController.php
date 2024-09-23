@@ -199,6 +199,18 @@ class LoginController extends BaseOidcController {
 	}
 
 	/**
+	 * @param string|null $redirectUrl
+	 * @return RedirectResponse
+	 */
+	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse {
+		return new RedirectResponse(
+			$redirectUrl === null
+				? null
+				: preg_replace('/^https?:\/\//', '', $redirectUrl)
+		);
+	}
+
+	/**
 	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @UseSession
@@ -210,7 +222,7 @@ class LoginController extends BaseOidcController {
 	 */
 	public function login(int $providerId, ?string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
-			return new RedirectResponse($redirectUrl);
+			return $this->getRedirectResponse($redirectUrl);
 		}
 		if (!$this->isSecure()) {
 			return $this->buildProtocolErrorResponse();
@@ -598,7 +610,7 @@ class LoginController extends BaseOidcController {
 
 		$redirectUrl = $this->session->get(self::REDIRECT_AFTER_LOGIN);
 		if ($redirectUrl) {
-			return new RedirectResponse($redirectUrl);
+			return $this->getRedirectResponse($redirectUrl);
 		}
 
 		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
