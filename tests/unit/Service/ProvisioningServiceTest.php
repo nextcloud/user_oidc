@@ -10,6 +10,7 @@ use OCP\Accounts\IAccountManager;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
+use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -65,6 +66,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->accountManager = $this->createMock(IAccountManager::class);
 		$this->clientService = $this->createMock(IClientService::class);
 		$this->avatarManager = $this->createMock(IAvatarManager::class);
+		$this->config = $this->createMock(IConfig::class);
 
 		$this->provisioningService = new ProvisioningService(
 			$this->idService,
@@ -76,7 +78,8 @@ class ProvisioningServiceTest extends TestCase {
 			$this->logger,
 			$this->accountManager,
 			$this->clientService,
-			$this->avatarManager
+			$this->avatarManager,
+			$this->config,
 		);
 	}
 
