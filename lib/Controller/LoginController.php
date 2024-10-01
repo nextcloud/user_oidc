@@ -671,7 +671,6 @@ class LoginController extends BaseOidcController {
 	 *
 	 * @PublicPage
 	 * @NoCSRFRequired
-	 * @BruteForceProtection(action=userOidcBackchannelLogout)
 	 *
 	 * @param string $providerIdentifier
 	 * @param string $logout_token
@@ -788,23 +787,19 @@ class LoginController extends BaseOidcController {
 	 * @param string $error
 	 * @param string $description
 	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
 	 * @return JSONResponse
 	 */
-	private function getBackchannelLogoutErrorResponse(string $error, string $description,
-		array $throttleMetadata = [], ?bool $throttle = null): JSONResponse {
+	private function getBackchannelLogoutErrorResponse(
+		string $error, string $description, array $throttleMetadata = [],
+	): JSONResponse {
 		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
-		$response = new JSONResponse(
+		return new JSONResponse(
 			[
 				'error' => $error,
 				'error_description' => $description,
 			],
 			Http::STATUS_BAD_REQUEST,
 		);
-		if (($throttle === null && !$this->isDebugModeEnabled()) || $throttle) {
-			$response->throttle($throttleMetadata);
-		}
-		return $response;
 	}
 
 	private function toCodeChallenge(string $data): string {
