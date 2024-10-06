@@ -88,10 +88,10 @@ sudo -u www-data php var/www/nextcloud/occ config:app:set --value=0 user_oidc al
 
 This app supports PKCE (Proof Key for Code Exchange).
 https://datatracker.ietf.org/doc/html/rfc7636
-It is disabled by default and can be enabled in `config.php`:
+It is enabled by default, but can be disabled in `config.php`:
 ``` php
 'user_oidc' => [
-    'use_pkce' => true,
+    'use_pkce' => false,
 ],
 ```
 

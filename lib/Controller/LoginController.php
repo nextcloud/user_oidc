@@ -232,7 +232,7 @@ class LoginController extends BaseOidcController {
 		$this->session->set(self::NONCE, $nonce);
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$isPkceEnabled = isset($oidcSystemConfig['use_pkce']) && $oidcSystemConfig['use_pkce'];
+		$isPkceEnabled = $oidcSystemConfig['use_pkce'] ?? true;
 		if ($isPkceEnabled) {
 			// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
 			$code_verifier = $this->random->generate(128, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER);
@@ -396,7 +396,7 @@ class LoginController extends BaseOidcController {
 		}
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$isPkceEnabled = isset($oidcSystemConfig['use_pkce']) && $oidcSystemConfig['use_pkce'];
+		$isPkceEnabled = $oidcSystemConfig['use_pkce'] ?? true;
 
 		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
