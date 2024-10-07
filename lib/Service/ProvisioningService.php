@@ -9,6 +9,7 @@ use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
+use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\Image;
 use OCP\IUser;
@@ -18,61 +19,20 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 class ProvisioningService {
-	/** @var UserMapper */
-	private $userMapper;
-
-	/** @var LocalIdService */
-	private $idService;
-
-	/** @var IUserManager */
-	private $userManager;
-
-	/** @var IGroupManager */
-	private $groupManager;
-
-	/** @var IEventDispatcher */
-	private $eventDispatcher;
-
-	/** @var LoggerInterface */
-	private $logger;
-
-	/** @var ProviderService */
-	private $providerService;
-
-	/** @var IAccountManager */
-	private $accountManager;
-	/**
-	 * @var IClientService
-	 */
-	private $clientService;
-	/**
-	 * @var IAvatarManager
-	 */
-	private $avatarManager;
-
 
 	public function __construct(
-		LocalIdService $idService,
-		ProviderService $providerService,
-		UserMapper $userMapper,
-		IUserManager $userManager,
-		IGroupManager $groupManager,
-		IEventDispatcher $eventDispatcher,
-		LoggerInterface $logger,
-		IAccountManager $accountManager,
-		IClientService $clientService,
-		IAvatarManager $avatarManager
+		private LocalIdService $idService,
+		private ProviderService $providerService,
+		private UserMapper $userMapper,
+		private IUserManager $userManager,
+		private IGroupManager $groupManager,
+		private IEventDispatcher $eventDispatcher,
+		private LoggerInterface $logger,
+		private IAccountManager $accountManager,
+		private IClientService $clientService,
+		private IAvatarManager $avatarManager,
+		private IConfig $config,
 	) {
-		$this->idService = $idService;
-		$this->providerService = $providerService;
-		$this->userMapper = $userMapper;
-		$this->userManager = $userManager;
-		$this->groupManager = $groupManager;
-		$this->eventDispatcher = $eventDispatcher;
-		$this->logger = $logger;
-		$this->accountManager = $accountManager;
-		$this->clientService = $clientService;
-		$this->avatarManager = $avatarManager;
 	}
 
 	/**
@@ -149,6 +109,16 @@ class ProvisioningService {
 		if ($existingLocalUser !== null) {
 			$user = $existingLocalUser;
 		} else {
+			// if disable_account_creation is true, user_oidc should not create any user
+			// so we just exit
+			// but it will accept connection from users it might have created in the past (before disable_account_creation was enabled)
+			$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+			$isUserCreationDisabled = isset($oidcSystemConfig['disable_account_creation'])
+				&& in_array($oidcSystemConfig['disable_account_creation'], [true, 'true', 1, '1'], true);
+			if ($isUserCreationDisabled) {
+				return null;
+			}
+
 			$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue() ?? '');
 			$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
 
