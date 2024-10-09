@@ -224,6 +224,24 @@ class LoginController extends BaseOidcController {
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_not_found' => $providerId]);
 		}
 
+		// pass discovery query parameters also on to the authentication
+		$data = [];
+		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
+		if (isset($discoveryUrl['query'])) {
+			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl['query']);
+			$discoveryQuery = [];
+			parse_str($discoveryUrl['query'], $discoveryQuery);
+			$data += $discoveryQuery;
+		}
+
+		try {
+			$discovery = $this->discoveryService->obtainDiscovery($provider);
+		} catch (\Exception $e) {
+			$this->logger->error('Could not reach the provider at URL ' . $provider->getDiscoveryEndpoint(), ['exception' => $e]);
+			$message = $this->l10n->t('Could not reach the OpenID Connect provider.');
+			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['reason' => 'provider unreachable']);
+		}
+
 		$state = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::STATE, $state);
 		$this->session->set(self::REDIRECT_AFTER_LOGIN, $redirectUrl);
@@ -232,7 +250,9 @@ class LoginController extends BaseOidcController {
 		$this->session->set(self::NONCE, $nonce);
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$isPkceEnabled = isset($oidcSystemConfig['use_pkce']) && $oidcSystemConfig['use_pkce'];
+		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
+		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+
 		if ($isPkceEnabled) {
 			// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
 			$code_verifier = $this->random->generate(128, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER);
@@ -295,7 +315,7 @@ class LoginController extends BaseOidcController {
 			}
 		}
 
-		$data = [
+		$data += [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
 			'scope' => trim($provider->getScope()),
@@ -308,23 +328,6 @@ class LoginController extends BaseOidcController {
 			$data['code_challenge'] = $this->toCodeChallenge($code_verifier);
 			$data['code_challenge_method'] = 'S256';
 		}
-		// pass discovery query parameters also on to the authentication
-		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
-		if (isset($discoveryUrl['query'])) {
-			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl['query']);
-			$discoveryQuery = [];
-			parse_str($discoveryUrl['query'], $discoveryQuery);
-			$data += $discoveryQuery;
-		}
-
-		try {
-			$discovery = $this->discoveryService->obtainDiscovery($provider);
-		} catch (\Exception $e) {
-			$this->logger->error('Could not reach the provider at URL ' . $provider->getDiscoveryEndpoint(), ['exception' => $e]);
-			$message = $this->l10n->t('Could not reach the OpenID Connect provider.');
-			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['reason' => 'provider unreachable']);
-		}
-
 		$authorizationUrl = $this->discoveryService->buildAuthorizationUrl($discovery['authorization_endpoint'], $data);
 
 		$this->logger->debug('Redirecting user to: ' . $authorizationUrl);
@@ -395,12 +398,13 @@ class LoginController extends BaseOidcController {
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$isPkceEnabled = isset($oidcSystemConfig['use_pkce']) && $oidcSystemConfig['use_pkce'];
-
 		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
+
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
+		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
 
 		$client = $this->clientService->newClient();
 		try {
