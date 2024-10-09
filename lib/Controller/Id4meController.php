@@ -37,6 +37,11 @@ use OCA\UserOIDC\Service\ID4MeService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
+use OCP\AppFramework\Http\Attribute\FrontpageRoute;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\Attribute\UseSession;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -129,11 +134,10 @@ class Id4meController extends BaseOidcController {
 		$this->id4MeService = $id4MeService;
 	}
 
-	/**
-	 * @PublicPage
-	 * @NoCSRFRequired
-	 * @UseSession
-	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[UseSession]
+	#[FrontpageRoute(verb: 'GET', url: '/id4me')]
 	public function showLogin() {
 		if (!$this->id4MeService->getID4ME()) {
 			$message = $this->l10n->t('ID4Me is disabled');
@@ -152,13 +156,13 @@ class Id4meController extends BaseOidcController {
 	}
 
 	/**
-	 * @PublicPage
-	 * @UseSession
-	 * @BruteForceProtection(action=userOidcId4MeLogin)
-	 *
 	 * @param string $domain
 	 * @return RedirectResponse|TemplateResponse
 	 */
+	#[PublicPage]
+	#[UseSession]
+	#[BruteForceProtection(action: 'userOidcId4MeLogin')]
+	#[FrontpageRoute(verb: 'POST', url: '/id4me')]
 	public function login(string $domain) {
 		if (!$this->id4MeService->getID4ME()) {
 			$message = $this->l10n->t('ID4Me is disabled');
@@ -222,17 +226,17 @@ class Id4meController extends BaseOidcController {
 	}
 
 	/**
-	 * @PublicPage
-	 * @NoCSRFRequired
-	 * @UseSession
-	 * @BruteForceProtection(action=userOidcId4MeCode)
-	 *
 	 * @param string $state
 	 * @param string $code
 	 * @param string $scope
 	 * @return JSONResponse|RedirectResponse|TemplateResponse
 	 * @throws \Exception
 	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[UseSession]
+	#[BruteForceProtection(action: 'userOidcId4MeCode')]
+	#[FrontpageRoute(verb: 'GET', url: '/id4me/code')]
 	public function code(string $state = '', string $code = '', string $scope = '') {
 		if (!$this->id4MeService->getID4ME()) {
 			$message = $this->l10n->t('ID4Me is disabled');
