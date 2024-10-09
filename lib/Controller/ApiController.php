@@ -67,7 +67,7 @@ class ApiController extends Controller {
 	 * @param string|null $quota
 	 * @return DataResponse
 	 */
-	public function createUser(int $providerId, string  $userId, ?string $displayName = null,
+	public function createUser(int $providerId, string $userId, ?string $displayName = null,
 		?string $email = null, ?string $quota = null): DataResponse {
 		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
 		$user = $this->userManager->get($backendUser->getUserId());
@@ -87,10 +87,10 @@ class ApiController extends Controller {
 			$user->setQuota($quota);
 		}
 
-		$userFolder = $this->root->getUserFolder($userId);
+		$userFolder = $this->root->getUserFolder($user->getUID());
 		try {
 			// copy skeleton
-			\OC_Util::copySkeleton($userId, $userFolder);
+			\OC_Util::copySkeleton($user->getUID(), $userFolder);
 		} catch (NotPermittedException $ex) {
 			// read only uses
 		}
