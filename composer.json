@@ -40,7 +40,7 @@
     "nextcloud/coding-standard": "^1.0.0",
     "symfony/event-dispatcher": "^4",
     "phpunit/phpunit": "^9.5",
-    "nextcloud/ocp": "dev-stable25",
+    "nextcloud/ocp": "dev-master",
     "psalm/phar": "^5.20"
   },
   "extra": {
