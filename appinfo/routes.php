@@ -31,6 +31,7 @@ return [
 		['name' => 'login#backChannelLogout', 'url' => '/backchannel-logout/{providerIdentifier}', 'verb' => 'POST'],
 
 		['name' => 'api#createUser', 'url' => '/user', 'verb' => 'POST'],
+		['name' => 'api#deleteUser', 'url' => '/user/{userId}', 'verb' => 'DELETE'],
 
 		['name' => 'id4me#showLogin', 'url' => '/id4me', 'verb' => 'GET'],
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],
