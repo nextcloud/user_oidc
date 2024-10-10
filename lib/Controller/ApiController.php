@@ -28,6 +28,7 @@ namespace OCA\UserOIDC\Controller;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
@@ -96,5 +97,21 @@ class ApiController extends Controller {
 		}
 
 		return new DataResponse(['user_id' => $user->getUID()]);
+	}
+
+	/**
+	 * @param string $userId
+	 * @return DataResponse
+	 */
+	public function deleteUser(string $userId): DataResponse {
+		$status = Http::STATUS_NOT_FOUND;
+		$user = $this->userManager->get($userId);
+
+		if (!is_null($user) && $user->getBackendClassName() === 'user_oidc') {
+			$user->delete();
+			$status = Http::STATUS_OK;
+		}
+
+		return new DataResponse(['user_id' => $userId], $status);
 	}
 }
