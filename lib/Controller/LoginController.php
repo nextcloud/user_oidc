@@ -44,6 +44,12 @@ use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
+use OCP\AppFramework\Http\Attribute\FrontpageRoute;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\Attribute\UseSession;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -199,15 +205,15 @@ class LoginController extends BaseOidcController {
 	}
 
 	/**
-	 * @PublicPage
-	 * @NoCSRFRequired
-	 * @UseSession
-	 * @BruteForceProtection(action=userOidcLogin)
-	 *
 	 * @param int $providerId
 	 * @param string|null $redirectUrl
 	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
 	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[UseSession]
+	#[BruteForceProtection(action: 'userOidcLogin')]
+	#[FrontpageRoute(verb: 'GET', url: '/login/{providerId}')]
 	public function login(int $providerId, ?string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
@@ -342,11 +348,6 @@ class LoginController extends BaseOidcController {
 	}
 
 	/**
-	 * @PublicPage
-	 * @NoCSRFRequired
-	 * @UseSession
-	 * @BruteForceProtection(action=userOidcCode)
-	 *
 	 * @param string $state
 	 * @param string $code
 	 * @param string $scope
@@ -358,6 +359,11 @@ class LoginController extends BaseOidcController {
 	 * @throws SessionNotAvailableException
 	 * @throws \JsonException
 	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[UseSession]
+	#[BruteForceProtection(action: 'userOidcCode')]
+	#[FrontpageRoute(verb: 'GET', url: '/code')]
 	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
 		if (!$this->isSecure()) {
 			return $this->buildProtocolErrorResponse();
@@ -611,16 +617,16 @@ class LoginController extends BaseOidcController {
 	/**
 	 * Endpoint called by NC to logout in the IdP before killing the current session
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @UseSession
-	 * @BruteForceProtection(action=userOidcSingleLogout)
-	 *
 	 * @return RedirectResponse|TemplateResponse
 	 * @throws Exception
 	 * @throws SessionNotAvailableException
 	 * @throws \JsonException
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[UseSession]
+	#[BruteForceProtection(action: 'userOidcSingleLogout')]
+	#[FrontpageRoute(verb: 'GET', url: '/sls')]
 	public function singleLogoutService() {
 		// TODO throttle in all failing cases
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
@@ -673,15 +679,15 @@ class LoginController extends BaseOidcController {
 	 * which leads to the auth token that we can invalidate
 	 * Implemented according to https://openid.net/specs/openid-connect-backchannel-1_0.html
 	 *
-	 * @PublicPage
-	 * @NoCSRFRequired
-	 *
 	 * @param string $providerIdentifier
 	 * @param string $logout_token
 	 * @return JSONResponse
 	 * @throws Exception
 	 * @throws \JsonException
 	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[FrontpageRoute(verb: 'POST', url: '/backchannel-logout/{providerIdentifier}')]
 	public function backChannelLogout(string $providerIdentifier, string $logout_token = ''): JSONResponse {
 		// get the provider
 		$provider = $this->providerService->getProviderByIdentifier($providerIdentifier);

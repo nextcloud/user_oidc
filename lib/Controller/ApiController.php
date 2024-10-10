@@ -28,6 +28,8 @@ namespace OCA\UserOIDC\Controller;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\FrontpageRoute;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
@@ -58,8 +60,6 @@ class ApiController extends Controller {
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @param int $providerId
 	 * @param string $userId
 	 * @param string|null $displayName
@@ -67,6 +67,8 @@ class ApiController extends Controller {
 	 * @param string|null $quota
 	 * @return DataResponse
 	 */
+	#[NoCSRFRequired]
+	#[FrontpageRoute(verb: 'POST', url: '/user')]
 	public function createUser(int $providerId, string $userId, ?string $displayName = null,
 		?string $email = null, ?string $quota = null): DataResponse {
 		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
