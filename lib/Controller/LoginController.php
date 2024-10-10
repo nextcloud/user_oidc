@@ -203,10 +203,13 @@ class LoginController extends BaseOidcController {
 	 * @return RedirectResponse
 	 */
 	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse {
+		// this could also be done with
+		// preg_replace('/^https?:\/\//', '', $redirectUrl)
+		// or even: if (preg_match('/https?:\/\//', $redirectUrl) === 1) return new RedirectResponse('/');
 		return new RedirectResponse(
 			$redirectUrl === null
 				? null
-				: preg_replace('/^https?:\/\//', '', $redirectUrl)
+				: parse_url($redirectUrl, PHP_URL_PATH)
 		);
 	}
 
