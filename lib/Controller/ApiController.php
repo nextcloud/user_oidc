@@ -100,18 +100,18 @@ class ApiController extends Controller {
 	}
 
 	/**
+	 * @NoCSRFRequired
+	 *
 	 * @param string $userId
 	 * @return DataResponse
 	 */
 	public function deleteUser(string $userId): DataResponse {
-		$status = Http::STATUS_NOT_FOUND;
 		$user = $this->userManager->get($userId);
-
-		if (!is_null($user) && $user->getBackendClassName() === 'user_oidc') {
-			$user->delete();
-			$status = Http::STATUS_OK;
+		if (is_null($user) || $user->getBackendClassName() !== 'user_oidc') {
+			return new DataResponse(['message' => 'User not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return new DataResponse(['user_id' => $userId], $status);
+		$user->delete();
+		return new DataResponse(['user_id' => $userId], Http::STATUS_OK);
 	}
 }
