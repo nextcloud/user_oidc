@@ -46,7 +46,7 @@ class OIDCService {
 		DiscoveryService $discoveryService,
 		LoggerInterface $logger,
 		IClientService $clientService,
-		ICrypto $crypto
+		ICrypto $crypto,
 	) {
 		$this->discoveryService = $discoveryService;
 		$this->logger = $logger;

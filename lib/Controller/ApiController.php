@@ -41,7 +41,7 @@ class ApiController extends OCSController {
 		IRequest $request,
 		private IRootFolder $root,
 		private UserMapper $userMapper,
-		private IUserManager $userManager
+		private IUserManager $userManager,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}

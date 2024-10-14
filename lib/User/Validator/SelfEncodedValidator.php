@@ -50,7 +50,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		DiscoveryService $discoveryService,
 		LoggerInterface $logger,
 		ITimeFactory $timeFactory,
-		IConfig $config
+		IConfig $config,
 	) {
 		$this->discoveryService = $discoveryService;
 		$this->logger = $logger;

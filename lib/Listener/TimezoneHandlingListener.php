@@ -46,7 +46,7 @@ class TimezoneHandlingListener implements IEventListener {
 	public function __construct(
 		IUserSession $userSession,
 		ISession $session,
-		IConfig $config
+		IConfig $config,
 	) {
 		$this->userSession = $userSession;
 		$this->session = $session;

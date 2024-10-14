@@ -62,7 +62,7 @@ class SettingsController extends Controller {
 		ProviderService $providerService,
 		ICrypto $crypto,
 		IClientService $clientService,
-		LoggerInterface $logger
+		LoggerInterface $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 

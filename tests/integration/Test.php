@@ -130,7 +130,7 @@ class Test extends \Test\TestCase {
 		$form = $result->item(0);
 		$url = $form->getAttribute('action');
 		libxml_clear_errors();
-		return $this->client->post($url, ['form_params' => ['username' => $username, 'password' => $password, "credentialId" => '']]);
+		return $this->client->post($url, ['form_params' => ['username' => $username, 'password' => $password, 'credentialId' => '']]);
 	}
 
 	private function getUserHtmlData($response) {
