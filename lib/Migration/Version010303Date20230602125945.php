@@ -46,7 +46,7 @@ class Version010303Date20230602125945 extends SimpleMigrationStep {
 
 	public function __construct(
 		IDBConnection $connection,
-		ICrypto $crypto
+		ICrypto $crypto,
 	) {
 		$this->connection = $connection;
 		$this->crypto = $crypto;

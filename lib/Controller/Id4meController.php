@@ -109,7 +109,7 @@ class Id4meController extends BaseOidcController {
 		Id4MeMapper $id4MeMapper,
 		ID4MeService $id4MeService,
 		LoggerInterface $logger,
-		ICrypto $crypto
+		ICrypto $crypto,
 	) {
 		parent::__construct($request, $config);
 
@@ -167,7 +167,7 @@ class Id4meController extends BaseOidcController {
 
 		try {
 			$authorityName = $this->id4me->discover($domain);
-		} catch (InvalidOpenIdDomainException | OpenIdDnsRecordNotFoundException $e) {
+		} catch (InvalidOpenIdDomainException|OpenIdDnsRecordNotFoundException $e) {
 			$message = $this->l10n->t('Invalid OpenID domain');
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['invalid_openid_domain' => $domain]);
 		}
@@ -266,7 +266,7 @@ class Id4meController extends BaseOidcController {
 
 		try {
 			$id4Me = $this->id4MeMapper->findByIdentifier($authorityName);
-		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
+		} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
 			$message = $this->l10n->t('Authority not found');
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, ['authority_not_found' => $authorityName]);
 		}

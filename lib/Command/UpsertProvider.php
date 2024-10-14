@@ -154,7 +154,7 @@ class UpsertProvider extends Base {
 	public function __construct(
 		ProviderService $providerService,
 		ProviderMapper $providerMapper,
-		ICrypto $crypto
+		ICrypto $crypto,
 	) {
 		parent::__construct();
 		$this->providerService = $providerService;
@@ -242,7 +242,7 @@ class UpsertProvider extends Base {
 			// invalidate JWKS cache (even if it was just created)
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, '');
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');
-		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
+		} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
 			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return -1;
 		}

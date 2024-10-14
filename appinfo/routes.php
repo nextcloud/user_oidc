@@ -23,6 +23,10 @@ declare(strict_types=1);
  *
  */
 
+$requirements = [
+	'apiVersion' => '(v1)',
+];
+
 return [
 	'routes' => [
 		['name' => 'login#login', 'url' => '/login/{providerId}', 'verb' => 'GET'],
@@ -43,5 +47,9 @@ return [
 		['name' => 'Settings#setID4ME', 'url' => '/provider/id4me', 'verb' => 'POST'],
 
 		['name' => 'Timezone#setTimezone', 'url' => '/config/timezone', 'verb' => 'POST'],
-	]
+	],
+	'ocs' => [
+		['name' => 'ocsApi#createUser', 'url' => '/api/{apiVersion}/user', 'verb' => 'POST', 'requirements' => $requirements],
+		['name' => 'ocsApi#deleteUser', 'url' => '/api/{apiVersion}/user/{userId}', 'verb' => 'DELETE', 'requirements' => $requirements],
+	],
 ];

@@ -150,7 +150,7 @@ class LoginController extends BaseOidcController {
 		ProvisioningService $provisioningService,
 		IL10N $l10n,
 		LoggerInterface $logger,
-		ICrypto $crypto
+		ICrypto $crypto,
 	) {
 		parent::__construct($request, $config);
 
@@ -234,7 +234,7 @@ class LoginController extends BaseOidcController {
 
 		try {
 			$provider = $this->providerMapper->getProvider($providerId);
-		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
+		} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
 			$message = $this->l10n->t('There is not such OpenID Connect provider.');
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_not_found' => $providerId]);
 		}
@@ -460,9 +460,9 @@ class LoginController extends BaseOidcController {
 					'headers' => $headers,
 				]
 			);
-		} catch (ClientException | ServerException $e) {
+		} catch (ClientException|ServerException $e) {
 			$response = $e->getResponse();
-			$body = (string) $response->getBody();
+			$body = (string)$response->getBody();
 			$responseBodyArray = json_decode($body, true);
 			if ($responseBodyArray !== null && isset($responseBodyArray['error'], $responseBodyArray['error_description'])) {
 				$this->logger->debug('Failed to contact the OIDC provider token endpoint', [
@@ -645,7 +645,7 @@ class LoginController extends BaseOidcController {
 			if ($providerId) {
 				try {
 					$provider = $this->providerMapper->getProvider((int)$providerId);
-				} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
+				} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
 					$message = $this->l10n->t('There is not such OpenID Connect provider.');
 					return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_id' => $providerId]);
 				}
