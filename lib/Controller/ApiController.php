@@ -27,40 +27,26 @@ namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
-use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\OCSController;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IRequest;
 use OCP\IUserManager;
 
-class ApiController extends Controller {
-	/** @var UserMapper */
-	private $userMapper;
-
-	/** @var IUserManager */
-	private $userManager;
-	/**
-	 * @var IRootFolder
-	 */
-	private $root;
+class ApiController extends OCSController {
 
 	public function __construct(
 		IRequest $request,
-		IRootFolder $root,
-		UserMapper $userMapper,
-		IUserManager $userManager
+		private IRootFolder $root,
+		private UserMapper $userMapper,
+		private IUserManager $userManager
 	) {
 		parent::__construct(Application::APP_ID, $request);
-		$this->userMapper = $userMapper;
-		$this->userManager = $userManager;
-		$this->root = $root;
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @param int $providerId
 	 * @param string $userId
 	 * @param string|null $displayName
@@ -81,7 +67,7 @@ class ApiController extends Controller {
 		}
 
 		if ($email) {
-			$user->setEMailAddress($email);
+			$user->setSystemEMailAddress($email);
 		}
 
 		if ($quota) {
@@ -100,8 +86,6 @@ class ApiController extends Controller {
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @param string $userId
 	 * @return DataResponse
 	 */
