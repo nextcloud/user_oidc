@@ -34,6 +34,9 @@ return [
 		['name' => 'login#singleLogoutService', 'url' => '/sls', 'verb' => 'GET'],
 		['name' => 'login#backChannelLogout', 'url' => '/backchannel-logout/{providerIdentifier}', 'verb' => 'POST'],
 
+		['name' => 'api#createUser', 'url' => '/user', 'verb' => 'POST'],
+		['name' => 'api#deleteUser', 'url' => '/user/{userId}', 'verb' => 'DELETE'],
+
 		['name' => 'id4me#showLogin', 'url' => '/id4me', 'verb' => 'GET'],
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],
 		['name' => 'id4me#code', 'url' => '/id4me/code', 'verb' => 'GET'],
@@ -46,7 +49,7 @@ return [
 		['name' => 'Timezone#setTimezone', 'url' => '/config/timezone', 'verb' => 'POST'],
 	],
 	'ocs' => [
-		['name' => 'api#createUser', 'url' => '/api/{apiVersion}/user', 'verb' => 'POST', 'requirements' => $requirements],
-		['name' => 'api#deleteUser', 'url' => '/api/{apiVersion}/user/{userId}', 'verb' => 'DELETE', 'requirements' => $requirements],
+		['name' => 'ocsApi#createUser', 'url' => '/api/{apiVersion}/user', 'verb' => 'POST', 'requirements' => $requirements],
+		['name' => 'ocsApi#deleteUser', 'url' => '/api/{apiVersion}/user/{userId}', 'verb' => 'DELETE', 'requirements' => $requirements],
 	],
 ];

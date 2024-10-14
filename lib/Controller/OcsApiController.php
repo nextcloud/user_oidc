@@ -27,15 +27,15 @@ namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
-use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\OCSController;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IRequest;
 use OCP\IUserManager;
 
-class ApiController extends Controller {
+class OcsApiController extends OCSController {
 
 	public function __construct(
 		IRequest $request,
@@ -47,8 +47,6 @@ class ApiController extends Controller {
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @param int $providerId
 	 * @param string $userId
 	 * @param string|null $displayName
@@ -88,8 +86,6 @@ class ApiController extends Controller {
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @param string $userId
 	 * @return DataResponse
 	 */
