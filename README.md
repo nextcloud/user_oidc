@@ -232,21 +232,18 @@ If you need the users to exist before they authenticate for the first time
 you can pre-provision them with the user_oidc API:
 
 ``` bash
-curl -H "ocs-apirequest: true" \
-  -u admin:admin \
-  https://my.nextcloud.org/ocs/v2.php/apps/user_oidc/api/v1/user \
-  -X POST \
-  -H "content-type: application/json" \
-  -d '{"providerId":2,"userId":"apicreate"}'
+curl -H "ocs-apirequest: true" -u admin:admin -X POST -H "content-type: application/json" \
+  -d '{"providerId":2,"userId":"new_user","displayName":"New User","email":"new@user.org","quota":"5GB"}' \
+  https://my.nextcloud.org/ocs/v2.php/apps/user_oidc/api/v1/user
 ```
+
+Only the `providerId` and `userId` parameters are mandatory.
 
 You can also delete users managed by user_oidc with this API endpoint:
 
 ``` bash
-curl -H "ocs-apirequest: true" \
-  -u admin:admin \
-  https://my.nextcloud.org/ocs/v2.php/apps/user_oidc/api/v1/user/USER_ID \
-  -X DELETE
+curl -H "ocs-apirequest: true" -u admin:admin -X DELETE
+  https://my.nextcloud.org/ocs/v2.php/apps/user_oidc/api/v1/user/USER_ID
 ```
 
 ### UserInfo request for Bearer token validation
