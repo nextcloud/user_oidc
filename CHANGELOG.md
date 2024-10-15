@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 6.1.0 – 2024-10-15
+
+### Added
+
+- feat(provisioning): New system config flag to disable user creation in soft auto provisioning @julien-nc [#954](https://github.com/nextcloud/user_oidc/pull/954)
+- feat(ApiController): Add endpoint to de-provision user @edward-ly [#960](https://github.com/nextcloud/user_oidc/pull/960)
+- Add an OCS API controller for pre-provisioning and de-provisioning @julien-nc [#963](https://github.com/nextcloud/user_oidc/pull/963)
+
+### Changed
+
+- Make aud and azp checks optional when logging in or validating a bearer token @julien-nc [#921](https://github.com/nextcloud/user_oidc/pull/921)
+- Bump max NC version to 31
+
+### Fixed
+
+- Fix provisioning mistake when setting role @julien-nc [#930](https://github.com/nextcloud/user_oidc/pull/930)
+- Fix LoginController: revert default `token_endpoint_auth_method` value @edward-ly [#946](https://github.com/nextcloud/user_oidc/pull/946)
+- Fix integration tests sometimes not finding docker-compose but 'docker compose' @julien-nc [#953](https://github.com/nextcloud/user_oidc/pull/953)
+- Backchannel logout endpoint should only return 200 or 400 @julien-nc [#955](https://github.com/nextcloud/user_oidc/pull/955)
+- Use correct userId when getting user folder in provisioning endpoint if unique-uid is enabled @julien-nc [#958](https://github.com/nextcloud/user_oidc/pull/958)
+- Re-enable PKCE by default (if supported by the IdP) @edward-ly [#956](https://github.com/nextcloud/user_oidc/pull/956)
+- Prevent redirecting to an absolute URL after login @julien-nc [#961](https://github.com/nextcloud/user_oidc/pull/961)
+- Fix provisioning: If address attr is an object but can't be parsed to an array, give null to the 'attr mapped' event @julien-nc [#948](https://github.com/nextcloud/user_oidc/pull/948)
+
 ## 6.0.1 – 2024-07-26
 
 ### Fixed
