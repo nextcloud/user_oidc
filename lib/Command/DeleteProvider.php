@@ -37,16 +37,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class DeleteProvider extends Base {
-	private $providerMapper;
-	/**
-	 * @var ProviderService
-	 */
-	private $providerService;
 
-	public function __construct(ProviderMapper $providerMapper, ProviderService $providerService) {
+	public function __construct(
+		private ProviderMapper $providerMapper,
+		private ProviderService $providerService,
+	) {
 		parent::__construct();
-		$this->providerMapper = $providerMapper;
-		$this->providerService = $providerService;
 	}
 
 	protected function configure() {

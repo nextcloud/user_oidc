@@ -42,36 +42,16 @@ use Psr\Log\LoggerInterface;
 
 class SettingsController extends Controller {
 
-	/** @var ProviderMapper */
-	private $providerMapper;
-	/** @var ID4MeService */
-	private $id4meService;
-	/** @var ProviderService */
-	private $providerService;
-	/** @var ICrypto */
-	private $crypto;
-	/** @var IClientService */
-	private $clientService;
-	/** @var LoggerInterface */
-	private $logger;
-
 	public function __construct(
 		IRequest $request,
-		ProviderMapper $providerMapper,
-		ID4MeService $id4meService,
-		ProviderService $providerService,
-		ICrypto $crypto,
-		IClientService $clientService,
-		LoggerInterface $logger,
+		private ProviderMapper $providerMapper,
+		private ID4MeService $id4meService,
+		private ProviderService $providerService,
+		private ICrypto $crypto,
+		private IClientService $clientService,
+		private LoggerInterface $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
-
-		$this->providerMapper = $providerMapper;
-		$this->id4meService = $id4meService;
-		$this->providerService = $providerService;
-		$this->crypto = $crypto;
-		$this->clientService = $clientService;
-		$this->logger = $logger;
 	}
 
 	public function isDiscoveryEndpointValid($url) {

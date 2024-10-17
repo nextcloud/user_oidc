@@ -26,28 +26,15 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\User\Validator;
 
 use OCA\UserOIDC\Db\Provider;
-use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
-use Psr\Log\LoggerInterface;
 
 class UserInfoValidator implements IBearerTokenValidator {
 
-	/** @var DiscoveryService */
-	private $discoveryService;
-	/** @var OIDCService */
-	private $userInfoService;
-	/** @var ProviderService */
-	private $providerService;
-	/** @var LoggerInterface */
-	private $logger;
-
-
-	public function __construct(DiscoveryService $discoveryService, LoggerInterface $logger, OIDCService $userInfoService, ProviderService $providerService) {
-		$this->discoveryService = $discoveryService;
-		$this->logger = $logger;
-		$this->userInfoService = $userInfoService;
-		$this->providerService = $providerService;
+	public function __construct(
+		private OIDCService $userInfoService,
+		private ProviderService $providerService,
+	) {
 	}
 
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {

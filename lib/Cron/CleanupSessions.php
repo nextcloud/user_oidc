@@ -32,21 +32,12 @@ use OCP\IConfig;
 
 class CleanupSessions extends TimedJob {
 
-	/**
-	 * @var SessionMapper
-	 */
-	private $sessionMapper;
-	/**
-	 * @var IConfig
-	 */
-	private $config;
-
-	public function __construct(ITimeFactory  $time,
-		IConfig $config,
-		SessionMapper $sessionMapper) {
+	public function __construct(
+		ITimeFactory $time,
+		private IConfig $config,
+		private SessionMapper $sessionMapper,
+	) {
 		parent::__construct($time);
-		$this->sessionMapper = $sessionMapper;
-		$this->config = $config;
 		// daily
 		$this->setInterval(24 * 60 * 60);
 		if (method_exists($this, 'setTimeSensitivity')) {

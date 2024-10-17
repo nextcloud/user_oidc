@@ -5,15 +5,11 @@ namespace OCA\UserOIDC\Service;
 use OCA\UserOIDC\Db\ProviderMapper;
 
 class LocalIdService {
-	/** @var ProviderService */
-	private $providerService;
 
-	/** @var ProviderMapper */
-	private $providerMapper;
-
-	public function __construct(ProviderService $providerService, ProviderMapper $providerMapper) {
-		$this->providerService = $providerService;
-		$this->providerMapper = $providerMapper;
+	public function __construct(
+		private ProviderService $providerService,
+		private ProviderMapper $providerMapper,
+	) {
 	}
 
 	public function getId(int $providerId, string $id, bool $id4me = false): string {

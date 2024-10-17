@@ -36,17 +36,14 @@ use OCP\EventDispatcher\Event;
  */
 class AttributeMappedEvent extends Event {
 
-	/** @var string */
-	private $attribute;
-	/** @var object */
-	private $claims;
-	/** @var string */
-	private $value;
+	private ?string $value;
 
-	public function __construct(string $attribute, object $claims, ?string $default = null) {
+	public function __construct(
+		private string $attribute,
+		private object $claims,
+		?string $default = null,
+	) {
 		parent::__construct();
-		$this->attribute = $attribute;
-		$this->claims = $claims;
 		$this->value = $default;
 	}
 

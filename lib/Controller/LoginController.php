@@ -72,108 +72,29 @@ class LoginController extends BaseOidcController {
 	private const ID_TOKEN = 'oidc.id_token';
 	private const CODE_VERIFIER = 'oidc.code_verifier';
 
-	/** @var ISecureRandom */
-	private $random;
-
-	/** @var ISession */
-	private $session;
-
-	/** @var IClientService */
-	private $clientService;
-
-	/** @var IURLGenerator */
-	private $urlGenerator;
-
-	/** @var IUserSession */
-	private $userSession;
-
-	/** @var IUserManager */
-	private $userManager;
-
-	/** @var ITimeFactory */
-	private $timeFactory;
-
-	/** @var ProviderMapper */
-	private $providerMapper;
-
-	/** @var IEventDispatcher */
-	private $eventDispatcher;
-
-	/** @var LoggerInterface */
-	private $logger;
-
-	/** @var ProviderService */
-	private $providerService;
-
-	/** @var DiscoveryService */
-	private $discoveryService;
-
-	/** @var IConfig */
-	private $config;
-
-	/** @var LdapService */
-	private $ldapService;
-
-	/** @var IProvider */
-	private $authTokenProvider;
-
-	/** @var SessionMapper */
-	private $sessionMapper;
-
-	/** @var ProvisioningService */
-	private $provisioningService;
-
-	/** @var IL10N */
-	private $l10n;
-	/**
-	 * @var ICrypto
-	 */
-	private $crypto;
-
 	public function __construct(
 		IRequest $request,
-		ProviderMapper $providerMapper,
-		ProviderService $providerService,
-		DiscoveryService $discoveryService,
-		LdapService $ldapService,
-		ISecureRandom $random,
-		ISession $session,
-		IClientService $clientService,
-		IURLGenerator $urlGenerator,
-		IUserSession $userSession,
-		IUserManager $userManager,
-		ITimeFactory $timeFactory,
-		IEventDispatcher $eventDispatcher,
-		IConfig $config,
-		IProvider $authTokenProvider,
-		SessionMapper $sessionMapper,
-		ProvisioningService $provisioningService,
-		IL10N $l10n,
-		LoggerInterface $logger,
-		ICrypto $crypto,
+		private ProviderMapper $providerMapper,
+		private ProviderService $providerService,
+		private DiscoveryService $discoveryService,
+		private LdapService $ldapService,
+		private ISecureRandom $random,
+		private ISession $session,
+		private IClientService $clientService,
+		private IURLGenerator $urlGenerator,
+		private IUserSession $userSession,
+		private IUserManager $userManager,
+		private ITimeFactory $timeFactory,
+		private IEventDispatcher $eventDispatcher,
+		private IConfig $config,
+		private IProvider $authTokenProvider,
+		private SessionMapper $sessionMapper,
+		private ProvisioningService $provisioningService,
+		private IL10N $l10n,
+		private LoggerInterface $logger,
+		private ICrypto $crypto,
 	) {
 		parent::__construct($request, $config);
-
-		$this->random = $random;
-		$this->session = $session;
-		$this->clientService = $clientService;
-		$this->discoveryService = $discoveryService;
-		$this->urlGenerator = $urlGenerator;
-		$this->userSession = $userSession;
-		$this->userManager = $userManager;
-		$this->timeFactory = $timeFactory;
-		$this->providerMapper = $providerMapper;
-		$this->providerService = $providerService;
-		$this->eventDispatcher = $eventDispatcher;
-		$this->logger = $logger;
-		$this->config = $config;
-		$this->ldapService = $ldapService;
-		$this->authTokenProvider = $authTokenProvider;
-		$this->sessionMapper = $sessionMapper;
-		$this->provisioningService = $provisioningService;
-		$this->request = $request;
-		$this->l10n = $l10n;
-		$this->crypto = $crypto;
 	}
 
 	/**
