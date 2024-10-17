@@ -37,25 +37,12 @@ use Throwable;
 
 class SelfEncodedValidator implements IBearerTokenValidator {
 
-	/** @var DiscoveryService */
-	private $discoveryService;
-	/** @var LoggerInterface */
-	private $logger;
-	/** @var ITimeFactory */
-	private $timeFactory;
-	/** @var IConfig */
-	private $config;
-
 	public function __construct(
-		DiscoveryService $discoveryService,
-		LoggerInterface $logger,
-		ITimeFactory $timeFactory,
-		IConfig $config,
+		private DiscoveryService $discoveryService,
+		private LoggerInterface $logger,
+		private ITimeFactory $timeFactory,
+		private IConfig $config,
 	) {
-		$this->discoveryService = $discoveryService;
-		$this->logger = $logger;
-		$this->timeFactory = $timeFactory;
-		$this->config = $config;
 	}
 
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {

@@ -36,21 +36,11 @@ use OCP\Util;
  */
 class TimezoneHandlingListener implements IEventListener {
 
-	/** @var IUserSession */
-	private $userSession;
-	/** @var ISession */
-	private $session;
-	/** @var IConfig */
-	private $config;
-
 	public function __construct(
-		IUserSession $userSession,
-		ISession $session,
-		IConfig $config,
+		private IUserSession $userSession,
+		private ISession $session,
+		private IConfig $config,
 	) {
-		$this->userSession = $userSession;
-		$this->session = $session;
-		$this->config = $config;
 	}
 
 	public function handle(Event $event): void {

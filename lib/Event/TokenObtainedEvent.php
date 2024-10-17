@@ -34,16 +34,13 @@ use OCP\EventDispatcher\Event;
  * It may be used for further handling of oidc authenticated requests
  */
 class TokenObtainedEvent extends Event {
-	private $token;
-	private $provider;
-	private $discovery;
 
-	public function __construct(array $token, $provider, $discovery) {
+	public function __construct(
+		private array $token,
+		private Provider $provider,
+		private array $discovery,
+	) {
 		parent::__construct();
-
-		$this->token = $token;
-		$this->provider = $provider;
-		$this->discovery = $discovery;
 	}
 
 	public function getToken(): array {

@@ -33,25 +33,12 @@ use Throwable;
 
 class OIDCService {
 
-	/** @var LoggerInterface */
-	private $logger;
-	/** @var IClientService */
-	private $clientService;
-	/** @var ICrypto */
-	private $crypto;
-	/** @var DiscoveryService */
-	private $discoveryService;
-
 	public function __construct(
-		DiscoveryService $discoveryService,
-		LoggerInterface $logger,
-		IClientService $clientService,
-		ICrypto $crypto,
+		private DiscoveryService $discoveryService,
+		private LoggerInterface $logger,
+		private IClientService $clientService,
+		private ICrypto $crypto,
 	) {
-		$this->discoveryService = $discoveryService;
-		$this->logger = $logger;
-		$this->clientService = $clientService;
-		$this->crypto = $crypto;
 	}
 
 	public function userinfo(Provider $provider, string $accessToken): array {

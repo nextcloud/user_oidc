@@ -12,19 +12,11 @@ use Throwable;
 
 class SelfEncodedTokenProvisioning implements IProvisioningStrategy {
 
-	/** @var ProvisioningService */
-	private $provisioningService;
-
-	/** @var DiscoveryService */
-	private $discoveryService;
-
-	/** @var LoggerInterface */
-	private $logger;
-
-	public function __construct(ProvisioningService $provisioningService, DiscoveryService $discoveryService, LoggerInterface $logger) {
-		$this->provisioningService = $provisioningService;
-		$this->discoveryService = $discoveryService;
-		$this->logger = $logger;
+	public function __construct(
+		private ProvisioningService $provisioningService,
+		private DiscoveryService $discoveryService,
+		private LoggerInterface $logger,
+	) {
 	}
 
 	public function provisionUser(Provider $provider, string $tokenUserId, string $bearerToken, ?IUser $userFromOtherBackend): ?IUser {

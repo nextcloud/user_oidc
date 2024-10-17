@@ -33,15 +33,11 @@ use OCP\IRequest;
 
 class BaseOidcController extends Controller {
 
-	/**
-	 * @var IConfig
-	 */
-	private $config;
-
-	public function __construct(IRequest $request,
-		IConfig $config) {
+	public function __construct(
+		IRequest $request,
+		private IConfig $config,
+	) {
 		parent::__construct(Application::APP_ID, $request);
-		$this->config = $config;
 	}
 
 	/**

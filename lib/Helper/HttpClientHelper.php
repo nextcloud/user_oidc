@@ -32,11 +32,9 @@ use Id4me\RP\HttpClient;
 
 class HttpClientHelper implements HttpClient {
 
-	/** @var IClientService */
-	private $clientService;
-
-	public function __construct(IClientService $clientService) {
-		$this->clientService = $clientService;
+	public function __construct(
+		private IClientService $clientService,
+	) {
 	}
 
 	public function get($url, array $headers = []) {

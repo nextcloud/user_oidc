@@ -51,22 +51,14 @@ class DiscoveryService {
 		'ES512' => 'EC'
 	];
 
-	/** @var LoggerInterface */
-	private $logger;
+	private ICache $cache;
 
-	/** @var IClientService */
-	private $clientService;
-
-	/** @var ProviderService */
-	private $providerService;
-
-	/** @var ICache */
-	private $cache;
-
-	public function __construct(LoggerInterface $logger, IClientService $clientService, ProviderService $providerService, ICacheFactory $cacheFactory) {
-		$this->logger = $logger;
-		$this->clientService = $clientService;
-		$this->providerService = $providerService;
+	public function __construct(
+		private LoggerInterface $logger,
+		private IClientService $clientService,
+		private ProviderService $providerService,
+		ICacheFactory $cacheFactory,
+	) {
 		$this->cache = $cacheFactory->createDistributed('user_oidc');
 	}
 
