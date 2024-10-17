@@ -29,7 +29,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\IInitialStateService;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\IURLGenerator;
 use OCP\Settings\ISettings;
 use OCP\Util;
@@ -40,23 +40,20 @@ class AdminSettings implements ISettings {
 		private ProviderService $providerService,
 		private ID4MeService $Id4MeService,
 		private IURLGenerator $urlGenerator,
-		private IInitialStateService $initialStateService,
+		private IInitialState $initialStateService,
 	) {
 	}
 
 	public function getForm() {
 		$this->initialStateService->provideInitialState(
-			Application::APP_ID,
 			'id4meState',
 			$this->Id4MeService->getID4ME()
 		);
 		$this->initialStateService->provideInitialState(
-			Application::APP_ID,
 			'providers',
 			$this->providerService->getProvidersWithSettings()
 		);
 		$this->initialStateService->provideInitialState(
-			Application::APP_ID,
 			'redirectUrl',
 			$this->urlGenerator->linkToRouteAbsolute('user_oidc.login.code')
 		);
