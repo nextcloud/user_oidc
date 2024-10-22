@@ -88,9 +88,9 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$checkAudience = !isset($oidcSystemConfig['selfencoded_bearer_validation_audience_check'])
 			|| !in_array($oidcSystemConfig['selfencoded_bearer_validation_audience_check'], [false, 'false', 0, '0'], true);
+		$providerClientId = $provider->getClientId();
 		if ($checkAudience) {
 			$tokenAudience = $payload->aud;
-			$providerClientId = $provider->getClientId();
 			if (
 				(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
 					|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
