@@ -30,11 +30,9 @@ use OCP\IConfig;
 
 class ID4MeService {
 
-	/** @var IConfig */
-	private $config;
-
-	public function __construct(IConfig $config) {
-		$this->config = $config;
+	public function __construct(
+		private IConfig $config,
+	) {
 	}
 
 	public function setID4ME(bool $enabled): void {

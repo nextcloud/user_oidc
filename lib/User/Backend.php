@@ -62,71 +62,20 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		UserInfoValidator::class,
 	];
 
-	/** @var UserMapper */
-	private $userMapper;
-	/** @var LoggerInterface */
-	private $logger;
-	/** @var IRequest */
-	private $request;
-	/** @var ProviderMapper */
-	private $providerMapper;
-	/**
-	 * @var ProviderService
-	 */
-	private $providerService;
-	/**
-	 * @var IConfig
-	 */
-	private $config;
-	/**
-	 * @var IEventDispatcher
-	 */
-	private $eventDispatcher;
-	/**
-	 * @var DiscoveryService
-	 */
-	private $discoveryService;
-	/**
-	 * @var IURLGenerator
-	 */
-	private $urlGenerator;
-	/**
-	 * @var ISession
-	 */
-	private $session;
-	/**
-	 * @var IUserManager
-	 */
-	private $userManager;
-	/**
-	 * @var LdapService
-	 */
-	private $ldapService;
-
-	public function __construct(IConfig $config,
-		UserMapper $userMapper,
-		LoggerInterface $logger,
-		IRequest $request,
-		ISession $session,
-		IURLGenerator $urlGenerator,
-		IEventDispatcher $eventDispatcher,
-		DiscoveryService $discoveryService,
-		ProviderMapper $providerMapper,
-		ProviderService $providerService,
-		LdapService $ldapService,
-		IUserManager $userManager) {
-		$this->config = $config;
-		$this->userMapper = $userMapper;
-		$this->logger = $logger;
-		$this->request = $request;
-		$this->providerMapper = $providerMapper;
-		$this->providerService = $providerService;
-		$this->eventDispatcher = $eventDispatcher;
-		$this->discoveryService = $discoveryService;
-		$this->session = $session;
-		$this->urlGenerator = $urlGenerator;
-		$this->userManager = $userManager;
-		$this->ldapService = $ldapService;
+	public function __construct(
+		private IConfig $config,
+		private UserMapper $userMapper,
+		private LoggerInterface $logger,
+		private IRequest $request,
+		private ISession $session,
+		private IURLGenerator $urlGenerator,
+		private IEventDispatcher $eventDispatcher,
+		private DiscoveryService $discoveryService,
+		private ProviderMapper $providerMapper,
+		private ProviderService $providerService,
+		private LdapService $ldapService,
+		private IUserManager $userManager,
+	) {
 	}
 
 	public function getBackendName(): string {
