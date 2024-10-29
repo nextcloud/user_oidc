@@ -34,6 +34,9 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var ProvisioningService | MockObject */
 	private $providerService;
 
+	/** @var LdapService | MockObject */
+	private $ldapService;
+
 	/** @var UserMapper | MockObject */
 	private $userMapper;
 
@@ -192,8 +195,12 @@ class ProvisioningServiceTest extends TestCase {
 
 		$this->providerService
 			->method('getSetting')
-			->with($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups')
-			->willReturn('groups');
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', ''],
+					[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
+				]
+			));
 
 		$this->groupManager
 			->method('getUserGroups')

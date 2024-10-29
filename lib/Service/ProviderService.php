@@ -57,6 +57,7 @@ class ProviderService {
 		self::SETTING_UNIQUE_UID => true,
 		self::SETTING_CHECK_BEARER => false,
 		self::SETTING_SEND_ID_TOKEN_HINT => false,
+		self::SETTING_RESTRICT_LOGIN_TO_GROUPS => false,
 	];
 
 	public function __construct(
