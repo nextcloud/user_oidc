@@ -454,6 +454,18 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
 
+		// prevent login of users that are not in a whitelisted group (if activated)
+		$restrictLoginToGroups = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0');
+		if($restrictLoginToGroups === '1') {
+			$syncGroups = $this->provisioningService->getSyncGroupsOfToken($providerId, $idTokenPayload);
+			$this->logger->debug('Prevented user from login as user is not part of a whitelisted group');
+
+			if($syncGroups === null || count($syncGroups) === 0) {
+				$message = $this->l10n->t('You are not allowed to login');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'user not allowed to login']);
+			}
+		}
+
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
 
 		// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results

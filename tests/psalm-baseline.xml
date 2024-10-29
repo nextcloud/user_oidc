@@ -4,8 +4,5 @@
     <MissingDependency>
       <code><![CDATA[Image]]></code>
     </MissingDependency>
-    <RedundantCondition>
-      <code><![CDATA[isset($group->displayName)]]></code>
-    </RedundantCondition>
   </file>
 </files>
