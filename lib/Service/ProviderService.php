@@ -47,6 +47,8 @@ class ProviderService {
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
 	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
+	public const SETTING_GROUP_WHITELIST_REGEX = 'groupWhitelistRegex';
+	public const SETTING_RESTRICT_LOGIN_TO_GROUPS = 'restrictLoginToGroups';
 
 	public const BOOLEAN_SETTINGS_DEFAULT_VALUES = [
 		self::SETTING_GROUP_PROVISIONING => false,
@@ -159,7 +161,9 @@ class ProviderService {
 			self::SETTING_BEARER_PROVISIONING,
 			self::SETTING_EXTRA_CLAIMS,
 			self::SETTING_PROVIDER_BASED_ID,
-			self::SETTING_GROUP_PROVISIONING
+			self::SETTING_GROUP_PROVISIONING,
+			self::SETTING_GROUP_WHITELIST_REGEX,
+			self::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 		];
 	}
 

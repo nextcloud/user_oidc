@@ -389,6 +389,8 @@ class ProvisioningService {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $idTokenPayload->{$groupsAttribute} ?? null;
 
+		$groupsWhitelistRegex = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, 'whitelist');
+
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GROUPS, $idTokenPayload, json_encode($groupsData));
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Group mapping event dispatched');
@@ -413,6 +415,11 @@ class ProvisioningService {
 					continue;
 				}
 
+				if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->gid)) {
+					$this->logger->debug('Skipped group `' . $group->gid . '` for importing as not part of whitelist');
+					continue;
+				}
+
 				$group->gid = $this->idService->getId($providerId, $group->gid);
 
 				$syncGroups[] = $group;
@@ -420,6 +427,9 @@ class ProvisioningService {
 
 			foreach ($userGroups as $group) {
 				if (!in_array($group->getGID(), array_column($syncGroups, 'gid'))) {
+					if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->getGID())) {
+						continue;
+					}
 					$group->removeUser($user);
 				}
 			}
