@@ -209,7 +209,7 @@ class LoginController extends BaseOidcController {
 		return new RedirectResponse(
 			$redirectUrl === null
 				? null
-				: join('?', array_filter(parse_url($redirectUrl), fn($k) => in_array($k, ['path', 'query']), ARRAY_FILTER_USE_KEY))
+				: join('?', array_filter(parse_url($redirectUrl), fn ($k) => in_array($k, ['path', 'query']), ARRAY_FILTER_USE_KEY))
 		);
 	}
 
