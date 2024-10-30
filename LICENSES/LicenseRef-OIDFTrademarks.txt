@@ -1,0 +1,229 @@
+OPENID FOUNDATION
+
+TRADEMARK USAGE POLICY
+
+APPLICABILITY
+
+This OpenID Foundation (“OIDF”) Trademark Usage Policy (“Trademark Usage
+Policy”) applies to and is binding on:
+
+* each OIDF Member (“Member”) granted a Trademark License to use any OIDF
+Mark pursuant to the Member Agreement,
+* each OIDF Chapter (“Chapter”) granted a Trademark License to use any OIDF
+Mark pursuant to the National Chapters Policy,
+* each individual or organization (whether OIDF Member or non-member) granted
+a Trademark License to use an OIDF Mark pursuant to the Terms and
+Conditions for Certification of Conformance to an OpenID Connect
+Conformance Profile (“Implementer”), and
+* each other individual or organization (whether OIDF Member or non-member)
+granted a Trademark License to use an OIDF Mark by OIDF.
+This Trademark Usage Policy also applies to and is binding on any individual or
+organization (whether OIDF Member or non-member) that seeks to use the OIDF Marks
+for referential or other fair use purposes as authorized in Section 4 of this Trademark
+Usage Policy. Such individuals and organizations referred to herein as “Non-Licensed
+Users.”
+
+PURPOSE
+
+This Trademark Usage Policy specifies the rights and obligations of Members,
+Chapters, Implementers and other individuals and organizations when using one or
+more OIDF Marks licensed to them by OIDF pursuant to the Membership Agreement,
+National Chapters Policy, the Terms and Conditions for Certification of Conformance to
+an OpenID Connect Conformance Profile, or any other Trademark License granted by
+OIDF.
+It also addresses the rights and obligations of Non-Licensed Users who are not
+licensed to use an OIDF Mark, but are simply referring to such OIDF Mark in a manner
+authorized by the applicable trademark law as fair use.
+
+POLICY
+
+1. Definitions.
+
+1.1. “Licensee” means any and all of the following: Member as defined in the
+Membership Agreement, Chapter as defined in the National Chapters Policy,
+Implementer as defined in the Terms and Conditions for Certification of
+Conformance to an OpenID Connect Conformance Profile, and any party
+granted a license by OIDF to use an OIDF Mark under any other agreement.
+
+1.2. “OIDF Marks” and “Marks” mean the trademarks specified on Exhibit A (as
+updated from time-to-time) and additional trademarks as may be created or
+adopted by OIDF from time to time.
+
+1.3. “OpenID Logo” means the OIDF Mark designated as the “OpenID Logo” on
+Exhibit A.
+
+1.4. “Trademark License” means the applicable limited license and right to use
+one or more OIDF Marks granted to Licensee pursuant to the terms of the
+Membership Agreement (for Members), the National Chapters Policy (for
+Chapters), the Terms and Conditions For Certification of Conformance to an
+OpenID Connect Conformance Profile (for Implementers), or any other
+agreement between OIDF and Licensee granting a license and right to use one
+or more OIDF Marks.
+
+2. Use of OIDF Marks Generally. All Trademark Licenses to use one or more of the
+OIDF Marks granted to Licensees are subject to the following rules and
+requirements, which are incorporated in the applicable Trademark Licenses by
+reference:
+
+2.1. Ownership. The OIDF Marks are and shall remain at all times the sole
+and exclusive property of OIDF. Licensee agrees that it will do nothing
+inconsistent with such ownership, and agrees that all use by Licensee
+of the OIDF Marks and all goodwill associated with the use of the OIDF
+Marks shall inure to the sole benefit of, and be owned exclusively by,
+OIDF.
+
+2.2. Identification of Owner. All uses of any OIDF Mark must clearly identify the
+“OpenID Foundation” as the owner of the Mark. For example, “OpenID is a
+trademark (registered in various countries) of the OpenID Foundation.”
+
+2.3. Use of Trademark Symbols. When referencing any OIDF Mark, the
+proper notation should be included after the brand name or logo as
+provided in Exhibit A: “®” should be used for registered trademarks
+and “TM” should be appended to any unregistered trademarks.
+
+2.4. No Additional Rights Granted. Nothing in this Trademark Usage Policy
+or any Trademark License granting Licensee the right to use one or
+more of the OIDF Marks shall give Licensee any right, title or interest in
+or to any of the OIDF Marks, other than the license to use the OIDF
+Marks in the manner expressly permitted by such Trademark License,
+and only for so long as such agreement and Trademark License
+remains in place. Use of the OIDF Marks shall create no rights for
+Licensee in or to any of the OIDF Marks beyond the terms and
+conditions of such limited Trademark License and this Trademark
+Usage Policy.
+
+2.5. No Alterations. No right to create modifications or derivatives of OIDF Marks is
+granted to any Licensee. The OIDF Marks may not be revised or altered in any
+way and must be displayed in the same form as produced by OIDF.
+
+2.6. Third Party Use Prohibited. Licensee shall not permit any third party to use the
+OIDF Marks.
+
+2.7. Compliance with Law. The OIDF Marks must at all times be used in a
+professional manner and in compliance with all applicable laws and
+regulations.
+
+2.8. Inappropriate Use. The OIDF Marks may not be used in any manner that, in the
+sole discretion of OIDF, embarrasses or discredits OIDF or tarnishes its
+reputation and goodwill; is false or misleading; violates the rights of others;
+violates any law, regulation or other public policy; or mischaracterizes the
+relationship between OIDF and Licensee, including but not limited to the fact
+that Licensee is a separate and distinct legal entity from OIDF.
+
+2.9. No Endorsement. Except as expressly authorized in the applicable Trademark
+License, OIDF Marks may not be used to indicate or suggest any kind of
+endorsement by OIDF, official status with respect to OIDF, or any kind of
+relationship with OIDF.
+
+2.10.Audit Rights. OIDF may audit Licensee’s use of the OIDF Marks to determine
+compliance with the applicable Trademark License(s) and this Trademark
+Usage Policy.
+
+2.11.Enforcement. OIDF reserves the right to enforce its OIDF Marks against
+improper, inappropriate, or misleading uses.
+
+2.12.Other Requirements. Note: Certain OIDF Marks or icons may have additional
+information and requirements regarding their use not found within this
+Trademark Usage Policy. Please refer to OpenID Logo and Icon Usage
+(http://wiki.openid.net/f/openid-logo-guidelines.pdf).
+
+2.13.LIMITATION OF LIABILITY. IN NO EVENT SHALL OIDF OR ANY TRUSTEES,
+DIRECTORS, OFFICERS, EMPLOYEES, OR CONTRACTORS BE LIABLE FOR
+INCIDENTAL OR CONSEQUENTIAL DAMAGES OF ANY KIND ARISING FROM
+OR RELATED TO USE OF ANY OIDF MARKS, INCLUDING ECONOMIC
+DAMAGES AND LOST PROFITS, REGARDLESS OF WHETHER OIDF SHALL
+BE ADVISED, SHALL HAVE OTHER REASON TO KNOW, OR IN FACT SHALL
+KNOW OF THE POSSIBILITY OF THE FOREGOING.
+
+2.14.Questions. Questions about this license should be sent to help@oidf.org.
+
+3. Use of “OpenID Certified” Certification Mark.
+In addition to the foregoing general requirements, the Trademark License to use the
+“OpenID Certified” certification mark granted to Implementers in the Terms and
+Conditions for Certification of Conformance to an OpenID Connect Conformance
+Profile (“Certification Terms”) is also subject to the following rules and
+requirements, which are incorporated in such Certification Terms by reference:
+
+3.1. The “OpenID Certified” certification mark is a visual manifestation of the status
+of the Implementer’s Deployment as having been self-certified as conforming to
+the OpenID Connect Conformance Profile.
+
+3.2. An Implementer may announce self-certification of its Deployment in a press
+release, and include the “OpenID Certified” certification mark as evidence that
+its Deployment has met the requirements for self-certification established by
+OIDF.
+
+3.3. An Implementer may use the “OpenID Certified” certification mark only in
+connection with the Deployment that is the subject of such self-certification and
+only so long as such self-certification remains posted and publicly available
+from OIDF or a registry selected by OIDF.
+
+3.4. The “OpenID Certified” certification mark may not be used in a manner that
+implies any endorsement of the Implementer or such Deployment by OIDF, or
+the existence of any certification, authorization, or affiliation that does not exist
+with respect to OIDF.
+
+3.5. The “OpenID Certified” certification mark may be placed on the Implementer’s
+website, but only in a manner that clearly identifies the Deployment to which it
+relates, and only in a form that constitutes a link
+to: http://openid.net/certification/.
+
+3.6. The “OpenID Certified” certification mark must be removed from the
+Implementer’s website under certain circumstances including, but not limited
+to: (1) the Deployment self-certification ceases to be active or accurate; (2) the
+Implementer fails to comply with the Certification Terms or these Trademark
+Usage Guidelines; or (3) the Implementer ceases operations with respect to the
+Deployment
+
+3.7. Failure to comply with these Trademark Usage Guidelines may result in
+enforcement of the “OpenID Certified” certification mark, including but not
+limited to, through an action for infringement of the mark, an action for breach
+of contract, and/or a referral to the Federal Trade Commission for investigation
+of an unfair or deceptive trade practice under section 5 of the Federal Trade
+Commission Act.
+
+3.8. USE OF THE “OpenID Certified” CERTIFICATION MARK BY ANY PERSON
+OR ORGANIZATION NOT AUTHORIZED BY OIDF IN ACCORDANCE WITH
+THE FOREGOING, OR IN CONNECTION WITH ANY DEPLOYMENTTHAT IS
+NOT THE SUBJECT OF A CURRENT AND VALID CERTIFICATION
+ACCEPTED AND PUBLISHED BY OIDF, IS STRICTLY PROHIBITED.
+
+4. Guidelines for Non-Licensed Use of the OIDF Marks
+These guidelines are for third parties who do not hold a license to use OIDF Marks
+(“Non-Licensed Users”), but wish to use OIDF Marks (other than the OpenID Logo
+and the OpenID Certified Logo) for referential or other fair use purposes in
+promotional, advertising, instructional, or reference materials, or on their web sites,
+products, labels, or packaging. Except for the limited right to use as expressly
+permitted under these Guidelines, no other rights of any kind are granted
+hereunder, by implication or otherwise.
+The following guidelines apply:
+
+4.1. The OIDF Marks must be used only to:
+* describe or reference OIDF specifications, documents, software, or other
+products listed at the OIDF web sites (collectively, “OIDF Products”), or
+* describe non-OIDF products that implement the required features and
+operations of OIDF Products. Required features and operations are defined
+within OIDF specifications, often in accordance with [RFC2119].
+Representations that products or services comply with any OIDF
+specification must clearly indicate that the representations are made by the
+Non-Licensed User, and not by the OIDF.
+
+4.2. The OIDF Marks must only be used in a way that accurately reflects the
+STATUS associated with the OIDF Products. The STATUS of an OIDF Product
+describes the context in which the product was developed including the
+publication date, intellectual property disclosures (e.g., copyright or patent
+terms), location (URI), its publication level (Draft, Implementer’s Draft, Final
+Specification, Note, Whitepaper), and future expectations regarding the OIDF
+Product.
+
+4.3. All such uses of the OIDF Marks are subject to and must comply with the
+requirements of Section 2 above (“Use of OIDF Marks Generally”).
+Notwithstanding the foregoing, a Non-Licensed User may not use the OpenID
+Logo or the OpenID CERTIFIED Logo in any manner, in whole or in part.
+
+References
+[RFC2119]
+S. Bradner. RFC2119: Key words for use in RFCs to Indicate Requirement Levels. IETF
+Network Working Group. BCP: 14 March 1997. Category: Best Current Practice
+
+A copy can be found at https://openid.net/wordpress-content/uploads/2017/06/OIDF-Policy-Trademark-Usage-Policy-Final-6-19-2017.pdf
