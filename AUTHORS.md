@@ -20,6 +20,7 @@
 - Florian Klinger <florian.klinger@nextcloud.com>
 - Joas Schilling <coding@schilljs.com>
 - John Molakvoæ <skjnldsv@protonmail.com>
+- joselameira <60699452+joselameira@users.noreply.github.com>
 - Julien Veyssier <julien-nc@posteo.net>
 - Julius Knorr <jus@bitgrid.net>
 - Louis Chemineau <louis@chmn.me>
