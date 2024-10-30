@@ -4,6 +4,8 @@
 -->
 # user_oidc
 
+[![REUSE status](https://api.reuse.software/badge/github.com/nextcloud/user_oidc)](https://api.reuse.software/info/github.com/nextcloud/user_oidc)
+
 OpenID Connect user backend for Nextcloud
 
 ## General usage
