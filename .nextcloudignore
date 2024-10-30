@@ -23,6 +23,7 @@
 /node_modules
 /package.json
 /package-lock.json
+/psalm.xml
 /screenshots
 /src
 /stylelint.config.js
