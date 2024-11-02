@@ -461,8 +461,8 @@ class LoginController extends BaseOidcController {
 
 			if($syncGroups === null || count($syncGroups) === 0) {
 				$this->logger->debug('Prevented user from login as user is not part of a whitelisted group');
-				$message = $this->l10n->t('You do not have permission to log in to this instance. If you believe this is an error, please contact an Administrator.');
-				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'user not allowed to login']);
+				$message = $this->l10n->t('You do not have permission to log in to this instance. If you think this is an error, please contact an administrator.');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'user not in any whitelisted group']);
 			}
 		}
 

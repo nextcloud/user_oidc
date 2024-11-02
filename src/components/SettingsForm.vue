@@ -247,13 +247,13 @@
 				type="text">
 		</p>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'Only groups matching the whitelist regex will be created, updated and deleted by the group claim') }}
+			{{ t('user_oidc', 'Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}', { regex: '/^blue/', substr: 'blue' }) }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.restrictLoginToGroups" wrapper-element="div">
-			{{ t('user_oidc', 'Restrict login for users without whitelisted groups.') }}
+			{{ t('user_oidc', 'Restrict login for users that are not in any whitelisted group') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'Users that are not part of a whitelisted group are not created and can not login') }}
+			{{ t('user_oidc', 'Users that are not part of any whitelisted group are not created and can not login') }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
