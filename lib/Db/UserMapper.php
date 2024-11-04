@@ -35,15 +35,14 @@ use OCP\IDBConnection;
  * @extends QBMapper<User>
  */
 class UserMapper extends QBMapper {
-	/** @var LocalIdService */
-	private $idService;
 
-	/** @var CappedMemoryCache<User> */
-	private $userCache;
+	private CappedMemoryCache $userCache;
 
-	public function __construct(IDBConnection $db, LocalIdService $idService) {
+	public function __construct(
+		IDBConnection $db,
+		private LocalIdService $idService,
+	) {
 		parent::__construct($db, 'user_oidc', User::class);
-		$this->idService = $idService;
 		$this->userCache = new CappedMemoryCache();
 	}
 

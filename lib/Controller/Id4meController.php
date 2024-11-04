@@ -63,70 +63,29 @@ class Id4meController extends BaseOidcController {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	private const AUTHNAME = 'oidc.authname';
-
-	/** @var ISecureRandom */
-	private $random;
-	/** @var ISession */
-	private $session;
-	/** @var IClientService */
-	private $clientService;
-	/** @var IURLGenerator */
-	private $urlGenerator;
-	/** @var UserMapper */
-	private $userMapper;
-	/** @var IUserSession */
-	private $userSession;
-	/** @var IUserManager */
-	private $userManager;
-	/** @var Id4MeMapper */
-	private $id4MeMapper;
-	/** @var Service */
-	private $id4me;
-	/** @var IL10N */
-	private $l10n;
-	/** @var LoggerInterface */
-	private $logger;
-	/** @var ICrypto */
-	private $crypto;
-	/** @var ITimeFactory */
-	private $timeFactory;
-	/** @var ID4MeService */
-	private $id4MeService;
+	private Service $id4me;
 
 	public function __construct(
 		IRequest $request,
-		ISecureRandom $random,
-		ISession $session,
+		private ISecureRandom $random,
+		private ISession $session,
 		IConfig $config,
-		IL10N $l10n,
-		ITimeFactory $timeFactory,
-		IClientService $clientService,
-		IURLGenerator $urlGenerator,
-		UserMapper $userMapper,
-		IUserSession $userSession,
-		IUserManager $userManager,
+		private IL10N $l10n,
+		private ITimeFactory $timeFactory,
+		private IClientService $clientService,
+		private IURLGenerator $urlGenerator,
+		private UserMapper $userMapper,
+		private IUserSession $userSession,
+		private IUserManager $userManager,
 		HttpClientHelper $clientHelper,
-		Id4MeMapper $id4MeMapper,
-		ID4MeService $id4MeService,
-		LoggerInterface $logger,
-		ICrypto $crypto,
+		private Id4MeMapper $id4MeMapper,
+		private ID4MeService $id4MeService,
+		private LoggerInterface $logger,
+		private ICrypto $crypto,
 	) {
 		parent::__construct($request, $config);
 
-		$this->random = $random;
-		$this->session = $session;
-		$this->clientService = $clientService;
-		$this->urlGenerator = $urlGenerator;
-		$this->userMapper = $userMapper;
-		$this->userSession = $userSession;
-		$this->userManager = $userManager;
 		$this->id4me = new Service($clientHelper);
-		$this->id4MeMapper = $id4MeMapper;
-		$this->l10n = $l10n;
-		$this->logger = $logger;
-		$this->crypto = $crypto;
-		$this->timeFactory = $timeFactory;
-		$this->id4MeService = $id4MeService;
 	}
 
 	/**

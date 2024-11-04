@@ -37,13 +37,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class UpsertProvider extends Base {
 
-	/** @var ProviderService */
-	private $providerService;
-	/** @var ProviderMapper */
-	private $providerMapper;
-	/** @var ICrypto */
-	private $crypto;
-
 	private const EXTRA_OPTIONS = [
 		'unique-uid' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_UNIQUE_UID,
@@ -152,14 +145,11 @@ class UpsertProvider extends Base {
 	];
 
 	public function __construct(
-		ProviderService $providerService,
-		ProviderMapper $providerMapper,
-		ICrypto $crypto,
+		private ProviderService $providerService,
+		private ProviderMapper $providerMapper,
+		private ICrypto $crypto,
 	) {
 		parent::__construct();
-		$this->providerService = $providerService;
-		$this->providerMapper = $providerMapper;
-		$this->crypto = $crypto;
 	}
 
 	protected function configure() {

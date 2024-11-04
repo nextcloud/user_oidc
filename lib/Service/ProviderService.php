@@ -74,15 +74,10 @@ class ProviderService {
 		self::SETTING_SEND_ID_TOKEN_HINT => false,
 	];
 
-
-	/** @var IConfig */
-	private $config;
-	/** @var ProviderMapper */
-	private $providerMapper;
-
-	public function __construct(IConfig $config, ProviderMapper $providerMapper) {
-		$this->config = $config;
-		$this->providerMapper = $providerMapper;
+	public function __construct(
+		private IConfig $config,
+		private ProviderMapper $providerMapper,
+	) {
 	}
 
 	public function getProvidersWithSettings(): array {
