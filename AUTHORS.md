@@ -1,0 +1,42 @@
+<!--
+  - SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+# Authors
+
+- Aaron Lewandowski <a.lewandowski@tks.eu>
+- Ada <29815625+eyduh@users.noreply.github.com>
+- Andy Scherzinger <info@andy-scherzinger.de>
+- aro-lew <114079388+aro-lew@users.noreply.github.com>
+- Ben Kristinsson <ben@sudo.is>
+- Bernd.Rederlechner@t-systems.com <bernd.rederlechner@t-systems.com>
+- Caleb Maclennan <caleb@alerque.com>
+- Carl Schwan <carl@carlschwan.eu>
+- Christoph Wurst <christoph@winzerhof-wurst.at>
+- Christoph Wurst <ChristophWurst@users.noreply.github.com>
+- Clément OUDOT <clement@oodo.net>
+- Côme Chilliet <91878298+come-nc@users.noreply.github.com>
+- Edward Ly <contact@edward.ly>
+- Florian Klinger <florian.klinger@nextcloud.com>
+- Joas Schilling <coding@schilljs.com>
+- John Molakvoæ <skjnldsv@protonmail.com>
+- joselameira <60699452+joselameira@users.noreply.github.com>
+- Julien Veyssier <julien-nc@posteo.net>
+- Julius Knorr <jus@bitgrid.net>
+- Louis Chemineau <louis@chmn.me>
+- Lukas Reschke <lukas@statuscode.ch>
+- Marcel Klehr <mklehr@gmx.net>
+- Marvin Öhlerking <marvin.oehlerking@capgemini.com>
+- msk010 <msk010@outlook.com>
+- nc-fkl <149385388+nc-fkl@users.noreply.github.com>
+- Nextcloud bot <bot@nextcloud.com>
+- Pieter Fiers <pieter@pfiers.net>
+- Quentin de Longraye <quentin@dldl.fr>
+- Reigo Reinmets <reigo@reinmets.ee>
+- Rello <Rello@users.noreply.github.com>
+- rgfernandes <rgfernandes@gmail.com>
+- Robin Appelman <robin@icewind.nl>
+- Roeland Jago Douma <roeland@famdouma.nl>
+- Thibault Coupin <thibault.coupin@gmail.com>
+- Tobias Wolter <towo@towo.eu>
+- Vincent Petry <vincent@nextcloud.com>
