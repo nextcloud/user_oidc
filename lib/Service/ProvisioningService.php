@@ -7,6 +7,7 @@
 
 namespace OCA\UserOIDC\Service;
 
+use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCP\Accounts\IAccountManager;
@@ -180,6 +181,12 @@ class ProvisioningService {
 				$oldDisplayName = $user->getDisplayName();
 				if ($newDisplayName !== $oldDisplayName) {
 					$user->setDisplayName($newDisplayName);
+					if ($user->getBackendClassName() === Application::APP_ID) {
+						$backendUser = $this->userMapper->getOrCreate($providerId, $user->getUID());
+						$backendUser->setDisplayName($newDisplayName);
+						$this->userMapper->update($backendUser);
+					}
+					$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
 				}
 			}
 		}
