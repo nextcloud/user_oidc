@@ -29,7 +29,7 @@ use JsonSerializable;
 
 class Token implements JsonSerializable {
 
-	private string $idToken;
+	private ?string $idToken;
 	private string $accessToken;
 	private int $expiresIn;
 	private int $refreshExpiresIn;
@@ -38,7 +38,7 @@ class Token implements JsonSerializable {
 	private ?int $providerId;
 
 	public function __construct(array $tokenData) {
-		$this->idToken = $tokenData['id_token'];
+		$this->idToken = $tokenData['id_token'] ?? null;
 		$this->accessToken = $tokenData['access_token'];
 		$this->expiresIn = $tokenData['expires_in'];
 		$this->refreshExpiresIn = $tokenData['refresh_expires_in'];
@@ -51,7 +51,7 @@ class Token implements JsonSerializable {
 		return $this->accessToken;
 	}
 
-	public function getIdToken(): string {
+	public function getIdToken(): ?string {
 		return $this->idToken;
 	}
 
