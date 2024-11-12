@@ -215,7 +215,7 @@ class ProvisioningServiceTest extends TestCase {
 						'users',
 					],
 				],
-				'/nextcloud/',
+				'nextcloud',
 				false,
 			],
 		];

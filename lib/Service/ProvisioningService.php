@@ -389,7 +389,7 @@ class ProvisioningService {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $idTokenPayload->{$groupsAttribute} ?? null;
 
-		$groupsWhitelistRegex = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');
+		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GROUPS, $idTokenPayload, json_encode($groupsData));
 		$this->eventDispatcher->dispatchTyped($event);
@@ -431,7 +431,7 @@ class ProvisioningService {
 	}
 
 	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
-		$groupsWhitelistRegex = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');
+		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
 		$syncGroups = $this->getSyncGroupsOfToken($providerId, $idTokenPayload);
 
@@ -459,5 +459,17 @@ class ProvisioningService {
 				}
 			}
 		}
+	}
+
+	public function getGroupWhitelistRegex(int $providerId): string {
+		$regex = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');
+
+		// If regex does not start with '/', add '/' to the beginning and end
+		// Only check first character to allow for flags at the end of the regex
+		if ($regex && substr($regex, 0, 1) !== '/') {
+			$regex = '/' . $regex . '/';
+		}
+
+		return $regex;
 	}
 }
