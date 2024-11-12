@@ -146,6 +146,7 @@ class UpsertProvider extends Base {
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
 			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
 			->addOption('endsessionendpointuri', 'e', InputOption::VALUE_OPTIONAL, 'OpenID end session endpoint uri')
+			->addOption('bearersecret', 'bs', InputOption::VALUE_OPTIONAL, 'Telekom bearer token requires a different client secret for bearer tokens')
 			->addOption('scope', 'o', InputOption::VALUE_OPTIONAL, 'OpenID requested value scopes, if not set defaults to "openid email profile"');
 		foreach (self::EXTRA_OPTIONS as $name => $option) {
 			$this->addOption($name, $option['shortcut'], $option['mode'], $option['description'], $option['default']);
@@ -170,10 +171,17 @@ class UpsertProvider extends Base {
 			return $this->listProviders($input, $output);
 		}
 
+		// bearersecret is usually base64 encoded, but SAM delivers it non-encoded by default
+		// so always encode/decode for this field
+		$bearersecret = $input->getOption('bearersecret');
+		if ($bearersecret !== null) {
+			$bearersecret = $this->crypto->encrypt(\Base64Url\Base64Url::encode($bearersecret));
+		}
+
 		// check if any option for updating is provided
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
-				'identifier', 'clientid', 'clientsecret', 'discoveryuri', 'scope',
+				'identifier', 'clientid', 'clientsecret', 'discoveryuri', 'scope', 'bearersecret',
 				...array_keys(self::EXTRA_OPTIONS),
 			]) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
@@ -213,7 +221,7 @@ class UpsertProvider extends Base {
 			$scope = $scope ?? 'openid email profile';
 		}
 		try {
-			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope, $endsessionendpointuri);
+			$provider = $this->providerMapper->createOrUpdateProvider($identifier, $clientid, $clientsecret, $discoveryuri, $scope, $endsessionendpointuri, $bearersecret);
 			// invalidate JWKS cache (even if it was just created)
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, '');
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');

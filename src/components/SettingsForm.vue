@@ -32,6 +32,15 @@
 				:required="!update"
 				autocomplete="off">
 		</p>
+		<p>
+			<label for="oidc-bearer-secret">{{ t('user_oidc', 'Bearer shared secret') }}</label>
+			<input id="oidc-bearer-secret"
+				v-model="localProvider.bearerSecret"
+				:placeholder="update ? t('user_oidc', 'Leave empty to keep existing') : null"
+				type="text"
+				:required="!update"
+				autocomplete="off">
+		</p>
 		<p class="settings-hint warning-hint">
 			<AlertOutlineIcon :size="20" class="icon" />
 			{{ t('user_oidc', 'Warning, if the protocol of the URLs in the discovery content is HTTP, the ID token will be delivered through an insecure connection.') }}
