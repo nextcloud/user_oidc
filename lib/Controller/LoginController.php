@@ -456,10 +456,10 @@ class LoginController extends BaseOidcController {
 
 		// prevent login of users that are not in a whitelisted group (if activated)
 		$restrictLoginToGroups = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0');
-		if($restrictLoginToGroups === '1') {
+		if ($restrictLoginToGroups === '1') {
 			$syncGroups = $this->provisioningService->getSyncGroupsOfToken($providerId, $idTokenPayload);
 
-			if($syncGroups === null || count($syncGroups) === 0) {
+			if ($syncGroups === null || count($syncGroups) === 0) {
 				$this->logger->debug('Prevented user from login as user is not part of a whitelisted group');
 				$message = $this->l10n->t('You do not have permission to log in to this instance. If you think this is an error, please contact an administrator.');
 				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'user not in any whitelisted group']);

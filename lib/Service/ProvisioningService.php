@@ -435,7 +435,7 @@ class ProvisioningService {
 
 		$syncGroups = $this->getSyncGroupsOfToken($providerId, $idTokenPayload);
 
-		if($syncGroups !== null) {
+		if ($syncGroups !== null) {
 
 			$userGroups = $this->groupManager->getUserGroups($user);
 			foreach ($userGroups as $group) {
