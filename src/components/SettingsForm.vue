@@ -240,6 +240,21 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token. The Format of the groups claim value should be [{gid: "1", displayName: "group1"}, ...] or ["group1", "group2", ...]') }}
 		</p>
+		<p>
+			<label for="group-whitelist-regex">{{ t('user_oidc', 'Group whitelist regex') }}</label>
+			<input id="group-whitelist-regex"
+				v-model="localProvider.settings.groupWhitelistRegex"
+				type="text">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}', { regex: '/^blue/', substr: 'blue' }) }}
+		</p>
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.restrictLoginToGroups" wrapper-element="div">
+			{{ t('user_oidc', 'Restrict login for users that are not in any whitelisted group') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Users that are not part of any whitelisted group are not created and can not login') }}
+		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
 		</NcCheckboxRadioSwitch>

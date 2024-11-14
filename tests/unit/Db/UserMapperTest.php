@@ -20,6 +20,9 @@ class UserMapperTest extends TestCase {
 	/** @var LocalIdService|MockObject */
 	private $idService;
 
+	/** @var IDBConnection|MockObject */
+	private $db;
+
 	/** @var UserMapper|MockObject */
 	private $userMapper;
 

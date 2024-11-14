@@ -34,6 +34,9 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var ProvisioningService | MockObject */
 	private $providerService;
 
+	/** @var LdapService | MockObject */
+	private $ldapService;
+
 	/** @var UserMapper | MockObject */
 	private $userMapper;
 
@@ -170,7 +173,9 @@ class ProvisioningServiceTest extends TestCase {
 							'displayName' => 'groupName1'
 						]
 					],
-				]
+				],
+				'',
+				true,
 			],
 			[
 				'1',
@@ -179,26 +184,71 @@ class ProvisioningServiceTest extends TestCase {
 					'groups' => [
 						'group2'
 					],
-				]
+				],
+				'',
+				true,
+			],
+			[
+				'1_Group_Import',
+				'Imported from OIDC',
+				(object)[
+					'groups' => [
+						(object)[
+							'gid' => '1_Group_Import',
+							'displayName' => 'Imported from OIDC',
+						],
+						(object)[
+							'gid' => '10_Group_NoImport',
+							'displayName' => 'Not Imported',
+						]
+					],
+				],
+				'/^1_/',
+				false
+			],
+			[
+				'1',
+				'users_nextcloud',
+				(object)[
+					'groups' => [
+						'users_nextcloud',
+						'users',
+					],
+				],
+				'nextcloud',
+				false,
 			],
 		];
 	}
 
 	/** @dataProvider dataProvisionUserGroups */
-	public function testProvisionUserGroups(string $gid, string $displayName, object $payload): void {
+	public function testProvisionUserGroups(string $gid, string $displayName, object $payload, string $group_whitelist, bool $expect_delete_local_group): void {
 		$user = $this->createMock(IUser::class);
 		$group = $this->createMock(IGroup::class);
+		$local_group = $this->createMock(IGroup::class);
 		$providerId = 421;
 
 		$this->providerService
 			->method('getSetting')
-			->with($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups')
-			->willReturn('groups');
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', $group_whitelist],
+					[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
+				]
+			));
 
 		$this->groupManager
 			->method('getUserGroups')
 			->with($user)
-			->willReturn([]);
+			->willReturn([$local_group]);
+
+		$local_group
+			->method('getGID')
+			->willReturn('local_group');
+
+		$local_group->expects($expect_delete_local_group ? self::once() : self::never())
+			->method('removeUser')
+			->with($user);
 
 		$this->idService->method('getId')
 			->willReturn($gid);

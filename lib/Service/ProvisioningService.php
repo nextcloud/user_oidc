@@ -385,9 +385,11 @@ class ProvisioningService {
 		}
 	}
 
-	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
+	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload) {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $idTokenPayload->{$groupsAttribute} ?? null;
+
+		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GROUPS, $idTokenPayload, json_encode($groupsData));
 		$this->eventDispatcher->dispatchTyped($event);
@@ -396,7 +398,6 @@ class ProvisioningService {
 		if ($event->hasValue() && $event->getValue() !== null) {
 			// casted to null if empty value
 			$groups = json_decode($event->getValue() ?? '');
-			$userGroups = $this->groupManager->getUserGroups($user);
 			$syncGroups = [];
 
 			foreach ($groups as $k => $v) {
@@ -413,13 +414,35 @@ class ProvisioningService {
 					continue;
 				}
 
+				if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->gid)) {
+					$this->logger->debug('Skipped group `' . $group->gid . '` for importing as not part of whitelist');
+					continue;
+				}
+
 				$group->gid = $this->idService->getId($providerId, $group->gid);
 
 				$syncGroups[] = $group;
 			}
 
+			return $syncGroups;
+		}
+
+		return null;
+	}
+
+	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
+		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
+
+		$syncGroups = $this->getSyncGroupsOfToken($providerId, $idTokenPayload);
+
+		if ($syncGroups !== null) {
+
+			$userGroups = $this->groupManager->getUserGroups($user);
 			foreach ($userGroups as $group) {
 				if (!in_array($group->getGID(), array_column($syncGroups, 'gid'))) {
+					if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->getGID())) {
+						continue;
+					}
 					$group->removeUser($user);
 				}
 			}
@@ -436,5 +459,17 @@ class ProvisioningService {
 				}
 			}
 		}
+	}
+
+	public function getGroupWhitelistRegex(int $providerId): string {
+		$regex = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');
+
+		// If regex does not start with '/', add '/' to the beginning and end
+		// Only check first character to allow for flags at the end of the regex
+		if ($regex && substr($regex, 0, 1) !== '/') {
+			$regex = '/' . $regex . '/';
+		}
+
+		return $regex;
 	}
 }
