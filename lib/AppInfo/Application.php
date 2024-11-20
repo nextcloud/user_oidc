@@ -83,7 +83,7 @@ class Application extends App implements IBootstrap {
 		if ($isDefaultLogin && !$settings->getAllowMultipleUserBackEnds() && count($providers) === 1) {
 			$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
 				'providerId' => $providers[0]->getId(),
-				'redirectUrl' => $redirectUrl
+				'redirectUrl' => $urlGenerator->getAbsoluteURL($redirectUrl)
 			]);
 			header('Location: ' . $targetUrl);
 			exit();
@@ -97,7 +97,7 @@ class Application extends App implements IBootstrap {
 			// FIXME: Move to IAlternativeLogin but requires boot due to db connection
 			OC_App::registerLogIn([
 				'name' => $l10n->t('Login with %1s', [$provider->getIdentifier()]),
-				'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login', ['providerId' => $provider->getId(), 'redirectUrl' => $redirectUrl]),
+				'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login', ['providerId' => $provider->getId(), 'redirectUrl' => $urlGenerator->getAbsoluteURL($redirectUrl)]),
 			]);
 		}
 
