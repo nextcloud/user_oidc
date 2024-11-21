@@ -111,6 +111,7 @@ import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import { confirmPassword } from '@nextcloud/password-confirmation'
 
 import logger from '../logger.js'
 import SettingsForm from './SettingsForm.vue'
@@ -175,6 +176,7 @@ export default {
 
 			this.loadingId4Me = true
 			try {
+				await confirmPassword()
 				const url = generateUrl('/apps/user_oidc/provider/id4me')
 
 				await axios.post(url, {
@@ -194,6 +196,7 @@ export default {
 			this.editProvider = null
 		},
 		async onUpdate(provider) {
+			await confirmPassword()
 			logger.info('Update oidc provider', { data: provider })
 
 			const url = generateUrl(`/apps/user_oidc/provider/${provider.id}`)
@@ -208,6 +211,7 @@ export default {
 			}
 		},
 		async onRemove(provider) {
+			await confirmPassword()
 			logger.info('Remove oidc provider', { provider })
 
 			const url = generateUrl(`/apps/user_oidc/provider/${provider.id}`)
@@ -221,6 +225,7 @@ export default {
 			}
 		},
 		async onSubmit() {
+			await confirmPassword()
 			logger.info('Add new oidc provider', { data: this.newProvider })
 
 			const url = generateUrl('/apps/user_oidc/provider')
