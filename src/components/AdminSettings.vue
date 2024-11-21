@@ -172,11 +172,11 @@ export default {
 	},
 	methods: {
 		async onId4MeChange(newValue) {
-			await confirmPassword()
 			logger.info('ID4me state changed', { enabled: newValue })
 
 			this.loadingId4Me = true
 			try {
+				await confirmPassword()
 				const url = generateUrl('/apps/user_oidc/provider/id4me')
 
 				await axios.post(url, {
