@@ -31,6 +31,11 @@ if (class_exists('OCA\UserOIDC\Event\ExchangedTokenRequestedEvent')) {
 		$this->eventDispatcher->dispatchTyped($event);
 	} catch (OCA\UserOIDC\Exception\TokenExchangeFailedException $e) {
 		$this->logger->debug('Failed to exchange token: ' . $e->getMessage());
+		$error = $e->getError();
+		$errorDescription = $e->getErrorDescription();
+		if ($error && $errorDescription) {
+			$this->logger->debug('Token exchange error response from the IdP: ' . $error . ' (' . $errorDescription . ')');
+		}
 	}
 	$token = $event->getToken();
 	if ($token === null) {

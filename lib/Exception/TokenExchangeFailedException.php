@@ -11,4 +11,22 @@ namespace OCA\UserOIDC\Exception;
 use Exception;
 
 class TokenExchangeFailedException extends Exception {
+
+	public function __construct(
+		$message = '',
+		$code = 0,
+		$previous = null,
+		private ?string $error = null,
+		private ?string $errorDescription = null,
+	) {
+		parent::__construct($message, $code, $previous);
+	}
+
+	public function getError(): ?string {
+		return $this->error;
+	}
+
+	public function getErrorDescription(): ?string {
+		return $this->errorDescription;
+	}
 }

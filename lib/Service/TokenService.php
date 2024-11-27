@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
@@ -268,6 +270,27 @@ class TokenService {
 				['provider_id' => $loginToken->getProviderId()],
 			);
 			return new Token($tokenData);
+		} catch (ClientException|ServerException $e) {
+			$response = $e->getResponse();
+			$body = (string)$response->getBody();
+			$this->logger->error('[TokenService] Failed to exchange token, client/server error in the exchange request', ['response_body' => $body, 'exception' => $e]);
+
+			$parsedBody = json_decode(trim($body), true);
+			if (is_array($parsedBody) && isset($parsedBody['error'], $parsedBody['error_description'])) {
+				throw new TokenExchangeFailedException(
+					'Failed to exchange token, client/server error in the exchange request: ' . $body,
+					0,
+					$e,
+					$parsedBody['error'],
+					$parsedBody['error_description'],
+				);
+			} else {
+				throw new TokenExchangeFailedException(
+					'Failed to exchange token, client/server error in the exchange request: ' . $body,
+					0,
+					$e,
+				);
+			}
 		} catch (\Exception|\Throwable $e) {
 			$this->logger->error('[TokenService] Failed to exchange token ', ['exception' => $e]);
 			throw new TokenExchangeFailedException('Failed to exchange token, error in the exchange request', 0, $e);
