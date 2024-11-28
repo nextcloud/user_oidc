@@ -95,11 +95,11 @@ jobs:
         working-directory: apps/${{ env.APP_NAME }}/tests/
 
       - name: Set up php ${{ matrix.php-versions }}
-        uses: shivammathur/setup-php@2.12.0
+        uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
           tools: phpunit
-          extensions: mbstring, iconv, fileinfo, intl, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql,
+          extensions: zip, gd, mbstring, iconv, fileinfo, intl, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql
           coverage: none
 
       - name: Set up PHPUnit
