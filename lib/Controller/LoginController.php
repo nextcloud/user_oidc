@@ -115,7 +115,7 @@ class LoginController extends BaseOidcController {
 		// or even: if (preg_match('/https?:\/\//', $redirectUrl) === 1) return new RedirectResponse('/');
 		return new RedirectResponse(
 			$redirectUrl === null
-				? null
+				? $this->urlGenerator->getBaseUrl()
 				: join('?', array_filter(parse_url($redirectUrl), fn ($k) => in_array($k, ['path', 'query']), ARRAY_FILTER_USE_KEY))
 		);
 	}
