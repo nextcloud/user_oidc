@@ -24,6 +24,7 @@ use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCA\UserOIDC\Service\TokenService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
@@ -77,6 +78,7 @@ class LoginController extends BaseOidcController {
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private ICrypto $crypto,
+		private TokenService $tokenService,
 	) {
 		parent::__construct($request, $config);
 	}
@@ -113,7 +115,7 @@ class LoginController extends BaseOidcController {
 		// or even: if (preg_match('/https?:\/\//', $redirectUrl) === 1) return new RedirectResponse('/');
 		return new RedirectResponse(
 			$redirectUrl === null
-				? null
+				? $this->urlGenerator->getBaseUrl()
 				: join('?', array_filter(parse_url($redirectUrl), fn ($k) => in_array($k, ['path', 'query']), ARRAY_FILTER_USE_KEY))
 		);
 	}
@@ -507,6 +509,14 @@ class LoginController extends BaseOidcController {
 			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 			$this->userSession->createRememberMeToken($user);
 		}
+
+		// store all token information for potential token exchange requests
+		$tokenData = array_merge(
+			$data,
+			['provider_id' => $providerId],
+		);
+		$this->tokenService->storeToken($tokenData);
+		$this->config->setUserValue($user->getUID(), Application::APP_ID, 'had_token_once', '1');
 
 		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
 		$this->session->set('last-password-confirm', strtotime('+4 year', time()));
