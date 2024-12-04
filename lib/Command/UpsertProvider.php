@@ -31,6 +31,10 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_CHECK_BEARER,
 			'description' => 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable',
 		],
+		'bearer-provisioning' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_BEARER_PROVISIONING,
+			'description' => 'Flag if Nextcloud API/WebDav calls should automatically provision the user, when sending API and WebDav Requests with a Bearer token. 1 to enable (default), 0 to disable',
+		],
 		'send-id-token-hint' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_OPTIONAL, 'default' => null, 'setting_key' => ProviderService::SETTING_SEND_ID_TOKEN_HINT,
 			'description' => 'Flag if ID token should be included as a parameter to the end_session_endpoint URL when using unified logout. 1 to enable (default), 0 to disable',
