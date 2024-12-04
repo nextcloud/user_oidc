@@ -25,19 +25,19 @@ class UpsertProvider extends Base {
 	private const EXTRA_OPTIONS = [
 		'unique-uid' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_UNIQUE_UID,
-			'description' => 'Flag if unique user ids shall be used or not. 1 to enable (default), 0 to disable',
+			'description' => 'Determines if unique user ids shall be used or not. 1 to enable, 0 to disable',
 		],
 		'check-bearer' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_CHECK_BEARER,
-			'description' => 'Flag if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable (default), 0 to disable',
+			'description' => 'Determines if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable, 0 to disable (default when creating a new provider)',
 		],
 		'bearer-provisioning' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_BEARER_PROVISIONING,
-			'description' => 'Flag if Nextcloud API/WebDav calls should automatically provision the user, when sending API and WebDav Requests with a Bearer token. 1 to enable (default), 0 to disable',
+			'description' => 'Determines if Nextcloud API/WebDav calls should automatically provision the user, when sending API and WebDav Requests with a Bearer token. 1 to enable, 0 to disable (default when creating a new provider)',
 		],
 		'send-id-token-hint' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_SEND_ID_TOKEN_HINT,
-			'description' => 'Flag if ID token should be included as a parameter to the end_session_endpoint URL when using unified logout. 1 to enable (default), 0 to disable',
+			'description' => 'Determines if ID token should be included as a parameter to the end_session_endpoint URL when using unified logout. 1 to enable, 0 to disable',
 		],
 		'mapping-display-name' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_DISPLAYNAME,
