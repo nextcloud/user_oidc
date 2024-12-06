@@ -238,7 +238,7 @@
 			{{ t('user_oidc', 'Use group provisioning.') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token. The Format of the groups claim value should be [{gid: "1", displayName: "group1"}, ...] or ["group1", "group2", ...]') }}
+			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token. The Format of the groups claim value should be [{gid: "1", displayName: "group1"}, ...] or ["group1", "group2", ...] or "group1,group2"') }}
 		</p>
 		<p>
 			<label for="group-whitelist-regex">{{ t('user_oidc', 'Group whitelist regex') }}</label>
