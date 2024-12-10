@@ -110,6 +110,8 @@ class LoginController extends BaseOidcController {
 	 * @return RedirectResponse
 	 */
 	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse {
+		// parse_url fails when the paths contains ':'.
+		$redirectUrl = str_replace(':', '%3A', $redirectUrl);
 		// this could also be done with
 		// preg_replace('/^https?:\/\//', '', $redirectUrl)
 		// or even: if (preg_match('/https?:\/\//', $redirectUrl) === 1) return new RedirectResponse('/');
