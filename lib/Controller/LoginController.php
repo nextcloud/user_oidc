@@ -26,6 +26,7 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Service\TokenService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
+use OCA\UserOIDC\Vendor\Firebase\JWT\Key;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -554,6 +555,7 @@ class LoginController extends BaseOidcController {
 	/**
 	 * Endpoint called by NC to logout in the IdP before killing the current session
 	 *
+	 * @PublicPage
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @UseSession
@@ -569,7 +571,22 @@ class LoginController extends BaseOidcController {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
 		if (!isset($oidcSystemConfig['single_logout']) || $oidcSystemConfig['single_logout']) {
-			$providerId = $this->session->get(self::PROVIDERID);
+			$isFromGS = ($this->config->getSystemValueBool('gs.enabled', false)
+				&& $this->config->getSystemValueString('gss.mode', '') === 'master');
+			if ($isFromGS) {
+				// Request is from master GlobalScale: we get the provider ID from the JWT token provided by the slave
+				$jwt = $this->request->getParam('jwt', '');
+
+				try {
+					$key = $this->config->getSystemValueString('gss.jwt.key', '');
+					$decoded = (array)JWT::decode($jwt, new Key($key, 'HS256'));
+
+					$providerId = $decoded['oidcProviderId'] ?? null;
+				} catch (\Exception) {
+				}
+			} else {
+				$providerId = $this->session->get(self::PROVIDERID);
+			}
 			if ($providerId) {
 				try {
 					$provider = $this->providerMapper->getProvider((int)$providerId);
