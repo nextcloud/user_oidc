@@ -12,6 +12,7 @@ use OCA\UserOIDC\Service\LocalIdService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\Cache\CappedMemoryCache;
+use OCP\IConfig;
 use OCP\IDBConnection;
 
 /**
@@ -24,6 +25,7 @@ class UserMapper extends QBMapper {
 	public function __construct(
 		IDBConnection $db,
 		private LocalIdService $idService,
+		private IConfig $config,
 	) {
 		parent::__construct($db, 'user_oidc', User::class);
 		$this->userCache = new CappedMemoryCache();
@@ -57,19 +59,31 @@ class UserMapper extends QBMapper {
 	public function find(string $search, $limit = null, $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
-		$qb->select('user_id', 'display_name')
-			->from($this->getTableName(), 'u')
-			->leftJoin('u', 'preferences', 'p', $qb->expr()->andX(
-				$qb->expr()->eq('userid', 'user_id'),
-				$qb->expr()->eq('appid', $qb->expr()->literal('settings')),
-				$qb->expr()->eq('configkey', $qb->expr()->literal('email')))
-			)
-			->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-			->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-			->orWhere($qb->expr()->iLike('configvalue', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-			->orderBy($qb->func()->lower('user_id'), 'ASC')
-			->setMaxResults($limit)
-			->setFirstResult($offset);
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$matchEmails = !isset($oidcSystemConfig['user_search_match_emails']) || $oidcSystemConfig['user_search_match_emails'] === true;
+		if ($matchEmails) {
+			$qb->select('user_id', 'display_name')
+				->from($this->getTableName(), 'u')
+				->leftJoin('u', 'preferences', 'p', $qb->expr()->andX(
+					$qb->expr()->eq('userid', 'user_id'),
+					$qb->expr()->eq('appid', $qb->expr()->literal('settings')),
+					$qb->expr()->eq('configkey', $qb->expr()->literal('email')))
+				)
+				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orWhere($qb->expr()->iLike('configvalue', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orderBy($qb->func()->lower('user_id'), 'ASC')
+				->setMaxResults($limit)
+				->setFirstResult($offset);
+		} else {
+			$qb->select('user_id', 'display_name')
+				->from($this->getTableName())
+				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orderBy($qb->func()->lower('user_id'), 'ASC')
+				->setMaxResults($limit)
+				->setFirstResult($offset);
+		}
 
 		return $this->findEntities($qb);
 	}
@@ -77,21 +91,33 @@ class UserMapper extends QBMapper {
 	public function findDisplayNames(string $search, $limit = null, $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
-		$qb->select('user_id', 'display_name')
-			->from($this->getTableName(), 'u')
-			->leftJoin('u', 'preferences', 'p', $qb->expr()->andX(
-				$qb->expr()->eq('userid', 'user_id'),
-				$qb->expr()->eq('appid', $qb->expr()->literal('settings')),
-				$qb->expr()->eq('configkey', $qb->expr()->literal('email')))
-			)
-			->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-			->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-			->orWhere($qb->expr()->iLike('configvalue', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-			->orderBy($qb->func()->lower('user_id'), 'ASC')
-			->setMaxResults($limit)
-			->setFirstResult($offset);
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$matchEmails = !isset($oidcSystemConfig['user_search_match_emails']) || $oidcSystemConfig['user_search_match_emails'] === true;
+		if ($matchEmails) {
+			$qb->select('user_id', 'display_name')
+				->from($this->getTableName(), 'u')
+				->leftJoin('u', 'preferences', 'p', $qb->expr()->andX(
+					$qb->expr()->eq('userid', 'user_id'),
+					$qb->expr()->eq('appid', $qb->expr()->literal('settings')),
+					$qb->expr()->eq('configkey', $qb->expr()->literal('email')))
+				)
+				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orWhere($qb->expr()->iLike('configvalue', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orderBy($qb->func()->lower('user_id'), 'ASC')
+				->setMaxResults($limit)
+				->setFirstResult($offset);
+		} else {
+			$qb->select('user_id', 'display_name')
+				->from($this->getTableName())
+				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
+				->orderBy($qb->func()->lower('user_id'), 'ASC')
+				->setMaxResults($limit)
+				->setFirstResult($offset);
+		}
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$displayNames = [];
 		while ($row = $result->fetch()) {
 			$displayNames[(string)$row['user_id']] = (string)$row['display_name'];
