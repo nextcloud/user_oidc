@@ -287,6 +287,15 @@ You can disable these check with these config value (in config.php):
 ],
 ```
 
+### Disable the user search by email
+
+This app can stop matching users (when a user search is performed in Nextcloud) by setting this config.php value:
+``` php
+'user_oidc' => [
+    'user_search_match_emails' => false,
+],
+```
+
 ## Building the app
 
 Requirements for building:

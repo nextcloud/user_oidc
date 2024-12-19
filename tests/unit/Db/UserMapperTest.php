@@ -10,6 +10,7 @@ declare(strict_types=1);
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Service\LocalIdService;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IConfig;
 use OCP\IDBConnection;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -26,13 +27,17 @@ class UserMapperTest extends TestCase {
 	/** @var UserMapper|MockObject */
 	private $userMapper;
 
+	/** @var Iconfig|MockObject */
+	private $config;
+
 	public function setUp(): void {
 		parent::setUp();
 
+		$this->config = $this->createMock(IConfig::class);
 		$this->idService = $this->createMock(LocalIdService::class);
 		$this->db = $this->createMock(IDBConnection::class);
 		$this->userMapper = $this->getMockBuilder(UserMapper::class)
-			->setConstructorArgs([$this->db, $this->idService])
+			->setConstructorArgs([$this->db, $this->idService, $this->config])
 			->setMethods(['getUser', 'insert'])
 			->getMock();
 	}
