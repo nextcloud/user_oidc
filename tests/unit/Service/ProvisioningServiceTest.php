@@ -18,6 +18,7 @@ use OCP\IAvatarManager;
 use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
+use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -61,6 +62,9 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var IAvatarManager | MockObject */
 	private $avatarManager;
 
+	/** @var ISession | MockObject */
+	private $session;
+
 	public function setUp(): void {
 		parent::setUp();
 		$this->idService = $this->createMock(LocalIdService::class);
@@ -75,6 +79,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->clientService = $this->createMock(IClientService::class);
 		$this->avatarManager = $this->createMock(IAvatarManager::class);
 		$this->config = $this->createMock(IConfig::class);
+		$this->session = $this->createMock(ISession::class);
 
 		$this->provisioningService = new ProvisioningService(
 			$this->idService,
@@ -88,6 +93,7 @@ class ProvisioningServiceTest extends TestCase {
 			$this->clientService,
 			$this->avatarManager,
 			$this->config,
+			$this->session,
 		);
 	}
 

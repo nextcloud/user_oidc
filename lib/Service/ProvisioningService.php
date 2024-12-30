@@ -17,6 +17,7 @@ use OCP\IAvatarManager;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\Image;
+use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\User\Events\UserChangedEvent;
@@ -37,6 +38,7 @@ class ProvisioningService {
 		private IClientService $clientService,
 		private IAvatarManager $avatarManager,
 		private IConfig $config,
+		private ISession $session,
 	) {
 	}
 
@@ -49,6 +51,9 @@ class ProvisioningService {
 	 * @throws Exception
 	 */
 	public function provisionUser(string $tokenUserId, int $providerId, object $idTokenPayload, ?IUser $existingLocalUser = null): ?IUser {
+		// user data potentially later used by globalsiteselector if user_oidc is used with global scale
+		$oidcGssUserData = get_object_vars($idTokenPayload);
+
 		// get name/email/quota information from the token itself
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
 		$email = $idTokenPayload->{$emailAttribute} ?? null;
@@ -146,6 +151,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Displayname mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$oidcGssUserData[$displaynameAttribute] = $event->getValue();
 			$newDisplayName = $event->getValue();
 			if ($existingLocalUser === null) {
 				$oldDisplayName = $backendUser->getDisplayName();
@@ -172,6 +178,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Email mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$oidcGssUserData[$emailAttribute] = $event->getValue();
 			$user->setSystemEMailAddress($event->getValue());
 		}
 
@@ -180,12 +187,21 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Quota mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$oidcGssUserData[$quotaAttribute] = $event->getValue();
 			$user->setQuota($event->getValue());
 		}
 
 		// Update groups
 		if ($this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0') === '1') {
-			$this->provisionUserGroups($user, $providerId, $idTokenPayload);
+			$groups = $this->provisionUserGroups($user, $providerId, $idTokenPayload);
+			// for gss
+			if ($groups !== null) {
+				$groupIds = array_map(static function ($group) {
+					return $group->gid;
+				}, $groups);
+				$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
+				$oidcGssUserData[$groupsAttribute] = $groupIds;
+			}
 		}
 
 		// Update the phone number
@@ -306,6 +322,8 @@ class ProvisioningService {
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
 			$account->setProperty('gender', $event->getValue(), $scope, '1', '');
 		}
+
+		$this->session->set('user_oidc.oidcUserData', $oidcGssUserData);
 
 		$this->accountManager->updateAccount($account);
 		return $user;
@@ -430,36 +448,40 @@ class ProvisioningService {
 		return null;
 	}
 
-	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): void {
+	public function provisionUserGroups(IUser $user, int $providerId, object $idTokenPayload): ?array {
 		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
 		$syncGroups = $this->getSyncGroupsOfToken($providerId, $idTokenPayload);
 
-		if ($syncGroups !== null) {
+		if ($syncGroups === null) {
+			return null;
+		}
 
-			$userGroups = $this->groupManager->getUserGroups($user);
-			foreach ($userGroups as $group) {
-				if (!in_array($group->getGID(), array_column($syncGroups, 'gid'))) {
-					if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->getGID())) {
-						continue;
-					}
-					$group->removeUser($user);
+		$userGroups = $this->groupManager->getUserGroups($user);
+		foreach ($userGroups as $group) {
+			if (!in_array($group->getGID(), array_column($syncGroups, 'gid'))) {
+				if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->getGID())) {
+					continue;
 				}
+				$group->removeUser($user);
 			}
+		}
 
-			foreach ($syncGroups as $group) {
-				// Creates a new group or return the exiting one.
-				if ($newGroup = $this->groupManager->createGroup($group->gid)) {
-					// Adds the user to the group. Does nothing if user is already in the group.
-					$newGroup->addUser($user);
+		foreach ($syncGroups as $group) {
+			// Creates a new group or return the exiting one.
+			if ($newGroup = $this->groupManager->createGroup($group->gid)) {
+				// Adds the user to the group. Does nothing if user is already in the group.
+				$newGroup->addUser($user);
 
-					if (isset($group->displayName)) {
-						$newGroup->setDisplayName($group->displayName);
-					}
+				if (isset($group->displayName)) {
+					$newGroup->setDisplayName($group->displayName);
 				}
 			}
 		}
+
+		return $syncGroups;
 	}
+
 
 	public function getGroupWhitelistRegex(int $providerId): string {
 		$regex = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');

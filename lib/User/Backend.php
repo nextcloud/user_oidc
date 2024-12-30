@@ -150,6 +150,52 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	/**
+	 * Return user data from the idp
+	 * Inspired by user_saml
+	 */
+	public function getUserData(): array {
+		$userData = $this->session->get('user_oidc.oidcUserData');
+		$providerId = (int)$this->session->get(LoginController::PROVIDERID);
+		$userData = $this->formatUserData($providerId, $userData);
+
+		// make sure that a valid UID is given
+		if (empty($userData['formatted']['uid'])) {
+			$this->logger->error('No valid uid given, please check your attribute mapping. Got uid: {uid}', ['app' => 'user_oidc', 'uid' => $userData['formatted']['uid']]);
+			throw new \InvalidArgumentException('No valid uid given, please check your attribute mapping. Got uid: ' . $userData['formatted']['uid']);
+		}
+
+		return $userData;
+	}
+
+	/**
+	 * Format user data and map them to the configured attributes
+	 * Inspired by user_saml
+	 */
+	private function formatUserData(int $providerId, array $attributes): array {
+		$result = ['formatted' => [], 'raw' => $attributes];
+
+		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
+		$result['formatted']['email'] = $attributes[$emailAttribute] ?? null;
+
+		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
+		$result['formatted']['displayName'] = $attributes[$displaynameAttribute] ?? null;
+
+		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
+		$result['formatted']['quota'] = $attributes[$quotaAttribute] ?? null;
+		if ($result['formatted']['quota'] === '') {
+			$result['formatted']['quota'] = 'default';
+		}
+
+		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
+		$result['formatted']['groups'] = $attributes[$groupsAttribute] ?? null;
+
+		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
+		$result['formatted']['uid'] = $attributes[$uidAttribute] ?? null;
+
+		return $result;
+	}
+
+	/**
 	 * Return the id of the current user
 	 * @return string
 	 * @since 6.0.0
