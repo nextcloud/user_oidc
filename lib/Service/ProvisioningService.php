@@ -398,6 +398,11 @@ class ProvisioningService {
 		if ($event->hasValue() && $event->getValue() !== null) {
 			// casted to null if empty value
 			$groups = json_decode($event->getValue() ?? '');
+			// support values like group1,group2
+			if (is_string($groups)) {
+				$groups = explode(',', $groups);
+				$groups = array_filter($groups);
+			}
 			$syncGroups = [];
 
 			foreach ($groups as $k => $v) {
