@@ -466,18 +466,22 @@ class LoginController extends BaseOidcController {
 		}
 
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
+		$softAutoProvisionAllowed = (!isset($oidcSystemConfig['soft_auto_provision']) || $oidcSystemConfig['soft_auto_provision']);
 
-		// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
-		// so new users will be directly available even if they were not synced before this login attempt
-		$this->userManager->search($userId);
-		$this->ldapService->syncUser($userId);
+		$shouldDoUserLookup = !$autoProvisionAllowed || ($softAutoProvisionAllowed && !$this->provisioningService->hasOidcUserProvisitioned($userId));
+		if ($shouldDoUserLookup && $this->ldapService->isLDAPEnabled()) {
+			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
+			// so new users will be directly available even if they were not synced before this login attempt
+			$this->userManager->search($userId, 1, 0);
+			$this->ldapService->syncUser($userId);
+		}
+
 		$userFromOtherBackend = $this->userManager->get($userId);
 		if ($userFromOtherBackend !== null && $this->ldapService->isLdapDeletedUser($userFromOtherBackend)) {
 			$userFromOtherBackend = null;
 		}
 
 		if ($autoProvisionAllowed) {
-			$softAutoProvisionAllowed = (!isset($oidcSystemConfig['soft_auto_provision']) || $oidcSystemConfig['soft_auto_provision']);
 			if (!$softAutoProvisionAllowed && $userFromOtherBackend !== null) {
 				// if soft auto-provisioning is disabled,
 				// we refuse login for a user that already exists in another backend
