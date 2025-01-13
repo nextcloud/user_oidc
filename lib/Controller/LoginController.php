@@ -25,6 +25,7 @@ use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Service\TokenService;
+use OCA\UserOIDC\User\Backend;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\Vendor\Firebase\JWT\Key;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -48,6 +49,8 @@ use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
+use OCP\User\Events\BeforeUserLoggedInEvent;
+use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
 
 class LoginController extends BaseOidcController {
@@ -510,6 +513,9 @@ class LoginController extends BaseOidcController {
 			$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
 			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 			$this->userSession->createRememberMeToken($user);
+			// TODO server should/could be refactored so we don't need to manually create the user session and dispatch the login-related events
+			$this->eventDispatcher->dispatchTyped(new BeforeUserLoggedInEvent($user->getUID(), null, \OC::$server->get(Backend::class)));
+			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $user->getUID(), null, false));
 		}
 
 		// store all token information for potential token exchange requests
