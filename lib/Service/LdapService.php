@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
+use OCP\App\IAppManager;
 use OCP\AppFramework\QueryException;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
@@ -16,7 +17,12 @@ class LdapService {
 
 	public function __construct(
 		private LoggerInterface $logger,
+		private IAppManager $appManager,
 	) {
+	}
+
+	public function isLDAPEnabled(): bool {
+		return $this->appManager->isEnabledForUser('user_ldap');
 	}
 
 	/**
@@ -26,6 +32,10 @@ class LdapService {
 	 * @throws \Psr\Container\NotFoundExceptionInterface
 	 */
 	public function isLdapDeletedUser(IUser $user): bool {
+		if ($this->isLDAPEnabled()) {
+			return false;
+		}
+
 		$className = $user->getBackendClassName();
 		if ($className !== 'LDAP') {
 			return false;
