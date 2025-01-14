@@ -588,7 +588,8 @@ class LoginController extends BaseOidcController {
 					$decoded = (array)JWT::decode($jwt, new Key($key, 'HS256'));
 
 					$providerId = $decoded['oidcProviderId'] ?? null;
-				} catch (\Exception) {
+				} catch (\Exception $e) {
+					$this->logger->debug('Failed to get the logout provider ID in the request from GSS', ['exception' => $e]);
 				}
 			} else {
 				$providerId = $this->session->get(self::PROVIDERID);
