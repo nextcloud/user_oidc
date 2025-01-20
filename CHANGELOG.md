@@ -8,6 +8,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 6.2.0 – 2025-01-20
+
+### Added
+
+- Support for Global Scale (globalsiteselector app) @julien-nc [#1011](https://github.com/nextcloud/user_oidc/pull/1011)
+- Add whitelist regular expression for group provisioning @bergerar [#884](https://github.com/nextcloud/user_oidc/pull/884)
+- Optionally restrict login to users matching a certain group @bergerar [#884](https://github.com/nextcloud/user_oidc/pull/884)
+- Token exchange mechanism for other apps @julien-nc [#974](https://github.com/nextcloud/user_oidc/pull/974)
+- Password confirmation in admin settings @janepie [#991](https://github.com/nextcloud/user_oidc/pull/991)
+- Add option to configure bearer provisioning via occ @janepie [#1003](https://github.com/nextcloud/user_oidc/pull/1003)
+- Add config value to make the email match optional when searching for a user or a display name @julien-nc [#1014](https://github.com/nextcloud/user_oidc/pull/1014)
+
+### Changed
+
+- Make the app Reuse compliant @AndyScherzinger [#975](https://github.com/nextcloud/user_oidc/pull/975)
+- Add support for comma-separated groups in group mapping attribute @julien-nc [#1006](https://github.com/nextcloud/user_oidc/pull/1006)
+
+### Fixed
+
+- Update cache when discovery endpoint is changed @janepie [#1002](https://github.com/nextcloud/user_oidc/pull/1002)
+- Set fallback redirect URL for login if already logged in @janepie [#1001](https://github.com/nextcloud/user_oidc/pull/1001)
+- Fix redirect URI when Nextcloud is accessed at a sub path @bdovaz [#990](https://github.com/nextcloud/user_oidc/pull/990)
+- Handle redirect URL containing a ':' @artonge [#1008](https://github.com/nextcloud/user_oidc/pull/1008)
+- Avoid slow queries in scenarios where we do not need a search @juliusknorr [#1019](https://github.com/nextcloud/user_oidc/pull/1019)
+- Adjust provisioning service to correctly update the display name on login @julien-nc [#979](https://github.com/nextcloud/user_oidc/pull/979)
+
 ## 6.1.2 – 2024-10-30
 
 ### Fixed
