@@ -16,7 +16,7 @@ class Token implements JsonSerializable {
 	private string $accessToken;
 	private int $expiresIn;
 	private ?int $refreshExpiresIn;
-	private string $refreshToken;
+	private ?string $refreshToken;
 	private int $createdAt;
 	private ?int $providerId;
 
@@ -25,7 +25,7 @@ class Token implements JsonSerializable {
 		$this->accessToken = $tokenData['access_token'];
 		$this->expiresIn = $tokenData['expires_in'];
 		$this->refreshExpiresIn = $tokenData['refresh_expires_in'] ?? null;
-		$this->refreshToken = $tokenData['refresh_token'];
+		$this->refreshToken = $tokenData['refresh_token'] ?? null;
 		$this->createdAt = $tokenData['created_at'] ?? time();
 		$this->providerId = $tokenData['provider_id'] ?? null;
 	}
@@ -61,7 +61,7 @@ class Token implements JsonSerializable {
 		return $refreshExpiresAt - time();
 	}
 
-	public function getRefreshToken(): string {
+	public function getRefreshToken(): ?string {
 		return $this->refreshToken;
 	}
 

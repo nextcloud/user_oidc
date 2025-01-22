@@ -84,8 +84,8 @@ class TokenService {
 		}
 
 		// token has expired
-		// try to refresh the token if the refresh token is still valid
-		if ($refreshIfExpired && !$token->refreshIsExpired()) {
+		// try to refresh the token if there is a refresh token and it is still valid
+		if ($refreshIfExpired && $token->getRefreshToken() !== null && !$token->refreshIsExpired()) {
 			$this->logger->debug('[TokenService] getToken: token is expired and refresh token is still valid, refresh expires in ' . $token->getRefreshExpiresInFromNow());
 			return $this->refresh($token);
 		}
