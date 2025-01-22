@@ -102,6 +102,12 @@ class TokenService {
 	 * @throws PreConditionNotMetException
 	 */
 	public function checkLoginToken(): void {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$tokenExchangeEnabled = (isset($oidcSystemConfig['token_exchange']) && $oidcSystemConfig['token_exchange'] === true);
+		if (!$tokenExchangeEnabled) {
+			return;
+		}
+
 		$currentUser = $this->userSession->getUser();
 		if (!$this->userSession->isLoggedIn() || $currentUser === null) {
 			$this->logger->debug('[TokenService] checkLoginToken: user not logged in');
@@ -212,6 +218,15 @@ class TokenService {
 	 * @throws \JsonException
 	 */
 	public function getExchangedToken(string $targetAudience): Token {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$tokenExchangeEnabled = (isset($oidcSystemConfig['token_exchange']) && $oidcSystemConfig['token_exchange'] === true);
+		if (!$tokenExchangeEnabled) {
+			throw new TokenExchangeFailedException(
+				'Failed to exchange token, the token exchange feature is disabled. It can be enabled in config.php',
+				0,
+			);
+		}
+
 		$loginToken = $this->getToken();
 		if ($loginToken === null) {
 			$this->logger->debug('[TokenService] Failed to exchange token, no login token found in the session');

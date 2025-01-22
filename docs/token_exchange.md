@@ -6,6 +6,13 @@
 
 If your IdP supports token exchange, user_oidc can exchange the login token against another token.
 
+:warning: The token exchange feature is disabled by default. You can enable it in `config.php`:
+``` php
+'user_oidc' => [
+    'token_exchange' => true,
+],
+```
+
 Keycloak supports token exchange if its "Preview" mode is enabled. See https://www.keycloak.org/securing-apps/token-exchange .
 
 :warning: Your IdP need to be configured accordingly. For example, Keycloak requires that token exchange is explicitely
