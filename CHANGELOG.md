@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 6.2.1 – 2025-01-23
+
+### Fixed
+
+- Fix crash when storing a token without refresh_expires_in or refresh_token @julien-nc [#1025](https://github.com/nextcloud/user_oidc/pull/1025)
+- Disable token exchange mechanism by default @julien-nc [#1025](https://github.com/nextcloud/user_oidc/pull/1025)
+
 ## 6.2.0 – 2025-01-20
 
 ### Added
