@@ -518,12 +518,15 @@ class LoginController extends BaseOidcController {
 			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $user->getUID(), null, false));
 		}
 
-		// store all token information for potential token exchange requests
-		$tokenData = array_merge(
-			$data,
-			['provider_id' => $providerId],
-		);
-		$this->tokenService->storeToken($tokenData);
+		$tokenExchangeEnabled = (isset($oidcSystemConfig['token_exchange']) && $oidcSystemConfig['token_exchange'] === true);
+		if ($tokenExchangeEnabled) {
+			// store all token information for potential token exchange requests
+			$tokenData = array_merge(
+				$data,
+				['provider_id' => $providerId],
+			);
+			$this->tokenService->storeToken($tokenData);
+		}
 		$this->config->setUserValue($user->getUID(), Application::APP_ID, 'had_token_once', '1');
 
 		// Set last password confirm to the future as we don't have passwords to confirm against with SSO

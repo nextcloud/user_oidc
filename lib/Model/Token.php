@@ -15,8 +15,8 @@ class Token implements JsonSerializable {
 	private ?string $idToken;
 	private string $accessToken;
 	private int $expiresIn;
-	private int $refreshExpiresIn;
-	private string $refreshToken;
+	private ?int $refreshExpiresIn;
+	private ?string $refreshToken;
 	private int $createdAt;
 	private ?int $providerId;
 
@@ -24,8 +24,8 @@ class Token implements JsonSerializable {
 		$this->idToken = $tokenData['id_token'] ?? null;
 		$this->accessToken = $tokenData['access_token'];
 		$this->expiresIn = $tokenData['expires_in'];
-		$this->refreshExpiresIn = $tokenData['refresh_expires_in'];
-		$this->refreshToken = $tokenData['refresh_token'];
+		$this->refreshExpiresIn = $tokenData['refresh_expires_in'] ?? null;
+		$this->refreshToken = $tokenData['refresh_token'] ?? null;
 		$this->createdAt = $tokenData['created_at'] ?? time();
 		$this->providerId = $tokenData['provider_id'] ?? null;
 	}
@@ -47,16 +47,21 @@ class Token implements JsonSerializable {
 		return $expiresAt - time();
 	}
 
-	public function getRefreshExpiresIn(): int {
+	public function getRefreshExpiresIn(): ?int {
 		return $this->refreshExpiresIn;
 	}
 
 	public function getRefreshExpiresInFromNow(): int {
+		// if there is no refresh_expires_in, we assume the refresh token never expires
+		// so we don't need getRefreshExpiresInFromNow
+		if ($this->refreshExpiresIn === null) {
+			return 0;
+		}
 		$refreshExpiresAt = $this->createdAt + $this->refreshExpiresIn;
 		return $refreshExpiresAt - time();
 	}
 
-	public function getRefreshToken(): string {
+	public function getRefreshToken(): ?string {
 		return $this->refreshToken;
 	}
 
@@ -73,10 +78,18 @@ class Token implements JsonSerializable {
 	}
 
 	public function refreshIsExpired(): bool {
+		// if there is no refresh_expires_in, we assume the refresh token never expires
+		if ($this->refreshExpiresIn === null) {
+			return false;
+		}
 		return time() > ($this->createdAt + $this->refreshExpiresIn);
 	}
 
 	public function refreshIsExpiring(): bool {
+		// if there is no refresh_expires_in, we assume the refresh token never expires
+		if ($this->refreshExpiresIn === null) {
+			return false;
+		}
 		return time() > ($this->createdAt + (int)($this->refreshExpiresIn / 2));
 	}
 
