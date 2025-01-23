@@ -12,7 +12,7 @@ use OCA\UserOIDC\Model\Token;
 use OCP\EventDispatcher\Event;
 
 /**
- * This event is emitted with by other apps which need an exchanged token for another audience (another client ID)
+ * This event is emitted by other apps which need an exchanged token for another audience (another client ID)
  */
 class ExchangedTokenRequestedEvent extends Event {
 
