@@ -65,12 +65,13 @@ class DiscoveryService {
 	/**
 	 * @param Provider $provider
 	 * @param string $tokenToDecode This is used to potentially fix the missing alg in
+	 * @param bool $refresh
 	 * @return array
 	 * @throws \JsonException
 	 */
-	public function obtainJWK(Provider $provider, string $tokenToDecode): array {
+	public function obtainJWK(Provider $provider, string $tokenToDecode, bool $refresh = false): array {
 		$lastJwksRefresh = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
-		if ($lastJwksRefresh !== '' && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
+		if ($lastJwksRefresh !== '' && !$refresh && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
 			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
 			$rawJwks = json_decode($rawJwks, true);
 		} else {
