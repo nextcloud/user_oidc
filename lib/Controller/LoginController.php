@@ -22,6 +22,7 @@ use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
+use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Service\TokenService;
@@ -85,6 +86,7 @@ class LoginController extends BaseOidcController {
 		private LoggerInterface $logger,
 		private ICrypto $crypto,
 		private TokenService $tokenService,
+		private OidcService $oidcService,
 	) {
 		parent::__construct($request, $config);
 	}
@@ -424,6 +426,17 @@ class LoginController extends BaseOidcController {
 			$this->logger->debug('Failed to decode the JWT token, retrying with fresh JWK');
 			$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw, false);
 			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		}
+
+		// default is false
+		if (isset($oidcSystemConfig['enrich_login_id_token_with_userinfo']) && $oidcSystemConfig['enrich_login_id_token_with_userinfo']) {
+			$userInfo = $this->oidcService->userInfo($provider, $data['access_token']);
+			foreach ($userInfo as $key => $value) {
+				// give priority to id token values, only use userinfo ones if missing in id token
+				if (!isset($idTokenPayload->{$key})) {
+					$idTokenPayload->{$key} = $value;
+				}
+			}
 		}
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
