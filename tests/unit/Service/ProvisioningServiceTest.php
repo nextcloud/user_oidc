@@ -9,11 +9,11 @@ use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\LocalIdService;
+use OCA\UserOIDC\Service\NetworkService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCP\Accounts\IAccountManager;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
 use OCP\IConfig;
 use OCP\IGroup;
@@ -56,8 +56,8 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var IAccountManager | MockObject */
 	private $accountManager;
 
-	/** @var IClientService | MockObject */
-	private $clientService;
+	/** @var NetworkService | MockObject */
+	private $networkService;
 
 	/** @var IAvatarManager | MockObject */
 	private $avatarManager;
@@ -76,7 +76,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->eventDispatcher = $this->createMock(IEventDispatcher::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->accountManager = $this->createMock(IAccountManager::class);
-		$this->clientService = $this->createMock(IClientService::class);
+		$this->networkService = $this->createMock(NetworkService::class);
 		$this->avatarManager = $this->createMock(IAvatarManager::class);
 		$this->config = $this->createMock(IConfig::class);
 		$this->session = $this->createMock(ISession::class);
@@ -90,7 +90,7 @@ class ProvisioningServiceTest extends TestCase {
 			$this->eventDispatcher,
 			$this->logger,
 			$this->accountManager,
-			$this->clientService,
+			$this->networkService,
 			$this->avatarManager,
 			$this->config,
 			$this->session,
