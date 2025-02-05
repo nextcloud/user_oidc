@@ -229,6 +229,23 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			}
 		}
 
+		// check if we should ask the OIDC Identity Provider (oidc) to validate the token (default is false)
+		if (!isset($oidcSystemConfig['oidc_provider_bearer_validation']) || !$oidcSystemConfig['oidc_provider_bearer_validation']) {
+			if (class_exists('OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent')) {
+				$validationEvent = new \OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent($headerToken);
+				$this->eventDispatcher->dispatchTyped($validationEvent);
+				if ($validationEvent->getUserId() !== null) {
+					return $validationEvent->getUserId();
+				} else {
+					$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has failed');
+				}
+			} else {
+				$this->logger->debug('[NextcloudOidcProviderValidator] Impossible to validate bearer token with Nextcloud Oidc provider, OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent class not found');
+			}
+		} else {
+			$this->logger->debug('[NextcloudOidcProviderValidator] oidc_provider_bearer_validation is false or not defined');
+		}
+
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
 
 		// try to validate with all providers
