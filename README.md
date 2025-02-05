@@ -291,14 +291,14 @@ sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider \
 
 ### Disable audience and azp checks
 
-The `audience` and `azp` token claims will be checked when validating a login or bearer ID token.
-You can disable these check with these config value (in config.php):
+The `audience` and `azp` token claims will be checked when validating a login ID token.
+Only the `audience` will be checked when validating a Bearer token.
+You can disable these checks with these config values (in config.php):
 ``` php
 'user_oidc' => [
     'login_validation_audience_check' => false,
     'login_validation_azp_check' => false,
     'selfencoded_bearer_validation_audience_check' => false,
-    'selfencoded_bearer_validation_azp_check' => false,
 ],
 ```
 
