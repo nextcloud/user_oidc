@@ -234,8 +234,9 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			if (class_exists('OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent')) {
 				$validationEvent = new \OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent($headerToken);
 				$this->eventDispatcher->dispatchTyped($validationEvent);
-				if ($validationEvent->getUserId() !== null) {
-					return $validationEvent->getUserId();
+				$oidcProviderUserId = $validationEvent->getUserId();
+				if ($oidcProviderUserId !== null) {
+					return $oidcProviderUserId;
 				} else {
 					$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has failed');
 				}
