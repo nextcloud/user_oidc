@@ -243,7 +243,7 @@ class ProvisioningService {
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_LANGUAGE, $idTokenPayload, $language);
 		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Phone mapping event dispatched');
+		$this->logger->debug('Language mapping event dispatched');
 		if ($event->hasValue()) {
 			$language = $event->getValue();
 			$languagesCodes = $this->l10nFactory->findAvailableLanguages();

@@ -126,6 +126,7 @@ class ProvisioningServiceTest extends TestCase {
 					[$providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name', 'name'],
 					[$providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota', 'quota'],
 					[$providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0', '0'],
+					[$providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language', 'language'],
 					[$providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address', 'address'],
 					[$providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address', 'street_address'],
 					[$providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code', 'postal_code'],
