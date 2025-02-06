@@ -130,6 +130,13 @@
 					placeholder="phone_number">
 			</p>
 			<p>
+				<label for="mapping-language">{{ t('user_oidc', 'Language mapping') }}</label>
+				<input id="mapping-language"
+					v-model="localProvider.settings.mappingLanguage"
+					type="text"
+					placeholder="language">
+			</p>
+			<p>
 				<label for="mapping-role">{{ t('user_oidc', 'Role/Title mapping') }}</label>
 				<input id="mapping-role"
 					v-model="localProvider.settings.mappingRole"

@@ -59,6 +59,10 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_EXTRA_CLAIMS,
 			'description' => 'Extra claims to request when getting tokens',
 		],
+		'mapping-language' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_LANGUAGE,
+			'description' => 'Attribute mapping of the account language',
+		],
 		'mapping-website' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_WEBSITE,
 			'description' => 'Attribute mapping of the website',
