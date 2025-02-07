@@ -201,9 +201,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @since 6.0.0
 	 */
 	public function getCurrentUserId(): string {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$ncOidcProviderBearerValidation = isset($oidcSystemConfig['oidc_provider_bearer_validation']) && $oidcSystemConfig['oidc_provider_bearer_validation'] === true;
+
 		$providers = $this->providerMapper->getProviders();
-		if (count($providers) === 0) {
-			$this->logger->debug('no OIDC providers');
+		if (count($providers) === 0 && !$ncOidcProviderBearerValidation) {
+			$this->logger->debug('no OIDC providers and no NC provider validation');
 			return '';
 		}
 
@@ -215,7 +218,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		// check if we should use UserInfoValidator (default is false)
 		if (!isset($oidcSystemConfig['userinfo_bearer_validation']) || !$oidcSystemConfig['userinfo_bearer_validation']) {
 			if (($key = array_search(UserInfoValidator::class, $this->tokenValidators)) !== false) {
@@ -229,8 +231,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			}
 		}
 
-		// check if we should ask the OIDC Identity Provider (oidc) to validate the token (default is false)
-		if (!isset($oidcSystemConfig['oidc_provider_bearer_validation']) || !$oidcSystemConfig['oidc_provider_bearer_validation']) {
+		// check if we should ask the OIDC Identity Provider app (app_id: oidc) to validate the token (default is false)
+		if ($ncOidcProviderBearerValidation) {
 			if (class_exists('OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent')) {
 				$validationEvent = new \OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent($headerToken);
 				$this->eventDispatcher->dispatchTyped($validationEvent);
