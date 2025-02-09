@@ -52,6 +52,7 @@ use OCP\Session\Exceptions\SessionNotAvailableException;
 use OCP\User\Events\BeforeUserLoggedInEvent;
 use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
+use UnexpectedValueException;
 
 class LoginController extends BaseOidcController {
 	private const STATE = 'oidc.state';
@@ -398,7 +399,16 @@ class LoginController extends BaseOidcController {
 		$idTokenRaw = $data['id_token'];
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
-		$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		try {
+			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		} catch (UnexpectedValueException $e) {
+			if ($e->getMessage() !== '"kid" invalid, unable to lookup correct key') {
+				throw $e;
+			}
+			$this->logger->debug('Failed to decode the JWT token, retrying with fresh JWK');
+			$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw, true);
+			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		}
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
 
