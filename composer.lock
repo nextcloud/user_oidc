@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1e0b7a5fe4961934d5a24bb527fd2481",
+    "content-hash": "e0924ff7321e097a6baffe93ebbdb0d4",
     "packages": [
         {
             "name": "bamarni/composer-bin-plugin",
@@ -502,16 +502,16 @@
         },
         {
             "name": "nextcloud/ocp",
-            "version": "dev-stable25",
+            "version": "dev-stable26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nextcloud-deps/ocp.git",
-                "reference": "94192422c97feb772526ad46eeaf918a31c518d6"
+                "reference": "692e8fb9d10e591600048723c6ed5f7d33fa4275"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/94192422c97feb772526ad46eeaf918a31c518d6",
-                "reference": "94192422c97feb772526ad46eeaf918a31c518d6",
+                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/692e8fb9d10e591600048723c6ed5f7d33fa4275",
+                "reference": "692e8fb9d10e591600048723c6ed5f7d33fa4275",
                 "shasum": ""
             },
             "require": {
@@ -539,9 +539,9 @@
             "description": "Composer package containing Nextcloud's public API (classes, interfaces)",
             "support": {
                 "issues": "https://github.com/nextcloud-deps/ocp/issues",
-                "source": "https://github.com/nextcloud-deps/ocp/tree/stable25"
+                "source": "https://github.com/nextcloud-deps/ocp/tree/stable26"
             },
-            "time": "2023-10-10T00:31:16+00:00"
+            "time": "2024-01-03T00:33:21+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -2645,5 +2645,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
