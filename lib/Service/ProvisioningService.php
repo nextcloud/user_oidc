@@ -15,7 +15,6 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -38,7 +37,7 @@ class ProvisioningService {
 		private IEventDispatcher $eventDispatcher,
 		private LoggerInterface $logger,
 		private IAccountManager $accountManager,
-		private IClientService $clientService,
+		private NetworkService $networkService,
 		private IAvatarManager $avatarManager,
 		private IConfig $config,
 		private ISession $session,
@@ -355,7 +354,7 @@ class ProvisioningService {
 	private function setUserAvatar(string $userId, string $avatarAttribute): void {
 		$avatarContent = null;
 		if (filter_var($avatarAttribute, FILTER_VALIDATE_URL)) {
-			$client = $this->clientService->newClient();
+			$client = $this->networkService->newClient();
 			try {
 				$avatarContent = $client->get($avatarAttribute)->getBody();
 				if (is_resource($avatarContent)) {

@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\Provider;
-use OCP\Http\Client\IClientService;
+use OCP\IConfig;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -19,8 +19,9 @@ class OIDCService {
 	public function __construct(
 		private DiscoveryService $discoveryService,
 		private LoggerInterface $logger,
-		private IClientService $clientService,
+		private NetworkService $networkService,
 		private ICrypto $crypto,
+		private IConfig $config,
 	) {
 	}
 
@@ -30,7 +31,7 @@ class OIDCService {
 			return [];
 		}
 
-		$client = $this->clientService->newClient();
+		$client = $this->networkService->newClient();
 		$this->logger->debug('Fetching user info endpoint');
 		$options = [
 			'headers' => [
@@ -56,7 +57,7 @@ class OIDCService {
 			return [];
 		}
 
-		$client = $this->clientService->newClient();
+		$client = $this->networkService->newClient();
 		$this->logger->debug('Fetching user info endpoint');
 		$options = [
 			'headers' => [

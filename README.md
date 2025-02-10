@@ -296,6 +296,16 @@ This app can stop matching users (when a user search is performed in Nextcloud) 
 ],
 ```
 
+### Disable SSL certificates verification
+
+If your IdP is using self-signed certificates or if you have any other reason to disable SSL certificates verification
+when making requests to the IdP, set this in config.php :
+``` php
+'user_oidc' => [
+    'disable_certificate_verification' => true,
+],
+```
+
 ## Building the app
 
 Requirements for building:

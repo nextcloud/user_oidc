@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Helper;
 
-use OCP\Http\Client\IClientService;
+use OCA\UserOIDC\Service\NetworkService;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 use Id4me\RP\HttpClient;
@@ -16,12 +16,12 @@ use Id4me\RP\HttpClient;
 class HttpClientHelper implements HttpClient {
 
 	public function __construct(
-		private IClientService $clientService,
+		private NetworkService $networkService,
 	) {
 	}
 
 	public function get($url, array $headers = []) {
-		$client = $this->clientService->newClient();
+		$client = $this->networkService->newClient();
 
 		return $client->get($url, [
 			'headers' => $headers,
@@ -29,7 +29,7 @@ class HttpClientHelper implements HttpClient {
 	}
 
 	public function post($url, $body, array $headers = []) {
-		$client = $this->clientService->newClient();
+		$client = $this->networkService->newClient();
 
 		return $client->post($url, [
 			'headers' => $headers,
