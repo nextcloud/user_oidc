@@ -44,6 +44,7 @@
 				<referencedClass name="GuzzleHttp\Exception\ServerException" />
 				<referencedClass name="Symfony\Component\Console\Helper\Table" />
 				<referencedClass name="Symfony\Component\Console\Question\ConfirmationQuestion" />
+				<referencedClass name="OC\Accounts\AccountManager" />
 			</errorLevel>
 		</UndefinedClass>
 		<UndefinedDocblockClass>
