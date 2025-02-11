@@ -9,7 +9,6 @@ namespace OCA\UserOIDC\Service;
 
 use InvalidArgumentException;
 use OC\Accounts\AccountManager;
-use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCP\Accounts\IAccountManager;
@@ -176,29 +175,10 @@ class ProvisioningService {
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
 			$oidcGssUserData[$displaynameAttribute] = $event->getValue();
 			$newDisplayName = $event->getValue();
-			if ($existingLocalUser === null) {
-				$oldDisplayName = $backendUser->getDisplayName();
-				if ($newDisplayName !== $oldDisplayName) {
-					$backendUser->setDisplayName($newDisplayName);
-					$this->userMapper->update($backendUser);
-				}
-				// 2 reasons why we should update the display name: It does not match the one
-				// - of our backend
-				// - returned by the user manager (outdated one before the fix in https://github.com/nextcloud/user_oidc/pull/530)
-				if ($newDisplayName !== $oldDisplayName || $newDisplayName !== $user->getDisplayName()) {
-					$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
-				}
-			} else {
-				$oldDisplayName = $user->getDisplayName();
-				if ($newDisplayName !== $oldDisplayName) {
-					$user->setDisplayName($newDisplayName);
-					if ($user->getBackendClassName() === Application::APP_ID) {
-						$backendUser = $this->userMapper->getOrCreate($providerId, $user->getUID());
-						$backendUser->setDisplayName($newDisplayName);
-						$this->userMapper->update($backendUser);
-					}
-					$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
-				}
+			$oldDisplayName = $user->getDisplayName();
+			if ($newDisplayName !== $oldDisplayName) {
+				$user->setDisplayName($newDisplayName);
+				$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $newDisplayName, $oldDisplayName));
 			}
 		}
 
