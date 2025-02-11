@@ -154,8 +154,8 @@ class ProvisioningService {
 		$account = $this->accountManager->getAccount($user);
 		$fallbackScope = 'v2-local';
 		$defaultScopes = array_merge(
-				AccountManager::DEFAULT_SCOPES,
-				$this->config->getSystemValue('account_manager.default_property_scope', []) ?? []
+			AccountManager::DEFAULT_SCOPES,
+			$this->config->getSystemValue('account_manager.default_property_scope', []) ?? []
 		);
 
 
