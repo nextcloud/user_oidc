@@ -57,7 +57,7 @@ class LoginController extends BaseOidcController {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	public const PROVIDERID = 'oidc.providerid';
-	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
+	public const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
 	private const ID_TOKEN = 'oidc.id_token';
 	private const CODE_VERIFIER = 'oidc.code_verifier';
 
@@ -514,6 +514,8 @@ class LoginController extends BaseOidcController {
 			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 			$this->userSession->createRememberMeToken($user);
 			// TODO server should/could be refactored so we don't need to manually create the user session and dispatch the login-related events
+			// Warning! If GSS is used, it reacts to the BeforeUserLoggedInEvent and handles the redirection itself
+			// So nothing after dispatching this event will be executed
 			$this->eventDispatcher->dispatchTyped(new BeforeUserLoggedInEvent($user->getUID(), null, \OC::$server->get(Backend::class)));
 			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $user->getUID(), null, false));
 		}
