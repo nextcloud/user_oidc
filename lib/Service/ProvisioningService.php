@@ -24,6 +24,7 @@ use OCP\Image;
 use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\L10N\IFactory;
 use OCP\User\Events\UserChangedEvent;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -43,6 +44,7 @@ class ProvisioningService {
 		private IAvatarManager $avatarManager,
 		private IConfig $config,
 		private ISession $session,
+		private IFactory $l10nFactory,
 	) {
 	}
 
@@ -76,6 +78,9 @@ class ProvisioningService {
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
+
+		$languageAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language');
+		$language = $idTokenPayload->{$languageAttribute} ?? null;
 
 		$genderAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender');
 		$gender = $idTokenPayload->{$genderAttribute} ?? null;
@@ -234,6 +239,19 @@ class ProvisioningService {
 		$this->logger->debug('Phone mapping event dispatched');
 		if ($event->hasValue()) {
 			$account->setProperty('phone', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_PHONE] ?? $fallbackScope, '1', '');
+		}
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_LANGUAGE, $idTokenPayload, $language);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Language mapping event dispatched');
+		if ($event->hasValue()) {
+			$language = $event->getValue();
+			$languagesCodes = $this->l10nFactory->findAvailableLanguages();
+			if (in_array($language, $languagesCodes, true) || $language === 'en') {
+				$this->config->setUserValue($user->getUID(), 'core', 'lang', $language);
+			} else {
+				$this->logger->debug('Invalid language in ID token', ['language' => $language]);
+			}
 		}
 
 		$addressParts = null;

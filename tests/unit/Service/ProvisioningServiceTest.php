@@ -21,6 +21,7 @@ use OCP\IGroupManager;
 use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\L10N\IFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -64,6 +65,10 @@ class ProvisioningServiceTest extends TestCase {
 
 	/** @var ISession | MockObject */
 	private $session;
+	/**
+	 * @var IFactory | MockObject
+	 */
+	private $l10nFactory;
 
 	public function setUp(): void {
 		parent::setUp();
@@ -80,6 +85,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->avatarManager = $this->createMock(IAvatarManager::class);
 		$this->config = $this->createMock(IConfig::class);
 		$this->session = $this->createMock(ISession::class);
+		$this->l10nFactory = $this->createMock(IFactory::class);
 
 		$this->provisioningService = new ProvisioningService(
 			$this->idService,
@@ -94,6 +100,7 @@ class ProvisioningServiceTest extends TestCase {
 			$this->avatarManager,
 			$this->config,
 			$this->session,
+			$this->l10nFactory,
 		);
 	}
 
@@ -119,6 +126,7 @@ class ProvisioningServiceTest extends TestCase {
 					[$providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name', 'name'],
 					[$providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota', 'quota'],
 					[$providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0', '0'],
+					[$providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language', 'language'],
 					[$providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address', 'address'],
 					[$providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address', 'street_address'],
 					[$providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code', 'postal_code'],
