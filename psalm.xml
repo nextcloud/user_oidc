@@ -45,6 +45,7 @@
 				<referencedClass name="Symfony\Component\Console\Helper\Table" />
 				<referencedClass name="Symfony\Component\Console\Question\ConfirmationQuestion" />
 				<referencedClass name="OC\Accounts\AccountManager" />
+				<referencedClass name="OCA\OIDCIdentityProvider\AppInfo\Application" />
 			</errorLevel>
 		</UndefinedClass>
 		<UndefinedDocblockClass>
