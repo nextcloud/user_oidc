@@ -7,11 +7,12 @@
 
 use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
-use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\LocalIdService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCP\Accounts\IAccount;
 use OCP\Accounts\IAccountManager;
+use OCP\Accounts\IAccountProperty;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
@@ -36,8 +37,8 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var ProvisioningService | MockObject */
 	private $providerService;
 
-	/** @var LdapService | MockObject */
-	private $ldapService;
+	/** @var IConfig | MockObject */
+	private $config;
 
 	/** @var UserMapper | MockObject */
 	private $userMapper;
@@ -74,7 +75,7 @@ class ProvisioningServiceTest extends TestCase {
 		parent::setUp();
 		$this->idService = $this->createMock(LocalIdService::class);
 		$this->providerService = $this->createMock(ProviderService::class);
-		$this->ldapService = $this->createMock(LdapService::class);
+		$this->config = $this->createMock(IConfig::class);
 		$this->userMapper = $this->createMock(UserMapper::class);
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
@@ -83,7 +84,6 @@ class ProvisioningServiceTest extends TestCase {
 		$this->accountManager = $this->createMock(IAccountManager::class);
 		$this->clientService = $this->createMock(IClientService::class);
 		$this->avatarManager = $this->createMock(IAvatarManager::class);
-		$this->config = $this->createMock(IConfig::class);
 		$this->session = $this->createMock(ISession::class);
 		$this->l10nFactory = $this->createMock(IFactory::class);
 
@@ -171,6 +171,116 @@ class ProvisioningServiceTest extends TestCase {
 				'email' => $email,
 				'name' => $name,
 				'quota' => $quota
+			]
+		);
+	}
+
+	public function testProvisionUserInvalidProperties(): void {
+		$user = $this->createMock(IUser::class);
+		$email = 'userEmail@email.com';
+		$name = 'userName';
+		$quota = '1234';
+		$userId = 'userId123';
+		$providerId = 312;
+
+		$backendUser = $this->getMockBuilder(User::class)
+			->addMethods(['getUserId', 'setUserId', 'getDisplayName', 'setDisplayName'])
+			->getMock();
+		$backendUser->method('getUserId')
+			->willReturn($userId);
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email', 'email'],
+					[$providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name', 'name'],
+					[$providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota', 'quota'],
+					[$providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0', '0'],
+					[$providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language', 'language'],
+					[$providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address', 'address'],
+					[$providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address', 'street_address'],
+					[$providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code', 'postal_code'],
+					[$providerId, ProviderService::SETTING_MAPPING_LOCALITY, 'locality', 'locality'],
+					[$providerId, ProviderService::SETTING_MAPPING_REGION, 'region', 'region'],
+					[$providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country', 'country'],
+					[$providerId, ProviderService::SETTING_MAPPING_WEBSITE, 'website', 'website'],
+					[$providerId, ProviderService::SETTING_MAPPING_AVATAR, 'avatar', 'avatar'],
+					[$providerId, ProviderService::SETTING_MAPPING_TWITTER, 'twitter', 'twitter'],
+					[$providerId, ProviderService::SETTING_MAPPING_FEDIVERSE, 'fediverse', 'fediverse'],
+					[$providerId, ProviderService::SETTING_MAPPING_ORGANISATION, 'organisation', 'organisation'],
+					[$providerId, ProviderService::SETTING_MAPPING_ROLE, 'role', 'role'],
+					[$providerId, ProviderService::SETTING_MAPPING_HEADLINE, 'headline', 'headline'],
+					[$providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography', 'biography'],
+					[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
+					[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
+				]
+			));
+
+		$this->userMapper
+			->method('getOrCreate')
+			->willReturn($backendUser);
+
+		$this->userManager
+			->method('get')
+			->willReturn($user);
+
+		$backendUser->expects(self::once())
+			->method('setDisplayName')
+			->with($name);
+		$user->expects(self::once())
+			->method('setSystemEMailAddress')
+			->with($email);
+		$user->expects(self::once())
+			->method('setQuota')
+			->with($quota);
+
+		$twitterProperty = 'undefined';
+		$property = $this->createMock(IAccountProperty::class);
+		$property->method('getName')->willReturn('twitter');
+		$property->method('getScope')->willReturn(IAccountManager::SCOPE_LOCAL);
+		$property->method('getValue')->willReturnCallback(function () use (&$twitterProperty) {
+			echo 'GETTING: ' . $twitterProperty;
+			return $twitterProperty;
+		});
+
+		/** @var IAccount|MockObject */
+		$account = $this->createMock(IAccount::class);
+		$account->expects(self::exactly(2))
+			->method('setProperty')
+			->with('twitter', self::anything())
+			->willReturnCallback(function ($_, string $prop) use (&$twitterProperty, $account) {
+				$twitterProperty = $prop;
+				return $account;
+			});
+		$account->expects(self::atLeastOnce())
+			->method('getProperty')
+			->with('twitter')
+			->willReturn($property);
+		
+
+		$this->accountManager->expects(self::once())
+			->method('getAccount')
+			->with($user)
+			->willReturn($account);
+
+		$this->accountManager->expects(self::exactly(2))
+			->method('updateAccount')
+			->with($account)
+			->willReturnCallback(fn ($account) => match($account->getProperty('twitter')->getValue()) {
+				'' => null,
+				'invalid@twitter' => throw new InvalidArgumentException(IAccountManager::PROPERTY_TWITTER),
+				default => self::fail('Unexpected update account call'),
+			});
+
+		$this->provisioningService->provisionUser(
+			$userId,
+			$providerId,
+			(object)[
+				'email' => $email,
+				'name' => $name,
+				'quota' => $quota,
+				'twitter' => 'invalid@twitter'
 			]
 		);
 	}
