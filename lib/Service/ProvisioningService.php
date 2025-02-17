@@ -7,6 +7,7 @@
 
 namespace OCA\UserOIDC\Service;
 
+use InvalidArgumentException;
 use OC\Accounts\AccountManager;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
@@ -162,7 +163,6 @@ class ProvisioningService {
 			AccountManager::DEFAULT_SCOPES,
 			$this->config->getSystemValue('account_manager.default_property_scope', []) ?? []
 		);
-
 
 		// Update displayname
 		if (isset($userName)) {
@@ -369,7 +369,23 @@ class ProvisioningService {
 
 		$this->session->set('user_oidc.oidcUserData', $oidcGssUserData);
 
-		$this->accountManager->updateAccount($account);
+		while (true) {
+			try {
+				$this->accountManager->updateAccount($account);
+				break;
+			} catch (InvalidArgumentException $e) {
+				// If the message is a property name, then this was throws because of an invalid property value
+				if (in_array($e->getMessage(), IAccountManager::ALLOWED_PROPERTIES)) {
+					$property = $account->getProperty($e->getMessage());
+					// Remove the property from account
+					$account->setProperty($property->getName(), '', $property->getScope(), IAccountManager::NOT_VERIFIED);
+					$this->logger->info('Invalid account property provisioned', ['account' => $user->getUID(), 'property' => $property->getName()]);
+					continue;
+				}
+				// unrelated error - rethrow
+				throw $e;
+			}
+		}
 		return $user;
 	}
 
