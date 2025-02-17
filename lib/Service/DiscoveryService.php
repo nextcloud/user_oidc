@@ -11,7 +11,6 @@ namespace OCA\UserOIDC\Service;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
-use OCP\Http\Client\IClientService;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
@@ -38,7 +37,7 @@ class DiscoveryService {
 
 	public function __construct(
 		private LoggerInterface $logger,
-		private IClientService $clientService,
+		private NetworkService $networkService,
 		private ProviderService $providerService,
 		ICacheFactory $cacheFactory,
 	) {
@@ -52,7 +51,7 @@ class DiscoveryService {
 			$url = $provider->getDiscoveryEndpoint();
 			$this->logger->debug('Obtaining discovery endpoint: ' . $url);
 
-			$client = $this->clientService->newClient();
+			$client = $this->networkService->newClient();
 			$response = $client->get($url);
 			$cachedDiscovery = $response->getBody();
 
@@ -76,7 +75,7 @@ class DiscoveryService {
 			$rawJwks = json_decode($rawJwks, true);
 		} else {
 			$discovery = $this->obtainDiscovery($provider);
-			$client = $this->clientService->newClient();
+			$client = $this->networkService->newClient();
 			$responseBody = $client->get($discovery['jwks_uri'])->getBody();
 			$rawJwks = json_decode($responseBody, true);
 			// cache jwks

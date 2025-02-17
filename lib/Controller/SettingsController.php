@@ -13,12 +13,12 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\NetworkService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\Http\Client\IClientService;
 use OCP\IRequest;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
@@ -31,7 +31,7 @@ class SettingsController extends Controller {
 		private ID4MeService $id4meService,
 		private ProviderService $providerService,
 		private ICrypto $crypto,
-		private IClientService $clientService,
+		private NetworkService $networkService,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -44,7 +44,7 @@ class SettingsController extends Controller {
 		];
 
 		try {
-			$client = $this->clientService->newClient();
+			$client = $this->networkService->newClient();
 			$response = $client->get($url);
 			$httpCode = $response->getStatusCode();
 			$body = $response->getBody();

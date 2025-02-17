@@ -17,6 +17,7 @@ use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\NetworkService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -24,7 +25,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -55,7 +55,7 @@ class Id4meController extends BaseOidcController {
 		IConfig $config,
 		private IL10N $l10n,
 		private ITimeFactory $timeFactory,
-		private IClientService $clientService,
+		private NetworkService $networkService,
 		private IURLGenerator $urlGenerator,
 		private UserMapper $userMapper,
 		private IUserSession $userSession,
@@ -221,7 +221,7 @@ class Id4meController extends BaseOidcController {
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
 
-		$client = $this->clientService->newClient();
+		$client = $this->networkService->newClient();
 		$result = $client->post(
 			$openIdConfig->getTokenEndpoint(),
 			[

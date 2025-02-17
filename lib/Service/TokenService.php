@@ -17,8 +17,6 @@ use OCA\UserOIDC\Model\Token;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
-use OCP\Http\Client\IClient;
-use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -37,10 +35,10 @@ class TokenService {
 
 	private const SESSION_TOKEN_KEY = Application::APP_ID . '-user-token';
 
-	private IClient $client;
+	private NetworkClient $client;
 
 	public function __construct(
-		IClientService $clientService,
+		NetworkService $networkService,
 		private ISession $session,
 		private IUserSession $userSession,
 		private IConfig $config,
@@ -51,7 +49,7 @@ class TokenService {
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
 	) {
-		$this->client = $clientService->newClient();
+		$this->client = $networkService->newClient();
 	}
 
 	public function storeToken(array $tokenData): Token {

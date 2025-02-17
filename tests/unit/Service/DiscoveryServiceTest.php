@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\NetworkService;
 use OCA\UserOIDC\Service\ProviderService;
-use OCP\Http\Client\IClientService;
 use OCP\ICacheFactory;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -23,9 +23,9 @@ class DiscoveryServiceTest extends TestCase {
 	 */
 	private $logger;
 	/**
-	 * @var IClientService|MockObject
+	 * @var NetworkService|MockObject
 	 */
-	private $clientService;
+	private $networkService;
 	/**
 	 * @var ProviderService|MockObject
 	 */
@@ -42,10 +42,10 @@ class DiscoveryServiceTest extends TestCase {
 	public function setUp(): void {
 		parent::setUp();
 		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->clientService = $this->createMock(IClientService::class);
+		$this->networkService = $this->createMock(NetworkService::class);
 		$this->providerService = $this->createMock(ProviderService::class);
 		$this->cacheFactory = $this->createMock(ICacheFactory::class);
-		$this->discoveryService = new DiscoveryService($this->logger, $this->clientService, $this->providerService, $this->cacheFactory);
+		$this->discoveryService = new DiscoveryService($this->logger, $this->networkService, $this->providerService, $this->cacheFactory);
 	}
 
 	public function testBuildAuthorizationUrl() {
