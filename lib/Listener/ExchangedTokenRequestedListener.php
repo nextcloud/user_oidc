@@ -12,6 +12,7 @@ use OCA\UserOIDC\Event\ExchangedTokenRequestedEvent;
 use OCA\UserOIDC\Service\TokenService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use OCP\IConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -24,6 +25,7 @@ class ExchangedTokenRequestedListener implements IEventListener {
 		private IUserSession $userSession,
 		private TokenService $tokenService,
 		private LoggerInterface $logger,
+		private IConfig $config,
 	) {
 	}
 
@@ -38,6 +40,22 @@ class ExchangedTokenRequestedListener implements IEventListener {
 
 		$targetAudience = $event->getTargetAudience();
 		$this->logger->debug('[TokenExchange Listener] received request for audience: ' . $targetAudience);
+
+		// generate a token pair with the Oidc provider app
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$ncProviderTokenGenerationEnabled = (isset($oidcSystemConfig['oidc_provider_token_generation']) && $oidcSystemConfig['oidc_provider_token_generation'] === true);
+		if ($ncProviderTokenGenerationEnabled) {
+			$userId = $this->userSession->getUser()?->getUID();
+			if ($userId !== null) {
+				$ncProviderToken = $this->tokenService->getTokenFromOidcProviderApp($userId, $targetAudience);
+				if ($ncProviderToken !== null) {
+					$event->setToken($ncProviderToken);
+					return;
+				}
+			}
+		}
+
+		// classic token exchange with an external provider
 		$token = $this->tokenService->getExchangedToken($targetAudience);
 		$event->setToken($token);
 	}

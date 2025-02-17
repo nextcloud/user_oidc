@@ -15,8 +15,10 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
 use OCA\UserOIDC\Model\Token;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
@@ -48,6 +50,8 @@ class TokenService {
 		private ICrypto $crypto,
 		private IRequest $request,
 		private IURLGenerator $urlGenerator,
+		private IEventDispatcher $eventDispatcher,
+		private IAppManager $appManager,
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
 	) {
@@ -208,7 +212,7 @@ class TokenService {
 	}
 
 	/**
-	 * Exchange a token for another audience (client ID)
+	 * Exchange the login token for another audience (client ID)
 	 *
 	 * @param string $targetAudience
 	 * @return Token
@@ -310,5 +314,41 @@ class TokenService {
 			$this->logger->error('[TokenService] Failed to exchange token ', ['exception' => $e]);
 			throw new TokenExchangeFailedException('Failed to exchange token, error in the exchange request', 0, $e);
 		}
+	}
+
+	/**
+	 * Try to get a token from the Oidc provider app for a user and a specific audience (client ID)
+	 *
+	 * @param string $userId
+	 * @param string $targetAudience
+	 * @return Token|null
+	 */
+	public function getTokenFromOidcProviderApp(string $userId, string $targetAudience): ?Token {
+		if (!class_exists('OCA\OIDCIdentityProvider\AppInfo\Application')) {
+			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, oidc app is not installed');
+			return null;
+		}
+		if (!$this->appManager->isEnabledForUser(\OCA\OIDCIdentityProvider\AppInfo\Application::APP_ID)) {
+			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, oidc app is not enabled');
+			return null;
+		}
+		if (!class_exists('OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent')) {
+			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, TokenGenerationRequestEvent class not found, oidc app is probably not >= v1.4.0');
+			return null;
+		}
+
+		$generationEvent = new \OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent($targetAudience, $userId);
+		$this->eventDispatcher->dispatchTyped($generationEvent);
+		if ($generationEvent->getAccessToken() === null || $generationEvent->getIdToken() === null) {
+			$this->logger->debug('[TokenService] The Oidc provider app did not generate any access/id token');
+			return null;
+		}
+		return new Token([
+			'access_token' => $generationEvent->getAccessToken(),
+			'id_token' => $generationEvent->getIdToken(),
+			'refresh_token' => $generationEvent->getRefreshToken(),
+			'expires_in' => $generationEvent->getExpiresIn(),
+			'refresh_expires_in' => $generationEvent->getExpiresIn(),
+		]);
 	}
 }
