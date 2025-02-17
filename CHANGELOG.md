@@ -8,6 +8,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 6.3.0 – 2025-02-17
+
+### Changed
+
+- Support NC 32 @nickvergessen [#1029](https://github.com/nextcloud/user_oidc/pull/1029)
+- Map the user language @julien-nc [#1046](https://github.com/nextcloud/user_oidc/pull/1046)
+- Adjustment for GSS @julien-nc [#1053](https://github.com/nextcloud/user_oidc/pull/1053)
+
+### Fixed
+
+- Replace broken jumpstart docs link @joshtrichards [#1045](https://github.com/nextcloud/user_oidc/pull/1045)
+- Fetch default privacy scopes and set properties appropriate @bjalbor [#1048](https://github.com/nextcloud/user_oidc/pull/1048)
+- Backchannel logout token may not contain "sub" @prigaux [#1049](https://github.com/nextcloud/user_oidc/pull/1049)
+- Fix '"kid" invalid, unable to lookup correct key' when keys are rotated @Adphi [#1035](https://github.com/nextcloud/user_oidc/pull/1035)
+- Fix(ProvisioningService): Handle `InvalidArgumentException` when updating account @susnux [#1058](https://github.com/nextcloud/user_oidc/pull/1058)
+
 ## 6.2.1 – 2025-01-23
 
 ### Fixed
