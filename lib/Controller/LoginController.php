@@ -724,13 +724,15 @@ class LoginController extends BaseOidcController {
 			);
 		}
 
-		$sub = $logoutTokenPayload->sub;
-		if ($oidcSession->getSub() !== $sub) {
-			return $this->getBackchannelLogoutErrorResponse(
-				'invalid SUB',
-				'The sub does not match the one from the login ID token',
-				['invalid_sub' => $sub]
-			);
+		if (isset($logoutTokenPayload->sub)) {
+			$sub = $logoutTokenPayload->sub;
+			if ($oidcSession->getSub() !== $sub) {
+				return $this->getBackchannelLogoutErrorResponse(
+					'invalid SUB',
+					'The sub does not match the one from the login ID token',
+					['invalid_sub' => $sub]
+				);
+			}
 		}
 		$iss = $logoutTokenPayload->iss;
 		if ($oidcSession->getIss() !== $iss) {
