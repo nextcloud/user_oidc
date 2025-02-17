@@ -7,6 +7,8 @@
 
 namespace OCA\UserOIDC\Service;
 
+use InvalidArgumentException;
+use OC\Accounts\AccountManager;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
@@ -23,6 +25,7 @@ use OCP\Image;
 use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\L10N\IFactory;
 use OCP\User\Events\UserChangedEvent;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -42,6 +45,7 @@ class ProvisioningService {
 		private IAvatarManager $avatarManager,
 		private IConfig $config,
 		private ISession $session,
+		private IFactory $l10nFactory,
 	) {
 	}
 
@@ -75,6 +79,9 @@ class ProvisioningService {
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 		$quota = $idTokenPayload->{$quotaAttribute} ?? null;
+
+		$languageAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language');
+		$language = $idTokenPayload->{$languageAttribute} ?? null;
 
 		$genderAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender');
 		$gender = $idTokenPayload->{$genderAttribute} ?? null;
@@ -151,7 +158,11 @@ class ProvisioningService {
 		}
 
 		$account = $this->accountManager->getAccount($user);
-		$scope = 'v2-local';
+		$fallbackScope = 'v2-local';
+		$defaultScopes = array_merge(
+			AccountManager::DEFAULT_SCOPES,
+			$this->config->getSystemValue('account_manager.default_property_scope', []) ?? []
+		);
 
 		// Update displayname
 		if (isset($userName)) {
@@ -227,7 +238,20 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Phone mapping event dispatched');
 		if ($event->hasValue()) {
-			$account->setProperty('phone', $event->getValue(), $scope, '1', '');
+			$account->setProperty('phone', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_PHONE] ?? $fallbackScope, '1', '');
+		}
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_LANGUAGE, $idTokenPayload, $language);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Language mapping event dispatched');
+		if ($event->hasValue()) {
+			$language = $event->getValue();
+			$languagesCodes = $this->l10nFactory->findAvailableLanguages();
+			if (in_array($language, $languagesCodes, true) || $language === 'en') {
+				$this->config->setUserValue($user->getUID(), 'core', 'lang', $language);
+			} else {
+				$this->logger->debug('Invalid language in ID token', ['language' => $language]);
+			}
 		}
 
 		$addressParts = null;
@@ -266,7 +290,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Address mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('address', $event->getValue(), $scope, '1', '');
+			$account->setProperty('address', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_ADDRESS] ?? $fallbackScope, '1', '');
 		}
 
 		// Update the website
@@ -274,7 +298,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Website mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('website', $event->getValue(), $scope, '1', '');
+			$account->setProperty('website', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_WEBSITE] ?? $fallbackScope, '1', '');
 		}
 
 		// Update the avatar
@@ -290,7 +314,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Twitter mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('twitter', $event->getValue(), $scope, '1', '');
+			$account->setProperty('twitter', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_TWITTER] ?? $fallbackScope, '1', '');
 		}
 
 		// Update fediverse
@@ -298,7 +322,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Fediverse mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('fediverse', $event->getValue(), $scope, '1', '');
+			$account->setProperty('fediverse', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_FEDIVERSE] ?? $fallbackScope, '1', '');
 		}
 
 		// Update the organisation
@@ -306,7 +330,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Organisation mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('organisation', $event->getValue(), $scope, '1', '');
+			$account->setProperty('organisation', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_ORGANISATION] ?? $fallbackScope, '1', '');
 		}
 
 		// Update role
@@ -322,7 +346,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Headline mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('headline', $event->getValue(), $scope, '1', '');
+			$account->setProperty('headline', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_HEADLINE] ?? $fallbackScope, '1', '');
 		}
 
 		// Update the biography
@@ -330,20 +354,38 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Biography mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('biography', $event->getValue(), $scope, '1', '');
+			$account->setProperty('biography', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_BIOGRAPHY] ?? $fallbackScope, '1', '');
 		}
 
 		// Update the gender
+		// Since until now there is no default for property for gender we have to use default
+		// In v31 there will be introduced PRONOUNS, which could be of better use
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GENDER, $idTokenPayload, $gender);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Gender mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('gender', $event->getValue(), $scope, '1', '');
+			$account->setProperty('gender', $event->getValue(), $fallbackScope, '1', '');
 		}
 
 		$this->session->set('user_oidc.oidcUserData', $oidcGssUserData);
 
-		$this->accountManager->updateAccount($account);
+		while (true) {
+			try {
+				$this->accountManager->updateAccount($account);
+				break;
+			} catch (InvalidArgumentException $e) {
+				// If the message is a property name, then this was throws because of an invalid property value
+				if (in_array($e->getMessage(), IAccountManager::ALLOWED_PROPERTIES)) {
+					$property = $account->getProperty($e->getMessage());
+					// Remove the property from account
+					$account->setProperty($property->getName(), '', $property->getScope(), IAccountManager::NOT_VERIFIED);
+					$this->logger->info('Invalid account property provisioned', ['account' => $user->getUID(), 'property' => $property->getName()]);
+					continue;
+				}
+				// unrelated error - rethrow
+				throw $e;
+			}
+		}
 		return $user;
 	}
 

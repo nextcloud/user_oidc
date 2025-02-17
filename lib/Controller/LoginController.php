@@ -52,12 +52,13 @@ use OCP\Session\Exceptions\SessionNotAvailableException;
 use OCP\User\Events\BeforeUserLoggedInEvent;
 use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
+use UnexpectedValueException;
 
 class LoginController extends BaseOidcController {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	public const PROVIDERID = 'oidc.providerid';
-	private const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
+	public const REDIRECT_AFTER_LOGIN = 'oidc.redirect';
 	private const ID_TOKEN = 'oidc.id_token';
 	private const CODE_VERIFIER = 'oidc.code_verifier';
 
@@ -398,7 +399,13 @@ class LoginController extends BaseOidcController {
 		$idTokenRaw = $data['id_token'];
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
-		$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		try {
+			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		} catch (UnexpectedValueException $e) {
+			$this->logger->debug('Failed to decode the JWT token, retrying with fresh JWK');
+			$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw, false);
+			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		}
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
 
@@ -514,6 +521,8 @@ class LoginController extends BaseOidcController {
 			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 			$this->userSession->createRememberMeToken($user);
 			// TODO server should/could be refactored so we don't need to manually create the user session and dispatch the login-related events
+			// Warning! If GSS is used, it reacts to the BeforeUserLoggedInEvent and handles the redirection itself
+			// So nothing after dispatching this event will be executed
 			$this->eventDispatcher->dispatchTyped(new BeforeUserLoggedInEvent($user->getUID(), null, \OC::$server->get(Backend::class)));
 			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $user->getUID(), null, false));
 		}
