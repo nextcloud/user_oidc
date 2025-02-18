@@ -10,6 +10,8 @@ namespace OC\Authentication\Token {
 		public function getId(): int;
 
 		public function getUid(): string;
+
+		public function setScope(array $scope): void;
 	}
 
 	interface IProvider {
@@ -18,5 +20,7 @@ namespace OC\Authentication\Token {
 		public function invalidateTokenById(string $uid, int $id);
 
 		public function getTokenById(int $tokenId): IToken;
+
+		public function updateToken(IToken $token);
 	}
 }
