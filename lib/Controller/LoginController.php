@@ -36,6 +36,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\Authentication\Token\IToken;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClientService;
@@ -520,6 +521,14 @@ class LoginController extends BaseOidcController {
 			$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
 			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
 			$this->userSession->createRememberMeToken($user);
+
+			// prevent password confirmation
+			if (defined(IToken::class . '::SCOPE_SKIP_PASSWORD_VALIDATION')) {
+				$token = $this->authTokenProvider->getToken($this->session->getId());
+				$token->setScope([IToken::SCOPE_SKIP_PASSWORD_VALIDATION => true]);
+				$this->authTokenProvider->updateToken($token);
+			}
+
 			// TODO server should/could be refactored so we don't need to manually create the user session and dispatch the login-related events
 			// Warning! If GSS is used, it reacts to the BeforeUserLoggedInEvent and handles the redirection itself
 			// So nothing after dispatching this event will be executed
