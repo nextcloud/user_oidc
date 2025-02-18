@@ -280,9 +280,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								}
 							}
 
+							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
 							return $userId;
 						} elseif ($this->userExists($tokenUserId)) {
 							$this->checkFirstLogin($tokenUserId);
+							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
 							return $tokenUserId;
 						} else {
 							// check if the user exists locally
@@ -303,6 +305,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								return '';
 							}
 							$this->checkFirstLogin($tokenUserId);
+							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
 							return $tokenUserId;
 						}
 					}
