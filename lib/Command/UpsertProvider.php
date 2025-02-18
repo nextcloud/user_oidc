@@ -131,6 +131,14 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_GROUP_PROVISIONING,
 			'description' => 'Flag to toggle group provisioning. 1 to enable, 0 to disable (default)',
 		],
+		'group-whitelist-regex' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_GROUP_WHITELIST_REGEX,
+			'description' => 'Group whitelist regex',
+		],
+		'group-restrict-login-to-whitelist' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS,
+			'description' => 'Restrict login for users that are not in any whitelisted groups. 1 to enable, 0 to disable (default)',
+		],
 		'mapping-groups' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_GROUPS,
 			'description' => 'Attribute mapping of the groups',
