@@ -40,7 +40,7 @@ sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider --cl
     --clientsecret="lbXy***********" --discoveryuri="https://accounts.example.com/openid-configuration"
 ```
 
-Attribute mappings can be optionally specified. For more details refer to `occ user_oidc:provider --help`.
+Other options like attribute mappings or group provisioning can be optionally specified. For more details refer to `occ user_oidc:provider --help`.
 
 To delete a provider, use:
 ```
@@ -272,6 +272,27 @@ it is possible to disable the classic "self-encoded" validation:
     'userinfo_bearer_validation' => true,
     'selfencoded_bearer_validation' => false,
 ],
+```
+
+### Group provisioning
+
+If enabled, user_oidc will create nonexisting groups on user login. If you specify a whitelist,
+all other groups will be kept untouched. Additionally you can restrict login to allow only users who are
+member in a whitelisted group:
+
+```
+sudo -u www-data php /var/www/nextcloud/occ config:app:set user_oidc provider-X-groupProvisioning --value=1
+sudo -u www-data php /var/www/nextcloud/occ config:app:set user_oidc provider-X-groupWhitelistRegex --value='/<regex>/'
+sudo -u www-data php /var/www/nextcloud/occ config:app:set user_oidc provider-X-restrictLoginToGroups --value=1
+```
+(where `X` is the numeric provider id)
+
+Or at provider creation:
+
+```
+sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider \
+                --clientid="..." --clientsecret="***" --discoveryuri="..." \
+                --group-provisioning=1 --group-whitelist-regex='/<regex>/' --group-restrict-login-to-whitelist=1
 ```
 
 ### Disable audience and azp checks
