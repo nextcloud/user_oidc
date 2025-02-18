@@ -23,7 +23,7 @@ jobs:
       matrix:
         php-versions: ['8.0', '8.1', '8.2']
         databases: ['mysql']
-        server-versions: ['stable26', 'stable27', 'stable28', 'stable29', 'stable30', 'stable31', 'master']
+        server-versions: ['stable28', 'stable29', 'stable30', 'stable31', 'master']
         exclude:
           - php-versions: 8.0
             server-versions: master
