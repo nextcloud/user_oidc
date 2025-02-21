@@ -287,7 +287,12 @@ sudo -u www-data php /var/www/nextcloud/occ config:app:set user_oidc provider-X-
 ```
 (where `X` is the numeric provider id)
 
-Or at provider creation:
+You can configure each provider:
+* Toggle group provisioning
+* Set the group whitelist regular expression
+* Toggle login restriction to people who don't belong to any whitelisted group.
+
+This can be done in the graphical settings, in the "OpenID Connect" admin settings section or with the occ command to create/update providers:
 
 ```
 sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider \
