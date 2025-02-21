@@ -276,21 +276,10 @@ it is possible to disable the classic "self-encoded" validation:
 
 ### Group provisioning
 
-If enabled, user_oidc will create nonexisting groups on user login. If you specify a whitelist,
-all other groups will be kept untouched. Additionally you can restrict login to allow only users who are
-member in a whitelisted group:
-
-```
-sudo -u www-data php /var/www/nextcloud/occ config:app:set user_oidc provider-X-groupProvisioning --value=1
-sudo -u www-data php /var/www/nextcloud/occ config:app:set user_oidc provider-X-groupWhitelistRegex --value='/<regex>/'
-sudo -u www-data php /var/www/nextcloud/occ config:app:set user_oidc provider-X-restrictLoginToGroups --value=1
-```
-(where `X` is the numeric provider id)
-
 You can configure each provider:
-* Toggle group provisioning
-* Set the group whitelist regular expression
-* Toggle login restriction to people who don't belong to any whitelisted group.
+* Toggle group provisioning (creates nonexisting groups on login)
+* Set the group whitelist regular expression (nonmatching groups will be kept untouched)
+* Toggle login restriction to people who don't belong to any whitelisted group
 
 This can be done in the graphical settings, in the "OpenID Connect" admin settings section or with the occ command to create/update providers:
 
