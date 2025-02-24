@@ -40,7 +40,7 @@ sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider --cl
     --clientsecret="lbXy***********" --discoveryuri="https://accounts.example.com/openid-configuration"
 ```
 
-Attribute mappings can be optionally specified. For more details refer to `occ user_oidc:provider --help`.
+Other options like attribute mappings or group provisioning can be optionally specified. For more details refer to `occ user_oidc:provider --help`.
 
 To delete a provider, use:
 ```
@@ -272,6 +272,21 @@ it is possible to disable the classic "self-encoded" validation:
     'userinfo_bearer_validation' => true,
     'selfencoded_bearer_validation' => false,
 ],
+```
+
+### Group provisioning
+
+You can configure each provider:
+* Toggle group provisioning (creates nonexisting groups on login)
+* Set the group whitelist regular expression (nonmatching groups will be kept untouched)
+* Toggle login restriction to people who don't belong to any whitelisted group
+
+This can be done in the graphical settings, in the "OpenID Connect" admin settings section or with the occ command to create/update providers:
+
+```
+sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider \
+                --clientid="..." --clientsecret="***" --discoveryuri="..." \
+                --group-provisioning=1 --group-whitelist-regex='/<regex>/' --group-restrict-login-to-whitelist=1
 ```
 
 ### Disable audience and azp checks
