@@ -530,7 +530,9 @@ class LoginController extends BaseOidcController {
 			// prevent password confirmation
 			if (defined(IToken::class . '::SCOPE_SKIP_PASSWORD_VALIDATION')) {
 				$token = $this->authTokenProvider->getToken($this->session->getId());
-				$token->setScope([IToken::SCOPE_SKIP_PASSWORD_VALIDATION => true]);
+				$scope = $token->getScopeAsArray();
+				$scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION] = true;
+				$token->setScope($scope);
 				$this->authTokenProvider->updateToken($token);
 			}
 

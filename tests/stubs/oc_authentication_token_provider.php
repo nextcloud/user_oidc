@@ -12,6 +12,8 @@ namespace OC\Authentication\Token {
 		public function getUid(): string;
 
 		public function setScope(array $scope): void;
+
+		public function getScopeAsArray(): array;
 	}
 
 	interface IProvider {
