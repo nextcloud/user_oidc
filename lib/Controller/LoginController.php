@@ -22,6 +22,7 @@ use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
+use OCA\UserOIDC\Service\NetworkService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Service\TokenService;
@@ -38,7 +39,6 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -70,7 +70,7 @@ class LoginController extends BaseOidcController {
 		private LdapService $ldapService,
 		private ISecureRandom $random,
 		private ISession $session,
-		private IClientService $clientService,
+		private NetworkService $networkService,
 		private IURLGenerator $urlGenerator,
 		private IUserSession $userSession,
 		private IUserManager $userManager,
@@ -330,7 +330,7 @@ class LoginController extends BaseOidcController {
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
 		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
 
-		$client = $this->clientService->newClient();
+		$client = $this->networkService->newClient();
 		try {
 			$requestBody = [
 				'code' => $code,
