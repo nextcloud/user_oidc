@@ -338,7 +338,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Role mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('role', $event->getValue(), '1', '');
+			$account->setProperty('role', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_ROLE] ?? $fallbackScope, '1', '');
 		}
 
 		// Update the headline
