@@ -343,12 +343,16 @@ class TokenService {
 			$this->logger->debug('[TokenService] The Oidc provider app did not generate any access/id token');
 			return null;
 		}
+
 		return new Token([
 			'access_token' => $generationEvent->getAccessToken(),
 			'id_token' => $generationEvent->getIdToken(),
 			'refresh_token' => $generationEvent->getRefreshToken(),
 			'expires_in' => $generationEvent->getExpiresIn(),
-			'refresh_expires_in' => $generationEvent->getExpiresIn(),
+			// the getRefreshExpiresIn method will appear after oidc v1.4.0, see https://github.com/H2CK/oidc/pull/530
+			'refresh_expires_in' => method_exists($generationEvent, 'getRefreshExpiresIn')
+				? $generationEvent->getRefreshExpiresIn()
+				: $generationEvent->getExpiresIn(),
 		]);
 	}
 }
