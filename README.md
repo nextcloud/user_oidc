@@ -59,6 +59,18 @@ The avatar attribute on your IdP side may contain a URL pointing to an image fil
 The base64 should start with `data:image/png;base64,` or `data:image/jpeg;base64,`.
 The image should be in JPG or PNG format and have the same width and height.
 
+### Custom login button label
+
+You can set a custom label for the buttons in the login page.
+
+Set this value in `config.php`:
+``` php
+'user_oidc' => [
+    'login_label' => 'Connect with {name}',
+],
+```
+This custom label won't be translated.
+
 ### Disable default claims
 
 Even if you don't map any attribute for quota, display name, email or groups, this application will

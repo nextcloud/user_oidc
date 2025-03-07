@@ -24,6 +24,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
@@ -100,14 +101,19 @@ class Application extends App implements IBootstrap {
 		}
 	}
 
-	private function registerLogin(IRequest $request, IL10N $l10n, IURLGenerator $urlGenerator, ProviderMapper $providerMapper): void {
+	private function registerLogin(
+		IRequest $request, IL10N $l10n, IURLGenerator $urlGenerator, IConfig $config, ProviderMapper $providerMapper,
+	): void {
 		$redirectUrl = $request->getParam('redirect_url');
 		$absoluteRedirectUrl = !empty($redirectUrl) ? $urlGenerator->getAbsoluteURL($redirectUrl) : $redirectUrl;
 		$providers = $this->getCachedProviders($providerMapper);
+		$customLoginLabel = $config->getSystemValue('user_oidc', [])['login_label'] ?? '';
 		foreach ($providers as $provider) {
 			// FIXME: Move to IAlternativeLogin but requires boot due to db connection
 			OC_App::registerLogIn([
-				'name' => $l10n->t('Login with %1s', [$provider->getIdentifier()]),
+				'name' => $customLoginLabel
+					? preg_replace('/{name}/', $provider->getIdentifier(), $customLoginLabel)
+					: $l10n->t('Login with %1s', [$provider->getIdentifier()]),
 				'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login', ['providerId' => $provider->getId(), 'redirectUrl' => $absoluteRedirectUrl]),
 			]);
 		}
