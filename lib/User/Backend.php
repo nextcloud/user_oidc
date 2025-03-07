@@ -201,9 +201,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @since 6.0.0
 	 */
 	public function getCurrentUserId(): string {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$ncOidcProviderBearerValidation = isset($oidcSystemConfig['oidc_provider_bearer_validation']) && $oidcSystemConfig['oidc_provider_bearer_validation'] === true;
+
 		$providers = $this->providerMapper->getProviders();
-		if (count($providers) === 0) {
-			$this->logger->debug('no OIDC providers');
+		if (count($providers) === 0 && !$ncOidcProviderBearerValidation) {
+			$this->logger->debug('no OIDC providers and no NC provider validation');
 			return '';
 		}
 
@@ -215,7 +218,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return '';
 		}
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		// check if we should use UserInfoValidator (default is false)
 		if (!isset($oidcSystemConfig['userinfo_bearer_validation']) || !$oidcSystemConfig['userinfo_bearer_validation']) {
 			if (($key = array_search(UserInfoValidator::class, $this->tokenValidators)) !== false) {
@@ -227,6 +229,28 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			if (($key = array_search(SelfEncodedValidator::class, $this->tokenValidators)) !== false) {
 				unset($this->tokenValidators[$key]);
 			}
+		}
+
+		// check if we should ask the OIDC Identity Provider app (app_id: oidc) to validate the token (default is false)
+		if ($ncOidcProviderBearerValidation) {
+			if (class_exists(\OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent::class)) {
+				try {
+					$validationEvent = new \OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent($headerToken);
+					$this->eventDispatcher->dispatchTyped($validationEvent);
+					$oidcProviderUserId = $validationEvent->getUserId();
+					if ($oidcProviderUserId !== null) {
+						return $oidcProviderUserId;
+					} else {
+						$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has failed');
+					}
+				} catch (\Exception|\Throwable $e) {
+					$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has crashed', ['exception' => $e]);
+				}
+			} else {
+				$this->logger->debug('[NextcloudOidcProviderValidator] Impossible to validate bearer token with Nextcloud Oidc provider, OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent class not found');
+			}
+		} else {
+			$this->logger->debug('[NextcloudOidcProviderValidator] oidc_provider_bearer_validation is false or not defined');
 		}
 
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);

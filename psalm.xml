@@ -45,6 +45,7 @@
 				<referencedClass name="Symfony\Component\Console\Helper\Table" />
 				<referencedClass name="Symfony\Component\Console\Question\ConfirmationQuestion" />
 				<referencedClass name="OC\Accounts\AccountManager" />
+				<referencedClass name="OCA\OIDCIdentityProvider\AppInfo\Application" />
 			</errorLevel>
 		</UndefinedClass>
 		<UndefinedDocblockClass>
@@ -77,6 +78,7 @@
 		<file name="tests/stubs/oc_app.php" />
 		<file name="tests/stubs/oc_user.php" />
 		<file name="tests/stubs/oca_files_events.php" />
+		<file name="tests/stubs/oca_oidc_events.php" />
 		<file name="tests/stubs/ocp_imapperexception.php" />
 	</stubs>
 </psalm>
