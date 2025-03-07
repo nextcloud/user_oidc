@@ -233,14 +233,18 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		// check if we should ask the OIDC Identity Provider app (app_id: oidc) to validate the token (default is false)
 		if ($ncOidcProviderBearerValidation) {
-			if (class_exists('OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent')) {
-				$validationEvent = new \OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent($headerToken);
-				$this->eventDispatcher->dispatchTyped($validationEvent);
-				$oidcProviderUserId = $validationEvent->getUserId();
-				if ($oidcProviderUserId !== null) {
-					return $oidcProviderUserId;
-				} else {
-					$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has failed');
+			if (class_exists(\OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent::class)) {
+				try {
+					$validationEvent = new \OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent($headerToken);
+					$this->eventDispatcher->dispatchTyped($validationEvent);
+					$oidcProviderUserId = $validationEvent->getUserId();
+					if ($oidcProviderUserId !== null) {
+						return $oidcProviderUserId;
+					} else {
+						$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has failed');
+					}
+				} catch (\Exception|\Throwable $e) {
+					$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has crashed', ['exception' => $e]);
 				}
 			} else {
 				$this->logger->debug('[NextcloudOidcProviderValidator] Impossible to validate bearer token with Nextcloud Oidc provider, OCA\OIDCIdentityProvider\Event\TokenValidationRequestEvent class not found');

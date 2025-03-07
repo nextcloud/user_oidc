@@ -324,7 +324,7 @@ class TokenService {
 	 * @return Token|null
 	 */
 	public function getTokenFromOidcProviderApp(string $userId, string $targetAudience): ?Token {
-		if (!class_exists('OCA\OIDCIdentityProvider\AppInfo\Application')) {
+		if (!class_exists(\OCA\OIDCIdentityProvider\AppInfo\Application::class)) {
 			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, oidc app is not installed');
 			return null;
 		}
@@ -332,15 +332,20 @@ class TokenService {
 			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, oidc app is not enabled');
 			return null;
 		}
-		if (!class_exists('OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent')) {
+		if (!class_exists(\OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent::class)) {
 			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, TokenGenerationRequestEvent class not found, oidc app is probably not >= v1.4.0');
 			return null;
 		}
 
-		$generationEvent = new \OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent($targetAudience, $userId);
-		$this->eventDispatcher->dispatchTyped($generationEvent);
-		if ($generationEvent->getAccessToken() === null || $generationEvent->getIdToken() === null) {
-			$this->logger->debug('[TokenService] The Oidc provider app did not generate any access/id token');
+		try {
+			$generationEvent = new \OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent($targetAudience, $userId);
+			$this->eventDispatcher->dispatchTyped($generationEvent);
+			if ($generationEvent->getAccessToken() === null || $generationEvent->getIdToken() === null) {
+				$this->logger->debug('[TokenService] The Oidc provider app did not generate any access/id token');
+				return null;
+			}
+		} catch (\Exception|\Throwable $e) {
+			$this->logger->debug('[TokenService] The Oidc provider app failed to generate a token');
 			return null;
 		}
 
