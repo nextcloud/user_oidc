@@ -8,6 +8,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 7.0.0 – 2025-03-07
+
+### Added
+
+- Add ability to set a custom login button label @julien-nc [#1070](https://github.com/nextcloud/user_oidc/pull/1070)
+- Add support for bearer token validation and generation by the OIDC Identity Provider app via events @julien-nc [#1040](https://github.com/nextcloud/user_oidc/pull/1040)
+
+### Changed
+
+- Prepare for transifex sync @julien-nc [#1071](https://github.com/nextcloud/user_oidc/pull/1071)
+- Remove AZP check when validating a bearer ID token @julien-nc [#1039](https://github.com/nextcloud/user_oidc/pull/1039)
+- Bump min NC version to 28 to make sure we have `OCP\Authentication\Token\IToken` @julien-nc [#1061](https://github.com/nextcloud/user_oidc/pull/1061)
+
+### Fixed
+
+- Properly avoid password confirmation with user_oidc by adding the SCOPE_SKIP_PASSWORD_VALIDATION scope to the session tokens @julien-nc [#1061](https://github.com/nextcloud/user_oidc/pull/1061)
+- Fix scope for the role account property @julien-nc [#1069](https://github.com/nextcloud/user_oidc/pull/1069)
+
 ## 6.3.1 – 2025-02-25
 
 ### Fixed
