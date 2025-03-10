@@ -36,7 +36,7 @@
   "require-dev": {
     "nextcloud/coding-standard": "^1.0.0",
     "symfony/event-dispatcher": "^4",
-    "phpunit/phpunit": "^9.5"
+    "phpunit/phpunit": "^9.6"
   },
   "extra": {
     "mozart": {
