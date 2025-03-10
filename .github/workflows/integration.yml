@@ -20,7 +20,7 @@ jobs:
       matrix:
         php-versions: ['8.0']
         databases: ['sqlite', 'mysql', 'pgsql']
-        server-versions: ['master']
+        server-versions: ['stable23']
         include:
             - php-versions: 7.4
               databases: mysql
@@ -28,24 +28,6 @@ jobs:
             - php-versions: 8.0
               databases: mysql
               server-versions: stable22
-            - php-versions: 8.0
-              databases: mysql
-              server-versions: stable23
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable24
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable25
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable26
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable27
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: master
 
     name: php${{ matrix.php-versions }}-${{ matrix.databases }}-${{ matrix.server-versions }}
 
