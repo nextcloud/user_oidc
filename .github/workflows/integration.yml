@@ -87,7 +87,9 @@ jobs:
           path: apps/${{ env.APP_NAME }}
 
       - name: Start keycloak
-        run: docker-compose -f "docker-compose.integration.yml" up -d --build
+        run: |
+          docker-compose -f "docker-compose.integration.yml" up -d --build \
+            || docker compose -f "docker-compose.integration.yml" up -d --build
         working-directory: apps/${{ env.APP_NAME }}/tests/
 
       - name: Set up php ${{ matrix.php-versions }}
@@ -130,5 +132,7 @@ jobs:
 
       - name: Stop containers
         if: always()
-        run: docker-compose -f "docker-compose.integration.yml" down
+        run: |
+          docker-compose -f "docker-compose.integration.yml" down \
+            || docker compose -f "docker-compose.integration.yml" down
         working-directory: apps/${{ env.APP_NAME }}/tests/
