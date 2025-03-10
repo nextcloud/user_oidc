@@ -118,7 +118,7 @@ export default {
 				)
 			} catch (error) {
 				logger.error('Could not save ID4me state: ' + error.message, { error })
-				showError(t('user_oidc', 'Could not save ID4me state: ' + error.message))
+				showError(t('user_oidc', 'Could not save ID4me state: {msg}', { msg: error.message }))
 			} finally {
 				this.loadingId4Me = false
 			}
@@ -133,7 +133,7 @@ export default {
 				this.providers = this.providers.filter(p => p.id !== provider.id)
 			} catch (error) {
 				logger.error('Could not remove a provider: ' + error.message, { error })
-				showError(t('user_oidc', 'Could not remove provider: ' + error.message))
+				showError(t('user_oidc', 'Could not remove provider: {msg} ', { msg: error.message }))
 			}
 		},
 		async onSubmit() {
@@ -151,7 +151,7 @@ export default {
 				this.newProvider.discoveryEndpoint = ''
 			} catch (error) {
 				logger.error('Could not register a provider: ' + error.message, { error })
-				showError(t('user_oidc', 'Could not register provider: ' + error.message))
+				showError(t('user_oidc', 'Could not register provider: {msg}', { msg: error.message }))
 			}
 		},
 	},
