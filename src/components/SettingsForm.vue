@@ -255,7 +255,7 @@
 			{{ t('user_oidc', 'Use group provisioning.') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token. The Format of the groups claim value should be [{gid: "1", displayName: "group1"}, ...] or ["group1", "group2", ...]') }}
+			{{ t('user_oidc', 'This will create and update the users groups depending on the groups claim in the id token. The Format of the groups claim value should be {sample1} or {sample2}', { sample1: '[{gid: "1", displayName: "group1"}, …]', sample2: '["group1", "group2", …]' }, undefined, { escape: false }) }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.checkBearer" wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDav requests') }}
