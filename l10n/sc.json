@@ -1,0 +1,6 @@
+{ "translations": {
+    "Client ID" : "ID cliente",
+    "Client secret" : "Segretu de su cliente",
+    "Domain" : "Domìniu"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

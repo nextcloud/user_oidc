@@ -1,0 +1,7 @@
+{ "translations": {
+    "Client ID" : "Klient-ID",
+    "Client secret" : "Klienthemlighet",
+    "Scope" : "Sammanhang",
+    "Domain" : "Domän"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

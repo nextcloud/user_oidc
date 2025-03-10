@@ -1,0 +1,9 @@
+{ "translations": {
+    "Client ID" : "İstemci kimliği",
+    "Update" : "Güncelle",
+    "Client secret" : "İstemci parolası",
+    "Scope" : "Kapsam",
+    "Attribute mapping" : "Öznitelik eşleştirme",
+    "Domain" : "Etki alanı"
+},"pluralForm" :"nplurals=2; plural=(n > 1);"
+}
