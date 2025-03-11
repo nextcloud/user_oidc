@@ -1,0 +1,20 @@
+{ "translations": {
+    "Login with %1s" : "Acceder con %1s",
+    "ID4Me is disabled" : "ID4Me está desactivado",
+    "Invalid OpenID domain" : "O dominio OpenID non é válido",
+    "Invalid authority issuer" : "A autoridade emisora non é válida",
+    "Multiple authority found" : "Atopáronse varias autoridades",
+    "The received state does not match the expected value." : "O estado recibido non coincide co valor agardado.",
+    "Authority not found" : "Non se atopou a autoridade",
+    "The received token is expired." : "O testemuño recibido caducou",
+    "Client ID" : "ID de cliente",
+    "Update" : "Actualizar",
+    "Remove" : "Retirar",
+    "Submit" : "Enviar",
+    "Client secret" : "Segredo do cliente",
+    "Scope" : "Ámbito",
+    "Attribute mapping" : "Asignación de atributos",
+    "Cancel" : "Cancelar",
+    "Domain" : "Dominio"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

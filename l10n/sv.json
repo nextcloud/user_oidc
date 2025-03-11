@@ -1,7 +1,12 @@
 { "translations": {
     "Client ID" : "Klient-ID",
+    "Update" : "Uppdatera",
+    "Remove" : "Ta bort",
+    "Submit" : "Skicka",
     "Client secret" : "Klienthemlighet",
     "Scope" : "Sammanhang",
+    "Attribute mapping" : "Attributmappning",
+    "Cancel" : "Avbryt",
     "Domain" : "Domän"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

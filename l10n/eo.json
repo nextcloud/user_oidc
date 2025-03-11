@@ -1,0 +1,9 @@
+{ "translations": {
+    "Client ID" : "Klientidentigilo",
+    "Update" : "Ĝisdatigi",
+    "Submit" : "Sendi",
+    "Client secret" : "Klientosekreto",
+    "Scope" : "Amplekso",
+    "Domain" : "Domajno"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

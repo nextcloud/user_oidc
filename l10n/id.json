@@ -1,0 +1,10 @@
+{ "translations": {
+    "Client ID" : "ID Klien",
+    "Update" : "Perbarui",
+    "Remove" : "Hapus",
+    "Client secret" : "Rahasia klien",
+    "Scope" : "Skop",
+    "Cancel" : "Batal",
+    "Domain" : "Domain"
+},"pluralForm" :"nplurals=1; plural=0;"
+}

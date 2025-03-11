@@ -1,4 +1,10 @@
 { "translations": {
+    "Client ID" : "Kliendi ID",
+    "Update" : "Uuenda",
+    "Submit" : "Saada",
+    "Client secret" : "Kliendi salasõna",
+    "Scope" : "Skoop",
+    "Cancel" : "Tühista",
     "Domain" : "Domeen"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }
