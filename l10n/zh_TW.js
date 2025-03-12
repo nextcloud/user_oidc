@@ -1,6 +1,7 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Login with %1s" : "以 %1s 登入",
     "Client ID" : "客戶端 ID",
     "Update" : "更新",
     "Remove" : "移除",

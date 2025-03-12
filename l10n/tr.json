@@ -93,6 +93,7 @@
     "Auto provision user when accessing API and WebDav with Bearer token" : "Bearer kodu ile API ve WebDav erişiminde kullanıcı otomatik olarak yetkilendirilsin",
     "This automatically provisions the user, when sending API and WebDav Requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work." : "Bu seçenek, bir Bearer kodu ile API ve WebDav istekleri gönderirken kullanıcıyı otomatik olarak yetkilendirir. Çalışması için otomatik yetkilendirme ve Bearer kodu denetiminin açılması gerekir.",
     "Send ID token hint on logout" : "Oturumu kapatıldığında kimlik kodu ipucu gönderilsin",
+    "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "OpenID oturumu kapatma adresine id_token_hint GET parametresi olarak kimlik kodu eklensin mi? Kullanıcılar Nextcloud oturumlarını kapattıktan sonra bu adrese yönlendirilir. Bu ayarı açmak, OIDC kimlik kodunu kullanıcı uygulamasına sunar. Bu işlem OIDC hizmeti sağlayıcısına bağlı olarak gerekli olmayabilir.",
     "Cancel" : "İptal",
     "Domain" : "Etki alanı",
     "your.domain" : "etki.alaniniz"

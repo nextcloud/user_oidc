@@ -11,14 +11,19 @@ OC.L10N.register(
     "Failed to decrypt the ID4ME provider client secret" : "Falha ao decriptar o segredo de cliente do provedor ID4ME",
     "The received token is expired." : "O token recebido está expirado",
     "The audience does not match ours" : "A audiência não corresponde à nossa",
+    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect user backend" : "Back-end do usuário de OpenID Connect",
+    "Use an OpenID Connect backend to login to your Nextcloud" : "Use um back-end de OpenID Connect para fazer login em seu Nextcloud",
     "Client ID" : "ID do Cliente",
     "Update" : "Atualizar",
     "Remove" : "Remover",
     "Submit" : "Enviar",
+    "Client configuration" : "Configuração do cliente",
     "Client secret" : "Segredo do cliente",
     "Scope" : "Alcance",
     "Attribute mapping" : "Mapeamento de atributo",
     "Cancel" : "Cancelar",
-    "Domain" : "Domínio"
+    "Domain" : "Domínio",
+    "your.domain" : "seu.domínio"
 },
 "nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;");
