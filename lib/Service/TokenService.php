@@ -107,8 +107,8 @@ class TokenService {
 	 */
 	public function checkLoginToken(): void {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$tokenExchangeEnabled = (isset($oidcSystemConfig['token_exchange']) && $oidcSystemConfig['token_exchange'] === true);
-		if (!$tokenExchangeEnabled) {
+		$storeLoginTokenEnabled = (isset($oidcSystemConfig['store_login_token']) && $oidcSystemConfig['store_login_token'] === true);
+		if (!$storeLoginTokenEnabled) {
 			return;
 		}
 
@@ -223,10 +223,10 @@ class TokenService {
 	 */
 	public function getExchangedToken(string $targetAudience): Token {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$tokenExchangeEnabled = (isset($oidcSystemConfig['token_exchange']) && $oidcSystemConfig['token_exchange'] === true);
-		if (!$tokenExchangeEnabled) {
+		$storeLoginTokenEnabled = (isset($oidcSystemConfig['store_login_token']) && $oidcSystemConfig['store_login_token'] === true);
+		if (!$storeLoginTokenEnabled) {
 			throw new TokenExchangeFailedException(
-				'Failed to exchange token, the token exchange feature is disabled. It can be enabled in config.php',
+				'Failed to exchange token, storing the login token is disabled. It can be enabled in config.php',
 				0,
 			);
 		}
