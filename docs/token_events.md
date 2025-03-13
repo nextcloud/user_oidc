@@ -16,11 +16,9 @@ In this paragraph, we only talk about getting the login token (or a refreshed on
 client that was used when the user logged in Nextcloud.
 
 To get the token obtained on login, user_oidc needs to store it and refresh it when needed. This is disabled by default.
-You can enable this in `config.php`:
-``` php
-'user_oidc' => [
-    'store_login_token' => true,
-],
+You can enable this with:
+``` bash
+sudo -u www-data php /var/www/nextcloud/occ config:app:set --value=1 user_oidc store_login_token
 ```
 This login token is refreshed by user_oidc when needed. So the token you will get by emitting the event will be valid (not expired).
 

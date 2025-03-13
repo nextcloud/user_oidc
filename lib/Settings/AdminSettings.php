@@ -14,6 +14,7 @@ use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
+use OCP\IConfig;
 use OCP\IURLGenerator;
 use OCP\Settings\ISettings;
 use OCP\Util;
@@ -24,6 +25,7 @@ class AdminSettings implements ISettings {
 		private ProviderService $providerService,
 		private ID4MeService $Id4MeService,
 		private IURLGenerator $urlGenerator,
+		private IConfig $config,
 		private IInitialState $initialStateService,
 	) {
 	}
@@ -32,6 +34,10 @@ class AdminSettings implements ISettings {
 		$this->initialStateService->provideInitialState(
 			'id4meState',
 			$this->Id4MeService->getID4ME()
+		);
+		$this->initialStateService->provideInitialState(
+			'storeLoginTokenState',
+			$this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1'
 		);
 		$this->initialStateService->provideInitialState(
 			'providers',

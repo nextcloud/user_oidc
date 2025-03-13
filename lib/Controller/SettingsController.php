@@ -17,8 +17,10 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Http\Client\IClientService;
+use OCP\IConfig;
 use OCP\IRequest;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
@@ -27,6 +29,7 @@ class SettingsController extends Controller {
 
 	public function __construct(
 		IRequest $request,
+		private IConfig $config,
 		private ProviderMapper $providerMapper,
 		private ID4MeService $id4meService,
 		private ProviderService $providerService,
@@ -73,9 +76,7 @@ class SettingsController extends Controller {
 		return $result;
 	}
 
-	/**
-	 * @PasswordConfirmationRequired
-	 */
+	#[PasswordConfirmationRequired]
 	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
 		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
@@ -106,9 +107,7 @@ class SettingsController extends Controller {
 		return new JSONResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
 
-	/**
-	 * @PasswordConfirmationRequired
-	 */
+	#[PasswordConfirmationRequired]
 	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, ?string $clientSecret = null,
 		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
@@ -145,9 +144,7 @@ class SettingsController extends Controller {
 		return new JSONResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
 
-	/**
-	 * @PasswordConfirmationRequired
-	 */
+	#[PasswordConfirmationRequired]
 	public function deleteProvider(int $providerId): JSONResponse {
 		try {
 			$provider = $this->providerMapper->getProvider($providerId);
@@ -169,11 +166,19 @@ class SettingsController extends Controller {
 		return $this->id4meService->getID4ME();
 	}
 
-	/**
-	 * @PasswordConfirmationRequired
-	 */
+	#[PasswordConfirmationRequired]
 	public function setID4ME(bool $enabled): JSONResponse {
 		$this->id4meService->setID4ME($enabled);
 		return new JSONResponse(['enabled' => $this->getID4ME()]);
+	}
+
+	#[PasswordConfirmationRequired]
+	public function setAdminConfig(array $values): JSONResponse {
+		foreach ($values as $key => $value) {
+			if ($key === 'store_login_token' && is_bool($value)) {
+				$this->config->setAppValue(Application::APP_ID, 'store_login_token', $value ? '1' : '0');
+			}
+		}
+		return new JSONResponse([]);
 	}
 }
