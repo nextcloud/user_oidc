@@ -17,6 +17,13 @@
 					{{ t('user_oidc', 'Enable ID4me') }}
 				</NcCheckboxRadioSwitch>
 			</p>
+			<p>
+				<NcCheckboxRadioSwitch :checked.sync="storeLoginTokenState"
+					wrapper-element="div"
+					@update:checked="onStoreLoginTokenChange">
+					{{ t('user_oidc', 'Store login tokens') }}
+				</NcCheckboxRadioSwitch>
+			</p>
 		</div>
 		<div class="section">
 			<h2>
@@ -133,6 +140,10 @@ export default {
 			type: Boolean,
 			required: true,
 		},
+		initialStoreLoginTokenState: {
+			type: Boolean,
+			required: true,
+		},
 		initialProviders: {
 			type: Array,
 			required: true,
@@ -146,6 +157,8 @@ export default {
 		return {
 			id4meState: this.initialId4MeState,
 			loadingId4Me: false,
+			storeLoginTokenState: this.initialStoreLoginTokenState,
+			loadingStoreLoginToken: false,
 			providers: this.initialProviders,
 			newProvider: {
 				identifier: '',
@@ -187,6 +200,26 @@ export default {
 				showError(t('user_oidc', 'Could not save ID4me state: {msg}', { msg: error.message }))
 			} finally {
 				this.loadingId4Me = false
+			}
+		},
+		async onStoreLoginTokenChange(newValue) {
+			logger.info('Store login token state changed', { enabled: newValue })
+
+			this.loadingStoreLoginToken = true
+			try {
+				await confirmPassword()
+				const url = generateUrl('/apps/user_oidc/admin-config')
+
+				await axios.post(url, {
+					values: {
+						store_login_token: newValue,
+					},
+				})
+			} catch (error) {
+				logger.error('Could not save storeLoginToken state: ' + error.message, { error })
+				showError(t('user_oidc', 'Could not save storeLoginToken state: {msg}', { msg: error.message }))
+			} finally {
+				this.loadingStoreLoginToken = false
 			}
 		},
 		updateProvider(provider) {
