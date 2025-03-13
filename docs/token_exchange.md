@@ -6,11 +6,9 @@
 
 If your IdP supports token exchange, user_oidc can exchange the login token against another token.
 
-:warning: The token exchange feature requires to store the login token which is disabled by default. You can enable it in `config.php`:
-``` php
-'user_oidc' => [
-    'store_login_token' => true,
-],
+:warning: The token exchange feature requires to store the login token which is disabled by default. You can enable it with:
+``` bash
+sudo -u www-data php /var/www/nextcloud/occ config:app:set --value=1 user_oidc store_login_token
 ```
 
 Keycloak supports token exchange if its "Preview" mode is enabled. See https://www.keycloak.org/securing-apps/token-exchange .

@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Listener;
 
+use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Event\ExternalTokenRequestedEvent;
 use OCA\UserOIDC\Exception\GetExternalTokenFailedException;
 use OCA\UserOIDC\Service\TokenService;
@@ -41,8 +42,7 @@ class ExternalTokenRequestedListener implements IEventListener {
 
 		$this->logger->debug('[ExternalTokenRequestedListener] received request');
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$storeLoginTokenEnabled = (isset($oidcSystemConfig['store_login_token']) && $oidcSystemConfig['store_login_token'] === true);
+		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			throw new GetExternalTokenFailedException('Failed to get external token, login token is not stored', 0);
 		}
