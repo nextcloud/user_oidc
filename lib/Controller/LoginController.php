@@ -145,7 +145,7 @@ class LoginController extends BaseOidcController {
 		try {
 			$provider = $this->providerMapper->getProvider($providerId);
 		} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
-			$message = $this->l10n->t('There is not such OpenID Connect provider.');
+			$message = $this->l10n->t('There is no such OpenID Connect provider.');
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_not_found' => $providerId]);
 		}
 
@@ -622,7 +622,7 @@ class LoginController extends BaseOidcController {
 				try {
 					$provider = $this->providerMapper->getProvider((int)$providerId);
 				} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
-					$message = $this->l10n->t('There is not such OpenID Connect provider.');
+					$message = $this->l10n->t('There is no such OpenID Connect provider.');
 					return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_id' => $providerId]);
 				}
 
