@@ -233,7 +233,7 @@
 			{{ t('user_oidc', 'Use unique user ID') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'By default every user will get a unique user ID that is a hashed value of the provider and user id. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then.') }}
+			{{ t('user_oidc', 'By default every user will get a unique user ID that is a hashed value of the provider and user ID. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then.') }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.providerBasedId" wrapper-element="div">
 			{{ t('user_oidc', 'Use provider identifier as prefix for IDs') }}
