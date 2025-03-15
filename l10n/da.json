@@ -13,7 +13,6 @@
     "No authorized party" : "Ingen autoriseret part",
     "The nonce does not match" : "Nonce matcher ikke",
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "Du skal tilgå Nextcloud via HTTPS for at anvende OpenID Connect.",
-    "There is not such OpenID Connect provider." : "Der findes ikke sådan en OpenID Connect leverandør",
     "Could not reach the OpenID Connect provider." : "Kunne ikke kontakte OpenID Connect leverandøren",
     "Failed to decrypt the OIDC provider client secret" : "Kunne ikke dekryptere OIDC leverandør klient hemmeligheden",
     "Failed to contact the OIDC provider token endpoint" : "Kunne ikke kontakte OIDC leverandør token slutpunktet",

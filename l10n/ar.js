@@ -15,7 +15,6 @@ OC.L10N.register(
     "No authorized party" : "لايوجد طَرَف مُخوّل",
     "The nonce does not match" : "الرقم العشوائي لايتطابق",
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "يجب أن يكون اتصالك مع نكست كلاود عن طريق HTTPS ليمكنك استعمال التوصيل عن طريق OpenID Connect.",
-    "There is not such OpenID Connect provider." : "هذا المُزوِّد لتوصيل OpenID Connect غير موجود.",
     "Could not reach the OpenID Connect provider." : "تعذّر العثور على مزُوِّد OpenID Connect.",
     "Failed to decrypt the OIDC provider client secret" : "تعذّر فكّ تشفير سرّ العميل لمُزوِّد OIDC",
     "Failed to contact the OIDC provider token endpoint" : "تعذّر الاتصال بالنقطة الحدّيّة لأَمَارَة token مُزوِّد OIDC. ",
