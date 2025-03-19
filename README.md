@@ -294,14 +294,6 @@ If you want to ask the [OIDC Identity Provider app](https://apps.nextcloud.com/a
 ```
 This requires the OIDC Identity Provider app >= v1.4.0 . Access tokens and JWT tokens can be validated.
 
-If you want to ask the [OIDC Identity Provider app](https://apps.nextcloud.com/apps/oidc) to generate a token when user_oidc receives a token exchange request event:
-``` php
-'user_oidc' => [
-    'oidc_provider_token_generation' => true,
-],
-```
-This requires the OIDC Identity Provider app >= v1.4.0 . An access token and a JWT token are generated.
-
 ### Group provisioning
 
 You can configure each provider:
