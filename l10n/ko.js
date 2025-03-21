@@ -1,6 +1,9 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Login with %1s" : "%1s 로 로그인",
+    "ID4Me is disabled" : "ID4Me 비활성화됨",
+    "Invalid OpenID domain" : "유효하지 않은 OpenID 도메인",
     "Client ID" : "클라이언트 ID",
     "Update" : "업데이트",
     "Remove" : "삭제",
