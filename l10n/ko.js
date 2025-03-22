@@ -12,6 +12,7 @@ OC.L10N.register(
     "Scope" : "범위",
     "Attribute mapping" : "속성 매핑",
     "Cancel" : "취소",
-    "Domain" : "도메인"
+    "Domain" : "도메인",
+    "your.domain" : "your.domain"
 },
 "nplurals=1; plural=0;");
