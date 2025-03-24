@@ -18,6 +18,7 @@ const View = Vue.extend(App)
 new View({
 	propsData: {
 		initialId4MeState: loadState('user_oidc', 'id4meState'),
+		initialStoreLoginTokenState: loadState('user_oidc', 'storeLoginTokenState'),
 		initialProviders: loadState('user_oidc', 'providers'),
 		redirectUrl: loadState('user_oidc', 'redirectUrl'),
 	},

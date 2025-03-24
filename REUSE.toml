@@ -6,6 +6,12 @@ SPDX-PackageSupplier = "Nextcloud <info@nextcloud.com>"
 SPDX-PackageDownloadLocation = "https://github.com/nextcloud/user_oidc"
 
 [[annotations]]
+path = ["l10n/**.js", "l10n/**.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2023-2023 Nextcloud translators"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
 path = [".tx/config", "composer.json", "composer.lock", "package.json", "package-lock.json"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2020 Nextcloud GmbH and Nextcloud contributors"

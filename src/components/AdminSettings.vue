@@ -17,6 +17,19 @@
 					{{ t('user_oidc', 'Enable ID4me') }}
 				</NcCheckboxRadioSwitch>
 			</p>
+			<p class="line">
+				<NcCheckboxRadioSwitch :checked.sync="storeLoginTokenState"
+					wrapper-element="div"
+					@update:checked="onStoreLoginTokenChange">
+					{{ t('user_oidc', 'Store login tokens') }}
+				</NcCheckboxRadioSwitch>
+				<NcButton type="tertiary"
+					:title="t('user_oidc', 'This is needed if you are using other apps that want to use user_oidc\'s token exchange or simply get the login token')">
+					<template #icon>
+						<HelpCircleIcon />
+					</template>
+				</NcButton>
+			</p>
 		</div>
 		<div class="section">
 			<h2>
@@ -100,6 +113,7 @@
 </template>
 
 <script>
+import HelpCircleIcon from 'vue-material-design-icons/HelpCircle.vue'
 import DeleteIcon from 'vue-material-design-icons/Delete.vue'
 import PencilIcon from 'vue-material-design-icons/Pencil.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
@@ -111,6 +125,7 @@ import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import { confirmPassword } from '@nextcloud/password-confirmation'
 
 import logger from '../logger.js'
@@ -124,12 +139,18 @@ export default {
 		NcActionButton,
 		NcModal,
 		NcCheckboxRadioSwitch,
+		NcButton,
 		PencilIcon,
 		DeleteIcon,
 		PlusIcon,
+		HelpCircleIcon,
 	},
 	props: {
 		initialId4MeState: {
+			type: Boolean,
+			required: true,
+		},
+		initialStoreLoginTokenState: {
 			type: Boolean,
 			required: true,
 		},
@@ -146,6 +167,8 @@ export default {
 		return {
 			id4meState: this.initialId4MeState,
 			loadingId4Me: false,
+			storeLoginTokenState: this.initialStoreLoginTokenState,
+			loadingStoreLoginToken: false,
 			providers: this.initialProviders,
 			newProvider: {
 				identifier: '',
@@ -187,6 +210,26 @@ export default {
 				showError(t('user_oidc', 'Could not save ID4me state: {msg}', { msg: error.message }))
 			} finally {
 				this.loadingId4Me = false
+			}
+		},
+		async onStoreLoginTokenChange(newValue) {
+			logger.info('Store login token state changed', { enabled: newValue })
+
+			this.loadingStoreLoginToken = true
+			try {
+				await confirmPassword()
+				const url = generateUrl('/apps/user_oidc/admin-config')
+
+				await axios.post(url, {
+					values: {
+						store_login_token: newValue,
+					},
+				})
+			} catch (error) {
+				logger.error('Could not save storeLoginToken state: ' + error.message, { error })
+				showError(t('user_oidc', 'Could not save storeLoginToken state: {msg}', { msg: error.message }))
+			} finally {
+				this.loadingStoreLoginToken = false
 			}
 		},
 		updateProvider(provider) {
@@ -261,6 +304,10 @@ h2 .action-item {
 h3 {
 	font-weight: bold;
 	padding-bottom: 12px;
+}
+
+.line {
+	display: flex;
 }
 
 .oidcproviders {

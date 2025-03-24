@@ -6,11 +6,9 @@
 
 If your IdP supports token exchange, user_oidc can exchange the login token against another token.
 
-:warning: The token exchange feature is disabled by default. You can enable it in `config.php`:
-``` php
-'user_oidc' => [
-    'token_exchange' => true,
-],
+:warning: The token exchange feature requires to store the login token which is disabled by default. You can enable it with:
+``` bash
+sudo -u www-data php /var/www/nextcloud/occ config:app:set --value=1 user_oidc store_login_token
 ```
 
 Keycloak supports token exchange if its "Preview" mode is enabled. See https://www.keycloak.org/securing-apps/token-exchange .
@@ -32,7 +30,7 @@ it can dispatch the `OCA\UserOIDC\Event\ExchangedTokenRequestedEvent` event.
 The exchanged token is immediately stored in the event object itself.
 
 ```php
-if (class_exists('OCA\UserOIDC\Event\ExchangedTokenRequestedEvent')) {
+if (class_exists(OCA\UserOIDC\Event\ExchangedTokenRequestedEvent:class)) {
 	$event = new OCA\UserOIDC\Event\ExchangedTokenRequestedEvent('my_target_audience');
 	try {
 		$this->eventDispatcher->dispatchTyped($event);
@@ -51,6 +49,7 @@ if (class_exists('OCA\UserOIDC\Event\ExchangedTokenRequestedEvent')) {
 		$this->logger->debug('Obtained a token that expires in ' . $token->getExpiresInFromNow());
 		// use the token
 		$accessToken = $token->getAccessToken();
+		$idToken = $token->getIdToken();
 	}
 } else {
 	$this->logger->debug('The user_oidc app is not installed/available');
