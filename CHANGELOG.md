@@ -8,6 +8,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 7.1.0 – 2025-03-24
+
+### Changed
+
+- Clarify token request events @julien-nc [#1082](https://github.com/nextcloud/user_oidc/pull/1082)
+
+### Fixed
+
+- Fix translation issues @julien-nc [#1075](https://github.com/nextcloud/user_oidc/pull/1075)
+- Improve grammar @rakekniven [1083](https://github.com/nextcloud/user_oidc/pull/1083)
+
 ## 7.0.0 – 2025-03-07
 
 ### Added
