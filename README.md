@@ -86,6 +86,21 @@ To change this behaviour and disable the default claims, you can change this val
 When default claims are disabled, each claim will be asked for only if there is an attribute explicitely mapped
 in the OpenId client settings (in Nextcloud's admin settings).
 
+### Call the userinfo endpoint to enrich the login ID token
+
+If some user information is not in your login ID tokens but can be obtained with the userinfo endpoint, just enable
+`enrich_login_id_token_with_userinfo` in config.php. This is disabled by default.
+``` php
+'user_oidc' => [
+    'enrich_login_id_token_with_userinfo' => true,
+],
+```
+
+This will use the content of the userinfo endpoint response just like if it had been included in the login ID token.
+
+This will only work on login and not when validating a bearer token
+because provisioning when validating a bearer access token is not supported yet.
+
 ### ID4me option
 ID4me is an application setting switch which is configurable as normal Nextcloud app setting:
 ```
