@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Client ID" : "Kliendi ID",
     "Update" : "Uuenda",
+    "Remove" : "Eemalda",
     "Submit" : "Saada",
     "Client secret" : "Kliendi salasõna",
     "Scope" : "Skoop",
