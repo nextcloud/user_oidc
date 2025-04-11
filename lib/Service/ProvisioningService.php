@@ -180,6 +180,9 @@ class ProvisioningService {
 		$pronounsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns');
 		$pronouns = $idTokenPayload->{$pronounsAttribute} ?? null;
 
+		$birthdateAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate');
+		$birthdate = $idTokenPayload->{$birthdateAttribute} ?? null;
+
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $tokenUserId);
 		$this->eventDispatcher->dispatchTyped($event);
 
@@ -356,8 +359,12 @@ class ProvisioningService {
 			IAccountManager::PROPERTY_HEADLINE => ['value' => $headline, 'setting_key' => ProviderService::SETTING_MAPPING_HEADLINE],
 			IAccountManager::PROPERTY_BIOGRAPHY => ['value' => $biography, 'setting_key' => ProviderService::SETTING_MAPPING_BIOGRAPHY],
 		];
+		// properties that appeared after 28 (our min supported NC version)
 		if (defined(IAccountManager::class . '::PROPERTY_PRONOUNS')) {
 			$simpleAccountPropertyAttributes[IAccountManager::PROPERTY_PRONOUNS] = ['value' => $pronouns, 'setting_key' => ProviderService::SETTING_MAPPING_PRONOUNS];
+		}
+		if (defined(IAccountManager::class . '::PROPERTY_BIRTHDATE')) {
+			$simpleAccountPropertyAttributes[IAccountManager::PROPERTY_BIRTHDATE] = ['value' => $birthdate, 'setting_key' => ProviderService::SETTING_MAPPING_BIRTHDATE];
 		}
 
 		foreach ($simpleAccountPropertyAttributes as $property => $values) {

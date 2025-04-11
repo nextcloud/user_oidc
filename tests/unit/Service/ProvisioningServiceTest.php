@@ -145,6 +145,7 @@ class ProvisioningServiceTest extends TestCase {
 					[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
 					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
 					[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
+					[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
 				]
 			));
 
@@ -216,11 +217,9 @@ class ProvisioningServiceTest extends TestCase {
 					[$providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography', 'biography'],
 					[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
 					[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
-<<<<<<< HEAD
 					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
-=======
 					[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
->>>>>>> d602c73 (add pronouns mapping)
+					[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
 				]
 			));
 
