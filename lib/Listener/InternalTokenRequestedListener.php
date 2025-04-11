@@ -37,12 +37,14 @@ class InternalTokenRequestedListener implements IEventListener {
 		}
 
 		$targetAudience = $event->getTargetAudience();
+		$extraScopes = $event->getExtraScopes();
+		$resource = $event->getResource();
 		$this->logger->debug('[InternalTokenRequestedListener] received request for audience: ' . $targetAudience);
 
 		// generate a token pair with the Oidc provider app
 		$userId = $this->userSession->getUser()?->getUID();
 		if ($userId !== null) {
-			$ncProviderToken = $this->tokenService->getTokenFromOidcProviderApp($userId, $targetAudience);
+			$ncProviderToken = $this->tokenService->getTokenFromOidcProviderApp($userId, $targetAudience, $extraScopes, $resource);
 			if ($ncProviderToken !== null) {
 				$event->setToken($ncProviderToken);
 			}

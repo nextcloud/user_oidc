@@ -20,6 +20,8 @@ class InternalTokenRequestedEvent extends Event {
 
 	public function __construct(
 		private string $targetAudience,
+		private array $extraScopes = [],
+		private string $resource = '',
 	) {
 		parent::__construct();
 	}
@@ -30,6 +32,14 @@ class InternalTokenRequestedEvent extends Event {
 
 	public function setTargetAudience(string $targetAudience): void {
 		$this->targetAudience = $targetAudience;
+	}
+
+	public function getExtraScopes(): array {
+		return $this->extraScopes;
+	}
+
+	public function getResource(): string {
+		return $this->resource;
 	}
 
 	public function getToken(): ?Token {
