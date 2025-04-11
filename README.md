@@ -331,6 +331,39 @@ This app can stop matching users (when a user search is performed in Nextcloud) 
 ],
 ```
 
+### Optional: Enable support for nested and fallback claim mappings
+
+By default, claim mapping in this app uses **flat attribute keys** like `email`, `name`, `custom.nickname`, etc.
+However, some Identity Providers return **structured tokens** (nested JSON), and mapping such claims requires dot-notation (e.g. `custom.nickname` → `{ "custom": { "nickname": "value" } }`).
+
+Additionally, you may want to define **fallbacks**, in case a preferred claim is missing, using the `|` separator.
+
+#### Example
+
+```
+custom.nickname | profile.name | name
+```
+
+This will return the first non-empty string from the token in the order defined.
+
+
+#### Enabling this behavior (optional)
+
+To enable support for dot-notation and fallback claims for a specific provider, set the following configuration flag via the Nextcloud command line:
+
+```bash
+php occ user_oidc:provider <your-provider-identifier> --resolve-nested-claims=1
+```
+
+To disable again:
+
+```bash
+php occ user_oidc:provider <your-provider-identifier> --resolve-nested-claims=0
+```
+
+This setting is **disabled by default** to ensure full backward compatibility with existing configurations and flat token structures.
+
+
 ## Building the app
 
 Requirements for building:
