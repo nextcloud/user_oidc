@@ -144,6 +144,7 @@ class ProvisioningServiceTest extends TestCase {
 					[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
 					[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
 					[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
+					[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
 				]
 			));
 
@@ -216,6 +217,7 @@ class ProvisioningServiceTest extends TestCase {
 					[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
 					[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
 					[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
+					[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
 				]
 			));
 

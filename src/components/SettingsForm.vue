@@ -109,6 +109,13 @@
 					placeholder="name">
 			</p>
 			<p>
+				<label for="mapping-birthdate">{{ t('user_oidc', 'Birth date mapping') }}</label>
+				<input id="mapping-birthdate"
+					v-model="localProvider.settings.mappingBirthdate"
+					type="text"
+					placeholder="birthdate">
+			</p>
+			<p>
 				<label for="mapping-pronouns">{{ t('user_oidc', 'Pronouns mapping') }}</label>
 				<input id="mapping-pronouns"
 					v-model="localProvider.settings.mappingPronouns"
