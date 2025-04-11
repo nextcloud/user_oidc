@@ -103,6 +103,14 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_GENDER,
 			'description' => 'Attribute mapping of the gender',
 		],
+		'mapping-pronouns' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_PRONOUNS,
+			'description' => 'Attribute mapping of the pronouns',
+		],
+		'mapping-birthdate' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_BIRTHDATE,
+			'description' => 'Attribute mapping of the birth date',
+		],
 		'mapping-address' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_ADDRESS,
 			'description' => 'Attribute mapping of the address',
