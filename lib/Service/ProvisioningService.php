@@ -120,64 +120,64 @@ class ProvisioningService {
 
 		// get name/email/quota information from the token itself
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$email = $this->getClaimValue($idTokenPayload, $emailAttribute);//$idTokenPayload->{$emailAttribute} ?? null;
+		$email = $this->getClaimValue($idTokenPayload, $emailAttribute, $providerId);//$idTokenPayload->{$emailAttribute} ?? null;
 
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$userName = $this->getClaimValue($idTokenPayload, $displaynameAttribute);//$idTokenPayload->{$displaynameAttribute} ?? null;
+		$userName = $this->getClaimValue($idTokenPayload, $displaynameAttribute, $providerId);//$idTokenPayload->{$displaynameAttribute} ?? null;
 
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$quota = $this->getClaimValue($idTokenPayload, $quotaAttribute);//$idTokenPayload->{$quotaAttribute} ?? null;
+		$quota = $this->getClaimValue($idTokenPayload, $quotaAttribute, $providerId);//$idTokenPayload->{$quotaAttribute} ?? null;
 
 		$languageAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language');
-		$language = $this->getClaimValue($idTokenPayload, $languageAttribute);//$idTokenPayload->{$languageAttribute} ?? null;
+		$language = $this->getClaimValue($idTokenPayload, $languageAttribute, $providerId);//$idTokenPayload->{$languageAttribute} ?? null;
 
 		$genderAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender');
-		$gender = $this->getClaimValue($idTokenPayload, $genderAttribute);//$idTokenPayload->{$genderAttribute} ?? null;
+		$gender = $this->getClaimValue($idTokenPayload, $genderAttribute, $providerId);//$idTokenPayload->{$genderAttribute} ?? null;
 
 		$addressAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address');
-		$address = $this->getClaimValue($idTokenPayload, $addressAttribute);//$idTokenPayload->{$addressAttribute} ?? null;
+		$address = $this->getClaimValue($idTokenPayload, $addressAttribute, $providerId);//$idTokenPayload->{$addressAttribute} ?? null;
 
 		$postalcodeAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code');
-		$postalcode = $this->getClaimValue($idTokenPayload, $postalcodeAttribute);//$idTokenPayload->{$postalcodeAttribute} ?? null;
+		$postalcode = $this->getClaimValue($idTokenPayload, $postalcodeAttribute, $providerId);//$idTokenPayload->{$postalcodeAttribute} ?? null;
 
 		$streetAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address');
-		$street = $this->getClaimValue($idTokenPayload, $streetAttribute);//$idTokenPayload->{$streetAttribute} ?? null;
+		$street = $this->getClaimValue($idTokenPayload, $streetAttribute, $providerId);//$idTokenPayload->{$streetAttribute} ?? null;
 
 		$localityAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_LOCALITY, 'locality');
-		$locality = $this->getClaimValue($idTokenPayload, $localityAttribute);//$idTokenPayload->{$localityAttribute} ?? null;
+		$locality = $this->getClaimValue($idTokenPayload, $localityAttribute, $providerId);//$idTokenPayload->{$localityAttribute} ?? null;
 
 		$regionAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_REGION, 'region');
-		$region = $this->getClaimValue($idTokenPayload, $regionAttribute);//$idTokenPayload->{$regionAttribute} ?? null;
+		$region = $this->getClaimValue($idTokenPayload, $regionAttribute, $providerId);//$idTokenPayload->{$regionAttribute} ?? null;
 
 		$countryAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country');
-		$country = $this->getClaimValue($idTokenPayload, $countryAttribute);//$idTokenPayload->{$countryAttribute} ?? null;
+		$country = $this->getClaimValue($idTokenPayload, $countryAttribute, $providerId);//$idTokenPayload->{$countryAttribute} ?? null;
 
 		$websiteAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_WEBSITE, 'website');
-		$website = $this->getClaimValue($idTokenPayload, $websiteAttribute);//$idTokenPayload->{$websiteAttribute} ?? null;
+		$website = $this->getClaimValue($idTokenPayload, $websiteAttribute, $providerId);//$idTokenPayload->{$websiteAttribute} ?? null;
 
 		$avatarAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_AVATAR, 'avatar');
-		$avatar = $this->getClaimValue($idTokenPayload, $avatarAttribute);//$idTokenPayload->{$avatarAttribute} ?? null;
+		$avatar = $this->getClaimValue($idTokenPayload, $avatarAttribute, $providerId);//$idTokenPayload->{$avatarAttribute} ?? null;
 
 		$phoneAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number');
-		$phone = $this->getClaimValue($idTokenPayload, $phoneAttribute);//$idTokenPayload->{$phoneAttribute} ?? null;
+		$phone = $this->getClaimValue($idTokenPayload, $phoneAttribute, $providerId);//$idTokenPayload->{$phoneAttribute} ?? null;
 
 		$twitterAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_TWITTER, 'twitter');
-		$twitter = $this->getClaimValue($idTokenPayload, $twitterAttribute);//$idTokenPayload->{$twitterAttribute} ?? null;
+		$twitter = $this->getClaimValue($idTokenPayload, $twitterAttribute, $providerId);//$idTokenPayload->{$twitterAttribute} ?? null;
 
 		$fediverseAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_FEDIVERSE, 'fediverse');
-		$fediverse = $this->getClaimValue($idTokenPayload, $fediverseAttribute);//$idTokenPayload->{$fediverseAttribute} ?? null;
+		$fediverse = $this->getClaimValue($idTokenPayload, $fediverseAttribute, $providerId);//$idTokenPayload->{$fediverseAttribute} ?? null;
 
 		$organisationAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_ORGANISATION, 'organisation');
-		$organisation = $this->getClaimValue($idTokenPayload, $organisationAttribute);//$idTokenPayload->{$organisationAttribute} ?? null;
+		$organisation = $this->getClaimValue($idTokenPayload, $organisationAttribute, $providerId);//$idTokenPayload->{$organisationAttribute} ?? null;
 
 		$roleAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_ROLE, 'role');
-		$role = $this->getClaimValue($idTokenPayload, $roleAttribute);//$idTokenPayload->{$roleAttribute} ?? null;
+		$role = $this->getClaimValue($idTokenPayload, $roleAttribute, $providerId);//$idTokenPayload->{$roleAttribute} ?? null;
 
 		$headlineAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_HEADLINE, 'headline');
-		$headline = $this->getClaimValue($idTokenPayload, $headlineAttribute);//$idTokenPayload->{$headlineAttribute} ?? null;
+		$headline = $this->getClaimValue($idTokenPayload, $headlineAttribute, $providerId);//$idTokenPayload->{$headlineAttribute} ?? null;
 
 		$biographyAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography');
-		$biography = $this->getClaimValue($idTokenPayload, $biographyAttribute);//$idTokenPayload->{$biographyAttribute} ?? null;
+		$biography = $this->getClaimValue($idTokenPayload, $biographyAttribute, $providerId);//$idTokenPayload->{$biographyAttribute} ?? null;
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $tokenUserId);
 		$this->eventDispatcher->dispatchTyped($event);

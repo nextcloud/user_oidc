@@ -177,21 +177,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		$result = ['formatted' => [], 'raw' => $attributes];
 
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$result['formatted']['email'] = $this->provisioningService->getClaimValue($attributes, $emailAttribute);
+		$result['formatted']['email'] = $this->provisioningService->getClaimValue($attributes, $emailAttribute, $providerId);
 
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$result['formatted']['displayName'] = $this->provisioningService->getClaimValue($attributes, $displaynameAttribute);
+		$result['formatted']['displayName'] = $this->provisioningService->getClaimValue($attributes, $displaynameAttribute, $providerId);
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$result['formatted']['quota'] = $this->provisioningService->getClaimValue($attributes, $quotaAttribute);
+		$result['formatted']['quota'] = $this->provisioningService->getClaimValue($attributes, $quotaAttribute, $providerId);
 		if ($result['formatted']['quota'] === '') {
 			$result['formatted']['quota'] = 'default';
 		}
 
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
-		$result['formatted']['groups'] = $this->provisioningService->getClaimValue($attributes, $groupsAttribute);
+		$result['formatted']['groups'] = $this->provisioningService->getClaimValue($attributes, $groupsAttribute, $providerId);
 
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$result['formatted']['uid'] = $this->provisioningService->getClaimValue($attributes, $uidAttribute);
+		$result['formatted']['uid'] = $this->provisioningService->getClaimValue($attributes, $uidAttribute, $providerId);
 
 		return $result;
 	}
