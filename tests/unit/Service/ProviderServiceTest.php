@@ -92,6 +92,7 @@ class ProviderServiceTest extends TestCase {
 					'groupProvisioning' => true,
 					'groupWhitelistRegex' => '1',
 					'restrictLoginToGroups' => true,
+					'nestedAndFallbackClaims' => true,
 				],
 			],
 			[
@@ -133,6 +134,7 @@ class ProviderServiceTest extends TestCase {
 					'groupProvisioning' => true,
 					'groupWhitelistRegex' => '1',
 					'restrictLoginToGroups' => true,
+					'nestedAndFallbackClaims' => true,
 				],
 			],
 		], $this->providerService->getProvidersWithSettings());
@@ -171,6 +173,7 @@ class ProviderServiceTest extends TestCase {
 			'mappingGender' => 'gender',
 			'groupWhitelistRegex' => '',
 			'restrictLoginToGroups' => false,
+			'nestedAndFallbackClaims' => false,
 		];
 		$this->config->expects(self::any())
 			->method('getAppValue')
@@ -206,6 +209,7 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_GROUP_PROVISIONING, '', '1'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', ''],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '', '0'],
 			]);
 
 		Assert::assertEquals(

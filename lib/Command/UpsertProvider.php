@@ -143,6 +143,12 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_GROUPS,
 			'description' => 'Attribute mapping of the groups',
 		],
+		'resolve-nested-claims' => [
+			'shortcut' => null,
+			'mode' => InputOption::VALUE_REQUIRED,
+			'setting_key' => ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
+			'description' => 'Enable support for dot-separated and fallback claim mappings (e.g. "a.b | c.d | e"). 1 to enable, 0 to disable (default)',
+		],
 	];
 
 	public function __construct(
