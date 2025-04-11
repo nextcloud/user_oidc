@@ -220,7 +220,7 @@ class TokenService {
 	 * @throws TokenExchangeFailedException
 	 * @throws \JsonException
 	 */
-	public function getExchangedToken(string $targetAudience): Token {
+	public function getExchangedToken(string $targetAudience, array $extraScopes = []): Token {
 		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			throw new TokenExchangeFailedException(
@@ -240,6 +240,10 @@ class TokenService {
 		}
 		$oidcProvider = $this->providerMapper->getProvider($loginToken->getProviderId());
 		$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
+		$scope = $oidcProvider->getScope();
+		if (!empty($extraScopes)) {
+			$scope .= ' ' . implode(' ', $extraScopes);
+		}
 
 		try {
 			$clientSecret = $oidcProvider->getClientSecret();
@@ -267,6 +271,7 @@ class TokenService {
 						// this one will get us an access token and refresh token within the response
 						'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
 						'audience' => $targetAudience,
+						'scope' => $scope,
 					],
 				]
 			);

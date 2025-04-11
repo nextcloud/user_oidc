@@ -20,6 +20,7 @@ class ExchangedTokenRequestedEvent extends Event {
 
 	public function __construct(
 		private string $targetAudience,
+		private array $extraScopes = [],
 	) {
 		parent::__construct();
 	}
@@ -30,6 +31,10 @@ class ExchangedTokenRequestedEvent extends Event {
 
 	public function setTargetAudience(string $targetAudience): void {
 		$this->targetAudience = $targetAudience;
+	}
+
+	public function getExtraScopes(): array {
+		return $this->extraScopes;
 	}
 
 	public function getToken(): ?Token {
