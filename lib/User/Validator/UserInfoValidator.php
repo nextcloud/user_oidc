@@ -25,9 +25,10 @@ class UserInfoValidator implements IBearerTokenValidator {
 
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {
 		$userInfo = $this->userInfoService->userinfo($provider, $bearerToken);
-		$uidAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT);
+		$providerId = $provider->getId();
+		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT);
 		// find the user ID
-		$uid = $this->provisioningService->getClaimValue($userInfo, $uidAttribute);
+		$uid = $this->provisioningService->getClaimValue($userInfo, $uidAttribute, $providerId);
 		return $uid ?: null;
 	}
 

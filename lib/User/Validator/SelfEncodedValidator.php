@@ -34,7 +34,8 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {
 		/** @var ProviderService $providerService */
 		$providerService = \OC::$server->get(ProviderService::class);
-		$uidAttribute = $providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT);
+		$providerId = $provider->getId();
+		$uidAttribute = $providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT);
 
 		// try to decode the bearer token
 		JWT::$leeway = 60;
@@ -75,7 +76,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		}
 
 		// find the user ID
-		$uid = $this->provisioningService->getClaimValue($payload, $uidAttribute);
+		$uid = $this->provisioningService->getClaimValue($payload, $uidAttribute, $providerId);
 		return $uid ?: null;
 	}
 

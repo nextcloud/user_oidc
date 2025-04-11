@@ -470,7 +470,7 @@ class LoginController extends BaseOidcController {
 
 		// get user ID attribute
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$userId = $this->provisioningService->getClaimValue($idTokenPayload, $uidAttribute);//$idTokenPayload->{$uidAttribute} ?? null;
+		$userId = $this->provisioningService->getClaimValue($idTokenPayload, $uidAttribute, $providerId);
 
 		if ($userId === null) {
 			$message = $this->l10n->t('Failed to provision the user');
