@@ -75,7 +75,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		}
 
 		// find the user ID
-		$uid =  $this->provisioningService->getClaimValue($payload, $uidAttribute);
+		$uid = $this->provisioningService->getClaimValue($payload, $uidAttribute);
 		return $uid ?: null;
 	}
 
