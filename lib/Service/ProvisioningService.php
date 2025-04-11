@@ -177,6 +177,9 @@ class ProvisioningService {
 		$biographyAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography');
 		$biography = $this->getClaimValue($idTokenPayload, $biographyAttribute, $providerId);//$idTokenPayload->{$biographyAttribute} ?? null;
 
+		$pronounsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns');
+		$pronouns = $idTokenPayload->{$pronounsAttribute} ?? null;
+
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $tokenUserId);
 		$this->eventDispatcher->dispatchTyped($event);
 
@@ -411,6 +414,14 @@ class ProvisioningService {
 		$this->logger->debug('Gender mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
 			$account->setProperty('gender', $event->getValue(), $fallbackScope, '1', '');
+		}
+
+		// Update the pronouns
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_PRONOUNS, $idTokenPayload, $pronouns);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Pronouns mapping event dispatched');
+		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
+			$account->setProperty(IAccountManager::PROPERTY_PRONOUNS, $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_PRONOUNS] ?? $fallbackScope, '1', '');
 		}
 
 		$this->session->set('user_oidc.oidcUserData', $oidcGssUserData);
