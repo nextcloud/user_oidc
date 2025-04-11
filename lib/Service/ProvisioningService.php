@@ -62,8 +62,23 @@ class ProvisioningService {
 	 * Resolves a claim path like "custom.nickname" or multiple alternatives separated by "|".
 	 * Returns the first found string value, or null if none could be resolved.
 	 */
-	public function getClaimValue(object|array $tokenPayload, string $claimPath): ?string {
+	public function getClaimValue(object|array $tokenPayload, string $claimPath, int $providerId): ?string {
 		if ($claimPath === '') {
+			return null;
+		}
+
+		// Check config if dot-notation resolution is enabled
+		$resolveDot = false;
+		$resolveDot = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, false);
+
+
+		if (!$resolveDot) {
+			// fallback to simple access
+			if (is_object($tokenPayload) && property_exists($tokenPayload, $claimPath)) {
+				return $tokenPayload->{$claimPath};
+			} elseif (is_array($tokenPayload) && array_key_exists($claimPath, $tokenPayload)) {
+				return $tokenPayload[$claimPath];
+			}
 			return null;
 		}
 
