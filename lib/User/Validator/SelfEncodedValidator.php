@@ -12,6 +12,7 @@ namespace OCA\UserOIDC\User\Validator;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
+use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\User\Provisioning\SelfEncodedTokenProvisioning;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -23,6 +24,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 
 	public function __construct(
 		private DiscoveryService $discoveryService,
+		private ProvisioningService $provisioningService,
 		private LoggerInterface $logger,
 		private ITimeFactory $timeFactory,
 		private IConfig $config,
@@ -73,11 +75,8 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		}
 
 		// find the user ID
-		if (!isset($payload->{$uidAttribute})) {
-			return null;
-		}
-
-		return $payload->{$uidAttribute};
+		$uid =  $this->provisioningService->getClaimValue($payload, $uidAttribute);
+		return $uid ?: null;
 	}
 
 	public function getProvisioningStrategy(): string {
