@@ -18,8 +18,14 @@ class ExternalTokenRequestedEvent extends Event {
 
 	private ?Token $token = null;
 
-	public function __construct() {
+	public function __construct(
+		private string $extraScopes = '',
+	) {
 		parent::__construct();
+	}
+
+	public function getExtraScopes(): string {
+		return $this->extraScopes;
 	}
 
 	public function getToken(): ?Token {

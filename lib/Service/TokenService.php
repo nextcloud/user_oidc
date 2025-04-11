@@ -73,7 +73,7 @@ class TokenService {
 	 * @return Token|null Return a token only if it is valid or has been successfully refreshed
 	 * @throws \JsonException
 	 */
-	public function getToken(bool $refreshIfExpired = true): ?Token {
+	public function getToken(bool $refreshIfExpired = true, string $extraScopes = ''): ?Token {
 		$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
 		if (!$sessionData) {
 			$this->logger->debug('[TokenService] getToken: no session data');
@@ -82,7 +82,7 @@ class TokenService {
 
 		$token = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR));
 		// token is still valid
-		if (!$token->isExpired()) {
+		if (!$token->isExpired() && $extraScopes === '') {
 			$this->logger->debug('[TokenService] getToken: token is still valid, it expires in ' . $token->getExpiresInFromNow() . ' and refresh expires in ' . $token->getRefreshExpiresInFromNow());
 			return $token;
 		}
@@ -91,7 +91,7 @@ class TokenService {
 		// try to refresh the token if there is a refresh token and it is still valid
 		if ($refreshIfExpired && $token->getRefreshToken() !== null && !$token->refreshIsExpired()) {
 			$this->logger->debug('[TokenService] getToken: token is expired and refresh token is still valid, refresh expires in ' . $token->getRefreshExpiresInFromNow());
-			return $this->refresh($token);
+			return $this->refresh($token, $extraScopes);
 		}
 
 		$this->logger->debug('[TokenService] getToken: return a token that has not been refreshed');
@@ -155,9 +155,13 @@ class TokenService {
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
 	 */
-	public function refresh(Token $token): Token {
+	public function refresh(Token $token, string $extraScopes = ''): Token {
 		$oidcProvider = $this->providerMapper->getProvider($token->getProviderId());
 		$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
+		$scope = $oidcProvider->getScope();
+		if ($extraScopes !== '') {
+			$scope .= ' ' . $extraScopes;
+		}
 
 		try {
 			$clientSecret = $oidcProvider->getClientSecret();
@@ -177,6 +181,7 @@ class TokenService {
 						'client_secret' => $clientSecret,
 						'grant_type' => 'refresh_token',
 						'refresh_token' => $token->getRefreshToken(),
+						'scope' => $scope,
 					],
 				]
 			);

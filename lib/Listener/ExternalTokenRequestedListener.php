@@ -40,6 +40,7 @@ class ExternalTokenRequestedListener implements IEventListener {
 			return;
 		}
 
+		$extraScopes = $event->getExtraScopes();
 		$this->logger->debug('[ExternalTokenRequestedListener] received request');
 
 		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
@@ -47,7 +48,7 @@ class ExternalTokenRequestedListener implements IEventListener {
 			throw new GetExternalTokenFailedException('Failed to get external token, login token is not stored', 0);
 		}
 
-		$token = $this->tokenService->getToken();
+		$token = $this->tokenService->getToken(true, $extraScopes);
 		$event->setToken($token);
 	}
 }
