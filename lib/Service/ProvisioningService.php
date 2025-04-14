@@ -62,7 +62,7 @@ class ProvisioningService {
 	 * Resolves a claim path like "custom.nickname" or multiple alternatives separated by "|".
 	 * Returns the first found string value, or null if none could be resolved.
 	 */
-	public function getClaimValue(object|array $tokenPayload, string $claimPath, int $providerId): ?string {
+	public function getClaimValue(object|array $tokenPayload, string $claimPath, int $providerId): mixed {
 		if ($claimPath === '') {
 			return null;
 		}
