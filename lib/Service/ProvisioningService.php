@@ -68,9 +68,7 @@ class ProvisioningService {
 		}
 
 		// Check config if dot-notation resolution is enabled
-		$resolveDot = false;
-		$resolveDot = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, false);
-
+		$resolveDot = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0') === '1';
 
 		if (!$resolveDot) {
 			// fallback to simple access
