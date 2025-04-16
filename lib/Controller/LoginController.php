@@ -199,6 +199,7 @@ class LoginController extends BaseOidcController {
 			'userinfo' => [],
 		];
 
+		$resolveNestedClaims = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0') === '1';
 		// by default: default claims are ENABLED
 		// default claims are historically for quota, email, displayName and groups
 		$isDefaultClaimsEnabled = !isset($oidcSystemConfig['enable_default_claims']) || $oidcSystemConfig['enable_default_claims'] !== false;
@@ -219,16 +220,19 @@ class LoginController extends BaseOidcController {
 			$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA);
 			$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS);
 			$rawClaims = [$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute];
-			$claimSet = [];
 
-			foreach ($rawClaims as $claim) {
-				if ($claim !== '') {
-					$first = trim(explode('|', $claim)[0]);
-					$claimSet[$first] = true;
+			if ($resolveNestedClaims) {
+				$claimSet = [];
+				foreach ($rawClaims as $claim) {
+					if ($claim !== '') {
+						$first = trim(explode('|', $claim)[0]);
+						$claimSet[$first] = true;
+					}
 				}
+				$rawClaims = array_keys($claimSet);
 			}
 
-			foreach (array_keys($claimSet) as $claim) {
+			foreach ($rawClaims as $claim) {
 				if ($claim !== '') {
 					$claims['id_token'][$claim] = null;
 					$claims['userinfo'][$claim] = null;
@@ -237,9 +241,12 @@ class LoginController extends BaseOidcController {
 		}
 
 		if ($uidAttribute !== 'sub') {
-			$firstUidAttribute = trim(explode('|', $uidAttribute)[0]);
-			$claims['id_token'][$firstUidAttribute] = ['essential' => true];
-			$claims['userinfo'][$firstUidAttribute] = ['essential' => true];
+			$uidAttributeToRequest = $uidAttribute;
+			if ($resolveNestedClaims) {
+				$uidAttributeToRequest = trim(explode('|', $uidAttribute)[0]);
+			}
+			$claims['id_token'][$uidAttributeToRequest] = ['essential' => true];
+			$claims['userinfo'][$uidAttributeToRequest] = ['essential' => true];
 		}
 
 		$extraClaimsString = $this->providerService->getSetting($providerId, ProviderService::SETTING_EXTRA_CLAIMS, '');
