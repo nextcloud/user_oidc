@@ -199,6 +199,7 @@ class LoginController extends BaseOidcController {
 			'userinfo' => [],
 		];
 
+		$resolveNestedClaims = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0') === '1';
 		// by default: default claims are ENABLED
 		// default claims are historically for quota, email, displayName and groups
 		$isDefaultClaimsEnabled = !isset($oidcSystemConfig['enable_default_claims']) || $oidcSystemConfig['enable_default_claims'] !== false;
@@ -218,7 +219,20 @@ class LoginController extends BaseOidcController {
 			$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME);
 			$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA);
 			$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS);
-			foreach ([$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute] as $claim) {
+			$rawClaims = [$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute];
+
+			if ($resolveNestedClaims) {
+				$claimSet = [];
+				foreach ($rawClaims as $claim) {
+					if ($claim !== '') {
+						$first = trim(explode('|', $claim)[0]);
+						$claimSet[$first] = true;
+					}
+				}
+				$rawClaims = array_keys($claimSet);
+			}
+
+			foreach ($rawClaims as $claim) {
 				if ($claim !== '') {
 					$claims['id_token'][$claim] = null;
 					$claims['userinfo'][$claim] = null;
@@ -227,8 +241,12 @@ class LoginController extends BaseOidcController {
 		}
 
 		if ($uidAttribute !== 'sub') {
-			$claims['id_token'][$uidAttribute] = ['essential' => true];
-			$claims['userinfo'][$uidAttribute] = ['essential' => true];
+			$uidAttributeToRequest = $uidAttribute;
+			if ($resolveNestedClaims) {
+				$uidAttributeToRequest = trim(explode('|', $uidAttribute)[0]);
+			}
+			$claims['id_token'][$uidAttributeToRequest] = ['essential' => true];
+			$claims['userinfo'][$uidAttributeToRequest] = ['essential' => true];
 		}
 
 		$extraClaimsString = $this->providerService->getSetting($providerId, ProviderService::SETTING_EXTRA_CLAIMS, '');
@@ -459,7 +477,8 @@ class LoginController extends BaseOidcController {
 
 		// get user ID attribute
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$userId = $idTokenPayload->{$uidAttribute} ?? null;
+		$userId = $this->provisioningService->getClaimValue($idTokenPayload, $uidAttribute, $providerId);
+
 		if ($userId === null) {
 			$message = $this->l10n->t('Failed to provision the user');
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);

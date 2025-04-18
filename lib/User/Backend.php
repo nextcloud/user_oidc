@@ -17,6 +17,7 @@ use OCA\UserOIDC\Event\TokenValidatedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
+use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -56,6 +57,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
 		private ProviderService $providerService,
+		private ProvisioningService $provisioningService,
 		private LdapService $ldapService,
 		private IUserManager $userManager,
 	) {
@@ -175,22 +177,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		$result = ['formatted' => [], 'raw' => $attributes];
 
 		$emailAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email');
-		$result['formatted']['email'] = $attributes[$emailAttribute] ?? null;
+		$result['formatted']['email'] = $this->provisioningService->getClaimValue($attributes, $emailAttribute, $providerId);
 
 		$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name');
-		$result['formatted']['displayName'] = $attributes[$displaynameAttribute] ?? null;
-
+		$result['formatted']['displayName'] = $this->provisioningService->getClaimValue($attributes, $displaynameAttribute, $providerId);
 		$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
-		$result['formatted']['quota'] = $attributes[$quotaAttribute] ?? null;
+		$result['formatted']['quota'] = $this->provisioningService->getClaimValue($attributes, $quotaAttribute, $providerId);
 		if ($result['formatted']['quota'] === '') {
 			$result['formatted']['quota'] = 'default';
 		}
 
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
-		$result['formatted']['groups'] = $attributes[$groupsAttribute] ?? null;
+		$result['formatted']['groups'] = $this->provisioningService->getClaimValue($attributes, $groupsAttribute, $providerId);
 
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$result['formatted']['uid'] = $attributes[$uidAttribute] ?? null;
+		$result['formatted']['uid'] = $this->provisioningService->getClaimValue($attributes, $uidAttribute, $providerId);
 
 		return $result;
 	}
