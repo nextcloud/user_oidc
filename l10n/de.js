@@ -60,6 +60,7 @@ OC.L10N.register(
     "Scope" : "Anwendungsbereich",
     "Extra claims" : "Extra Claims",
     "Attribute mapping" : "Attribute zuordnen",
+    "Enable nested and fallback claim mappings (like \"{example}\")" : "Aktivieren von verschachtelten und Fallback-Anspruchszuordnungen (wie \"{example}\")",
     "User ID mapping" : "Benutzer-ID-Mapping",
     "Quota mapping" : "Kontingent-Mapping",
     "Groups mapping" : "Gruppen-Mapping",
