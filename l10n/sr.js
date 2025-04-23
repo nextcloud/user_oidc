@@ -60,6 +60,7 @@ OC.L10N.register(
     "Scope" : "Опсег",
     "Extra claims" : "Екстра тврдње",
     "Attribute mapping" : "Мапирање атрибута",
+    "Enable nested and fallback claim mappings (like \"{example}\")" : "Укључи угњеждена и мапирања у крајњем случају (као „{example}”)",
     "User ID mapping" : "Мапирање ID корисника",
     "Quota mapping" : "Мапирање квоте",
     "Groups mapping" : "Мапирање група",
