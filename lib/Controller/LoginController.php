@@ -195,10 +195,11 @@ class LoginController extends BaseOidcController {
 			// https://openid.net/specs/openid-connect-core-1_0.html#IndividualClaimsRequests
 			// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
 			// null means we want it
-			'id_token' => [],
-			'userinfo' => [],
+			'id_token' => new \stdClass(),
+			'userinfo' => new \stdClass(),
 		];
 
+		$resolveNestedClaims = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0') === '1';
 		// by default: default claims are ENABLED
 		// default claims are historically for quota, email, displayName and groups
 		$isDefaultClaimsEnabled = !isset($oidcSystemConfig['enable_default_claims']) || $oidcSystemConfig['enable_default_claims'] !== false;
@@ -209,8 +210,8 @@ class LoginController extends BaseOidcController {
 			$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota');
 			$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 			foreach ([$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute] as $claim) {
-				$claims['id_token'][$claim] = null;
-				$claims['userinfo'][$claim] = null;
+				$claims['id_token']->{$claim} = null;
+				$claims['userinfo']->{$claim} = null;
 			}
 		} else {
 			// No default claim, we only set the claims if an attribute is mapped
@@ -218,25 +219,42 @@ class LoginController extends BaseOidcController {
 			$displaynameAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME);
 			$quotaAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_QUOTA);
 			$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS);
-			foreach ([$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute] as $claim) {
+			$rawClaims = [$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute];
+
+			if ($resolveNestedClaims) {
+				$claimSet = [];
+				foreach ($rawClaims as $claim) {
+					if ($claim !== '') {
+						$first = trim(explode('|', $claim)[0]);
+						$claimSet[$first] = true;
+					}
+				}
+				$rawClaims = array_keys($claimSet);
+			}
+
+			foreach ($rawClaims as $claim) {
 				if ($claim !== '') {
-					$claims['id_token'][$claim] = null;
-					$claims['userinfo'][$claim] = null;
+					$claims['id_token']->{$claim} = null;
+					$claims['userinfo']->{$claim} = null;
 				}
 			}
 		}
 
 		if ($uidAttribute !== 'sub') {
-			$claims['id_token'][$uidAttribute] = ['essential' => true];
-			$claims['userinfo'][$uidAttribute] = ['essential' => true];
+			$uidAttributeToRequest = $uidAttribute;
+			if ($resolveNestedClaims) {
+				$uidAttributeToRequest = trim(explode('|', $uidAttribute)[0]);
+			}
+			$claims['id_token']->{$uidAttributeToRequest} = ['essential' => true];
+			$claims['userinfo']->{$uidAttributeToRequest} = ['essential' => true];
 		}
 
 		$extraClaimsString = $this->providerService->getSetting($providerId, ProviderService::SETTING_EXTRA_CLAIMS, '');
 		if ($extraClaimsString) {
 			$extraClaims = explode(' ', $extraClaimsString);
 			foreach ($extraClaims as $extraClaim) {
-				$claims['id_token'][$extraClaim] = null;
-				$claims['userinfo'][$extraClaim] = null;
+				$claims['id_token']->{$extraClaim} = null;
+				$claims['userinfo']->{$extraClaim} = null;
 			}
 		}
 
@@ -459,7 +477,8 @@ class LoginController extends BaseOidcController {
 
 		// get user ID attribute
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, 'sub');
-		$userId = $idTokenPayload->{$uidAttribute} ?? null;
+		$userId = $this->provisioningService->getClaimValue($idTokenPayload, $uidAttribute, $providerId);
+
 		if ($userId === null) {
 			$message = $this->l10n->t('Failed to provision the user');
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);

@@ -60,6 +60,7 @@ OC.L10N.register(
     "Scope" : "Rozsah",
     "Extra claims" : "Další tvrzení",
     "Attribute mapping" : "Mapování atributů",
+    "Enable nested and fallback claim mappings (like \"{example}\")" : "Zapnout vnořené a náhradní tvrzení mapování (jako „{example}“)",
     "User ID mapping" : "Mapování identif. uživatele",
     "Quota mapping" : "Mapování kvóty",
     "Groups mapping" : "Mapování skupin",
