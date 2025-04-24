@@ -360,6 +360,9 @@ export default {
 		display: flex;
 		justify-content: right;
 		padding: 8px 0;
+		position: sticky;
+		bottom: 0;
+		background-color: var(--color-main-background);
 		> * {
 			margin: 0 4px;
 		}
