@@ -269,7 +269,7 @@
 			{{ t('user_oidc', 'Check Bearer token on API and WebDAV requests') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'Do you want to allow API calls and WebDAV request that are authenticated with an OIDC ID token or access token?') }}
+			{{ t('user_oidc', 'Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?') }}
 		</p>
 		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.bearerProvisioning" wrapper-element="div" :disabled="!localProvider.settings.checkBearer">
 			{{ t('user_oidc', 'Auto provision user when accessing API and WebDAV with Bearer token') }}
