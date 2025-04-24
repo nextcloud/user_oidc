@@ -8,6 +8,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 7.2.0 – 2025-04-24
+
+### Added
+
+- Provider-specific setting to enable support for nested claims and fallback attribute mapping @dragonpil [#1103](https://github.com/nextcloud/user_oidc/pull/1103)
+
+### Changed
+
+- Allow requesting scopes when using ExchangedTokenRequestedEvent event @saw-jan [#1099](https://github.com/nextcloud/user_oidc/pull/1099)
+- Allow requesting scopes when using InternalTokenRequestedEvent event @saw-jan [#1098](https://github.com/nextcloud/user_oidc/pull/1098)
+- Make settings form footer sticky @julien-nc [#1107](https://github.com/nextcloud/user_oidc/pull/1107)
+
+### Fixed
+
+- Fix serialization of requested claims to avoid empty arrays resulting in JSON arrays instead of objects @julien-nc [#1093](https://github.com/nextcloud/user_oidc/pull/1093)
+- Fix grammar @rakekniven [#1104](https://github.com/nextcloud/user_oidc/pull/1104)
+
 ## 7.1.0 – 2025-03-24
 
 ### Changed
