@@ -60,6 +60,7 @@ OC.L10N.register(
     "Scope" : "Alcance",
     "Extra claims" : "Reivindicações extras",
     "Attribute mapping" : "Mapeamento de atributos",
+    "Enable nested and fallback claim mappings (like \"{example}\")" : "Ativar mapeamentos de pedidos hierarquizados e de fallback (como \"{example}\")",
     "User ID mapping" : "Mapeamento de ID de usuário",
     "Quota mapping" : "Mapeamento de cotas",
     "Groups mapping" : "Mapeamento de grupos",

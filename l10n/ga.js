@@ -60,6 +60,7 @@ OC.L10N.register(
     "Scope" : "Raon feidhme",
     "Extra claims" : "Éilimh bhreise",
     "Attribute mapping" : "Mapáil tréithe",
+    "Enable nested and fallback claim mappings (like \"{example}\")" : "Cumasaigh mapálacha éileamh neadaithe agus cúl-ais (cosúil le \"{example}\")",
     "User ID mapping" : "Léarscáiliú aitheantais úsáideora",
     "Quota mapping" : "Mapáil cuóta",
     "Groups mapping" : "Mapáil grúpaí",

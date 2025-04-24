@@ -67,6 +67,9 @@
 				placeholder="claim1 claim2 claim3">
 		</p>
 		<h3><b>{{ t('user_oidc', 'Attribute mapping') }}</b></h3>
+		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.nestedAndFallbackClaims" wrapper-element="div">
+			{{ t('user_oidc', 'Enable nested and fallback claim mappings (like "{example}")', { example: 'custom.nickname | profile.name | name' }) }}
+		</NcCheckboxRadioSwitch>
 		<p>
 			<label for="mapping-uid">{{ t('user_oidc', 'User ID mapping') }}</label>
 			<input id="mapping-uid"

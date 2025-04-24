@@ -220,7 +220,7 @@ class TokenService {
 	 * @throws TokenExchangeFailedException
 	 * @throws \JsonException
 	 */
-	public function getExchangedToken(string $targetAudience): Token {
+	public function getExchangedToken(string $targetAudience, array $extraScopes = []): Token {
 		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			throw new TokenExchangeFailedException(
@@ -240,6 +240,10 @@ class TokenService {
 		}
 		$oidcProvider = $this->providerMapper->getProvider($loginToken->getProviderId());
 		$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
+		$scope = $oidcProvider->getScope();
+		if (!empty($extraScopes)) {
+			$scope .= ' ' . implode(' ', $extraScopes);
+		}
 
 		try {
 			$clientSecret = $oidcProvider->getClientSecret();
@@ -267,6 +271,7 @@ class TokenService {
 						// this one will get us an access token and refresh token within the response
 						'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
 						'audience' => $targetAudience,
+						'scope' => $scope,
 					],
 				]
 			);
@@ -321,7 +326,7 @@ class TokenService {
 	 * @param string $targetAudience
 	 * @return Token|null
 	 */
-	public function getTokenFromOidcProviderApp(string $userId, string $targetAudience): ?Token {
+	public function getTokenFromOidcProviderApp(string $userId, string $targetAudience, array $extraScopes = [], string $resource = ''): ?Token {
 		if (!class_exists(\OCA\OIDCIdentityProvider\AppInfo\Application::class)) {
 			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, oidc app is not installed');
 			return null;
@@ -336,7 +341,8 @@ class TokenService {
 		}
 
 		try {
-			$generationEvent = new \OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent($targetAudience, $userId);
+			$scope = implode(' ', $extraScopes);
+			$generationEvent = new \OCA\OIDCIdentityProvider\Event\TokenGenerationRequestEvent($targetAudience, $userId, $scope, $resource);
 			$this->eventDispatcher->dispatchTyped($generationEvent);
 			if ($generationEvent->getAccessToken() === null || $generationEvent->getIdToken() === null) {
 				$this->logger->debug('[TokenService] The Oidc provider app did not generate any access/id token');
