@@ -94,7 +94,6 @@ OC.L10N.register(
     "Restrict login for users that are not in any whitelisted group" : "화이트리스트 그룹에 없는 사용자 로그인 제한",
     "Users that are not part of any whitelisted group are not created and can not login" : "화이트리스트 그룹에 속하지 않는 사용자는 생성되지 않고 로그인 불가능합니다.",
     "Check Bearer token on API and WebDAV requests" : "API와 WebDAV 요청에 Bearer 토큰 확인",
-    "Do you want to allow API calls and WebDAV request that are authenticated with an OIDC ID token or access token?" : "OIDC ID 토큰 혹은 접근 토큰으로 인증된 API 호출과 WebDAV 요청을 허용합니까?",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "Bearer 토큰으로 API와 WebDAV 접근 시 자동 프로비저닝",
     "This automatically provisions the user, when sending API and WebDAV requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work." : "이것은 Bearer 토큰으로 API와 WebDAV 요청을 전송할 때 사용자를 자동적으로 프로지저닝합니다. 이 기능을 위하여 자동 프로비저닝과 Bearer 토큰 검사가 활성화되어야 합니다.",
     "Send ID token hint on logout" : "로그아웃 시 ID 토큰 힌트 전송",

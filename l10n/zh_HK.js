@@ -94,7 +94,6 @@ OC.L10N.register(
     "Restrict login for users that are not in any whitelisted group" : "限制不在任何白名單群組中的用戶登錄",
     "Users that are not part of any whitelisted group are not created and can not login" : "不在任何白名單群組中的用戶無法創建賬號和登錄",
     "Check Bearer token on API and WebDAV requests" : "檢查 API 和 WebDAV 請求中的 Bearer 權杖",
-    "Do you want to allow API calls and WebDAV request that are authenticated with an OIDC ID token or access token?" : "您是否希望允許使用 OIDC ID 權杖或訪問權杖進行身份驗證的 API 調用和 WebDAV 請求？",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "在使用 Bearer 權杖訪問 API 和 WebDAV 時自動配置用戶",
     "This automatically provisions the user, when sending API and WebDAV requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work." : "這會在使用 Bearer 權杖發送 API 和 WebDAV 請求時自動配置用戶。必須啟用自動配置和 Bearer 權杖檢查才能正常運作。",
     "Send ID token hint on logout" : "登出時發送 ID 權杖提示",

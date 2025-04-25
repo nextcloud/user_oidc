@@ -93,7 +93,6 @@
     "Restrict login for users that are not in any whitelisted group" : "Спречи пријављивање корисницима који се не налазе ни у једној од дозвољених група",
     "Users that are not part of any whitelisted group are not created and can not login" : "Корисници који нису део ниједне од дозвољених група се не креирају и не могу да се пријаве",
     "Check Bearer token on API and WebDAV requests" : "Проверавај Bearer жетон у API и WebDAV захтевима",
-    "Do you want to allow API calls and WebDAV request that are authenticated with an OIDC ID token or access token?" : "Желите ли да дозволите API позиве и WebDAV захтев који су потврђени  OIDC ID жетоном или приступним жетоном?",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "Аутоматски доставља корисника када приступа ка API и WebDAV  са Bearer жетоном",
     "This automatically provisions the user, when sending API and WebDAV requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work." : "Ово аутоматски доставља корисника када се шаљу API и WebDAV захтеви са Bearer жетоном. Да би ово функционисало, аутоматско достављање и провера Bearer жетона морају да буду укључени.",
     "Send ID token hint on logout" : "Приликом одјављивања шаљи наговештај ID жетона",

@@ -94,7 +94,6 @@ OC.L10N.register(
     "Restrict login for users that are not in any whitelisted group" : "قصر الدخول على المستخدِمين غير الموجودين في أي مجموعة على القائمة البيضاء",
     "Users that are not part of any whitelisted group are not created and can not login" : "المستخدِمين الذين ليسوا أعضاء في أي مجموعات مُدرَجة في القائمة البيضاء لا يتم إنشاؤهم ولا يتم السماح لهم بالدخول",
     "Check Bearer token on API and WebDAV requests" : "التحقق من أَمَارَة الحامل bearer token في طلبات API و WebDAV",
-    "Do you want to allow API calls and WebDAV request that are authenticated with an OIDC ID token or access token?" : "هل ترغب بالسماح لنداءات API وطلبات WebDAV المُصادَق عليها بأَمَارَة مُعرِّف OIDC أو أَمَارَة وُصُول؟",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "التجهيز التلقائي للمستخدِم عند الوصول لـ API و WebDAV بأًمَارَة الحامل",
     "This automatically provisions the user, when sending API and WebDAV requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work." : "سيؤدي هذا لتجهيز المستخدم تلقائياً عند إرسال طلبات API و WebDAV مع أَماَرَة الحامل. من أجل ذلك، لابد من تفعيل التجهيز التلقائي و فحص أَمَارَة الحامل.",
     "Send ID token hint on logout" : "أرسِل إرشاد أَمَارَة المُعرِّف عند الخروج ",
