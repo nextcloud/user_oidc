@@ -95,6 +95,7 @@ OC.L10N.register(
     "Restrict login for users that are not in any whitelisted group" : "Cuir srian le logáil isteach d'úsáideoirí nach bhfuil in aon ghrúpa ar an liosta bán",
     "Users that are not part of any whitelisted group are not created and can not login" : "Ní chruthaítear úsáideoirí nach bhfuil ina gcuid d'aon ghrúpa ar an liosta bán agus ní féidir leo logáil isteach",
     "Check Bearer token on API and WebDAV requests" : "Seiceáil an comhartha Iompróra ar iarratais API agus WebDAV",
+    "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?" : "Ar mhaith leat glaonna API agus iarratais WebDAV a cheadú atá fíordheimhnithe le comhartha aitheantais OIDC nó comhartha rochtana?",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "Úsáideoir soláthair uathoibríoch agus é ag rochtain API agus WebDAV le hiompróir chomhartha",
     "This automatically provisions the user, when sending API and WebDAV requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work." : "Soláthraíonn sé seo go huathoibríoch don úsáideoir, agus iarratais API agus WebDAV á sheoladh le comhartha Iompróra. Ní mór soláthar carranna agus seiceáil chomharthaí Iompróra a ghníomhachtú le go n-oibreoidh sé seo.",
     "Send ID token hint on logout" : "Seol leid comhartha aitheantais ar logáil amach",
