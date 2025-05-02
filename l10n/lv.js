@@ -6,6 +6,7 @@ OC.L10N.register(
     "Remove" : "Izņemt",
     "Submit" : "Iesniegt",
     "Scope" : "Darbības joma",
+    "Authentication and Access Control Settings" : "Autentificēšanās un piekļuves vadības iestatījumi",
     "Cancel" : "Atcelt",
     "Domain" : "Domain"
 },
