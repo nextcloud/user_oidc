@@ -93,6 +93,7 @@
     "Restrict login for users that are not in any whitelisted group" : "Restringir o login de usuários que não estejam em nenhum grupo da lista de permissões",
     "Users that are not part of any whitelisted group are not created and can not login" : "Os usuários que não fazem parte de nenhum grupo da lista de permissões não são criados e não podem fazer login",
     "Check Bearer token on API and WebDAV requests" : "Verificar o token Bearer nas solicitações de API e WebDAV",
+    "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?" : "Você deseja permitir chamadas de API e solicitações WebDAV autenticadas com um token de ID de OIDC ou um token de acesso?",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "Provisionamento automático do usuário ao acessar a API e o WebDAV com o token Bearer",
     "This automatically provisions the user, when sending API and WebDAV requests with a Bearer token. Auto provisioning and Bearer token check have to be activated for this to work." : "Isso provisiona automaticamente o usuário ao enviar solicitações de API e WebDAV com um token Bearer. O provisionamento automático e a verificação do token Bearer devem ser ativados para que isso funcione.",
     "Send ID token hint on logout" : "Enviar dica de token de ID no logout",
