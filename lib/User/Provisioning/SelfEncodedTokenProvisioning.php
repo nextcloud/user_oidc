@@ -34,6 +34,7 @@ class SelfEncodedTokenProvisioning implements IProvisioningStrategy {
 			return null;
 		}
 
-		return $this->provisioningService->provisionUser($tokenUserId, $provider->getId(), $payload, $userFromOtherBackend);
+		$provisioningResult = $this->provisioningService->provisionUser($tokenUserId, $provider->getId(), $payload, $userFromOtherBackend);
+		return $provisioningResult['user'];
 	}
 }

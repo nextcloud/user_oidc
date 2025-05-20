@@ -13,6 +13,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCP\Accounts\IAccountManager;
+use OCP\Accounts\PropertyDoesNotExistException;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\DB\Exception;
@@ -26,6 +27,7 @@ use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\L10N\IFactory;
+use OCP\PreConditionNotMetException;
 use OCP\User\Events\UserChangedEvent;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -104,15 +106,18 @@ class ProvisioningService {
 
 		return null;
 	}
+
 	/**
 	 * @param string $tokenUserId
 	 * @param int $providerId
 	 * @param object $idTokenPayload
 	 * @param IUser|null $existingLocalUser
-	 * @return IUser|null
+	 * @return array{user: ?IUser, userData: array}
 	 * @throws Exception
+	 * @throws PropertyDoesNotExistException
+	 * @throws PreConditionNotMetException
 	 */
-	public function provisionUser(string $tokenUserId, int $providerId, object $idTokenPayload, ?IUser $existingLocalUser = null): ?IUser {
+	public function provisionUser(string $tokenUserId, int $providerId, object $idTokenPayload, ?IUser $existingLocalUser = null): array {
 		// user data potentially later used by globalsiteselector if user_oidc is used with global scale
 		$oidcGssUserData = get_object_vars($idTokenPayload);
 
@@ -191,7 +196,10 @@ class ProvisioningService {
 			$isUserCreationDisabled = isset($oidcSystemConfig['disable_account_creation'])
 				&& in_array($oidcSystemConfig['disable_account_creation'], [true, 'true', 1, '1'], true);
 			if ($isUserCreationDisabled) {
-				return null;
+				return [
+					'user' => null,
+					'userData' => $oidcGssUserData,
+				];
 			}
 
 			$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue() ?? '');
@@ -199,7 +207,10 @@ class ProvisioningService {
 
 			$user = $this->userManager->get($backendUser->getUserId());
 			if ($user === null) {
-				return null;
+				return [
+					'user' => null,
+					'userData' => $oidcGssUserData,
+				];
 			}
 		}
 
@@ -413,8 +424,6 @@ class ProvisioningService {
 			$account->setProperty('gender', $event->getValue(), $fallbackScope, '1', '');
 		}
 
-		$this->session->set('user_oidc.oidcUserData', $oidcGssUserData);
-
 		while (true) {
 			try {
 				$this->accountManager->updateAccount($account);
@@ -432,7 +441,10 @@ class ProvisioningService {
 				throw $e;
 			}
 		}
-		return $user;
+		return [
+			'user' => $user,
+			'userData' => $oidcGssUserData,
+		];
 	}
 
 	/**
