@@ -533,7 +533,9 @@ class LoginController extends BaseOidcController {
 				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict'], false);
 			}
 			// use potential user from other backend, create it in our backend if it does not exist
-			$user = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $userFromOtherBackend);
+			$provisioningResult = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $userFromOtherBackend);
+			$user = $provisioningResult['user'];
+			$this->session->set('user_oidc.oidcUserData', $provisioningResult['userData']);
 		} else {
 			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
 			$user = $userFromOtherBackend;
