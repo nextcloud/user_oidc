@@ -19,5 +19,3 @@ require_once __DIR__ . '/../../../tests/autoload.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 Server::get(IAppManager::class)->loadApp('user_oidc');
-
-OC_Hook::clear();
