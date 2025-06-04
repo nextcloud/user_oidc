@@ -142,7 +142,7 @@ class LoginController extends BaseOidcController {
 		if (!$this->isSecure()) {
 			return $this->buildProtocolErrorResponse();
 		}
-		$this->logger->debug('Initiating login for provider with id: ' . $providerId);
+		$this->logger->debug('Initiating login for provider with id: ' . strval($providerId));
 
 		try {
 			$provider = $this->providerMapper->getProvider($providerId);

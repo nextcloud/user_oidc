@@ -102,7 +102,7 @@ class DiscoveryService {
 		$urlWithoutParams =
 			(isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '')
 			. ($parsedUrl['host'] ?? '')
-			. (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '')
+			. (isset($parsedUrl['port']) ? ':' . strval($parsedUrl['port']) : '')
 			. ($parsedUrl['path'] ?? '');
 
 		$queryParams = $extraGetParameters;
