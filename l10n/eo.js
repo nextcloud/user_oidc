@@ -6,6 +6,7 @@ OC.L10N.register(
     "Submit" : "Sendi",
     "Client secret" : "Klientosekreto",
     "Scope" : "Amplekso",
+    "Cancel" : "Cancel",
     "Domain" : "Domajno"
 },
 "nplurals=2; plural=(n != 1);");

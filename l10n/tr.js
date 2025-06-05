@@ -2,7 +2,7 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "%1s ile oturum açın",
-    "ID4Me is disabled" : "ID4Me kullanımdan kaldırılmış",
+    "ID4Me is disabled" : "ID4Me devre dışı bırakılmış",
     "Invalid OpenID domain" : "OpenID etki alanı geçersiz",
     "Invalid authority issuer" : "Yetki veren geçersiz",
     "Multiple authority found" : "Birden fazla yetki veren bulundu",
