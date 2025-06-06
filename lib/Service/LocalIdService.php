@@ -19,7 +19,7 @@ class LocalIdService {
 
 	public function getId(int $providerId, string $id, bool $id4me = false): string {
 		if ($this->providerService->getSetting($providerId, ProviderService::SETTING_UNIQUE_UID, '1') === '1' || $id4me) {
-			$newId = $providerId . '_';
+			$newId = strval($providerId) . '_';
 
 			if ($id4me) {
 				$newId .= '1_';

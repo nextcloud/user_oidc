@@ -134,7 +134,7 @@ class ProviderService {
 	}
 
 	private function getSettingsKey(int $providerId, string $key): string {
-		return 'provider-' . $providerId . '-' . $key;
+		return 'provider-' . strval($providerId) . '-' . $key;
 	}
 
 	private function getSupportedSettings(): array {
