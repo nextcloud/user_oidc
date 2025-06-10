@@ -83,14 +83,14 @@ class TokenService {
 		$token = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR));
 		// token is still valid
 		if (!$token->isExpired()) {
-			$this->logger->debug('[TokenService] getToken: token is still valid, it expires in ' . $token->getExpiresInFromNow() . ' and refresh expires in ' . $token->getRefreshExpiresInFromNow());
+			$this->logger->debug('[TokenService] getToken: token is still valid, it expires in ' . strval($token->getExpiresInFromNow()) . ' and refresh expires in ' . strval($token->getRefreshExpiresInFromNow()));
 			return $token;
 		}
 
 		// token has expired
 		// try to refresh the token if there is a refresh token and it is still valid
 		if ($refreshIfExpired && $token->getRefreshToken() !== null && !$token->refreshIsExpired()) {
-			$this->logger->debug('[TokenService] getToken: token is expired and refresh token is still valid, refresh expires in ' . $token->getRefreshExpiresInFromNow());
+			$this->logger->debug('[TokenService] getToken: token is expired and refresh token is still valid, refresh expires in ' . strval($token->getRefreshExpiresInFromNow()));
 			return $this->refresh($token);
 		}
 
