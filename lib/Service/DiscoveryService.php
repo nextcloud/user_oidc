@@ -73,16 +73,20 @@ class DiscoveryService {
 		if ($lastJwksRefresh !== '' && $useCache && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
 			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
 			$rawJwks = json_decode($rawJwks, true);
+			$this->logger->debug('[obtainJWK] jwks cache content', ['jwks_cache' => $rawJwks]);
 		} else {
 			$discovery = $this->obtainDiscovery($provider);
 			$responseBody = $this->clientService->get($discovery['jwks_uri']);
 			$rawJwks = json_decode($responseBody, true);
+			$this->logger->debug('[obtainJWK] getting fresh jwks', ['jwks' => $rawJwks]);
 			// cache jwks
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, $responseBody);
+			$this->logger->debug('[obtainJWK] setting cache', ['jwks_cache' => $responseBody]);
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, strval(time()));
 		}
 
 		$fixedJwks = $this->fixJwksAlg($rawJwks, $tokenToDecode);
+		$this->logger->debug('[obtainJWK] fixed jwks', ['fixed_jwks' => $fixedJwks]);
 		$jwks = JWK::parseKeySet($fixedJwks, 'RS256');
 		$this->logger->debug('Parsed the jwks');
 		return $jwks;
