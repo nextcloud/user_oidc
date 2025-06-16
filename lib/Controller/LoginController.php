@@ -310,10 +310,15 @@ class LoginController extends BaseOidcController {
 		$this->logger->debug('Code login with core: ' . $code . ' and state: ' . $state);
 
 		if ($error !== '') {
-			return new JSONResponse([
-				'error' => $error,
-				'error_description' => $error_description,
-			], Http::STATUS_FORBIDDEN);
+			$this->logger->warning('Code login error', ['error' => $error, 'error_description' => $error_description]);
+			if ($this->isDebugModeEnabled()) {
+				return new JSONResponse([
+					'error' => $error,
+					'error_description' => $error_description,
+				], Http::STATUS_FORBIDDEN);
+			}
+			$message = $this->l10n->t('The identity provider failed to authenticate the user.');
+			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
 
 		if ($this->session->get(self::STATE) !== $state) {
