@@ -8,6 +8,7 @@ OC.L10N.register(
     "Client secret" : "Тайна на клиент",
     "Scope" : "Обхват",
     "Attribute mapping" : "Съпоставяне на атрибут",
+    "Biography mapping" : "Съпоставяне на полето \"Биография\"",
     "Cancel" : "Отказ",
     "Domain" : "Домейн"
 },
