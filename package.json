@@ -23,14 +23,14 @@
 	},
 	"dependencies": {
 		"@nextcloud/axios": "^2.5.1",
-		"@nextcloud/dialogs": "^6.3.1",
+		"@nextcloud/dialogs": "^7.0.0-rc.1",
 		"@nextcloud/initial-state": "^2.2.0",
 		"@nextcloud/logger": "^3.0.2",
-		"@nextcloud/password-confirmation": "^5.3.1",
+		"@nextcloud/password-confirmation": "^6.0.0-rc.0",
 		"@nextcloud/router": "^3.0.1",
-		"@nextcloud/vue": "^8.27.0",
+		"@nextcloud/vue": "^9.0.0-rc.2",
 		"jstz": "^2.1.1",
-		"vue": "^2.7.14",
+		"vue": "^3.5.17",
 		"vue-material-design-icons": "^5.3.1"
 	},
 	"browserslist": [
