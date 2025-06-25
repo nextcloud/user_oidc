@@ -15,6 +15,7 @@
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "Aby bylo možné použít OpenID Connect, je třeba k Nextcloud přistupovat prostřednictvím HTTPS.",
     "There is no such OpenID Connect provider." : "Neexistuje takový poskytovatel OpenID Connect.",
     "Could not reach the OpenID Connect provider." : "Nepodařilo se dosáhnout poskytovatele OpenID Connect.",
+    "The identity provider failed to authenticate the user." : "Poskytovateli identity se nezdařilo ověřit uživatele.",
     "Failed to decrypt the OIDC provider client secret" : "Nepodařilo se rozšifrovat tajemství klienta poskytovatele OIDC",
     "Failed to contact the OIDC provider token endpoint" : "Nepodařilo se kontaktovat koncový bod tokenu poskytovatele OIDC",
     "The issuer does not match the one from the discovery endpoint" : "Vydavatel se neshoduje s tím z koncového bodu objevování",

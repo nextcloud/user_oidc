@@ -17,6 +17,7 @@ OC.L10N.register(
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "您必須使用 HTTPS 訪問 Nextcloud 才能使用 OpenID Connect。",
     "There is no such OpenID Connect provider." : "找不到此 OpenID Connect 提供者。",
     "Could not reach the OpenID Connect provider." : "無法連接到 OpenID Connect 提供者。",
+    "The identity provider failed to authenticate the user." : "身分提供者未能驗證用戶。",
     "Failed to decrypt the OIDC provider client secret" : "無法解密 OIDC 提供者的客戶端密鑰",
     "Failed to contact the OIDC provider token endpoint" : "無法聯繫 OIDC 提供者的權杖端點",
     "The issuer does not match the one from the discovery endpoint" : "發行者與發現端點中的不匹配",

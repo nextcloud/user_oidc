@@ -17,6 +17,7 @@ OC.L10N.register(
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "You must access Nextcloud with HTTPS to use OpenID Connect.",
     "There is no such OpenID Connect provider." : "There is no such OpenID Connect provider.",
     "Could not reach the OpenID Connect provider." : "Could not reach the OpenID Connect provider.",
+    "The identity provider failed to authenticate the user." : "The identity provider failed to authenticate the user.",
     "Failed to decrypt the OIDC provider client secret" : "Failed to decrypt the OIDC provider client secret",
     "Failed to contact the OIDC provider token endpoint" : "Failed to contact the OIDC provider token endpoint",
     "The issuer does not match the one from the discovery endpoint" : "The issuer does not match the one from the discovery endpoint",

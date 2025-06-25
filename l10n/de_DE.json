@@ -15,6 +15,7 @@
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "Für die Verwendung von OpenID Connect muss der Zugriff auf Nextcloud mit HTTPS erfolgen.",
     "There is no such OpenID Connect provider." : "Einen solchen OpenID Connect-Anbieter gibt es nicht.",
     "Could not reach the OpenID Connect provider." : "Der OpenID Connect-Anbieter konnte nicht erreicht werden.",
+    "The identity provider failed to authenticate the user." : "Der Identitätsanbieter konnte den Benutzer nicht authentifizieren.",
     "Failed to decrypt the OIDC provider client secret" : "Das Client-Geheimnis des OIDC-Providers konnte nicht entschlüsselt werden.",
     "Failed to contact the OIDC provider token endpoint" : "Der Token-Endpunkt des OIDC-Providers kann nicht kontaktiert werden",
     "The issuer does not match the one from the discovery endpoint" : "Der Aussteller stimmt nicht mit dem vom Discovery-Endpunkt überein",
