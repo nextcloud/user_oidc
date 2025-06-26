@@ -178,6 +178,7 @@ export default {
 				clientSecret: '',
 				discoveryEndpoint: '',
 				endSessionEndpoint: '',
+				postLogoutUri: '',
 				settings: {
 					uniqueUid: true,
 					checkBearer: false,
@@ -284,6 +285,7 @@ export default {
 				this.newProvider.clientSecret = ''
 				this.newProvider.discoveryEndpoint = ''
 				this.newProvider.endSessionEndpoint = ''
+				this.newProvider.postLogoutUri = ''
 				this.showNewProvider = false
 			} catch (error) {
 				logger.error('Could not register a provider: ' + error.message, { error })
