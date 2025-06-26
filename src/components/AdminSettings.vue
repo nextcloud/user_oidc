@@ -87,9 +87,9 @@
 						</NcActionButton>
 					</NcActions>
 					<NcActions :style="customActionsStyle">
-						<NcActionButton @click="onRemove(provider)">
+						<NcActionButton @click="onProviderDeleteClick(provider)">
 							<template #icon>
-								<DeleteOutlineIcon :size="20" />
+								<TrashCanOutlineIcon :size="20" />
 							</template>
 							{{ t('user_oidc', 'Remove') }}
 						</NcActionButton>
@@ -110,6 +110,24 @@
 						@cancel-form="editProvider=null" />
 				</div>
 			</NcModal>
+			<NcDialog v-model:open="showDeletionConfirmation"
+				:name="t('user_oidc', 'Confirm deletion')"
+				:message="deletionConfirmationMessage">
+				<template #actions>
+					<NcButton
+						@click="showDeletionConfirmation = false">
+						{{ t('user_oidc', 'Cancel') }}
+					</NcButton>
+					<NcButton
+						variant="warning"
+						@click="confirmDelete">
+						<template #icon>
+							<TrashCanOutlineIcon />
+						</template>
+						{{ t('user_oidc', 'Delete') }}
+					</NcButton>
+				</template>
+			</NcDialog>
 		</div>
 	</div>
 </template>
@@ -119,6 +137,7 @@ import HelpCircleOutlineIcon from 'vue-material-design-icons/HelpCircleOutline.v
 import DeleteOutlineIcon from 'vue-material-design-icons/DeleteOutline.vue'
 import PencilOutlineIcon from 'vue-material-design-icons/PencilOutline.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
+import TrashCanOutlineIcon from 'vue-material-design-icons/TrashCanOutline.vue'
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -128,6 +147,7 @@ import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcModal from '@nextcloud/vue/components/NcModal'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcButton from '@nextcloud/vue/components/NcButton'
+import NcDialog from '@nextcloud/vue/components/NcDialog'
 import { confirmPassword } from '@nextcloud/password-confirmation'
 
 import logger from '../logger.js'
@@ -144,6 +164,7 @@ export default {
 		NcButton,
 		PencilOutlineIcon,
 		DeleteOutlineIcon,
+		NcDialog,
 		PlusIcon,
 		HelpCircleOutlineIcon,
 	},
@@ -193,7 +214,17 @@ export default {
 				'--color-background-hover': 'var(--color-background-darker)',
 			},
 			redirectUri: window.location.protocol + '//' + window.location.host + generateUrl('/apps/user_oidc/code'),
+			showDeletionConfirmation: false,
+			providerToDelete: null,
 		}
+	},
+	computed: {
+		deletionConfirmationMessage() {
+			if (this.providerToDelete) {
+				return t('user_oidc', 'Are you sure you want to delete the provider "{providerName}"?', { providerName: this.providerToDelete.identifier })
+			}
+			return ''
+		},
 	},
 	methods: {
 		async onId4MeChange(newValue) {
@@ -255,7 +286,15 @@ export default {
 				showError(t('user_oidc', 'Could not update the provider:') + ' ' + (error.response?.data?.message ?? error.message))
 			}
 		},
-		async onRemove(provider) {
+		onProviderDeleteClick(provider) {
+			this.providerToDelete = provider
+			this.showDeletionConfirmation = true
+		},
+		confirmDelete() {
+			this.deleteProvider(this.providerToDelete)
+			this.showDeletionConfirmation = false
+		},
+		async deleteProvider(provider) {
 			await confirmPassword()
 			logger.info('Remove oidc provider', { provider })
 
@@ -268,6 +307,7 @@ export default {
 				logger.error('Could not remove a provider: ' + error.message, { error })
 				showError(t('user_oidc', 'Could not remove provider: {msg}', { msg: error.message }))
 			}
+			this.providerToDelete = null
 		},
 		async onSubmit() {
 			await confirmPassword()
