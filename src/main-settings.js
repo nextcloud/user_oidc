@@ -5,21 +5,15 @@
 
 import { loadState } from '@nextcloud/initial-state'
 import '@nextcloud/dialogs/style.css'
-import Vue from 'vue'
+import { createApp } from 'vue'
 
 import App from './components/AdminSettings.vue'
 
-Vue.prototype.t = t
-Vue.prototype.n = n
-Vue.prototype.OC = OC
-Vue.prototype.OCA = OCA
-
-const View = Vue.extend(App)
-new View({
-	propsData: {
-		initialId4MeState: loadState('user_oidc', 'id4meState'),
-		initialStoreLoginTokenState: loadState('user_oidc', 'storeLoginTokenState'),
-		initialProviders: loadState('user_oidc', 'providers'),
-		redirectUrl: loadState('user_oidc', 'redirectUrl'),
-	},
-}).$mount('#user-oidc-settings')
+const app = createApp(App, {
+	initialId4MeState: loadState('user_oidc', 'id4meState'),
+	initialStoreLoginTokenState: loadState('user_oidc', 'storeLoginTokenState'),
+	initialProviders: loadState('user_oidc', 'providers'),
+	redirectUrl: loadState('user_oidc', 'redirectUrl'),
+})
+app.mixin({ methods: { t, n } })
+app.mount('#user-oidc-settings')

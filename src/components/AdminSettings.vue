@@ -11,19 +11,21 @@
 				{{ t('user_oidc', 'Allows users to authenticate via OpenID Connect providers.') }}
 			</p>
 			<p>
-				<NcCheckboxRadioSwitch :checked.sync="id4meState"
+				<NcCheckboxRadioSwitch
+					v-model="id4meState"
 					wrapper-element="div"
-					@update:checked="onId4MeChange">
+					@update:model-value="onId4MeChange">
 					{{ t('user_oidc', 'Enable ID4me') }}
 				</NcCheckboxRadioSwitch>
 			</p>
 			<p class="line">
-				<NcCheckboxRadioSwitch :checked.sync="storeLoginTokenState"
+				<NcCheckboxRadioSwitch
+					v-model="storeLoginTokenState"
 					wrapper-element="div"
-					@update:checked="onStoreLoginTokenChange">
+					@update:model-value="onStoreLoginTokenChange">
 					{{ t('user_oidc', 'Store login tokens') }}
 				</NcCheckboxRadioSwitch>
-				<NcButton type="tertiary"
+				<NcButton variant="tertiary"
 					:title="t('user_oidc', 'This is needed if you are using other apps that want to use user_oidc\'s token exchange or simply get the login token')">
 					<template #icon>
 						<HelpCircleIcon />
@@ -53,7 +55,7 @@
 					<p class="settings-hint">
 						{{ t('user_oidc', 'Configure your provider to redirect back to {url}', { url: redirectUrl }) }}
 					</p>
-					<SettingsForm :provider="newProvider" @submit="onSubmit" @cancel="showNewProvider=false" />
+					<SettingsForm :provider="newProvider" @submit="onSubmit" @cancel-form="showNewProvider=false" />
 				</div>
 			</NcModal>
 
@@ -105,7 +107,7 @@
 						:update="true"
 						:submit-text="t('user_oidc', 'Update provider')"
 						@submit="onUpdate"
-						@cancel="editProvider=null" />
+						@cancel-form="editProvider=null" />
 				</div>
 			</NcModal>
 		</div>
@@ -121,11 +123,11 @@ import PlusIcon from 'vue-material-design-icons/Plus.vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
-import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
-import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
+import NcActions from '@nextcloud/vue/components/NcActions'
+import NcActionButton from '@nextcloud/vue/components/NcActionButton'
+import NcModal from '@nextcloud/vue/components/NcModal'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
+import NcButton from '@nextcloud/vue/components/NcButton'
 import { confirmPassword } from '@nextcloud/password-confirmation'
 
 import logger from '../logger.js'
@@ -247,7 +249,7 @@ export default {
 				await axios.put(url, provider)
 				this.editProvider = null
 				const index = this.providers.findIndex((p) => p.id === provider.id)
-				this.$set(this.providers, index, provider)
+				this.providers[index] = provider
 			} catch (error) {
 				logger.error('Could not update the provider: ' + error.message, { error })
 				showError(t('user_oidc', 'Could not update the provider:') + ' ' + (error.response?.data?.message ?? error.message))
