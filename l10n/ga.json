@@ -15,6 +15,7 @@
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "Ní mór duit Nextcloud a rochtain le HTTPS chun OpenID Connect a úsáid.",
     "There is no such OpenID Connect provider." : "Níl a leithéid de sholáthraí OpenID Connect ann.",
     "Could not reach the OpenID Connect provider." : "Níorbh fhéidir an soláthraí OpenID Connect a bhaint amach.",
+    "The identity provider failed to authenticate the user." : "Theip ar an soláthraí aitheantais an t-úsáideoir a fhíordheimhniú.",
     "Failed to decrypt the OIDC provider client secret" : "Theip ar rún an chliaint soláthraí OIDC a dhíchriptiú",
     "Failed to contact the OIDC provider token endpoint" : "Theip ar theagmháil a dhéanamh le críochphointe comharthaí an tsoláthraí OIDC",
     "The issuer does not match the one from the discovery endpoint" : "Ní mheaitseálann an t-eisitheoir leis an gceann ón gcríochphointe fionnachtana",
