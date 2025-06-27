@@ -28,7 +28,7 @@
 				<NcButton variant="tertiary"
 					:title="t('user_oidc', 'This is needed if you are using other apps that want to use user_oidc\'s token exchange or simply get the login token')">
 					<template #icon>
-						<HelpCircleIcon />
+						<HelpCircleOutlineIcon />
 					</template>
 				</NcButton>
 			</p>
@@ -81,7 +81,7 @@
 					<NcActions :style="customActionsStyle">
 						<NcActionButton @click="updateProvider(provider)">
 							<template #icon>
-								<PencilIcon :size="20" />
+								<PencilOutlineIcon :size="20" />
 							</template>
 							{{ t('user_oidc', 'Update') }}
 						</NcActionButton>
@@ -89,7 +89,7 @@
 					<NcActions :style="customActionsStyle">
 						<NcActionButton @click="onRemove(provider)">
 							<template #icon>
-								<DeleteIcon :size="20" />
+								<DeleteOutlineIcon :size="20" />
 							</template>
 							{{ t('user_oidc', 'Remove') }}
 						</NcActionButton>
@@ -115,9 +115,9 @@
 </template>
 
 <script>
-import HelpCircleIcon from 'vue-material-design-icons/HelpCircle.vue'
-import DeleteIcon from 'vue-material-design-icons/Delete.vue'
-import PencilIcon from 'vue-material-design-icons/Pencil.vue'
+import HelpCircleOutlineIcon from 'vue-material-design-icons/HelpCircleOutline.vue'
+import DeleteOutlineIcon from 'vue-material-design-icons/DeleteOutline.vue'
+import PencilOutlineIcon from 'vue-material-design-icons/PencilOutline.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
 
 import axios from '@nextcloud/axios'
@@ -142,10 +142,10 @@ export default {
 		NcModal,
 		NcCheckboxRadioSwitch,
 		NcButton,
-		PencilIcon,
-		DeleteIcon,
+		PencilOutlineIcon,
+		DeleteOutlineIcon,
 		PlusIcon,
-		HelpCircleIcon,
+		HelpCircleOutlineIcon,
 	},
 	props: {
 		initialId4MeState: {
