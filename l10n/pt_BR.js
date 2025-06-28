@@ -90,9 +90,7 @@ OC.L10N.register(
     "Use provider identifier as prefix for IDs" : "Usar o identificador do provedor como prefixo para IDs",
     "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "Para manter as IDs em texto simples, mas também preservar a exclusividade delas em vários provedores, é adicionado um prefixo com o nome dos provedores.",
     "Use group provisioning." : "Usar provisionamento de grupos.",
-    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Isso criará e atualizará os grupos de usuários, dependendo da reivindicação de grupos no token de ID. O formato do valor da reivindicação de grupos deve ser {sample1}, {sample2} ou {sample3}",
     "Group whitelist regex" : "Expressão regular de lista de permissões de grupos",
-    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Somente os grupos que corresponderem à expressão regular da lista branca serão criados, atualizados e excluídos pela reivindicação de grupo. Por exemplo: {regex} permite todos os grupos cujo ID começa com {substr}",
     "Restrict login for users that are not in any whitelisted group" : "Restringir o login de usuários que não estejam em nenhum grupo da lista de permissões",
     "Users that are not part of any whitelisted group are not created and can not login" : "Os usuários que não fazem parte de nenhum grupo da lista de permissões não são criados e não podem fazer login",
     "Check Bearer token on API and WebDAV requests" : "Verificar o token Bearer nas solicitações de API e WebDAV",
@@ -102,6 +100,8 @@ OC.L10N.register(
     "Send ID token hint on logout" : "Enviar dica de token de ID no logout",
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "O token de ID deve ser incluído como o parâmetro GET id_token_hint no URL de logout do OpenID? Os usuários são redirecionados para este URL depois de fazer logout do Nextcloud. A ativação desta configuração expõe o token de ID do OIDC ao agente do usuário, o que pode não ser necessário, dependendo do provedor do OIDC.",
     "Cancel" : "Cancelar",
+    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Somente os grupos que corresponderem à expressão regular da lista branca serão criados, atualizados e excluídos pela reivindicação de grupo. Por exemplo: {regex} permite todos os grupos cujo ID começa com {substr}",
+    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Isso criará e atualizará os grupos de usuários, dependendo da reivindicação de grupos no token de ID. O formato do valor da reivindicação de grupos deve ser {sample1}, {sample2} ou {sample3}",
     "Domain" : "Domínio",
     "your.domain" : "seu.domínio"
 },

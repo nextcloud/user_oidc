@@ -89,9 +89,7 @@ OC.L10N.register(
     "Use provider identifier as prefix for IDs" : "Kimlik ön eki olarak hizmet sağlayıcı tanımlayıcısı kullanılsın",
     "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "Kimliklerin düz metin olarak tutulması ve aynı zamanda birden fazla hizmet sağlayıcıda benzersizliğinin korunması için kimliklere ön ek olarak hizmet sağlayıcı tanımlayıcısı eklenir.",
     "Use group provisioning." : "Grup hazırlama kullanılsın",
-    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Bu seçenek, kimlik kodundaki grupların isteğine bağlı olarak kullanıcı gruplarını ekler ve günceller. İstek gruplarının biçim değeri {sample1}, {sample2} veya {sample3} olabilir",
     "Group whitelist regex" : "Grup beyaz listesi kurallı ifadesi",
-    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Yalnızca beyaz liste kurallı ifadesine uygun gruplar grup isteği tarafından eklenir, güncellenir ve silinir. Örneğin: {regex} ifadesi, kimliği {substr} ile başlayan tüm gruplara izin verir",
     "Restrict login for users that are not in any whitelisted group" : "Beyaz listeye alınmış herhangi bir grupta olmayan kullanıcıların oturum açması engellensin",
     "Users that are not part of any whitelisted group are not created and can not login" : "Beyaz listeye alınmış herhangi bir grubun üyesi olmayan kullanıcılar eklenmez ve oturum açamaz",
     "Check Bearer token on API and WebDAV requests" : "API ve WebDAV isteklerinde Bearer kodu kontrol edilsin",
@@ -101,6 +99,8 @@ OC.L10N.register(
     "Send ID token hint on logout" : "Oturumu kapatıldığında kimlik kodu ipucu gönderilsin",
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "OpenID oturumu kapatma adresine id_token_hint GET parametresi olarak kimlik kodu eklensin mi? Kullanıcılar Nextcloud oturumlarını kapattıktan sonra bu adrese yönlendirilir. Bu ayarı açmak, OIDC kimlik kodunu kullanıcı uygulamasına sunar. Bu işlem OIDC hizmeti sağlayıcısına bağlı olarak gerekli olmayabilir.",
     "Cancel" : "İptal",
+    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Yalnızca beyaz liste kurallı ifadesine uygun gruplar grup isteği tarafından eklenir, güncellenir ve silinir. Örneğin: {regex} ifadesi, kimliği {substr} ile başlayan tüm gruplara izin verir",
+    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Bu seçenek, kimlik kodundaki grupların isteğine bağlı olarak kullanıcı gruplarını ekler ve günceller. İstek gruplarının biçim değeri {sample1}, {sample2} veya {sample3} olabilir",
     "Domain" : "Etki alanı",
     "your.domain" : "etki.alaniniz"
 },

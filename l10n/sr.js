@@ -90,9 +90,7 @@ OC.L10N.register(
     "Use provider identifier as prefix for IDs" : "Користи идентификатор пружаоца услуге као префикс за ID",
     "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "Да би ID остао у чистом тексту, али да се ипак очува њихова јединственост по различитим пружаоцима услуге, додаје се префикс са именом пружаоца услуге.",
     "Use group provisioning." : "Користи достављање групе.",
-    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Ово ће да креира и ажурира припадност корисника групи у зависности од тврдње групе у ID жетону. Формат вредности за припадност групи би требало да буде {sample1}, {sample2} или {sample3}",
     "Group whitelist regex" : "Регуларни израз дозвољених група",
-    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Тврдња групе ће да креира, ажурира и обрише само групе које задовољавају овај регуларни израз. На пример: {regex} дозвољава све групе чији ID почиње са {substr}",
     "Restrict login for users that are not in any whitelisted group" : "Спречи пријављивање корисницима који се не налазе ни у једној од дозвољених група",
     "Users that are not part of any whitelisted group are not created and can not login" : "Корисници који нису део ниједне од дозвољених група се не креирају и не могу да се пријаве",
     "Check Bearer token on API and WebDAV requests" : "Проверавај Bearer жетон у API и WebDAV захтевима",
@@ -102,6 +100,8 @@ OC.L10N.register(
     "Send ID token hint on logout" : "Приликом одјављивања шаљи наговештај ID жетона",
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "Да ли би ID жетон требало да се укључи као id_token_hint GET параметар у OpenID URL адреси за одјављивање? Када се одјаве са  Nextcloud сервера, корисници се преусмеравају на ову URL адресу. Када се укључи ово подешавање, OIDC ID жетон се излаже корисничком агенту, а у зависности од пружаоца OIDC услуге, то можда није неопходно.",
     "Cancel" : "Откажи",
+    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Тврдња групе ће да креира, ажурира и обрише само групе које задовољавају овај регуларни израз. На пример: {regex} дозвољава све групе чији ID почиње са {substr}",
+    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Ово ће да креира и ажурира припадност корисника групи у зависности од тврдње групе у ID жетону. Формат вредности за припадност групи би требало да буде {sample1}, {sample2} или {sample3}",
     "Domain" : "Домен",
     "your.domain" : "ваш.домен"
 },

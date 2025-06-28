@@ -88,9 +88,7 @@ OC.L10N.register(
     "Use provider identifier as prefix for IDs" : "제공자 식별자를 ID에 대한 접두사로 사용",
     "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "다중 제공자에 걸쳐 고유성을 보존하면서 ID를 평문으로 유지하기위해 제공자 이름이 접두사로 추가됩니다.",
     "Use group provisioning." : "그룹 프로비저닝 사용",
-    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "이것은 ID 토큰의 그룹 클레임에 따라서 사용자 그룹을 생성하고 갱신할 것입니다. 그룹 클레임의 형식은 {sample1}, {sample2} 혹은 {sample3} 이어야 합니다.",
     "Group whitelist regex" : "그룹 화이트리스트 정규표현식",
-    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "화이트리스트 정규식에 일치하는 그룹만이 그룹 클레임에 의해서 생성되고, 갱신되고, 삭제됩니다. 예를들어 {regex}  은 ID가 {substr} 로 시작하는 그룹을 허용합니다.",
     "Restrict login for users that are not in any whitelisted group" : "화이트리스트 그룹에 없는 사용자 로그인 제한",
     "Users that are not part of any whitelisted group are not created and can not login" : "화이트리스트 그룹에 속하지 않는 사용자는 생성되지 않고 로그인 불가능합니다.",
     "Check Bearer token on API and WebDAV requests" : "API와 WebDAV 요청에 Bearer 토큰 확인",
@@ -99,6 +97,8 @@ OC.L10N.register(
     "Send ID token hint on logout" : "로그아웃 시 ID 토큰 힌트 전송",
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "ID 토큰이 OpenID 로그아웃 URL의 id_token_hint GET parameter 에 포함되어야 합니까? 사용자는 Nextcloud 로그아웃 이후 이 URL로 리다이렉트 됩니다. 이 설정을 활성화하면 OIDC ID 토큰을 user agent에 노출시키고, OIDC 제공자에 따라서는 이것이 필요하지 않을 수 있습니다.",
     "Cancel" : "취소",
+    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "화이트리스트 정규식에 일치하는 그룹만이 그룹 클레임에 의해서 생성되고, 갱신되고, 삭제됩니다. 예를들어 {regex}  은 ID가 {substr} 로 시작하는 그룹을 허용합니다.",
+    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "이것은 ID 토큰의 그룹 클레임에 따라서 사용자 그룹을 생성하고 갱신할 것입니다. 그룹 클레임의 형식은 {sample1}, {sample2} 혹은 {sample3} 이어야 합니다.",
     "Domain" : "도메인",
     "your.domain" : "your.domain"
 },

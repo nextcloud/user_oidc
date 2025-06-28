@@ -88,9 +88,7 @@ OC.L10N.register(
     "Use provider identifier as prefix for IDs" : "استعمِل مُعرِّف المُزوِّد كبادئة لكل المُعرِّفات",
     "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "للاحتفاظ بالمعرفات في شكل نصي صريح مع الحفاظ على فرادتها عبر عدة مزودين، يتم إضافة بادئة تمثل اسم المزود قبل كل واحد من تلك المُعرِّفات.",
     "Use group provisioning." : "إستَعمِل تجهيز المجموعة.",
-    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "سيؤدي هذا إلى إنشاء وتحديث مجموعات المستخدِمين بناءً على مطالبات المجموعات في أَمَارَة المُعرِّف ID token. صيغة قيمة مطالبات المجموعات يجب أن تكون {sample1}، أو {sample2}،أو {sample3}",
     "Group whitelist regex" : "التعبير النمطي regex للقوائم البيضاء للمجموعات",
-    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "فقط المجموعات التي تُطابِق التعبير النمطي للقوائم البيضاء للمجموعات يمكن إنشاؤها أو حذفها عن طريق مطالبات المجموعة. مثال: {regex} تسمح لكل المجموعات التي يبدأ مُعرِّفها بـ {substr}",
     "Restrict login for users that are not in any whitelisted group" : "قصر الدخول على المستخدِمين غير الموجودين في أي مجموعة على القائمة البيضاء",
     "Users that are not part of any whitelisted group are not created and can not login" : "المستخدِمين الذين ليسوا أعضاء في أي مجموعات مُدرَجة في القائمة البيضاء لا يتم إنشاؤهم ولا يتم السماح لهم بالدخول",
     "Check Bearer token on API and WebDAV requests" : "التحقق من أَمَارَة الحامل bearer token في طلبات API و WebDAV",
@@ -99,6 +97,8 @@ OC.L10N.register(
     "Send ID token hint on logout" : "أرسِل إرشاد أَمَارَة المُعرِّف عند الخروج ",
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "هل يجب تضمين أَمَارَة المُعرِّف كمَعْلَمَة GET لـ id_token_hint في رابط تسجيل الخروج من OpenID؟ يُعاد توجيه المستخدمين إلى هذا الرابط بعد تسجيلهم الخروج من نكست كلاود. يؤدي تفعيل هذا الإعداد إلى عرض أمارة مُعرّف OIDC لوكيل المستخدم، وهو أمر قد لا يكون ضروريًا حسب مزود OIDC.",
     "Cancel" : "إلغاء",
+    "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "فقط المجموعات التي تُطابِق التعبير النمطي للقوائم البيضاء للمجموعات يمكن إنشاؤها أو حذفها عن طريق مطالبات المجموعة. مثال: {regex} تسمح لكل المجموعات التي يبدأ مُعرِّفها بـ {substr}",
+    "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "سيؤدي هذا إلى إنشاء وتحديث مجموعات المستخدِمين بناءً على مطالبات المجموعات في أَمَارَة المُعرِّف ID token. صيغة قيمة مطالبات المجموعات يجب أن تكون {sample1}، أو {sample2}،أو {sample3}",
     "Domain" : "النطاق",
     "your.domain" : "your.domain"
 },
