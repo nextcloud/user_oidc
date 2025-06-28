@@ -62,9 +62,9 @@ class ProvisioningService {
 
 	/**
 	 * Resolves a claim path like "custom.nickname" or multiple alternatives separated by "|".
-	 * Returns the first found string value, or null if none could be resolved.
+	 * Returns the first found value, or null if none could be resolved.
 	 */
-	public function getClaimValue(object|array $tokenPayload, string $claimPath, int $providerId): mixed {
+	public function getClaimValues(object|array $tokenPayload, string $claimPath, int $providerId): mixed {
 		if ($claimPath === '') {
 			return null;
 		}
@@ -99,12 +99,19 @@ class ProvisioningService {
 				}
 			}
 
-			if (is_string($value)) {
-				return $value;
-			}
+			return $value;
 		}
 
 		return null;
+	}
+
+	/**
+	 * Resolves a claim path like "custom.nickname" or multiple alternatives separated by "|".
+	 * Returns the first found string value, or null if none could be resolved.
+	 */
+	public function getClaimValue(object|array $tokenPayload, string $claimPath, int $providerId): mixed {
+		$value = $this->getClaimValues($tokenPayload, $claimPath, $providerId);
+		return is_string($value) ? $value : null;
 	}
 
 	/**
@@ -523,7 +530,7 @@ class ProvisioningService {
 
 	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload) {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
-		$groupsData = $idTokenPayload->{$groupsAttribute} ?? null;
+		$groupsData = $this->getClaimValues($idTokenPayload, $groupsAttribute, $providerId);
 
 		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
