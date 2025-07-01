@@ -3,11 +3,12 @@ OC.L10N.register(
     {
     "Client ID" : "კლიენტის ID",
     "Update" : "განახლება",
+    "Cancel" : "გაუქმება",
+    "Delete" : "წაშლა",
     "Submit" : "გაგზავნა",
     "Client secret" : "კლიენტის საიდუმლო",
     "Scope" : "ფარგლები",
     "Attribute mapping" : "ატრიბუტების ბმები",
-    "Cancel" : "გაუქმება",
     "Domain" : "დომენი"
 },
 "nplurals=2; plural=(n!=1);");

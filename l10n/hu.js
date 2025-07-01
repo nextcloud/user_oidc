@@ -4,11 +4,13 @@ OC.L10N.register(
     "Client ID" : "Kliensazonosító",
     "Update" : "Frissítés",
     "Remove" : "Eltávolítás",
+    "Confirm deletion" : "Törlés megerősítése",
+    "Cancel" : "Mégse",
+    "Delete" : "Törlés",
     "Submit" : "Beküldés",
     "Client secret" : "Klienstitok",
     "Scope" : "Hatókör",
     "Attribute mapping" : "Attribútum-hozzárendelés",
-    "Cancel" : "Mégse",
     "Domain" : "Domain"
 },
 "nplurals=2; plural=(n != 1);");

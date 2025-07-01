@@ -1,0 +1,11 @@
+{ "translations": {
+    "Client ID" : "Kitambulisho cha mteja",
+    "Update" : "Sasisha",
+    "Remove" : "Ondoa",
+    "Confirm deletion" : "Thibitisha ufutaji",
+    "Cancel" : "Cancel",
+    "Delete" : "Futa",
+    "Submit" : "Wasilisha",
+    "Client secret" : "Siri ya mteja"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

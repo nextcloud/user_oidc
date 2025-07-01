@@ -17,6 +17,9 @@ OC.L10N.register(
     "Update" : "Mise à jour",
     "Remove" : "Supprimer",
     "Update provider" : "Mettre à jour le fournisseur",
+    "Confirm deletion" : "Confirmer la suppression",
+    "Cancel" : "Annuler",
+    "Delete" : "Supprimer",
     "Submit" : "Envoyer",
     "Client configuration" : "Configuration du client",
     "Client secret" : "Secret client",
@@ -46,7 +49,6 @@ OC.L10N.register(
     "X (formerly Twitter) mapping" : "Association de X (ex-Twitter)",
     "Fediverse/Nickname mapping" : "Association du Nickname Fediverse",
     "Headline mapping" : "Association du titre",
-    "Cancel" : "Annuler",
     "Domain" : "Domaine",
     "your.domain" : "votre.domaine"
 },

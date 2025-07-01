@@ -1,10 +1,11 @@
 { "translations": {
     "Client ID" : "Klientidentigilo",
     "Update" : "Ĝisdatigi",
+    "Cancel" : "Cancel",
+    "Delete" : "Forigi",
     "Submit" : "Sendi",
     "Client secret" : "Klientosekreto",
     "Scope" : "Amplekso",
-    "Cancel" : "Cancel",
     "Domain" : "Domajno"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

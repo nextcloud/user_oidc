@@ -26,6 +26,9 @@ OC.L10N.register(
     "Update" : "Aktualizovať",
     "Remove" : "Odobrať",
     "Update provider" : "Upraviť poskytovateľa",
+    "Confirm deletion" : "Potvrdiť vymazanie",
+    "Cancel" : "Zrušiť",
+    "Delete" : "Vymazať",
     "Submit" : "Odoslať",
     "Client configuration" : "Konfigurácia klienta",
     "Identifier (max 128 characters)" : "Identifikátor (max 128 znakov)",
@@ -34,7 +37,6 @@ OC.L10N.register(
     "Leave empty to keep existing" : "Ponechajte prázdne pre zachovanie existujúceho",
     "Scope" : "Rozsah",
     "Attribute mapping" : "Mapovanie atribútov",
-    "Cancel" : "Zrušiť",
     "Domain" : "Doména",
     "your.domain" : "vasa.domena"
 },

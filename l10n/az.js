@@ -3,9 +3,9 @@ OC.L10N.register(
     {
     "Client ID" : "Müştəri İD-s",
     "Update" : "Yenilənmə",
+    "Cancel" : "Cancel",
     "Client secret" : "Müxtəri sirri",
     "Scope" : "Həcm",
-    "Cancel" : "Cancel",
     "Domain" : "Domen"
 },
 "nplurals=2; plural=(n != 1);");

@@ -2,10 +2,12 @@
     "Client ID" : "Asiakas-ID",
     "Update" : "Päivitä",
     "Remove" : "Poista",
+    "Confirm deletion" : "Vahvista poistaminen",
+    "Cancel" : "Peruuta",
+    "Delete" : "Poista",
     "Submit" : "Lähetä",
     "Client secret" : "Asiakassalasana",
     "Scope" : "Näkyvyysalue",
-    "Cancel" : "Peruuta",
     "Domain" : "Domaini"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

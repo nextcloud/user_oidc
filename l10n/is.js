@@ -4,11 +4,13 @@ OC.L10N.register(
     "Client ID" : "Biðlaraauðkenni",
     "Update" : "Uppfæra",
     "Remove" : "Fjarlægja",
+    "Confirm deletion" : "Staðfesta eyðingu",
+    "Cancel" : "Hætta við",
+    "Delete" : "Eyða",
     "Submit" : "Senda inn",
     "Client secret" : "Leynilykill biðlara",
     "Scope" : "Umfang",
     "Attribute mapping" : "Vörpun eiginda",
-    "Cancel" : "Hætta við",
     "Domain" : "Lén"
 },
 "nplurals=2; plural=(n % 10 != 1 || n % 100 == 11);");

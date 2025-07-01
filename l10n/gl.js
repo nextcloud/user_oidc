@@ -12,11 +12,13 @@ OC.L10N.register(
     "Client ID" : "ID de cliente",
     "Update" : "Actualizar",
     "Remove" : "Retirar",
+    "Confirm deletion" : "Confirmar a eliminación",
+    "Cancel" : "Cancelar",
+    "Delete" : "Eliminar",
     "Submit" : "Enviar",
     "Client secret" : "Segredo do cliente",
     "Scope" : "Ámbito",
     "Attribute mapping" : "Asignación de atributos",
-    "Cancel" : "Cancelar",
     "Domain" : "Dominio"
 },
 "nplurals=2; plural=(n != 1);");

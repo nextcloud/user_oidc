@@ -4,11 +4,12 @@ OC.L10N.register(
     "Client ID" : "ID cliente",
     "Update" : "Agiorna",
     "Remove" : "Boga",
+    "Cancel" : "Annulla",
+    "Delete" : "Cantzella",
     "Submit" : "Imbia",
     "Client secret" : "Segretu de su cliente",
     "Scope" : "Àmbitu",
     "Attribute mapping" : "Assòtziu de is atributos",
-    "Cancel" : "Annulla",
     "Domain" : "Domìniu"
 },
 "nplurals=2; plural=(n != 1);");

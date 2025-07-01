@@ -4,9 +4,10 @@ OC.L10N.register(
     "Client ID" : "ID Klien",
     "Update" : "Perbarui",
     "Remove" : "Hapus",
+    "Cancel" : "Batal",
+    "Delete" : "Hapus",
     "Client secret" : "Rahasia klien",
     "Scope" : "Skop",
-    "Cancel" : "Batal",
     "Domain" : "Domain"
 },
 "nplurals=1; plural=0;");

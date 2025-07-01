@@ -4,10 +4,11 @@ OC.L10N.register(
     "Client ID" : "Klienta ID",
     "Update" : "Atjaunināt",
     "Remove" : "Izņemt",
+    "Cancel" : "Atcelt",
+    "Delete" : "Izdzēst",
     "Submit" : "Iesniegt",
     "Scope" : "Darbības joma",
     "Authentication and Access Control Settings" : "Autentificēšanās un piekļuves vadības iestatījumi",
-    "Cancel" : "Atcelt",
     "Domain" : "Domain"
 },
 "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);");

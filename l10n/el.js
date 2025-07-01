@@ -45,6 +45,8 @@ OC.L10N.register(
     "Remove" : "Αφαίρεση",
     "Update provider settings" : "Ενημέρωση ρυθμίσεων παρόχου",
     "Update provider" : "Ενημέρωση παρόχου",
+    "Confirm deletion" : "Επιβεβαίωση διαγραφής",
+    "Cancel" : "Ακύρωση",
     "Submit" : "Υποβολή",
     "Client configuration" : "Διαμόρφωση πελάτη",
     "Identifier (max 128 characters)" : "Αναγνωριστικό (μέγιστο 128 χαρακτήρες)",
@@ -84,7 +86,6 @@ OC.L10N.register(
     "Users that are not part of any whitelisted group are not created and can not login" : "Οι χρήστες που δεν ανήκουν σε καμία ομάδα λευκής λίστας δεν δημιουργούνται και δεν μπορούν να συνδεθούν",
     "Send ID token hint on logout" : "Αποστολή ID token hint κατά την αποσύνδεση",
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "Θα πρέπει το ID token να συμπεριληφθεί ως παράμετρος GET id_token_hint στο URL αποσύνδεσης OpenID; Οι χρήστες ανακατευθύνονται σε αυτό το URL μετά την αποσύνδεση από το Nextcloud. Η ενεργοποίηση αυτής της ρύθμισης εκθέτει το OIDC ID token στον user agent, κάτι που μπορεί να μην είναι απαραίτητο ανάλογα με τον πάροχο OIDC.",
-    "Cancel" : "Ακύρωση",
     "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Μόνο οι ομάδες που ταιριάζουν με το regex της λευκής λίστας θα δημιουργηθούν, ενημερωθούν και διαγραφούν από την αξίωση ομάδων. Για παράδειγμα: {regex} επιτρέπει όλες τις ομάδες των οποίων το ID ξεκινά με {substr}",
     "Domain" : "Τομέας",
     "your.domain" : "your.domain"
