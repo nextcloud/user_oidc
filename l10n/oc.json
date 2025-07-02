@@ -1,0 +1,9 @@
+{ "translations": {
+    "Client ID" : "ID client",
+    "Update" : "Actualizar",
+    "Remove" : "Suprimir",
+    "Cancel" : "Anullar",
+    "Delete" : "Suprimir",
+    "Submit" : "Transmetre"
+},"pluralForm" :"nplurals=2; plural=(n > 1);"
+}

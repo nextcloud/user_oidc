@@ -4,6 +4,7 @@ OC.L10N.register(
     "Client ID" : "Müştəri İD-s",
     "Update" : "Yenilənmə",
     "Cancel" : "Cancel",
+    "Delete" : "Sil",
     "Client secret" : "Müxtəri sirri",
     "Scope" : "Həcm",
     "Domain" : "Domen"

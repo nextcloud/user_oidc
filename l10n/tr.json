@@ -26,6 +26,7 @@
     "OpenID Connect user backend" : "OpenID Connect kullanıcı arka yüzü",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Nextcloud kopyanızda oturum açmak için bir OpenID Connect arka yüzü kullanın",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Nextcloud oturum açma kullanıcı arka yüzü olarak esnek bir OIDC sunucusu yapılandırması sağlar.",
+    "Are you sure you want to delete the provider \"{providerName}\"?" : "\"{providerName}\" hizmet sağlayıcısını silmek istediğinize emin misiniz?",
     "Could not save ID4me state: {msg}" : "ID4me durumu kaydedilemedi: {msg}",
     "Could not save storeLoginToken state: {msg}" : "storeLoginToken durumu kaydedilemedi: {msg}",
     "Could not update the provider:" : "Hizmet sağlayıcı güncellenemedi:",

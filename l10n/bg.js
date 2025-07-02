@@ -5,6 +5,7 @@ OC.L10N.register(
     "Update" : "Обновяване",
     "Remove" : "Премахване",
     "Cancel" : "Отказ",
+    "Delete" : "Изтриване",
     "Submit" : "Изпращане",
     "Client secret" : "Тайна на клиент",
     "Scope" : "Обхват",
