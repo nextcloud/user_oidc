@@ -28,6 +28,7 @@ OC.L10N.register(
     "OpenID Connect user backend" : "OpenID Connect user backend",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Use an OpenID Connect backend to login to your Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Allows flexible configuration of an OIDC server as Nextcloud login user backend.",
+    "Are you sure you want to delete the provider \"{providerName}\"?" : "Are you sure you want to delete the provider \"{providerName}\"?",
     "Could not save ID4me state: {msg}" : "Could not save ID4me state: {msg}",
     "Could not save storeLoginToken state: {msg}" : "Could not save storeLoginToken state: {msg}",
     "Could not update the provider:" : "Could not update the provider:",

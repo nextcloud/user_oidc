@@ -26,6 +26,7 @@
     "OpenID Connect user backend" : "OpenID Connect 用戶後端",
     "Use an OpenID Connect backend to login to your Nextcloud" : "使用 OpenID Connect 後端系統登錄您的 Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "允許靈活配置 OIDC 伺服器作為 Nextcloud 登錄用戶後端系統。",
+    "Are you sure you want to delete the provider \"{providerName}\"?" : "您確定要刪除提供者 「{providerName}」 嗎？",
     "Could not save ID4me state: {msg}" : "無法保存 ID4me 狀態: {msg}",
     "Could not save storeLoginToken state: {msg}" : "無法保存 storeLoginToken 狀態: {msg}",
     "Could not update the provider:" : "無法更新提供者：",
