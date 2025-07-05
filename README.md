@@ -12,6 +12,47 @@ OpenID Connect user backend for Nextcloud
 See [Nextcloud and OpenID-Connect](https://web.archive.org/web/20240412121655/https://www.schiessle.org/articles/2023/07/04/nextcloud-and-openid-connect/)
 for a proper jumpstart.
 
+---
+
+## `httpclient.allowselfsigned`
+
+```php
+'httpclient.allowselfsigned' => true,
+```
+
+This configuration allows Nextcloud to **trust self-signed SSL certificates** when making HTTP requests through the internal HTTP client. It is especially useful when your OAuth2 or OIDC provider is hosted locally or uses a self-signed certificate not recognized by public CAs.
+
+* **true**: Disables SSL certificate verification (`verify => false`)
+* **false** (default): SSL verification remains enabled and strict
+
+> ⚠️ Use with caution in production environments, as disabling certificate verification can introduce security risks.
+
+---
+
+## `user_oidc.prompt`
+
+```php
+'user_oidc' => [
+  'prompt' => 'internal'
+]
+```
+
+This option allows customizing the `prompt` parameter sent in the OAuth2/OIDC authorization request.
+
+Supported values include:
+
+* `none`
+* `login`
+* `consent`
+* `internal` (custom)
+
+The `internal` prompt is specific to **[OAuth2 Passport Server](https://github.com/elyerr/oauth2-passport-server)** and is designed to enable seamless login for private or internal applications without requiring user consent or interaction.
+
+Documentation for all supported prompt values is available here:
+[Oauth2 passport server prompts-supported](https://gitlab.com/elyerr/oauth2-passport-server/-/wikis/home/prompts-supported)
+
+---
+
 ### User IDs
 
 The OpenID Connect backend will ensure that user ids are unique even when multiple providers would report the same user
