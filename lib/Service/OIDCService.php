@@ -9,29 +9,30 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
-use OCA\UserOIDC\Db\Provider;
-use OCP\Http\Client\IClientService;
+use Throwable;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
-use Throwable;
+use OCA\UserOIDC\Db\Provider;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 
-class OIDCService {
+class OIDCService
+{
 
 	public function __construct(
 		private DiscoveryService $discoveryService,
 		private LoggerInterface $logger,
-		private IClientService $clientService,
+		private HttpClientHelper $clientService,
 		private ICrypto $crypto,
 	) {
 	}
 
-	public function userinfo(Provider $provider, string $accessToken): array {
+	public function userinfo(Provider $provider, string $accessToken): array
+	{
 		$url = $this->discoveryService->obtainDiscovery($provider)['userinfo_endpoint'] ?? null;
 		if ($url === null) {
 			return [];
 		}
 
-		$client = $this->clientService->newClient();
 		$this->logger->debug('Fetching user info endpoint');
 		$options = [
 			'headers' => [
@@ -39,13 +40,14 @@ class OIDCService {
 			],
 		];
 		try {
-			return json_decode($client->get($url, $options)->getBody(), true);
+			return json_decode($this->clientService->get($url, $options), true);
 		} catch (Throwable $e) {
 			return [];
 		}
 	}
 
-	public function introspection(Provider $provider, string $accessToken): array {
+	public function introspection(Provider $provider, string $accessToken): array
+	{
 		try {
 			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
 		} catch (\Exception $e) {
@@ -57,18 +59,18 @@ class OIDCService {
 			return [];
 		}
 
-		$client = $this->clientService->newClient();
 		$this->logger->debug('Fetching user info endpoint');
-		$options = [
-			'headers' => [
-				'Authorization' => base64_encode($provider->getClientId() . ':' . $providerClientSecret),
-			],
-			'body' => [
-				'token' => $accessToken,
-			],
-		];
+
 		try {
-			return json_decode($client->post($url, $options)->getBody(), true);
+			$body = $this->clientService->post(
+				$url,
+				['token' => $accessToken],
+				[
+					'Authorization' => base64_encode($provider->getClientId() . ':' . $providerClientSecret),
+				]
+			);
+
+			return json_decode($body, true);
 		} catch (Throwable $e) {
 			return [];
 		}
