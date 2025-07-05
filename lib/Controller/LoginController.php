@@ -20,6 +20,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\OIDCService;
@@ -40,7 +41,6 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\Token\IToken;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -56,7 +56,8 @@ use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 
-class LoginController extends BaseOidcController {
+class LoginController extends BaseOidcController
+{
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';
 	public const PROVIDERID = 'oidc.providerid';
@@ -72,7 +73,7 @@ class LoginController extends BaseOidcController {
 		private LdapService $ldapService,
 		private ISecureRandom $random,
 		private ISession $session,
-		private IClientService $clientService,
+		private HttpClientHelper $clientService,
 		private IURLGenerator $urlGenerator,
 		private IUserSession $userSession,
 		private IUserManager $userManager,
@@ -94,7 +95,8 @@ class LoginController extends BaseOidcController {
 	/**
 	 * @return bool
 	 */
-	private function isSecure(): bool {
+	private function isSecure(): bool
+	{
 		// no restriction in debug mode
 		return $this->isDebugModeEnabled() || $this->request->getServerProtocol() === 'https';
 	}
@@ -103,7 +105,8 @@ class LoginController extends BaseOidcController {
 	 * @param bool|null $throttle
 	 * @return TemplateResponse
 	 */
-	private function buildProtocolErrorResponse(?bool $throttle = null): TemplateResponse {
+	private function buildProtocolErrorResponse(?bool $throttle = null): TemplateResponse
+	{
 		$params = [
 			'errors' => [
 				['error' => $this->l10n->t('You must access Nextcloud with HTTPS to use OpenID Connect.')],
@@ -117,11 +120,12 @@ class LoginController extends BaseOidcController {
 	 * @param string|null $redirectUrl
 	 * @return RedirectResponse
 	 */
-	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse {
+	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse
+	{
 		return new RedirectResponse(
 			$redirectUrl === null
-				? $this->urlGenerator->getBaseUrl()
-				: preg_replace('/^https?:\/\/[^\/]+/', '', $redirectUrl)
+			? $this->urlGenerator->getBaseUrl()
+			: preg_replace('/^https?:\/\/[^\/]+/', '', $redirectUrl)
 		);
 	}
 
@@ -135,7 +139,8 @@ class LoginController extends BaseOidcController {
 	 * @param string|null $redirectUrl
 	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
 	 */
-	public function login(int $providerId, ?string $redirectUrl = null) {
+	public function login(int $providerId, ?string $redirectUrl = null)
+	{
 		if ($this->userSession->isLoggedIn()) {
 			return $this->getRedirectResponse($redirectUrl);
 		}
@@ -146,7 +151,7 @@ class LoginController extends BaseOidcController {
 
 		try {
 			$provider = $this->providerMapper->getProvider($providerId);
-		} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
+		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
 			$message = $this->l10n->t('There is no such OpenID Connect provider.');
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_not_found' => $providerId]);
 		}
@@ -260,6 +265,8 @@ class LoginController extends BaseOidcController {
 			}
 		}
 
+		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+
 		$data += [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
@@ -268,11 +275,16 @@ class LoginController extends BaseOidcController {
 			'claims' => json_encode($claims),
 			'state' => $state,
 			'nonce' => $nonce,
+			'prompt' => $oidcConfig['prompt'] ?? 'consent'
 		];
+
+
 		if ($isPkceEnabled) {
 			$data['code_challenge'] = $this->toCodeChallenge($code_verifier);
 			$data['code_challenge_method'] = 'S256';
 		}
+
+
 		$authorizationUrl = $this->discoveryService->buildAuthorizationUrl($discovery['authorization_endpoint'], $data);
 
 		$this->logger->debug('Redirecting user to: ' . $authorizationUrl);
@@ -303,7 +315,8 @@ class LoginController extends BaseOidcController {
 	 * @throws SessionNotAvailableException
 	 * @throws \JsonException
 	 */
-	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
+	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '')
+	{
 		if (!$this->isSecure()) {
 			return $this->buildProtocolErrorResponse();
 		}
@@ -338,7 +351,7 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'state does not match'], true);
 		}
 
-		$providerId = (int)$this->session->get(self::PROVIDERID);
+		$providerId = (int) $this->session->get(self::PROVIDERID);
 		$provider = $this->providerMapper->getProvider($providerId);
 		try {
 			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
@@ -356,7 +369,6 @@ class LoginController extends BaseOidcController {
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
 		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
 
-		$client = $this->clientService->newClient();
 		try {
 			$requestBody = [
 				'code' => $code,
@@ -370,10 +382,12 @@ class LoginController extends BaseOidcController {
 			$headers = [];
 			$tokenEndpointAuthMethod = 'client_secret_post';
 			// Use Basic only if client_secret_post is not available as supported by the endpoint
-			if (array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
+			if (
+				array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
 				is_array($discovery['token_endpoint_auth_methods_supported']) &&
 				in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported']) &&
-				!in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'])) {
+				!in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'])
+			) {
 				$tokenEndpointAuthMethod = 'client_secret_basic';
 			}
 
@@ -388,16 +402,14 @@ class LoginController extends BaseOidcController {
 				$requestBody['client_secret'] = $providerClientSecret;
 			}
 
-			$result = $client->post(
+			$body = $this->clientService->post(
 				$discovery['token_endpoint'],
-				[
-					'body' => $requestBody,
-					'headers' => $headers,
-				]
+				$requestBody,
+				$headers
 			);
-		} catch (ClientException|ServerException $e) {
+		} catch (ClientException | ServerException $e) {
 			$response = $e->getResponse();
-			$body = (string)$response->getBody();
+			$body = (string) $response->getBody();
 			$responseBodyArray = json_decode($body, true);
 			if ($responseBodyArray !== null && isset($responseBodyArray['error'], $responseBodyArray['error_description'])) {
 				$this->logger->debug('Failed to contact the OIDC provider token endpoint', [
@@ -417,7 +429,7 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
-		$data = json_decode($result->getBody(), true);
+		$data = json_decode($body, true);
 		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
@@ -635,7 +647,8 @@ class LoginController extends BaseOidcController {
 	 * @throws SessionNotAvailableException
 	 * @throws \JsonException
 	 */
-	public function singleLogoutService() {
+	public function singleLogoutService()
+	{
 		// TODO throttle in all failing cases
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
@@ -648,7 +661,7 @@ class LoginController extends BaseOidcController {
 
 				try {
 					$key = $this->config->getSystemValueString('gss.jwt.key', '');
-					$decoded = (array)JWT::decode($jwt, new Key($key, 'HS256'));
+					$decoded = (array) JWT::decode($jwt, new Key($key, 'HS256'));
 
 					$providerId = $decoded['oidcProviderId'] ?? null;
 				} catch (\Exception $e) {
@@ -659,8 +672,8 @@ class LoginController extends BaseOidcController {
 			}
 			if ($providerId) {
 				try {
-					$provider = $this->providerMapper->getProvider((int)$providerId);
-				} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
+					$provider = $this->providerMapper->getProvider((int) $providerId);
+				} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
 					$message = $this->l10n->t('There is no such OpenID Connect provider.');
 					return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_id' => $providerId]);
 				}
@@ -676,7 +689,8 @@ class LoginController extends BaseOidcController {
 					$endSessionEndpoint .= '&client_id=' . $provider->getClientId();
 					$shouldSendIdToken = $this->providerService->getSetting(
 						$provider->getId(),
-						ProviderService::SETTING_SEND_ID_TOKEN_HINT, '0'
+						ProviderService::SETTING_SEND_ID_TOKEN_HINT,
+						'0'
 					) === '1';
 					$idToken = $this->session->get(self::ID_TOKEN);
 					if ($shouldSendIdToken && $idToken) {
@@ -712,7 +726,8 @@ class LoginController extends BaseOidcController {
 	 * @throws Exception
 	 * @throws \JsonException
 	 */
-	public function backChannelLogout(string $providerIdentifier, string $logout_token = ''): JSONResponse {
+	public function backChannelLogout(string $providerIdentifier, string $logout_token = ''): JSONResponse
+	{
 		// get the provider
 		$provider = $this->providerService->getProviderByIdentifier($providerIdentifier);
 		if ($provider === null) {
@@ -795,7 +810,7 @@ class LoginController extends BaseOidcController {
 		}
 
 		// i don't know why but the cast is necessary
-		$authTokenId = (int)$oidcSession->getAuthtokenId();
+		$authTokenId = (int) $oidcSession->getAuthtokenId();
 		try {
 			$authToken = $this->authTokenProvider->getTokenById($authTokenId);
 			// we could also get the auth token by nc session ID
@@ -826,7 +841,9 @@ class LoginController extends BaseOidcController {
 	 * @return JSONResponse
 	 */
 	private function getBackchannelLogoutErrorResponse(
-		string $error, string $description, array $throttleMetadata = [],
+		string $error,
+		string $description,
+		array $throttleMetadata = [],
 	): JSONResponse {
 		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
 		return new JSONResponse(
@@ -838,7 +855,8 @@ class LoginController extends BaseOidcController {
 		);
 	}
 
-	private function toCodeChallenge(string $data): string {
+	private function toCodeChallenge(string $data): string
+	{
 		// Basically one big work around for the base64url decode being weird
 		$h = pack('H*', hash('sha256', $data));
 		$s = base64_encode($h); // Regular base64 encoder
