@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\ServerException;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Model\Token;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\App\IAppManager;
@@ -20,7 +21,6 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClient;
-use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -35,14 +35,15 @@ use Psr\Log\LoggerInterface;
  * This is helpful to debug:
  * tail -f data/nextcloud.log | grep "\[Token" | jq ".time,.message"
  */
-class TokenService {
+class TokenService
+{
 
 	private const SESSION_TOKEN_KEY = Application::APP_ID . '-user-token';
 
 	private IClient $client;
 
 	public function __construct(
-		IClientService $clientService,
+		public HttpClientHelper $clientService,
 		private ISession $session,
 		private IUserSession $userSession,
 		private IConfig $config,
@@ -55,10 +56,11 @@ class TokenService {
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
 	) {
-		$this->client = $clientService->newClient();
+
 	}
 
-	public function storeToken(array $tokenData): Token {
+	public function storeToken(array $tokenData): Token
+	{
 		$token = new Token($tokenData);
 		$this->session->set(self::SESSION_TOKEN_KEY, json_encode($token, JSON_THROW_ON_ERROR));
 		$this->logger->debug('[TokenService] Store token');
@@ -73,7 +75,8 @@ class TokenService {
 	 * @return Token|null Return a token only if it is valid or has been successfully refreshed
 	 * @throws \JsonException
 	 */
-	public function getToken(bool $refreshIfExpired = true): ?Token {
+	public function getToken(bool $refreshIfExpired = true): ?Token
+	{
 		$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
 		if (!$sessionData) {
 			$this->logger->debug('[TokenService] getToken: no session data');
@@ -105,7 +108,8 @@ class TokenService {
 	 * @throws \JsonException
 	 * @throws PreConditionNotMetException
 	 */
-	public function checkLoginToken(): void {
+	public function checkLoginToken(): void
+	{
 		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			return;
@@ -136,7 +140,8 @@ class TokenService {
 		}
 	}
 
-	public function reauthenticate(int $providerId) {
+	public function reauthenticate(int $providerId)
+	{
 		// Logout the user and redirect to the oidc login flow to gather a fresh token
 		$this->userSession->logout();
 		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.login', [
@@ -155,7 +160,8 @@ class TokenService {
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
 	 */
-	public function refresh(Token $token): Token {
+	public function refresh(Token $token): Token
+	{
 		$oidcProvider = $this->providerMapper->getProvider($token->getProviderId());
 		$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
 
@@ -169,15 +175,13 @@ class TokenService {
 				}
 			}
 			$this->logger->debug('[TokenService] Refreshing the token: ' . $discovery['token_endpoint']);
-			$result = $this->client->post(
+			$body = $this->clientService->post(
 				$discovery['token_endpoint'],
 				[
-					'body' => [
-						'client_id' => $oidcProvider->getClientId(),
-						'client_secret' => $clientSecret,
-						'grant_type' => 'refresh_token',
-						'refresh_token' => $token->getRefreshToken(),
-					],
+					'client_id' => $oidcProvider->getClientId(),
+					'client_secret' => $clientSecret,
+					'grant_type' => 'refresh_token',
+					'refresh_token' => $token->getRefreshToken(),
 				]
 			);
 			$this->logger->debug('[TokenService] Token refresh request params', [
@@ -186,7 +190,7 @@ class TokenService {
 				'grant_type' => 'refresh_token',
 				// 'refresh_token' => $token->getRefreshToken(),
 			]);
-			$body = $result->getBody();
+
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] ---- Refresh token success');
 			return $this->storeToken(
@@ -202,7 +206,8 @@ class TokenService {
 		}
 	}
 
-	public function decodeIdToken(Token $token): array {
+	public function decodeIdToken(Token $token): array
+	{
 		$provider = $this->providerMapper->getProvider($token->getProviderId());
 		$jwks = $this->discoveryService->obtainJWK($provider, $token->getIdToken());
 		JWT::$leeway = 60;
@@ -220,7 +225,8 @@ class TokenService {
 	 * @throws TokenExchangeFailedException
 	 * @throws \JsonException
 	 */
-	public function getExchangedToken(string $targetAudience, array $extraScopes = []): Token {
+	public function getExchangedToken(string $targetAudience, array $extraScopes = []): Token
+	{
 		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			throw new TokenExchangeFailedException(
@@ -256,23 +262,22 @@ class TokenService {
 			}
 			$this->logger->debug('[TokenService] Exchanging the token: ' . $discovery['token_endpoint']);
 			// more in https://www.keycloak.org/securing-apps/token-exchange
-			$result = $this->client->post(
+			$body = $this->clientService->post(
 				$discovery['token_endpoint'],
 				[
-					'body' => [
-						'client_id' => $oidcProvider->getClientId(),
-						'client_secret' => $clientSecret,
-						'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
-						'subject_token' => $loginToken->getAccessToken(),
-						'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
-						// can also be
-						// urn:ietf:params:oauth:token-type:access_token
-						// or urn:ietf:params:oauth:token-type:id_token
-						// this one will get us an access token and refresh token within the response
-						'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
-						'audience' => $targetAudience,
-						'scope' => $scope,
-					],
+					'client_id' => $oidcProvider->getClientId(),
+					'client_secret' => $clientSecret,
+					'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
+					'subject_token' => $loginToken->getAccessToken(),
+					'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
+					// can also be
+					// urn:ietf:params:oauth:token-type:access_token
+					// or urn:ietf:params:oauth:token-type:id_token
+					// this one will get us an access token and refresh token within the response
+					'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
+					'audience' => $targetAudience,
+					'scope' => $scope,
+					'prompt' => $this->config->getSystemValue('user_oidc.prompt', 'consent') // none,consent,login and internal for oauth2 passport server
 				]
 			);
 			$this->logger->debug('[TokenService] Token exchange request params', [
@@ -284,7 +289,7 @@ class TokenService {
 				'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
 				'audience' => $targetAudience,
 			]);
-			$body = $result->getBody();
+
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] Token exchange success: "' . trim($body) . '"');
 			$tokenData = array_merge(
@@ -292,9 +297,9 @@ class TokenService {
 				['provider_id' => $loginToken->getProviderId()],
 			);
 			return new Token($tokenData);
-		} catch (ClientException|ServerException $e) {
+		} catch (ClientException | ServerException $e) {
 			$response = $e->getResponse();
-			$body = (string)$response->getBody();
+			$body = (string) $response->getBody();
 			$this->logger->error('[TokenService] Failed to exchange token, client/server error in the exchange request', ['response_body' => $body, 'exception' => $e]);
 
 			$parsedBody = json_decode(trim($body), true);
@@ -313,7 +318,7 @@ class TokenService {
 					$e,
 				);
 			}
-		} catch (\Exception|\Throwable $e) {
+		} catch (\Exception | \Throwable $e) {
 			$this->logger->error('[TokenService] Failed to exchange token ', ['exception' => $e]);
 			throw new TokenExchangeFailedException('Failed to exchange token, error in the exchange request', 0, $e);
 		}
@@ -326,7 +331,8 @@ class TokenService {
 	 * @param string $targetAudience
 	 * @return Token|null
 	 */
-	public function getTokenFromOidcProviderApp(string $userId, string $targetAudience, array $extraScopes = [], string $resource = ''): ?Token {
+	public function getTokenFromOidcProviderApp(string $userId, string $targetAudience, array $extraScopes = [], string $resource = ''): ?Token
+	{
 		if (!class_exists(\OCA\OIDCIdentityProvider\AppInfo\Application::class)) {
 			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, oidc app is not installed');
 			return null;
@@ -348,7 +354,7 @@ class TokenService {
 				$this->logger->debug('[TokenService] The Oidc provider app did not generate any access/id token');
 				return null;
 			}
-		} catch (\Exception|\Throwable $e) {
+		} catch (\Exception | \Throwable $e) {
 			$this->logger->debug('[TokenService] The Oidc provider app failed to generate a token');
 			return null;
 		}
