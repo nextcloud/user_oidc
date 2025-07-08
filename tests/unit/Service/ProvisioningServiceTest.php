@@ -360,6 +360,7 @@ class ProvisioningServiceTest extends TestCase {
 				[
 					[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', $group_whitelist],
 					[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
 				]
 			));
 
