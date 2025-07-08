@@ -1,6 +1,9 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Login with %1s" : "Pieteikties ar %1s",
+    "ID4Me is disabled" : "ID4Me ir atspējota",
+    "Invalid OpenID domain" : "Nederīgs OpenID domēns",
     "Client ID" : "Klienta ID",
     "Update" : "Atjaunināt",
     "Remove" : "Izņemt",
