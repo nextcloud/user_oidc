@@ -6,7 +6,7 @@ OC.L10N.register(
     "Invalid OpenID domain" : "Nederīgs OpenID domēns",
     "Client ID" : "Klienta ID",
     "Update" : "Atjaunināt",
-    "Remove" : "Izņemt",
+    "Remove" : "Noņemt",
     "Cancel" : "Atcelt",
     "Delete" : "Izdzēst",
     "Submit" : "Iesniegt",

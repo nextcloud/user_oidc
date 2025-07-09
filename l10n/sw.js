@@ -8,6 +8,8 @@ OC.L10N.register(
     "Cancel" : "Cancel",
     "Delete" : "Futa",
     "Submit" : "Wasilisha",
-    "Client secret" : "Siri ya mteja"
+    "Client secret" : "Siri ya mteja",
+    "Scope" : "Scope",
+    "Domain" : "Domain"
 },
 "nplurals=2; plural=(n != 1);");
