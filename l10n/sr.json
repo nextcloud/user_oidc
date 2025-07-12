@@ -26,6 +26,7 @@
     "OpenID Connect user backend" : "OpenID Connect кориснички позадински механизам",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Користите OpenID Connect позадински механизам да се пријавите на свој Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Омогућава прилагодљиву конфигурација OIDC сервера као корисничког позадинског механизма за пријаву на Nextcloud.",
+    "Are you sure you want to delete the provider \"{providerName}\"?" : "Да ли сте сигурни да желите да обришете пружаоца услуге „{providerName}”? ",
     "Could not save ID4me state: {msg}" : "Није могло да се сачува ID4me: {msg} ",
     "Could not save storeLoginToken state: {msg}" : "Није могло да се сачува storeLoginToken стање: {msg} ",
     "Could not update the provider:" : "Није могао да се ажурира пружалац услуге:",
