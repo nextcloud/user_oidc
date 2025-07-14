@@ -28,12 +28,7 @@ class HttpClientHelper implements HttpClient
 		$client = $this->clientService->newClient();
 
 		if ($this->config->getSystemValue('httpclient.allowselfsigned', false)) {
-			$options = array_merge(
-				$options,
-				[
-					'verify' => false
-				]
-			);
+			$options['verify'] = false;
 		}
 
 		return $client->get($url, $options)->getBody();
@@ -49,12 +44,7 @@ class HttpClientHelper implements HttpClient
 		];
 
 		if ($this->config->getSystemValue('httpclient.allowselfsigned', false)) {
-			$options = array_merge(
-				$options,
-				[
-					'verify' => false
-				]
-			);
+			$options['verify'] = false;
 		}
 
 		return $client->post($url, $options)->getBody();
