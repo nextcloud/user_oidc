@@ -26,6 +26,7 @@ use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\Service\TokenService;
 use OCA\UserOIDC\User\Backend;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
@@ -70,6 +71,7 @@ class LoginController extends BaseOidcController {
 		private ProviderService $providerService,
 		private DiscoveryService $discoveryService,
 		private LdapService $ldapService,
+		private SettingsService $settingsService,
 		private ISecureRandom $random,
 		private ISession $session,
 		private HttpClientHelper $clientService,
@@ -667,6 +669,13 @@ class LoginController extends BaseOidcController {
 				}
 			} else {
 				$providerId = $this->session->get(self::PROVIDERID);
+				// if the provider is not found and we are in SSO mode, just use the one and only provider
+				if ($providerId === null && !$this->settingsService->getAllowMultipleUserBackEnds()) {
+					$providers = $this->providerMapper->getProviders();
+					if (count($providers) === 1) {
+						$providerId = $providers[0]->getId();
+					}
+				}
 			}
 			if ($providerId) {
 				try {
