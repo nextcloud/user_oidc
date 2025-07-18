@@ -9,16 +9,15 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
-use OCP\ICache;
-use OCP\ICacheFactory;
-use Psr\Log\LoggerInterface;
-use OCA\UserOIDC\Db\Provider; 
+use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
+use OCP\ICache;
+use OCP\ICacheFactory;
+use Psr\Log\LoggerInterface;
 
-class DiscoveryService
-{
+class DiscoveryService {
 	public const INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS = 3600;
 	public const INVALIDATE_JWKS_CACHE_AFTER_SECONDS = 3600;
 
@@ -47,8 +46,7 @@ class DiscoveryService
 		$this->cache = $cacheFactory->createDistributed('user_oidc');
 	}
 
-	public function obtainDiscovery(Provider $provider): array
-	{
+	public function obtainDiscovery(Provider $provider): array {
 		$cacheKey = 'discovery-' . $provider->getDiscoveryEndpoint();
 		$cachedDiscovery = $this->cache->get($cacheKey);
 		if ($cachedDiscovery === null) {
@@ -70,10 +68,9 @@ class DiscoveryService
 	 * @return array
 	 * @throws \JsonException
 	 */
-	public function obtainJWK(Provider $provider, string $tokenToDecode, bool $useCache = true): array
-	{
+	public function obtainJWK(Provider $provider, string $tokenToDecode, bool $useCache = true): array {
 		$lastJwksRefresh = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
-		if ($lastJwksRefresh !== '' && $useCache && (int) $lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
+		if ($lastJwksRefresh !== '' && $useCache && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
 			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
 			$rawJwks = json_decode($rawJwks, true);
 		} else {
@@ -96,8 +93,7 @@ class DiscoveryService
 	 * @param array $extraGetParameters
 	 * @return string
 	 */
-	public function buildAuthorizationUrl(string $authorizationEndpoint, array $extraGetParameters = []): string
-	{
+	public function buildAuthorizationUrl(string $authorizationEndpoint, array $extraGetParameters = []): string {
 		$parsedUrl = parse_url($authorizationEndpoint);
 
 		$urlWithoutParams =
@@ -126,8 +122,7 @@ class DiscoveryService
 	 * @return array
 	 * @throws \Exception
 	 */
-	private function fixJwksAlg(array $jwks, string $jwt): array
-	{
+	private function fixJwksAlg(array $jwks, string $jwt): array {
 		$jwtParts = explode('.', $jwt);
 		$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
 		if (!isset($jwtHeader['kid'])) {

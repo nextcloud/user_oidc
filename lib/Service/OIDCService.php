@@ -9,14 +9,13 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
-use Throwable;
-use OCP\Security\ICrypto;
-use Psr\Log\LoggerInterface;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Helper\HttpClientHelper;
+use OCP\Security\ICrypto;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
-class OIDCService
-{
+class OIDCService {
 
 	public function __construct(
 		private DiscoveryService $discoveryService,
@@ -26,8 +25,7 @@ class OIDCService
 	) {
 	}
 
-	public function userinfo(Provider $provider, string $accessToken): array
-	{
+	public function userinfo(Provider $provider, string $accessToken): array {
 		$url = $this->discoveryService->obtainDiscovery($provider)['userinfo_endpoint'] ?? null;
 		if ($url === null) {
 			return [];
@@ -46,8 +44,7 @@ class OIDCService
 		}
 	}
 
-	public function introspection(Provider $provider, string $accessToken): array
-	{
+	public function introspection(Provider $provider, string $accessToken): array {
 		try {
 			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
 		} catch (\Exception $e) {
