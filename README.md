@@ -14,10 +14,12 @@ for a proper jumpstart.
 
 ---
 
-## `httpclient.allowselfsigned`
+## `user_oidc.httpclient.allowselfsigned`
 
 ```php
-'httpclient.allowselfsigned' => true,
+'user_oidc' => [
+    'httpclient.allowselfsigned' => true,
+]
 ```
 
 This configuration allows Nextcloud to **trust self-signed SSL certificates** when making HTTP requests through the internal HTTP client.
