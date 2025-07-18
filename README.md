@@ -20,9 +20,10 @@ for a proper jumpstart.
 'httpclient.allowselfsigned' => true,
 ```
 
-This configuration allows Nextcloud to **trust self-signed SSL certificates** when making HTTP requests through the internal HTTP client. It is especially useful when your OAuth2 or OIDC provider is hosted locally or uses a self-signed certificate not recognized by public CAs.
+This configuration allows Nextcloud to **trust self-signed SSL certificates** when making HTTP requests through the internal HTTP client.
+It is especially useful when your OAuth2 or OIDC provider is hosted locally or uses a self-signed certificate not recognized by public CAs.
 
-* **true**: Disables SSL certificate verification (`verify => false`)
+* **true**: Disables SSL certificate verification (adds the `verify => false` option to the actual HTTP client)
 * **false** (default): SSL verification remains enabled and strict
 
 > ⚠️ Use with caution in production environments, as disabling certificate verification can introduce security risks.
@@ -46,7 +47,8 @@ Supported values include:
 * `consent`
 * `internal` (custom)
 
-The `internal` prompt is specific to **[OAuth2 Passport Server](https://github.com/elyerr/oauth2-passport-server)** and is designed to enable seamless login for private or internal applications without requiring user consent or interaction.
+The `internal` prompt is specific to **[OAuth2 Passport Server](https://github.com/elyerr/oauth2-passport-server)** and is designed to enable seamless login
+for private or internal applications without requiring user consent or interaction.
 
 Documentation for all supported prompt values is available here:
 [Oauth2 passport server prompts-supported](https://gitlab.com/elyerr/oauth2-passport-server/-/wikis/home/prompts-supported)
