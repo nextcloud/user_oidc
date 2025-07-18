@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\Provider;
-use OCP\Http\Client\IClientService;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -20,7 +20,7 @@ class OIDCService {
 	public function __construct(
 		private DiscoveryService $discoveryService,
 		private LoggerInterface $logger,
-		private IClientService $clientService,
+		private HttpClientHelper $clientService,
 		private ICrypto $crypto,
 	) {
 	}
@@ -31,7 +31,6 @@ class OIDCService {
 			return [];
 		}
 
-		$client = $this->clientService->newClient();
 		$this->logger->debug('Fetching user info endpoint');
 		$options = [
 			'headers' => [
@@ -39,7 +38,7 @@ class OIDCService {
 			],
 		];
 		try {
-			return json_decode($client->get($url, $options)->getBody(), true);
+			return json_decode($this->clientService->get($url, [], $options), true);
 		} catch (Throwable $e) {
 			return [];
 		}
@@ -57,18 +56,18 @@ class OIDCService {
 			return [];
 		}
 
-		$client = $this->clientService->newClient();
 		$this->logger->debug('Fetching user info endpoint');
-		$options = [
-			'headers' => [
-				'Authorization' => base64_encode($provider->getClientId() . ':' . $providerClientSecret),
-			],
-			'body' => [
-				'token' => $accessToken,
-			],
-		];
+
 		try {
-			return json_decode($client->post($url, $options)->getBody(), true);
+			$body = $this->clientService->post(
+				$url,
+				['token' => $accessToken],
+				[
+					'Authorization' => base64_encode($provider->getClientId() . ':' . $providerClientSecret),
+				]
+			);
+
+			return json_decode($body, true);
 		} catch (Throwable $e) {
 			return [];
 		}
