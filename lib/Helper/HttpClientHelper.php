@@ -22,7 +22,7 @@ class HttpClientHelper implements HttpClient {
 	) {
 	}
 
-	public function get($url, array $options = []) {
+	public function get($url, array $headers = [], array $options = []) {
 		$client = $this->clientService->newClient();
 
 		if ($this->config->getSystemValue('httpclient.allowselfsigned', false)) {

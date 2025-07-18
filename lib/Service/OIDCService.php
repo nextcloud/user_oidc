@@ -38,7 +38,7 @@ class OIDCService {
 			],
 		];
 		try {
-			return json_decode($this->clientService->get($url, $options), true);
+			return json_decode($this->clientService->get($url, [], $options), true);
 		} catch (Throwable $e) {
 			return [];
 		}
