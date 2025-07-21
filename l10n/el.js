@@ -47,6 +47,7 @@ OC.L10N.register(
     "Update provider" : "Ενημέρωση παρόχου",
     "Confirm deletion" : "Επιβεβαίωση διαγραφής",
     "Cancel" : "Ακύρωση",
+    "Delete" : "Διαγραφή",
     "Submit" : "Υποβολή",
     "Client configuration" : "Διαμόρφωση πελάτη",
     "Identifier (max 128 characters)" : "Αναγνωριστικό (μέγιστο 128 χαρακτήρες)",

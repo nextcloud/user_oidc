@@ -51,6 +51,7 @@ OC.L10N.register(
     "Update provider" : "Opdatér udbyder",
     "Confirm deletion" : "Bekræft sletning",
     "Cancel" : "Annuller",
+    "Delete" : "Slet",
     "Submit" : "Send",
     "Client configuration" : "Klient konfiguration",
     "Identifier (max 128 characters)" : "Identifikator (højst 128 tegn)",
