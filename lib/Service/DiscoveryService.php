@@ -96,8 +96,8 @@ class DiscoveryService {
 	public function buildAuthorizationUrl(string $authorizationEndpoint, array $extraGetParameters = []): string {
 		$parsedUrl = parse_url($authorizationEndpoint);
 
-		$urlWithoutParams =
-			(isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '')
+		$urlWithoutParams
+			= (isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '')
 			. ($parsedUrl['host'] ?? '')
 			. (isset($parsedUrl['port']) ? ':' . strval($parsedUrl['port']) : '')
 			. ($parsedUrl['path'] ?? '');

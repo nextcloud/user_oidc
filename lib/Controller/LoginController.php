@@ -120,8 +120,8 @@ class LoginController extends BaseOidcController {
 	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse {
 		return new RedirectResponse(
 			$redirectUrl === null
-			? $this->urlGenerator->getBaseUrl()
-			: preg_replace('/^https?:\/\/[^\/]+/', '', $redirectUrl)
+				? $this->urlGenerator->getBaseUrl()
+				: preg_replace('/^https?:\/\/[^\/]+/', '', $redirectUrl)
 		);
 	}
 
@@ -377,10 +377,10 @@ class LoginController extends BaseOidcController {
 			$tokenEndpointAuthMethod = 'client_secret_post';
 			// Use Basic only if client_secret_post is not available as supported by the endpoint
 			if (
-				array_key_exists('token_endpoint_auth_methods_supported', $discovery) &&
-				is_array($discovery['token_endpoint_auth_methods_supported']) &&
-				in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported']) &&
-				!in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'])
+				array_key_exists('token_endpoint_auth_methods_supported', $discovery)
+				&& is_array($discovery['token_endpoint_auth_methods_supported'])
+				&& in_array('client_secret_basic', $discovery['token_endpoint_auth_methods_supported'])
+				&& !in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'])
 			) {
 				$tokenEndpointAuthMethod = 'client_secret_basic';
 			}
