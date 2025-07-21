@@ -66,7 +66,7 @@ class Id4meController extends BaseOidcController {
 		private LoggerInterface $logger,
 		private ICrypto $crypto,
 	) {
-		parent::__construct($request, $config);
+		parent::__construct($request, $config, $l10n);
 
 		$this->id4me = new Service($clientHelper);
 	}
