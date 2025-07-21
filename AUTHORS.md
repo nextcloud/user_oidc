@@ -40,3 +40,4 @@
 - Thibault Coupin <thibault.coupin@gmail.com>
 - Tobias Wolter <towo@towo.eu>
 - Vincent Petry <vincent@nextcloud.com>
+- Elvis Yerel Roman Concha <yerel9212@yahoo.es>

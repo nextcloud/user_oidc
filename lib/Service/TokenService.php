@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\ServerException;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Model\Token;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\App\IAppManager;
@@ -20,7 +21,6 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClient;
-use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -42,7 +42,7 @@ class TokenService {
 	private IClient $client;
 
 	public function __construct(
-		IClientService $clientService,
+		public HttpClientHelper $clientService,
 		private ISession $session,
 		private IUserSession $userSession,
 		private IConfig $config,
@@ -55,7 +55,7 @@ class TokenService {
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
 	) {
-		$this->client = $clientService->newClient();
+
 	}
 
 	public function storeToken(array $tokenData): Token {
@@ -169,15 +169,13 @@ class TokenService {
 				}
 			}
 			$this->logger->debug('[TokenService] Refreshing the token: ' . $discovery['token_endpoint']);
-			$result = $this->client->post(
+			$body = $this->clientService->post(
 				$discovery['token_endpoint'],
 				[
-					'body' => [
-						'client_id' => $oidcProvider->getClientId(),
-						'client_secret' => $clientSecret,
-						'grant_type' => 'refresh_token',
-						'refresh_token' => $token->getRefreshToken(),
-					],
+					'client_id' => $oidcProvider->getClientId(),
+					'client_secret' => $clientSecret,
+					'grant_type' => 'refresh_token',
+					'refresh_token' => $token->getRefreshToken(),
 				]
 			);
 			$this->logger->debug('[TokenService] Token refresh request params', [
@@ -186,7 +184,7 @@ class TokenService {
 				'grant_type' => 'refresh_token',
 				// 'refresh_token' => $token->getRefreshToken(),
 			]);
-			$body = $result->getBody();
+
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] ---- Refresh token success');
 			return $this->storeToken(
@@ -256,23 +254,22 @@ class TokenService {
 			}
 			$this->logger->debug('[TokenService] Exchanging the token: ' . $discovery['token_endpoint']);
 			// more in https://www.keycloak.org/securing-apps/token-exchange
-			$result = $this->client->post(
+			$body = $this->clientService->post(
 				$discovery['token_endpoint'],
 				[
-					'body' => [
-						'client_id' => $oidcProvider->getClientId(),
-						'client_secret' => $clientSecret,
-						'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
-						'subject_token' => $loginToken->getAccessToken(),
-						'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
-						// can also be
-						// urn:ietf:params:oauth:token-type:access_token
-						// or urn:ietf:params:oauth:token-type:id_token
-						// this one will get us an access token and refresh token within the response
-						'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
-						'audience' => $targetAudience,
-						'scope' => $scope,
-					],
+					'client_id' => $oidcProvider->getClientId(),
+					'client_secret' => $clientSecret,
+					'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
+					'subject_token' => $loginToken->getAccessToken(),
+					'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
+					// can also be
+					// urn:ietf:params:oauth:token-type:access_token
+					// or urn:ietf:params:oauth:token-type:id_token
+					// this one will get us an access token and refresh token within the response
+					'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
+					'audience' => $targetAudience,
+					'scope' => $scope,
+					'prompt' => $this->config->getSystemValue('user_oidc.prompt', 'consent') // none,consent,login and internal for oauth2 passport server
 				]
 			);
 			$this->logger->debug('[TokenService] Token exchange request params', [
@@ -284,7 +281,7 @@ class TokenService {
 				'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
 				'audience' => $targetAudience,
 			]);
-			$body = $result->getBody();
+
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] Token exchange success: "' . trim($body) . '"');
 			$tokenData = array_merge(

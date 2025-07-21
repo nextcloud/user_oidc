@@ -10,9 +10,9 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\Provider;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
-use OCP\Http\Client\IClientService;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
@@ -39,7 +39,7 @@ class DiscoveryService {
 
 	public function __construct(
 		private LoggerInterface $logger,
-		private IClientService $clientService,
+		private HttpClientHelper $clientService,
 		private ProviderService $providerService,
 		ICacheFactory $cacheFactory,
 	) {
@@ -53,9 +53,7 @@ class DiscoveryService {
 			$url = $provider->getDiscoveryEndpoint();
 			$this->logger->debug('Obtaining discovery endpoint: ' . $url);
 
-			$client = $this->clientService->newClient();
-			$response = $client->get($url);
-			$cachedDiscovery = $response->getBody();
+			$cachedDiscovery = $this->clientService->get($url);
 
 			$this->cache->set($cacheKey, $cachedDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
 		}
@@ -77,8 +75,7 @@ class DiscoveryService {
 			$rawJwks = json_decode($rawJwks, true);
 		} else {
 			$discovery = $this->obtainDiscovery($provider);
-			$client = $this->clientService->newClient();
-			$responseBody = $client->get($discovery['jwks_uri'])->getBody();
+			$responseBody = $this->clientService->get($discovery['jwks_uri']);
 			$rawJwks = json_decode($responseBody, true);
 			// cache jwks
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, $responseBody);
@@ -99,8 +96,8 @@ class DiscoveryService {
 	public function buildAuthorizationUrl(string $authorizationEndpoint, array $extraGetParameters = []): string {
 		$parsedUrl = parse_url($authorizationEndpoint);
 
-		$urlWithoutParams =
-			(isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '')
+		$urlWithoutParams
+			= (isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] . '://' : '')
 			. ($parsedUrl['host'] ?? '')
 			. (isset($parsedUrl['port']) ? ':' . strval($parsedUrl['port']) : '')
 			. ($parsedUrl['path'] ?? '');
