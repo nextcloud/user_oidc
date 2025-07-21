@@ -88,7 +88,7 @@ class LoginController extends BaseOidcController {
 		private TokenService $tokenService,
 		private OidcService $oidcService,
 	) {
-		parent::__construct($request, $config);
+		parent::__construct($request, $config, $l10n);
 	}
 
 	/**
@@ -105,12 +105,10 @@ class LoginController extends BaseOidcController {
 	 */
 	private function buildProtocolErrorResponse(?bool $throttle = null): TemplateResponse {
 		$params = [
-			'errors' => [
-				['error' => $this->l10n->t('You must access Nextcloud with HTTPS to use OpenID Connect.')],
-			],
+			'message' => $this->l10n->t('You must access Nextcloud with HTTPS to use OpenID Connect.'),
 		];
 		$throttleMetadata = ['reason' => 'insecure connection'];
-		return $this->buildFailureTemplateResponse('', 'error', $params, Http::STATUS_NOT_FOUND, $throttleMetadata, $throttle);
+		return $this->buildFailureTemplateResponse($params, Http::STATUS_NOT_FOUND, $throttleMetadata, $throttle);
 	}
 
 	/**
