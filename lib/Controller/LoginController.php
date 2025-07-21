@@ -328,8 +328,14 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
 
-		if ($this->session->get(self::STATE) !== $state) {
-			$this->logger->debug('state does not match');
+		$storedState = $this->session->get(self::STATE);
+
+		if ($storedState !== $state) {
+			$this->logger->warning('state does not match', [
+				'got' => $state,
+				'expected' => $storedState,
+				'state_exists_in_session' => $this->session->exists(self::STATE),
+			]);
 
 			$message = $this->l10n->t('The received state does not match the expected value.');
 			if ($this->isDebugModeEnabled()) {
@@ -337,7 +343,8 @@ class LoginController extends BaseOidcController {
 					'error' => 'invalid_state',
 					'error_description' => $message,
 					'got' => $state,
-					'expected' => $this->session->get(self::STATE),
+					'expected' => $storedState,
+					'state_exists_in_session' => $this->session->exists(self::STATE),
 				];
 				return new JSONResponse($responseData, Http::STATUS_FORBIDDEN);
 			}
