@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "Пријави се са %1s",
+    "Error" : "Грешка",
+    "Access forbidden" : "Забрањен приступ",
     "ID4Me is disabled" : "ID4Me је искључен",
     "Invalid OpenID domain" : "Неисправан OpenID домен",
     "Invalid authority issuer" : "Неисправан издавач ауторитета",
@@ -105,6 +107,7 @@ OC.L10N.register(
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "Да ли би ID жетон требало да се укључи као id_token_hint GET параметар у OpenID URL адреси за одјављивање? Када се одјаве са  Nextcloud сервера, корисници се преусмеравају на ову URL адресу. Када се укључи ово подешавање, OIDC ID жетон се излаже корисничком агенту, а у зависности од пружаоца OIDC услуге, то можда није неопходно.",
     "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Тврдња групе ће да креира, ажурира и обрише само групе које задовољавају овај регуларни израз. На пример: {regex} дозвољава све групе чији ID почиње са {substr}",
     "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Ово ће да креира и ажурира припадност корисника групи у зависности од тврдње групе у ID жетону. Формат вредности за припадност групи би требало да буде {sample1}, {sample2} или {sample3}",
+    "Back to %s" : "Назад на %s",
     "Domain" : "Домен",
     "your.domain" : "ваш.домен"
 },

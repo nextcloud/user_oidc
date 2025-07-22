@@ -1,5 +1,7 @@
 { "translations": {
     "Login with %1s" : "Prihlásiť sa pomocou %1s",
+    "Error" : "Chyba",
+    "Access forbidden" : "Prístup odmietnutý",
     "ID4Me is disabled" : "ID4Me je zakázané",
     "Invalid OpenID domain" : "Neplatná OpenID doména",
     "Invalid authority issuer" : "Neplatný vydavateľ autority",
@@ -35,6 +37,7 @@
     "Leave empty to keep existing" : "Ponechajte prázdne pre zachovanie existujúceho",
     "Scope" : "Rozsah",
     "Attribute mapping" : "Mapovanie atribútov",
+    "Back to %s" : "Späť na %s",
     "Domain" : "Doména",
     "your.domain" : "vasa.domena"
 },"pluralForm" :"nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);"

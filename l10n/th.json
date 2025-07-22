@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "ข้อผิดพลาด",
+    "Access forbidden" : "ไม่ได้รับอนุญาตให้เข้าถึง",
     "Client ID" : "รหัสไคลเอ็นต์",
     "Update" : "อัปเดต",
     "Remove" : "ลบออก",
@@ -7,6 +9,7 @@
     "Submit" : "ส่ง",
     "Client secret" : "ข้อมูลลับไคลเอ็นต์",
     "Scope" : "ขอบเขต",
+    "Back to %s" : "กลับสู่ %s",
     "Domain" : "โดเมน"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

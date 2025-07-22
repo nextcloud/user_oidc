@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "Eraro",
+    "Access forbidden" : "Aliro estas malpermesata",
     "Client ID" : "Klientidentigilo",
     "Update" : "Ĝisdatigi",
     "Cancel" : "Cancel",

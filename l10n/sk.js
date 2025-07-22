@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "Prihlásiť sa pomocou %1s",
+    "Error" : "Chyba",
+    "Access forbidden" : "Prístup odmietnutý",
     "ID4Me is disabled" : "ID4Me je zakázané",
     "Invalid OpenID domain" : "Neplatná OpenID doména",
     "Invalid authority issuer" : "Neplatný vydavateľ autority",
@@ -37,6 +39,7 @@ OC.L10N.register(
     "Leave empty to keep existing" : "Ponechajte prázdne pre zachovanie existujúceho",
     "Scope" : "Rozsah",
     "Attribute mapping" : "Mapovanie atribútov",
+    "Back to %s" : "Späť na %s",
     "Domain" : "Doména",
     "your.domain" : "vasa.domena"
 },

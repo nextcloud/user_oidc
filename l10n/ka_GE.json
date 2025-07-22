@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "შეცდომა",
+    "Access forbidden" : "წვდომა აკრძალულია",
     "Client ID" : "კლიენტის ID",
     "Update" : "განახლება",
     "Cancel" : "გაუქმება",

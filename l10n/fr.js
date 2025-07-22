@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "Se connecter avec %1s",
+    "Error" : "Erreur",
+    "Access forbidden" : "Accès non autorisé",
     "ID4Me is disabled" : "ID4Me est désactivé",
     "Invalid OpenID domain" : "Domaine OpenID invalide",
     "Authority not found" : "Autorité non trouvée",
@@ -49,6 +51,7 @@ OC.L10N.register(
     "X (formerly Twitter) mapping" : "Association de X (ex-Twitter)",
     "Fediverse/Nickname mapping" : "Association du Nickname Fediverse",
     "Headline mapping" : "Association du titre",
+    "Back to %s" : "Retourner à %s",
     "Domain" : "Domaine",
     "your.domain" : "votre.domaine"
 },

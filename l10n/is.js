@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "Villa",
+    "Access forbidden" : "Aðgangur bannaður",
     "Client ID" : "Biðlaraauðkenni",
     "Update" : "Uppfæra",
     "Remove" : "Fjarlægja",
@@ -11,6 +13,7 @@ OC.L10N.register(
     "Client secret" : "Leynilykill biðlara",
     "Scope" : "Umfang",
     "Attribute mapping" : "Vörpun eiginda",
+    "Back to %s" : "Til baka í %s",
     "Domain" : "Lén"
 },
 "nplurals=2; plural=(n % 10 != 1 || n % 100 == 11);");

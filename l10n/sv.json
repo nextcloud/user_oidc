@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Fel",
+    "Access forbidden" : "Åtkomst förbjuden",
     "Client ID" : "Klient-ID",
     "Update" : "Uppdatera",
     "Remove" : "Ta bort",
@@ -9,6 +11,7 @@
     "Client secret" : "Klienthemlighet",
     "Scope" : "Sammanhang",
     "Attribute mapping" : "Attributmappning",
+    "Back to %s" : "Tillbaka till %s",
     "Domain" : "Domän"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

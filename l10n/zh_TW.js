@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "以 %1s 登入",
+    "Error" : "錯誤",
+    "Access forbidden" : "存取被拒",
     "ID4Me is disabled" : "已停用 ID4Me",
     "Invalid OpenID domain" : "無效的 OpenID 網域",
     "Invalid authority issuer" : "無效的權威發行者",
@@ -20,6 +22,7 @@ OC.L10N.register(
     "Client secret" : "客戶端密碼",
     "Scope" : "範圍",
     "Attribute mapping" : "屬性對映",
+    "Back to %s" : "返回 %s",
     "Domain" : "網域"
 },
 "nplurals=1; plural=0;");

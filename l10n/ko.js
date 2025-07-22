@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "%1s 로 로그인",
+    "Error" : "오류",
+    "Access forbidden" : "접근 금지됨",
     "ID4Me is disabled" : "ID4Me 비활성화됨",
     "Invalid OpenID domain" : "유효하지 않은 OpenID 도메인",
     "Invalid authority issuer" : "유효하지 않은 권한 발급자입니다.",
@@ -101,6 +103,7 @@ OC.L10N.register(
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "ID 토큰이 OpenID 로그아웃 URL의 id_token_hint GET parameter 에 포함되어야 합니까? 사용자는 Nextcloud 로그아웃 이후 이 URL로 리다이렉트 됩니다. 이 설정을 활성화하면 OIDC ID 토큰을 user agent에 노출시키고, OIDC 제공자에 따라서는 이것이 필요하지 않을 수 있습니다.",
     "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "화이트리스트 정규식에 일치하는 그룹만이 그룹 클레임에 의해서 생성되고, 갱신되고, 삭제됩니다. 예를들어 {regex}  은 ID가 {substr} 로 시작하는 그룹을 허용합니다.",
     "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "이것은 ID 토큰의 그룹 클레임에 따라서 사용자 그룹을 생성하고 갱신할 것입니다. 그룹 클레임의 형식은 {sample1}, {sample2} 혹은 {sample3} 이어야 합니다.",
+    "Back to %s" : "%s(으)로 돌아가기",
     "Domain" : "도메인",
     "your.domain" : "your.domain"
 },

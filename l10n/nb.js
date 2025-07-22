@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "Feil",
+    "Access forbidden" : "Tilgang nektet",
     "Client ID" : "Klient-ID",
     "Update" : "Oppdater",
     "Remove" : "Fjern",
@@ -11,6 +13,7 @@ OC.L10N.register(
     "Client secret" : "Klient-hemmelighet",
     "Scope" : "Omfang",
     "Attribute mapping" : "Attributt-binding",
+    "Back to %s" : "Tilbake til %s",
     "Domain" : "Domene"
 },
 "nplurals=2; plural=(n != 1);");

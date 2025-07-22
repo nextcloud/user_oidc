@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "Login with %1s",
+    "Error" : "Error",
+    "Access forbidden" : "Access forbidden",
     "ID4Me is disabled" : "ID4Me is disabled",
     "Invalid OpenID domain" : "Invalid OpenID domain",
     "Invalid authority issuer" : "Invalid authority issuer",

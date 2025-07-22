@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Lỗi",
+    "Access forbidden" : "Truy cập bị cấm",
     "Client ID" : "ID khách hàng",
     "Update" : "Cập nhật",
     "Remove" : "Xoá",
@@ -6,6 +8,7 @@
     "Cancel" : "Hủy bỏ",
     "Delete" : "Xóa",
     "Submit" : "Gửi",
+    "Back to %s" : "Quay lại %s",
     "Domain" : "Miền"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Virhe",
+    "Access forbidden" : "Pääsy estetty",
     "Client ID" : "Asiakas-ID",
     "Update" : "Päivitä",
     "Remove" : "Poista",
@@ -8,6 +10,7 @@
     "Submit" : "Lähetä",
     "Client secret" : "Asiakassalasana",
     "Scope" : "Näkyvyysalue",
+    "Back to %s" : "Takaisin kohtaan %s",
     "Domain" : "Domaini"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

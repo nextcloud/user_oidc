@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Error",
+    "Access forbidden" : "Access forbidden",
     "Client ID" : "Client ID",
     "Update" : "Update",
     "Remove" : "Remove",
@@ -8,6 +10,7 @@
     "Client secret" : "Client secret",
     "Scope" : "Scope",
     "Attribute mapping" : "Attribute mapping",
+    "Back to %s" : "Back to %s",
     "Domain" : "Domain"
 },"pluralForm" :"nplurals=2; plural=(n!=1);"
 }

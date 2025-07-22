@@ -1,5 +1,7 @@
 { "translations": {
     "Login with %1s" : "Pieteikties ar %1s",
+    "Error" : "Kļūda",
+    "Access forbidden" : "Piekļuve ir liegta",
     "ID4Me is disabled" : "ID4Me ir atspējota",
     "Invalid OpenID domain" : "Nederīgs OpenID domēns",
     "Client ID" : "Klienta ID",

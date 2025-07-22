@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "Σύνδεση με %1s",
+    "Error" : "Σφάλμα",
+    "Access forbidden" : "Απαγορεύεται η πρόσβαση",
     "ID4Me is disabled" : "Το ID4Me είναι απενεργοποιημένο",
     "Invalid OpenID domain" : "Μη έγκυρος τομέας OpenID",
     "Invalid authority issuer" : "Μη έγκυρος εκδότης αρχής",

@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "Gabim",
+    "Access forbidden" : "Ndalohet hyrja",
     "Client ID" : "ID klienti",
     "Update" : "Përditëso",
     "Remove" : "Hiqe",

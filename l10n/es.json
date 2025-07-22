@@ -1,5 +1,7 @@
 { "translations": {
     "Login with %1s" : "Iniciar sesión con %1s",
+    "Error" : "Error",
+    "Access forbidden" : "Acceso prohibido",
     "ID4Me is disabled" : "ID4Me está deshabilitado",
     "Invalid OpenID domain" : "Dominio OpenID inválido",
     "Invalid authority issuer" : "Emisor de autoridad inválido",

@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "Inloggen met %1s",
+    "Error" : "Fout",
+    "Access forbidden" : "Toegang verboden",
     "ID4Me is disabled" : "ID4Me is uitgeschakeld",
     "Invalid OpenID domain" : "Invalid OpenID domain",
     "Invalid authority issuer" : "Ongeldige autoriteitsuitgever",
@@ -104,6 +106,7 @@ OC.L10N.register(
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "Moet het ID-token worden opgenomen als de parameter id_token_hint GET in de OpenID-uitlog-URL? Gebruikers worden doorgestuurd naar deze URL nadat ze zich hebben afgemeld bij Nextcloud. Als deze instelling ingeschakeld is, wordt het OIDC ID-token aan de user-agent blootgesteld, wat afhankelijk van de OIDC-provider mogelijk niet nodig is.",
     "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Alleen groepen die overeenkomen met de whitelist regex worden aangemaakt, bijgewerkt en verwijderd door de groepsclaim. Bijvoorbeeld: {regex} staat alle groepen toe waarvan het ID begint met {substr}",
     "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Hierdoor worden de gebruikersgroepen gemaakt en bijgewerkt, afhankelijk van de groepsclaim in het ID-token. De opmaak van de claimwaarde van de groep moet zijn {sample1}, {sample2} of {sample3}",
+    "Back to %s" : "Terug naar %s",
     "Domain" : "Domein",
     "your.domain" : "your.domain"
 },

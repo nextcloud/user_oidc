@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "შეცდომა",
+    "Access forbidden" : "წვდომა აკრძალულია",
     "Client ID" : "კლიენტის ID",
     "Update" : "განახლება",
     "Cancel" : "გაუქმება",

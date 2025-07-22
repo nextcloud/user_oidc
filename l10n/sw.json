@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Hitilafu",
+    "Access forbidden" : "Ufukiaji umezuiliwa",
     "Client ID" : "Kitambulisho cha mteja",
     "Update" : "Sasisha",
     "Remove" : "Ondoa",
@@ -8,6 +10,7 @@
     "Submit" : "Wasilisha",
     "Client secret" : "Siri ya mteja",
     "Scope" : "Scope",
+    "Back to %s" : "Rudi kwenye %s",
     "Domain" : "Domain"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

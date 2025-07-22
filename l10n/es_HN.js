@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "Error",
+    "Access forbidden" : "Acceso prohibido",
     "Client ID" : "ID del cliente",
     "Cancel" : "Cancel",
     "Delete" : "Borrar",

@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Galat",
+    "Access forbidden" : "Akses ditolak",
     "Client ID" : "ID Klien",
     "Update" : "Perbarui",
     "Remove" : "Hapus",
@@ -6,6 +8,7 @@
     "Delete" : "Hapus",
     "Client secret" : "Rahasia klien",
     "Scope" : "Skop",
+    "Back to %s" : "Kembali ke %s",
     "Domain" : "Domain"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "Pogreška",
+    "Access forbidden" : "Pristup zabranjen",
     "Client ID" : "ID klijenta",
     "Update" : "Ažuriraj",
     "Remove" : "Ukloni",
@@ -10,6 +12,7 @@ OC.L10N.register(
     "Client secret" : "Tajni ključ klijenta",
     "Scope" : "Opseg",
     "Attribute mapping" : "Mapiranje atributa",
+    "Back to %s" : "Natrag na %s",
     "Domain" : "Domena"
 },
 "nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;");

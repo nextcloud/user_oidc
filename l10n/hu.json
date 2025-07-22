@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Hiba",
+    "Access forbidden" : "Hozzáférés megtagadva",
     "Client ID" : "Kliensazonosító",
     "Update" : "Frissítés",
     "Remove" : "Eltávolítás",
@@ -9,6 +11,7 @@
     "Client secret" : "Klienstitok",
     "Scope" : "Hatókör",
     "Attribute mapping" : "Attribútum-hozzárendelés",
+    "Back to %s" : "Vissza ide: %s",
     "Domain" : "Domain"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

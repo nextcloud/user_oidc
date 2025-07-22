@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Errorea",
+    "Access forbidden" : "Sarrera debekatuta",
     "Client ID" : "Bezeroaren IDa",
     "Update" : "Eguneratu",
     "Remove" : "Kendu",
@@ -9,6 +11,7 @@
     "Client secret" : "Bezeroaren sekretua",
     "Scope" : "Esparrua",
     "Attribute mapping" : "Atributu-esleitzea",
+    "Back to %s" : "Itzuli %s(e)ra",
     "Domain" : "Domeinua"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

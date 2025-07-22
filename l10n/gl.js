@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "Acceder con %1s",
+    "Error" : "Erro",
+    "Access forbidden" : "Acceso denegado",
     "ID4Me is disabled" : "ID4Me está desactivado",
     "Invalid OpenID domain" : "O dominio OpenID non é válido",
     "Invalid authority issuer" : "A autoridade emisora non é válida",
@@ -19,6 +21,7 @@ OC.L10N.register(
     "Client secret" : "Segredo do cliente",
     "Scope" : "Ámbito",
     "Attribute mapping" : "Asignación de atributos",
+    "Back to %s" : "Volver a %s",
     "Domain" : "Dominio"
 },
 "nplurals=2; plural=(n != 1);");

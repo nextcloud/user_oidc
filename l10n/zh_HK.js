@@ -2,6 +2,8 @@ OC.L10N.register(
     "user_oidc",
     {
     "Login with %1s" : "以 %1s 登入",
+    "Error" : "錯誤",
+    "Access forbidden" : "存取被拒",
     "ID4Me is disabled" : "已停用 ID4Me",
     "Invalid OpenID domain" : "無效的 OpenID 網域",
     "Invalid authority issuer" : "無效的權威發行者",
@@ -105,6 +107,7 @@ OC.L10N.register(
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "應該將 ID 權杖作為 id_token_hint GET 參數包含在 OpenID 登出 URL 中嗎？用戶在登出 Nextcloud 後將被重定向到此 URL。啟用此設置會將 OIDC ID 權杖暴露給用戶代理，這在某些 OIDC 提供者中可能不是必需的。",
     "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "只有符合白名單正則表達式的群組才會被創建、更新或刪除。例如: {regex} 允許所有 ID 以 {substr} 開頭的群組",
     "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "這將根據 ID 權杖中的群組聲明創建和更新用戶的群組。群組聲明值的格式應為 {sample1} 或 {sample2} 或 {sample3}",
+    "Back to %s" : "返回 %s",
     "Domain" : "網域名稱",
     "your.domain" : "your.domain"
 },

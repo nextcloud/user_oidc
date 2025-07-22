@@ -1,6 +1,8 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "错误",
+    "Access forbidden" : "访问被禁止",
     "Client ID" : "客户端 ID",
     "Update" : "更新",
     "Remove" : "移除",
@@ -11,6 +13,7 @@ OC.L10N.register(
     "Client secret" : "客户端 secret",
     "Scope" : "适用范围",
     "Attribute mapping" : "属性映射",
+    "Back to %s" : "返回 %s",
     "Domain" : "域名"
 },
 "nplurals=1; plural=0;");

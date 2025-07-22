@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "خاتالىق",
+    "Access forbidden" : "زىيارەت قىلىش چەكلەنگەن",
     "Client ID" : "Client ID",
     "Update" : "يېڭىلاش",
     "Remove" : "ئۆچۈرۈڭ",
@@ -9,6 +11,7 @@
     "Client secret" : "Client secret",
     "Scope" : "دائىرىسى",
     "Attribute mapping" : "خەرىتە سىزىش",
+    "Back to %s" : "% S گە قايتىش",
     "Domain" : "Domain"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

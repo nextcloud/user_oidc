@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "Errore",
+    "Access forbidden" : "Atzessu proibidu",
     "Client ID" : "ID cliente",
     "Update" : "Agiorna",
     "Remove" : "Boga",
@@ -8,6 +10,7 @@
     "Client secret" : "Segretu de su cliente",
     "Scope" : "Àmbitu",
     "Attribute mapping" : "Assòtziu de is atributos",
+    "Back to %s" : "Torra a %s",
     "Domain" : "Domìniu"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

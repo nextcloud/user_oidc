@@ -1,4 +1,6 @@
 { "translations": {
+    "Error" : "שגיאה",
+    "Access forbidden" : "הגישה נחסמה",
     "Client ID" : "מזהה לקו",
     "Update" : "עדכון",
     "Remove" : "הסרה",
@@ -8,6 +10,7 @@
     "Client secret" : "סוד לקוח",
     "Scope" : "היקף",
     "Attribute mapping" : "מיפוי מאפיינים",
+    "Back to %s" : "חזרה אל %s",
     "Domain" : "שם תחום"
 },"pluralForm" :"nplurals=3; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;"
 }
