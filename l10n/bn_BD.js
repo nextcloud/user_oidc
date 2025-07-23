@@ -1,0 +1,11 @@
+OC.L10N.register(
+    "user_oidc",
+    {
+    "Error" : "সমস্যা",
+    "Access forbidden" : "অধিগমনের অনুমতি নেই",
+    "Client ID" : "ক্লায়েন্ট পরিচিতি",
+    "Update" : "পরিবর্ধন",
+    "Cancel" : "বাতিল করুন",
+    "Delete" : "মুছে"
+},
+"nplurals=2; plural=(n != 1);");

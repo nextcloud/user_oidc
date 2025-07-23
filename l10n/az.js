@@ -1,6 +1,7 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Error" : "Səhv",
     "Client ID" : "Müştəri İD-s",
     "Update" : "Yenilənmə",
     "Cancel" : "Cancel",

@@ -1,0 +1,10 @@
+{ "translations": {
+    "Access forbidden" : "Toegang verbode",
+    "Client ID" : "Klant-ID",
+    "Update" : "Werk by",
+    "Cancel" : "Cancel",
+    "Delete" : "Skrap",
+    "Submit" : "Dien in",
+    "Back to %s" : "Terug na %s"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

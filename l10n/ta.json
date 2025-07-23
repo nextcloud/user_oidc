@@ -1,0 +1,9 @@
+{ "translations": {
+    "Error" : "வழு",
+    "Access forbidden" : "அணுக தடை",
+    "Update" : "இற்றைப்படுத்தல்",
+    "Remove" : "அகற்றுக",
+    "Cancel" : "ரத்து செய்",
+    "Delete" : "நீக்குக"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

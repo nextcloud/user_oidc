@@ -103,6 +103,7 @@ OC.L10N.register(
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "¿Debería el token de ID incluirse como el parámetro id_token_hint GET en el URL de cierre de sesión OpenID?. Los usuarios son redirigidos a esta URL luego de cerrar sesión en Nextcloud. Habilitar esta opción expone el token ID OIDC al agente de usuario, que podría no ser necesario dependiendo del proveedor OIDC.",
     "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Solo los grupos que coincidan con la expresión regular en la lista blanca de grupos, serán creados, actualizados y eliminados por el claim de grupos. Por ejemplo: {regex} permite a todos los grupos cuyo ID comienza con {substr} ",
     "This will create and update the users groups depending on the groups claim in the ID token. The Format of the groups claim value should be {sample1}, {sample2} or {sample3}" : "Esto creará y actualizará los grupos de usuarios dependiendo del claim de grupos en el token de ID. El formato del claim de grupos debe ser {sample1}, {sample2} ó {sample3}",
+    "Back to %s" : "Volver a %s",
     "Domain" : "Dominio",
     "your.domain" : "su.dominio"
 },

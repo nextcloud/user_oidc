@@ -88,6 +88,7 @@
     "Send ID token hint on logout" : "Αποστολή ID token hint κατά την αποσύνδεση",
     "Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider." : "Θα πρέπει το ID token να συμπεριληφθεί ως παράμετρος GET id_token_hint στο URL αποσύνδεσης OpenID; Οι χρήστες ανακατευθύνονται σε αυτό το URL μετά την αποσύνδεση από το Nextcloud. Η ενεργοποίηση αυτής της ρύθμισης εκθέτει το OIDC ID token στον user agent, κάτι που μπορεί να μην είναι απαραίτητο ανάλογα με τον πάροχο OIDC.",
     "Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}" : "Μόνο οι ομάδες που ταιριάζουν με το regex της λευκής λίστας θα δημιουργηθούν, ενημερωθούν και διαγραφούν από την αξίωση ομάδων. Για παράδειγμα: {regex} επιτρέπει όλες τις ομάδες των οποίων το ID ξεκινά με {substr}",
+    "Back to %s" : "Πίσω στο %s",
     "Domain" : "Τομέας",
     "your.domain" : "your.domain"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"

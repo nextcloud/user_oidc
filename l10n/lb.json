@@ -1,0 +1,9 @@
+{ "translations": {
+    "Error" : "Fehler",
+    "Access forbidden" : "Zougrëff net erlaabt",
+    "Client ID" : "Client ID",
+    "Update" : "Update",
+    "Cancel" : "Cancel",
+    "Delete" : "Läschen"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}

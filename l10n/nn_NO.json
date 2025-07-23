@@ -1,0 +1,9 @@
+{ "translations": {
+    "Error" : "Feil",
+    "Access forbidden" : "Tilgang forbudt",
+    "Client ID" : "Klient-ID",
+    "Update" : "Oppdater",
+    "Cancel" : "Cancel",
+    "Delete" : "Slett"
+},"pluralForm" :"nplurals=2; plural=(n != 1);"
+}
