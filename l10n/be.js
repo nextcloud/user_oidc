@@ -2,6 +2,7 @@ OC.L10N.register(
     "user_oidc",
     {
     "Error" : "Памылка",
+    "Access forbidden" : "Доступ забаронены",
     "Confirm deletion" : "Пацвердзіць выдаленне",
     "Cancel" : "Скасаваць",
     "Delete" : "Выдаліць",
