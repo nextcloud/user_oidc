@@ -8,6 +8,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 7.3.0 – 2025-07-25
+
+### Added
+
+- Call userinfo on login to enrich the login ID token @julien-nc [#1041](https://github.com/nextcloud/user_oidc/pull/1041)
+- feat(settings): ask for a confirmation before deleting a provider @julien-nc [#1144](https://github.com/nextcloud/user_oidc/pull/1144)
+- Allow nested claim mapping for groups @andreblanke [#1149](https://github.com/nextcloud/user_oidc/pull/1149)
+- Optionally allow self-signed SSL verification and support for oidc prompt @elyerr [#1151](https://github.com/nextcloud/user_oidc/pull/1151)
+
+### Changed
+
+- chore(tests): Cleanup bootstrap.php to be forward-compatible @come-nc [#1122](https://github.com/nextcloud/user_oidc/pull/1122)
+- Use Psalm 6.7 @julien-nc [#1131](https://github.com/nextcloud/user_oidc/pull/1131)
+- Improve the NC error page when the IdP auth fails @julien-nc [#1138](https://github.com/nextcloud/user_oidc/pull/1138)
+- Migrate to vue 3, nc/vue 9, stick with webpack @julien-nc [#1141](https://github.com/nextcloud/user_oidc/pull/1141)
+- Use outlined icons @julien-nc [#1146](https://github.com/nextcloud/user_oidc/pull/1146)
+- Add warning log with more data when there is a code state mismatch @julien-nc [#1157](https://github.com/nextcloud/user_oidc/pull/1157)
+- Use custom error/403 template that includes a 'back to nextcloud' button @julien-nc [#1156](https://github.com/nextcloud/user_oidc/pull/1156)
+- Add debug logs including the session ID when setting and getting the login token @julien-nc [#1134](https://github.com/nextcloud/user_oidc/pull/1134)
+- Add debug logs when getting the JWKs @julien-nc [#1135](https://github.com/nextcloud/user_oidc/pull/1135)
+
+### Fixed
+
+- fix(gss): set the gss session data in the controller rather than in the service @julien-nc [#1123](https://github.com/nextcloud/user_oidc/pull/1123)
+- In single-logout, if the provider is not found and we are in SSO mode, use the one and only provider to make sure we logout in the IdP and avoid being immediately logged in NC again @julien-nc [#1155](https://github.com/nextcloud/user_oidc/pull/1155)
+
 ## 7.2.0 – 2025-04-24
 
 ### Added
