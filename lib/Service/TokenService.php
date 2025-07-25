@@ -61,7 +61,7 @@ class TokenService {
 	public function storeToken(array $tokenData): Token {
 		$token = new Token($tokenData);
 		$this->session->set(self::SESSION_TOKEN_KEY, json_encode($token, JSON_THROW_ON_ERROR));
-		$this->logger->debug('[TokenService] Store token');
+		$this->logger->debug('[TokenService] Store token in the session', ['session_id' => $this->session->getId()]);
 		return $token;
 	}
 
@@ -75,6 +75,7 @@ class TokenService {
 	 */
 	public function getToken(bool $refreshIfExpired = true): ?Token {
 		$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
+		$this->logger->debug('[TokenService] Get token from the session', ['session_id' => $this->session->getId()]);
 		if (!$sessionData) {
 			$this->logger->debug('[TokenService] getToken: no session data');
 			return null;
@@ -226,6 +227,7 @@ class TokenService {
 				0,
 			);
 		}
+		$this->logger->debug('[TokenService] Starting token exchange');
 
 		$loginToken = $this->getToken();
 		if ($loginToken === null) {
