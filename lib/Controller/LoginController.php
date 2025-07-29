@@ -651,7 +651,6 @@ class LoginController extends BaseOidcController {
 	public function singleLogoutService() {
 		// TODO throttle in all failing cases
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
 		if (!isset($oidcSystemConfig['single_logout']) || $oidcSystemConfig['single_logout']) {
 			$isFromGS = ($this->config->getSystemValueBool('gs.enabled', false)
 				&& $this->config->getSystemValueString('gss.mode', '') === 'master');
@@ -692,6 +691,7 @@ class LoginController extends BaseOidcController {
 				$endSessionEndpoint = $customEndSessionEndpoint ?: $defaultEndSessionEndpoint;
 
 				if ($endSessionEndpoint) {
+					$targetUrl = $provider->getPostLogoutUri() ?: $this->urlGenerator->getAbsoluteURL('/');
 					$endSessionEndpoint .= '?post_logout_redirect_uri=' . $targetUrl;
 					$endSessionEndpoint .= '&client_id=' . $provider->getClientId();
 					$shouldSendIdToken = $this->providerService->getSetting(
