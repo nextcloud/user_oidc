@@ -41,6 +41,12 @@ class TokenService {
 
 	private IClient $client;
 
+	/**
+	 * user_oidc config
+	 * @var 
+	 */
+	private $oidcSystemConfig;
+
 	public function __construct(
 		public HttpClientHelper $clientService,
 		private ISession $session,
@@ -55,7 +61,7 @@ class TokenService {
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
 	) {
-
+		$this->oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 	}
 
 	public function storeToken(array $tokenData): Token {
@@ -107,7 +113,7 @@ class TokenService {
 	 * @throws PreConditionNotMetException
 	 */
 	public function checkLoginToken(): void {
-		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = in_array($this->oidcSystemConfig['store_login_token'], ['1', 1, true]);
 		if (!$storeLoginTokenEnabled) {
 			return;
 		}
@@ -220,7 +226,7 @@ class TokenService {
 	 * @throws \JsonException
 	 */
 	public function getExchangedToken(string $targetAudience, array $extraScopes = []): Token {
-		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = in_array($this->oidcSystemConfig['store_login_token'], ['1', 1, true]);
 		if (!$storeLoginTokenEnabled) {
 			throw new TokenExchangeFailedException(
 				'Failed to exchange token, storing the login token is disabled. It can be enabled in config.php',
