@@ -21,6 +21,7 @@ use OCP\Util;
 
 class AdminSettings implements ISettings {
 
+	private $oidcSystemConfig;
 	public function __construct(
 		private ProviderService $providerService,
 		private ID4MeService $Id4MeService,
@@ -28,6 +29,7 @@ class AdminSettings implements ISettings {
 		private IConfig $config,
 		private IInitialState $initialStateService,
 	) {
+		$this->oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 	}
 
 	public function getForm() {
@@ -37,7 +39,7 @@ class AdminSettings implements ISettings {
 		);
 		$this->initialStateService->provideInitialState(
 			'storeLoginTokenState',
-			$this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1'
+			in_array($this->oidcSystemConfig['store_login_token'], ['1', 1, true])
 		);
 		$this->initialStateService->provideInitialState(
 			'providers',

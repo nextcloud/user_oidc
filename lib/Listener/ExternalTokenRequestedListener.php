@@ -23,12 +23,19 @@ use Psr\Log\LoggerInterface;
  */
 class ExternalTokenRequestedListener implements IEventListener {
 
+	/**
+	 * User oidc config
+	 * @var 
+	 */
+	private $oidcSystemConfig;
+
 	public function __construct(
 		private IUserSession $userSession,
 		private TokenService $tokenService,
 		private IConfig $config,
 		private LoggerInterface $logger,
 	) {
+		$this->oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 	}
 
 	public function handle(Event $event): void {
@@ -42,7 +49,7 @@ class ExternalTokenRequestedListener implements IEventListener {
 
 		$this->logger->debug('[ExternalTokenRequestedListener] received request');
 
-		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = in_array($this->oidcSystemConfig['store_login_token'], ['1', 1, true]);
 		if (!$storeLoginTokenEnabled) {
 			throw new GetExternalTokenFailedException('Failed to get external token, login token is not stored', 0);
 		}
