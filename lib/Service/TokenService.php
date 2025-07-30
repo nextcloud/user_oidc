@@ -141,7 +141,12 @@ class TokenService {
 			return;
 		}
 		$scope = $sessionAuthToken->getScopeAsArray();
-		if (!isset($scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION]) || $scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION] === false) {
+		if (defined(IToken::class . '::SCOPE_SKIP_PASSWORD_VALIDATION')
+			&& (
+				!isset($scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION])
+					|| $scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION] === false
+			)
+		) {
 			$this->logger->debug('[TokenService] checkLoginToken: most likely not using user_oidc, the session auth token does not have the "skip pwd validation" scope');
 			return;
 		}
