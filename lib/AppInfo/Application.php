@@ -10,7 +10,6 @@ namespace OCA\UserOIDC\AppInfo;
 
 use Exception;
 use OC_App;
-use OC_User;
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Event\ExchangedTokenRequestedEvent;
@@ -53,11 +52,8 @@ class Application extends App implements IBootstrap {
 
 		/* Register our own user backend */
 		$this->backend = $this->getContainer()->get(Backend::class);
-		// this was done before but OC_User::useBackend calls OC::$server->getUserManager()->registerBackend anyway
-		// so the backend was registered twice, leading to wrong user count (double)
-		// $userManager->registerBackend($this->backend);
-		// TODO check if it can be replaced by $userManager->registerBackend($this->backend); in our case
-		OC_User::useBackend($this->backend);
+		// see https://docs.nextcloud.com/server/latest/developer_manual/app_publishing_maintenance/app_upgrade_guide/upgrade_to_32.html#id3
+		$userManager->registerBackend($this->backend);
 
 		$context->registerEventListener(LoadAdditionalScriptsEvent::class, TimezoneHandlingListener::class);
 		$context->registerEventListener(ExchangedTokenRequestedEvent::class, ExchangedTokenRequestedListener::class);
