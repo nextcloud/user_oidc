@@ -28,6 +28,7 @@
     "OpenID Connect user backend" : "OpenID Connect gebruikersbackend",
     "Use an OpenID Connect backend to login to your Nextcloud" : "OpenID Connect-backend gebruiken om in te loggen op jouw Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Maakt flexibele configuratie van een OIDC-server mogelijk als Nextcloud gebruikerslogin-backend.",
+    "Are you sure you want to delete the provider \"{providerName}\"?" : "Weet je zeker dat je de provider \"{providerName}\" wilt verwijderen?",
     "Could not save ID4me state: {msg}" : "Kon ID4me-status niet opslaan: {msg}",
     "Could not save storeLoginToken state: {msg}" : "Kon storeLoginToken-status niet opslaan: {msg}",
     "Could not update the provider:" : "Kon de provider niet bijwerken:",
