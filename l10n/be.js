@@ -3,6 +3,8 @@ OC.L10N.register(
     {
     "Error" : "Памылка",
     "Access forbidden" : "Доступ забаронены",
+    "Update" : "Абнавіць",
+    "Remove" : "Выдаліць",
     "Confirm deletion" : "Пацвердзіць выдаленне",
     "Cancel" : "Скасаваць",
     "Delete" : "Выдаліць",
