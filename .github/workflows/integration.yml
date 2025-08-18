@@ -101,7 +101,10 @@ jobs:
 
       - name: Set up PHPUnit
         working-directory: apps/${{ env.APP_NAME }}
-        run: composer i
+        # remove psalm because it requires php >= 8.2 and we want to test with 8.1
+        run: |
+          composer uninstall --dev psalm/phar
+          composer i
 
       - name: Set up Nextcloud
         run: |
