@@ -272,7 +272,7 @@ class LoginController extends BaseOidcController {
 			'nonce' => $nonce,
 		];
 
-		if ($oidcConfig['prompt']) {
+		if (isset($oidcConfig['prompt']) && is_string($oidcConfig['prompt'])) {
 			$data['prompt'] = $oidcConfig['prompt'];
 		}
 

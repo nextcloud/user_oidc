@@ -269,9 +269,10 @@ class TokenService {
 				'audience' => $targetAudience,
 				'scope' => $scope,
 			];
-			if ($this->config->getSystemValue('user_oidc.prompt') !== '') {
+			$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+			if (isset($oidcConfig['prompt']) && is_string($oidcConfig['prompt'])) {
 				// none, consent, login and internal for oauth2 passport server
-				$tokenEndpointParams['prompt'] = $this->config->getSystemValue('user_oidc.prompt');
+				$tokenEndpointParams['prompt'] = $oidcConfig['prompt'];
 			}
 			// more in https://www.keycloak.org/securing-apps/token-exchange
 			$body = $this->clientService->post(
