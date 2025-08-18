@@ -21,32 +21,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-versions: ['8.0', '8.1', '8.2']
+        php-versions: ['8.1', '8.2', '8.3']
         databases: ['mysql']
         server-versions: ['stable29', 'stable30', 'stable31', 'master']
-        exclude:
-          - php-versions: 8.0
-            server-versions: master
-          - php-versions: 8.0
-            server-versions: stable31
-          - php-versions: 8.0
-            server-versions: stable30
         include:
-          - php-versions: 8.3
-            databases: mysql
-            server-versions: stable29
-          - php-versions: 8.3
-            databases: mysql
-            server-versions: stable30
-          - php-versions: 8.3
-            databases: mysql
-            server-versions: stable31
           - php-versions: 8.4
             databases: mysql
             server-versions: stable31
-          - php-versions: 8.3
-            databases: mysql
-            server-versions: master
           - php-versions: 8.4
             databases: mysql
             server-versions: master
@@ -100,7 +81,10 @@ jobs:
 
       - name: Set up PHPUnit
         working-directory: apps/${{ env.APP_NAME }}
-        run: composer i
+        # remove psalm because it requires php >= 8.2 and we want to test with 8.1
+        run: |
+          composer uninstall --dev psalm/phar
+          composer i
 
       - name: Set up Nextcloud
         run: |

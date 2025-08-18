@@ -236,11 +236,15 @@ class ProviderServiceTest extends TestCase {
 	public function testDeleteSettings() {
 		$supportedConfigs = self::invokePrivate($this->providerService, 'getSupportedSettings');
 		$keysToDelete = [...$supportedConfigs, ProviderService::SETTING_JWKS_CACHE, ProviderService::SETTING_JWKS_CACHE_TIMESTAMP];
+		$realKeysToDelete = array_map(function ($setting) {
+			return 'provider-1-' . $setting;
+		}, $keysToDelete);
 		$this->config->expects(self::exactly(count($keysToDelete)))
 			->method('deleteAppValue')
-			->withConsecutive(...array_map(function ($setting) {
-				return [Application::APP_ID, 'provider-1-' . $setting];
-			}, $keysToDelete));
+			->willReturnCallback(function ($appName, $key) use ($realKeysToDelete) {
+				$this->assertEquals(Application::APP_ID, $appName);
+				$this->assertContains($key, $realKeysToDelete);
+			});
 
 		$this->providerService->deleteSettings(1);
 	}
