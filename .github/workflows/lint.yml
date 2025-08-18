@@ -52,7 +52,7 @@ jobs:
     - name: Install dependencies
       # remove psalm because it requires php >= 8.2 and we want to test with 8.0
       run: |
-        composer uninstall --dev psalm/phar
+        composer uninstall --dev psalm/phar phpunit/phpunit
         composer i
 
     - name: Run coding standards check
