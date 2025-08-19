@@ -270,9 +270,11 @@ class LoginController extends BaseOidcController {
 			'claims' => json_encode($claims),
 			'state' => $state,
 			'nonce' => $nonce,
-			'prompt' => $oidcConfig['prompt'] ?? 'consent'
 		];
 
+		if (isset($oidcConfig['prompt']) && is_string($oidcConfig['prompt'])) {
+			$data['prompt'] = $oidcConfig['prompt'];
+		}
 
 		if ($isPkceEnabled) {
 			$data['code_challenge'] = $this->toCodeChallenge($code_verifier);

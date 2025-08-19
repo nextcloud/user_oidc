@@ -255,24 +255,29 @@ class TokenService {
 				}
 			}
 			$this->logger->debug('[TokenService] Exchanging the token: ' . $discovery['token_endpoint']);
+			$tokenEndpointParams = [
+				'client_id' => $oidcProvider->getClientId(),
+				'client_secret' => $clientSecret,
+				'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
+				'subject_token' => $loginToken->getAccessToken(),
+				'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
+				// can also be
+				// urn:ietf:params:oauth:token-type:access_token
+				// or urn:ietf:params:oauth:token-type:id_token
+				// this one will get us an access token and refresh token within the response
+				'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
+				'audience' => $targetAudience,
+				'scope' => $scope,
+			];
+			$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+			if (isset($oidcConfig['prompt']) && is_string($oidcConfig['prompt'])) {
+				// none, consent, login and internal for oauth2 passport server
+				$tokenEndpointParams['prompt'] = $oidcConfig['prompt'];
+			}
 			// more in https://www.keycloak.org/securing-apps/token-exchange
 			$body = $this->clientService->post(
 				$discovery['token_endpoint'],
-				[
-					'client_id' => $oidcProvider->getClientId(),
-					'client_secret' => $clientSecret,
-					'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
-					'subject_token' => $loginToken->getAccessToken(),
-					'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
-					// can also be
-					// urn:ietf:params:oauth:token-type:access_token
-					// or urn:ietf:params:oauth:token-type:id_token
-					// this one will get us an access token and refresh token within the response
-					'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
-					'audience' => $targetAudience,
-					'scope' => $scope,
-					'prompt' => $this->config->getSystemValue('user_oidc.prompt', 'consent') // none,consent,login and internal for oauth2 passport server
-				]
+				$tokenEndpointParams,
 			);
 			$this->logger->debug('[TokenService] Token exchange request params', [
 				'client_id' => $oidcProvider->getClientId(),
