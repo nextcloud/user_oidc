@@ -19,6 +19,7 @@ use OCA\UserOIDC\Listener\ExchangedTokenRequestedListener;
 use OCA\UserOIDC\Listener\ExternalTokenRequestedListener;
 use OCA\UserOIDC\Listener\InternalTokenRequestedListener;
 use OCA\UserOIDC\Listener\TimezoneHandlingListener;
+use OCA\UserOIDC\Listener\TokenInvalidatedListener;
 use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\Service\TokenService;
@@ -59,6 +60,10 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(ExchangedTokenRequestedEvent::class, ExchangedTokenRequestedListener::class);
 		$context->registerEventListener(ExternalTokenRequestedEvent::class, ExternalTokenRequestedListener::class);
 		$context->registerEventListener(InternalTokenRequestedEvent::class, InternalTokenRequestedListener::class);
+
+		if (class_exists(\OCP\Authentication\Events\TokenInvalidatedEvent::class)) {
+			$context->registerEventListener(\OCP\Authentication\Events\TokenInvalidatedEvent::class, TokenInvalidatedListener::class);
+		}
 	}
 
 	public function boot(IBootContext $context): void {
