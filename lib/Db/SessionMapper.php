@@ -28,8 +28,9 @@ class SessionMapper extends QBMapper {
 	/**
 	 * @param int $id
 	 * @return Session
-	 * @throws \OCP\AppFramework\Db\DoesNotExistException
-	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 * @throws DoesNotExistException
+	 * @throws Exception
+	 * @throws MultipleObjectsReturnedException
 	 */
 	public function getSession(int $id): Session {
 		$qb = $this->db->getQueryBuilder();
@@ -100,9 +101,32 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
+	 * @param int $authTokenId
+	 * @param string $userId
+	 * @return Session
+	 * @throws DoesNotExistException
+	 * @throws Exception
+	 * @throws MultipleObjectsReturnedException
+	 */
+	public function getSessionByAuthTokenAndUid(int $authTokenId, string $userId): Session {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName())
+			->where(
+				$qb->expr()->eq('authtoken_id', $qb->createNamedParameter($authTokenId, IQueryBuilder::PARAM_INT))
+			)
+			->andWhere(
+				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId, IQueryBuilder::PARAM_STR))
+			);
+
+		return $this->findEntity($qb);
+	}
+
+	/**
 	 * @param string $ncSessionId
 	 * @return int
-	 * @throws \OCP\DB\Exception
+	 * @throws Exception
 	 */
 	public function deleteFromNcSessionId(string $ncSessionId): int {
 		$qb = $this->db->getQueryBuilder();
@@ -116,7 +140,7 @@ class SessionMapper extends QBMapper {
 
 	/**
 	 * @param int $minCreationTimestamp
-	 * @throws \OCP\DB\Exception
+	 * @throws Exception
 	 */
 	public function cleanupSessions(int $minCreationTimestamp): void {
 		$qb = $this->db->getQueryBuilder();
@@ -136,9 +160,17 @@ class SessionMapper extends QBMapper {
 	 * @param string $iss
 	 * @param int $authtokenId
 	 * @param string $ncSessionid
-	 * @return mixed|Session|\OCP\AppFramework\Db\Entity
+	 * @param string $idToken
+	 * @param string $userId
+	 * @param int $providerId
+	 * @param bool $idpSessionClosed
+	 * @return Session|null
+	 * @throws Exception
 	 */
-	public function createSession(string $sid, string $sub, string $iss, int $authtokenId, string $ncSessionid) {
+	public function createSession(
+		string $sid, string $sub, string $iss, int $authtokenId, string $ncSessionid,
+		string $idToken, string $userId, int $providerId, bool $idpSessionClosed = false,
+	): ?Session {
 		try {
 			// do not create if one with same sid already exists (which should not happen)
 			return $this->findSessionBySid($sid);
@@ -157,6 +189,10 @@ class SessionMapper extends QBMapper {
 		$session->setAuthtokenId($authtokenId);
 		$session->setNcSessionId($ncSessionid);
 		$session->setCreatedAt($createdAt);
+		$session->setIdToken($idToken);
+		$session->setUserId($userId);
+		$session->setProviderId($providerId);
+		$session->setIdpSessionClosed($idpSessionClosed ? 1 : 0);
 		return $this->insert($session);
 	}
 }
