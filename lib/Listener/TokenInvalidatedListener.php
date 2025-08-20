@@ -100,7 +100,7 @@ class TokenInvalidatedListener implements IEventListener {
 
 		$this->logger->warning('[TokenInvalidatedListener] requesting ' . $endSessionEndpoint);
 		try {
-			$this->httpClientHelper->get($endSessionEndpoint);
+			$this->httpClientHelper->get($endSessionEndpoint, [], ['timeout' => 5]);
 		} catch (ClientException|ServerException $e) {
 			$response = $e->getResponse();
 			$body = (string)$response->getBody();
@@ -112,5 +112,7 @@ class TokenInvalidatedListener implements IEventListener {
 		} catch (\Exception $e) {
 			$this->logger->debug('[TokenInvalidatedListener] Failed to request the end_session_endpoint', ['exception' => $e]);
 		}
+		// we know this oidc session is not useful anymore, we can delete it
+		$this->sessionMapper->delete($oidcSession);
 	}
 }
