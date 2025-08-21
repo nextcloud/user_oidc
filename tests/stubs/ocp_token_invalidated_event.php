@@ -7,7 +7,6 @@
 
 namespace OCP\Authentication\Events {
 	interface TokenInvalidatedEvent extends \OCP\EventDispatcher\Event {
-		public function getUserId(): string;
-		public function getTokenId(): int;
+		public function getToken(): \OCP\Authentication\Token\IToken;
 	}
 }
