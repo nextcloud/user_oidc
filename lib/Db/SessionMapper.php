@@ -16,12 +16,16 @@ use OCP\DB\Exception;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 
 use OCP\IDBConnection;
+use OCP\Security\ICrypto;
 
 /**
  * @extends QBMapper<Session>
  */
 class SessionMapper extends QBMapper {
-	public function __construct(IDBConnection $db) {
+	public function __construct(
+		IDBConnection $db,
+		private ICrypto $crypto,
+	) {
 		parent::__construct($db, 'user_oidc_sessions', Session::class);
 	}
 
@@ -189,7 +193,7 @@ class SessionMapper extends QBMapper {
 		$session->setAuthtokenId($authtokenId);
 		$session->setNcSessionId($ncSessionid);
 		$session->setCreatedAt($createdAt);
-		$session->setIdToken($idToken);
+		$session->setIdToken($this->crypto->encrypt($idToken));
 		$session->setUserId($userId);
 		$session->setProviderId($providerId);
 		$session->setIdpSessionClosed($idpSessionClosed ? 1 : 0);

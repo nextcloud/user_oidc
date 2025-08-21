@@ -20,6 +20,7 @@ use OCP\DB\Exception;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IURLGenerator;
+use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -34,6 +35,7 @@ class TokenInvalidatedListener implements IEventListener {
 		private DiscoveryService $discoveryService,
 		private IURLGenerator $urlGenerator,
 		private HttpClientHelper $httpClientHelper,
+		private ICrypto $crypto,
 	) {
 	}
 
@@ -98,9 +100,15 @@ class TokenInvalidatedListener implements IEventListener {
 			return;
 		}
 
+		try {
+			$decryptedIdToken = $this->crypto->decrypt($oidcSession->getIdToken());
+		} catch (\Exception $e) {
+			$this->logger->warning('[TokenInvalidatedListener] Could not decrpyt the login id token of a session related with an invalidated token', ['exception' => $e]);
+			return;
+		}
 		$endSessionEndpoint .= '?post_logout_redirect_uri=' . $this->urlGenerator->getAbsoluteURL('/');
 		$endSessionEndpoint .= '&client_id=' . $provider->getClientId();
-		$endSessionEndpoint .= '&id_token_hint=' . $oidcSession->getIdToken();
+		$endSessionEndpoint .= '&id_token_hint=' . $decryptedIdToken;
 
 		$this->logger->warning('[TokenInvalidatedListener] requesting ' . $endSessionEndpoint);
 		try {
