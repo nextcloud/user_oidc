@@ -42,17 +42,21 @@ class TokenInvalidatedListener implements IEventListener {
 			return;
 		}
 
+		$eventToken = $event->getToken();
+		$eventTokenId = $eventToken->getId();
+		$eventTokenUserId = $eventToken->getUID();
+
 		$this->logger->debug('[TokenInvalidatedListener] received event', [
-			'token_id' => $event->getTokenId(),
-			'user_id' => $event->getUserId(),
+			'token_id' => $eventTokenId,
+			'user_id' => $eventTokenUserId,
 		]);
 
 		try {
-			$oidcSession = $this->sessionMapper->getSessionByAuthTokenAndUid($event->getTokenId(), $event->getUserId());
+			$oidcSession = $this->sessionMapper->getSessionByAuthTokenAndUid($eventTokenId, $eventTokenUserId);
 		} catch (Exception|DoesNotExistException|MultipleObjectsReturnedException $e) {
 			$this->logger->warning('[TokenInvalidatedListener] Could not find the OIDC session related with an invalidated token', [
-				'token_id' => $event->getTokenId(),
-				'user_id' => $event->getUserId(),
+				'token_id' => $eventTokenId,
+				'user_id' => $eventTokenUserId,
 				'exception' => $e,
 			]);
 			return;
@@ -60,8 +64,8 @@ class TokenInvalidatedListener implements IEventListener {
 		// we have nothing to do if we know the idp session is already closed
 		if ($oidcSession->getIdpSessionClosed() !== 0) {
 			$this->logger->warning('[TokenInvalidatedListener] The session is already closed on the IdP side', [
-				'token_id' => $event->getTokenId(),
-				'user_id' => $event->getUserId(),
+				'token_id' => $eventTokenId,
+				'user_id' => $eventTokenUserId,
 			]);
 			return;
 		}
@@ -71,8 +75,8 @@ class TokenInvalidatedListener implements IEventListener {
 			$provider = $this->providerMapper->getProvider($oidcSession->getProviderId());
 		} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
 			$this->logger->warning('[TokenInvalidatedListener] Could not find the OIDC provider of a session related with an invalidated token', [
-				'token_id' => $event->getTokenId(),
-				'user_id' => $event->getUserId(),
+				'token_id' => $eventTokenId,
+				'user_id' => $eventTokenUserId,
 				'provider_id' => $oidcSession->getProviderId(),
 				'exception' => $e,
 			]);
@@ -87,8 +91,8 @@ class TokenInvalidatedListener implements IEventListener {
 
 		if ($endSessionEndpoint === null || $endSessionEndpoint === '') {
 			$this->logger->warning('[TokenInvalidatedListener] Could not find the end_session_endpoint of the OIDC provider of a session related with an invalidated token', [
-				'token_id' => $event->getTokenId(),
-				'user_id' => $event->getUserId(),
+				'token_id' => $eventTokenId,
+				'user_id' => $eventTokenUserId,
 				'provider_id' => $oidcSession->getProviderId(),
 			]);
 			return;
