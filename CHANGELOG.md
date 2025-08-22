@@ -8,6 +8,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 7.3.2 – 2025-08-22
+
+### Changed
+
+- Update dependencies, adjust GH actions, adjust tests to phpunit 10 @julien-nc [#1177](https://github.com/nextcloud/user_oidc/pull/1177)
+- Use OCP InvalidTokenException instead of the OC one @julien-nc [#1179](https://github.com/nextcloud/user_oidc/pull/1179)
+- Replace deprecated OC_User::useBackend with OCP\IUserManager::registerBackend @julien-nc [#1168](https://github.com/nextcloud/user_oidc/pull/1168)
+
+### Fixed
+
+- Only use the prompt param for the authorization and token endpoints if defined in NC config, drop 'consent' as the default @julien-nc [#1176](https://github.com/nextcloud/user_oidc/pull/1176)
+
 ## 7.3.1 – 2025-08-07
 
 ### Fixed
