@@ -12,6 +12,7 @@ use DateTime;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\Exception;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 
 use OCP\IDBConnection;
@@ -43,14 +44,40 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
-	 * Find session by sid (from the OIDC id token)
+	 * Find sessions by sub and iss
+	 *
+	 * @param string $sub
+	 * @param string $iss
+	 * @return Session[]
+	 * @throws Exception
+	 */
+	public function findSessionsBySubAndIss(string $sub, string $iss): array {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->select('*')
+			->from($this->getTableName())
+			->where(
+				$qb->expr()->eq('sub', $qb->createNamedParameter($sub, IQueryBuilder::PARAM_STR))
+			)
+			->andWhere(
+				$qb->expr()->eq('iss', $qb->createNamedParameter($iss, IQueryBuilder::PARAM_STR))
+			);
+
+		return $this->findEntities($qb);
+	}
+
+	/**
+	 * Find session by sid and optionally sub and iss
 	 *
 	 * @param string $sid
+	 * @param string|null $sub
+	 * @param string|null $iss
 	 * @return Session
-	 * @throws \OCP\AppFramework\Db\DoesNotExistException
-	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 * @throws DoesNotExistException
+	 * @throws Exception
+	 * @throws MultipleObjectsReturnedException
 	 */
-	public function findSessionBySid(string $sid): Session {
+	public function findSessionBySid(string $sid, ?string $sub = null, ?string $iss = null): Session {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
@@ -58,6 +85,16 @@ class SessionMapper extends QBMapper {
 			->where(
 				$qb->expr()->eq('sid', $qb->createNamedParameter($sid, IQueryBuilder::PARAM_STR))
 			);
+		if ($sub !== null) {
+			$qb->andWhere(
+				$qb->expr()->eq('sub', $qb->createNamedParameter($sub, IQueryBuilder::PARAM_STR))
+			);
+		}
+		if ($iss !== null) {
+			$qb->andWhere(
+				$qb->expr()->eq('iss', $qb->createNamedParameter($iss, IQueryBuilder::PARAM_STR))
+			);
+		}
 
 		return $this->findEntity($qb);
 	}
