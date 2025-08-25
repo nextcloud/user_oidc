@@ -615,7 +615,10 @@ class LoginController extends BaseOidcController {
 				$idTokenPayload->sub ?? 'fallback-sub',
 				$idTokenPayload->iss ?? 'fallback-iss',
 				$authToken->getId(),
-				$this->session->getId()
+				$this->session->getId(),
+				$idTokenRaw,
+				$user->getUID(),
+				$providerId,
 			);
 		} catch (InvalidTokenException $e) {
 			$this->logger->debug('Auth token not found after login');
@@ -687,7 +690,7 @@ class LoginController extends BaseOidcController {
 					return $this->buildErrorTemplateResponse($message, Http::STATUS_NOT_FOUND, ['provider_id' => $providerId]);
 				}
 
-				// Check if a custom end_session_endpoint is deposited otherwise use the default one provided by the openid-configuration
+				// Check if a custom end_session_endpoint is set in the provider otherwise use the default one provided by the openid-configuration
 				$discoveryData = $this->discoveryService->obtainDiscovery($provider);
 				$defaultEndSessionEndpoint = $discoveryData['end_session_endpoint'] ?? null;
 				$customEndSessionEndpoint = $provider->getEndSessionEndpoint();
@@ -842,8 +845,12 @@ class LoginController extends BaseOidcController {
 		}
 
 		foreach ($oidcSessionsToKill as $oidcSession) {
-			// i don't know why but the cast is necessary
-			$authTokenId = (int)$oidcSession->getAuthtokenId();
+			// we know the IdP session is closed
+			// we need this to prevent requesting the end_session_endpoint when we catch the TokenInvalidatedEvent
+			$oidcSession->setIdpSessionClosed(1);
+			$this->sessionMapper->update($oidcSession);
+
+			$authTokenId = $oidcSession->getAuthtokenId();
 			try {
 				$authToken = $this->authTokenProvider->getTokenById($authTokenId);
 				// we could also get the auth token by nc session ID
