@@ -24,7 +24,7 @@ OC.L10N.register(
     "Failed to contact the OIDC provider token endpoint" : "Није успело контактирање крајње тачке жетона пружаоца OIDC услуге",
     "The issuer does not match the one from the discovery endpoint" : "Издавач није исти као онај који је добијен из крајње тачке за откривање",
     "Failed to provision the user" : "Није успело снабдевање корисника",
-    "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Немате права да се пријавите на ову инстанцу. Ако мислите да је ово грешка, молимо вас да се обратите администратору.",
+    "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Немате права да се пријавите на ову инстанцу. Ако мислите да је у питању грешка, молимо вас да се обратите администратору сервера.",
     "User conflict" : "Конфликт корисника",
     "OpenID Connect" : "OpenID Connect",
     "OpenID Connect user backend" : "OpenID Connect кориснички позадински механизам",
