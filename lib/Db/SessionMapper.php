@@ -157,13 +157,19 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
-	 * Create a session
+	 * Create or update a Nextcloud Oidc session
+	 *
+	 * We have a unique constraint on the "sid" column because there cannot be multiple Nextcloud Oidc sessions for the same IdP session (sid)
+	 * So if we log in with an IdP session that was already used in a previous Nextcloud Oidc session, we can safely assume
+	 * the related real Nextcloud session does not exist anymore. So we update the row for this "sid".
+	 *
+	 * In short: If there are multiple Nextcloud logins using the same IdP session, we only store the last one
 	 *
 	 * @param string $sid
 	 * @param string $sub
 	 * @param string $iss
 	 * @param int $authtokenId
-	 * @param string $ncSessionid
+	 * @param string $ncSessionId
 	 * @param string $idToken
 	 * @param string $userId
 	 * @param int $providerId
@@ -171,27 +177,37 @@ class SessionMapper extends QBMapper {
 	 * @return Session|null
 	 * @throws Exception
 	 */
-	public function createSession(
-		string $sid, string $sub, string $iss, int $authtokenId, string $ncSessionid,
+	public function createOrUpdateSession(
+		string $sid, string $sub, string $iss, int $authtokenId, string $ncSessionId,
 		string $idToken, string $userId, int $providerId, bool $idpSessionClosed = false,
 	): ?Session {
+		$createdAt = (new DateTime())->getTimestamp();
+
 		try {
 			// do not create if one with same sid already exists (which should not happen)
-			return $this->findSessionBySid($sid);
+			$existingSession = $this->findSessionBySid($sid);
+			$existingSession->setSub($sub);
+			$existingSession->setIss($iss);
+			$existingSession->setAuthtokenId($authtokenId);
+			$existingSession->setNcSessionId($ncSessionId);
+			$existingSession->setCreatedAt($createdAt);
+			$existingSession->setIdToken($this->crypto->encrypt($idToken));
+			$existingSession->setUserId($userId);
+			$existingSession->setProviderId($providerId);
+			$existingSession->setIdpSessionClosed($idpSessionClosed ? 1 : 0);
+			return $this->update($existingSession);
 		} catch (MultipleObjectsReturnedException $e) {
 			// this can't happen
 			return null;
 		} catch (DoesNotExistException $e) {
 		}
 
-		$createdAt = (new DateTime())->getTimestamp();
-
 		$session = new Session();
 		$session->setSid($sid);
 		$session->setSub($sub);
 		$session->setIss($iss);
 		$session->setAuthtokenId($authtokenId);
-		$session->setNcSessionId($ncSessionid);
+		$session->setNcSessionId($ncSessionId);
 		$session->setCreatedAt($createdAt);
 		$session->setIdToken($this->crypto->encrypt($idToken));
 		$session->setUserId($userId);

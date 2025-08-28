@@ -610,7 +610,7 @@ class LoginController extends BaseOidcController {
 		// for backchannel logout
 		try {
 			$authToken = $this->authTokenProvider->getToken($this->session->getId());
-			$this->sessionMapper->createSession(
+			$this->sessionMapper->createOrUpdateSession(
 				$idTokenPayload->sid ?? 'fallback-sid',
 				$idTokenPayload->sub ?? 'fallback-sub',
 				$idTokenPayload->iss ?? 'fallback-iss',
