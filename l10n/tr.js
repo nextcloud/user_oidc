@@ -94,7 +94,7 @@ OC.L10N.register(
     "Use unique user ID" : "Benzersiz kullanıcı kimliği kullanılsın",
     "By default every user will get a unique user ID that is a hashed value of the provider and user ID. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then." : "Varsayılan olarak her kullanıcı, hizmet sağlayıcının ve kullanıcı kimliğinin karma değeri olan benzersiz bir kullanıcı kimliği alır. Bu seçenek kapatılabilir, ancak birden fazla kullanıcı arka yüzündeki ve hizmet sağlayıcıdaki kullanıcıların benzersizliği artık sağlanamayabilir.",
     "Use provider identifier as prefix for IDs" : "Kimlik ön eki olarak hizmet sağlayıcı tanımlayıcısı kullanılsın",
-    "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "Kimliklerin düz metin olarak tutulması ve aynı zamanda birden fazla hizmet sağlayıcıda benzersizliğinin korunması için kimliklere ön ek olarak hizmet sağlayıcı tanımlayıcısı eklenir.",
+    "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "Kimliklerin düz yazı olarak tutulması ve aynı zamanda birden fazla hizmet sağlayıcıda benzersizliğinin korunması için kimliklere ön ek olarak hizmet sağlayıcı tanımlayıcısı eklenir.",
     "Use group provisioning." : "Grup hazırlama kullanılsın",
     "Group whitelist regex" : "Grup izin verilenler listesi kurallı ifadesi",
     "Restrict login for users that are not in any whitelisted group" : "İzin verilenler listesine alınmış herhangi bir grupta olmayan kullanıcıların oturum açması engellensin",
