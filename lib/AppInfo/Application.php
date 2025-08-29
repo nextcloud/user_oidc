@@ -53,8 +53,14 @@ class Application extends App implements IBootstrap {
 
 		/* Register our own user backend */
 		$this->backend = $this->getContainer()->get(Backend::class);
-		// see https://docs.nextcloud.com/server/latest/developer_manual/app_publishing_maintenance/app_upgrade_guide/upgrade_to_32.html#id3
-		$userManager->registerBackend($this->backend);
+
+		$config = $this->getContainer()->get(IConfig::class);
+		if (version_compare($config->getSystemValueString('version', '0.0.0'), '32.0.0', '>=')) {
+			// see https://docs.nextcloud.com/server/latest/developer_manual/app_publishing_maintenance/app_upgrade_guide/upgrade_to_32.html#id3
+			$userManager->registerBackend($this->backend);
+		} else {
+			\OC_User::useBackend($this->backend);
+		}
 
 		$context->registerEventListener(LoadAdditionalScriptsEvent::class, TimezoneHandlingListener::class);
 		$context->registerEventListener(ExchangedTokenRequestedEvent::class, ExchangedTokenRequestedListener::class);
