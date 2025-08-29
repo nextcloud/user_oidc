@@ -277,23 +277,23 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								$this->userManager->search($tokenUserId);
 								$this->ldapService->syncUser($tokenUserId);
 							}
-							$userFromOtherBackend = $this->userManager->get($tokenUserId);
-							if ($userFromOtherBackend !== null && $this->ldapService->isLdapDeletedUser($userFromOtherBackend)) {
-								$userFromOtherBackend = null;
+							$existingUser = $this->userManager->get($tokenUserId);
+							if ($existingUser !== null && $this->ldapService->isLdapDeletedUser($existingUser)) {
+								$existingUser = null;
 							}
 
 							$softAutoProvisionAllowed = (!isset($oidcSystemConfig['soft_auto_provision']) || $oidcSystemConfig['soft_auto_provision']);
-							if (!$softAutoProvisionAllowed && $userFromOtherBackend !== null) {
+							if (!$softAutoProvisionAllowed && $existingUser !== null && $existingUser->getBackendClassName() !== Application::APP_ID) {
 								// if soft auto-provisioning is disabled,
 								// we refuse login for a user that already exists in another backend
 								return '';
 							}
-							if ($userFromOtherBackend === null) {
+							if ($existingUser === null) {
 								// only create the user in our backend if the user does not exist in another backend
 								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId);
 								$userId = $backendUser->getUserId();
 							} else {
-								$userId = $userFromOtherBackend->getUID();
+								$userId = $existingUser->getUID();
 							}
 
 							$this->checkFirstLogin($userId);
@@ -301,7 +301,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_BEARER_PROVISIONING, '0') === '1') {
 								$provisioningStrategy = $validator->getProvisioningStrategy();
 								if ($provisioningStrategy) {
-									$this->provisionUser($validator->getProvisioningStrategy(), $provider, $tokenUserId, $headerToken, $userFromOtherBackend);
+									$this->provisionUser($validator->getProvisioningStrategy(), $provider, $tokenUserId, $headerToken, $existingUser);
 								}
 							}
 
@@ -384,14 +384,14 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @param Provider $provider
 	 * @param string $tokenUserId
 	 * @param string $headerToken
-	 * @param IUser|null $userFromOtherBackend
+	 * @param IUser|null $existingUser
 	 * @return IUser|null
 	 */
 	private function provisionUser(
 		string $provisioningStrategyClass, Provider $provider, string $tokenUserId, string $headerToken,
-		?IUser $userFromOtherBackend,
+		?IUser $existingUser,
 	): ?IUser {
 		$provisioningStrategy = \OC::$server->get($provisioningStrategyClass);
-		return $provisioningStrategy->provisionUser($provider, $tokenUserId, $headerToken, $userFromOtherBackend);
+		return $provisioningStrategy->provisionUser($provider, $tokenUserId, $headerToken, $existingUser);
 	}
 }
