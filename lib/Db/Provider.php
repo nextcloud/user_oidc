@@ -11,17 +11,17 @@ namespace OCA\UserOIDC\Db;
 use OCP\AppFramework\Db\Entity;
 
 /**
- * @method string getIdentifier()
- * @method void setIdentifier(string $identifier)
- * @method string getClientId()
- * @method void setClientId(string $clientId)
- * @method string getClientSecret()
- * @method void setClientSecret(string $clientSecret)
- * @method string getDiscoveryEndpoint()
- * @method void setDiscoveryEndpoint(string $discoveryEndpoint)
- * @method string getEndSessionEndpoint()
- * @method void setEndSessionEndpoint(string $endSessionEndpoint)
- * @method void setScope(string $scope)
+ * @method \string getIdentifier()
+ * @method \void setIdentifier(string $identifier)
+ * @method \string getClientId()
+ * @method \void setClientId(string $clientId)
+ * @method \string getClientSecret()
+ * @method \void setClientSecret(string $clientSecret)
+ * @method \string|\null getDiscoveryEndpoint()
+ * @method \void setDiscoveryEndpoint(?string $discoveryEndpoint)
+ * @method \string|\null getEndSessionEndpoint()
+ * @method \void setEndSessionEndpoint(?string $endSessionEndpoint)
+ * @method \void setScope(string $scope)
  */
 class Provider extends Entity implements \JsonSerializable {
 
@@ -34,10 +34,10 @@ class Provider extends Entity implements \JsonSerializable {
 	/** @var string */
 	protected $clientSecret;
 
-	/** @var string */
+	/** @var ?string */
 	protected $discoveryEndpoint;
 
-	/** @var string */
+	/** @var ?string */
 	protected $endSessionEndpoint;
 
 	/** @var string */

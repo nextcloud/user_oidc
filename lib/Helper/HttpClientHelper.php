@@ -27,8 +27,10 @@ class HttpClientHelper implements HttpClient {
 
 		$client = $this->clientService->newClient();
 
-		if (isset($oidcConfig['httpclient.allowselfsigned'])
-			&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
+		$debugModeEnabled = $this->config->getSystemValueBool('debug', false);
+		if ($debugModeEnabled
+			|| (isset($oidcConfig['httpclient.allowselfsigned'])
+				&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true))) {
 			$options['verify'] = false;
 		}
 
