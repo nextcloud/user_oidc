@@ -8,6 +8,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 7.4.0 – 2025-09-01
+
+### Added
+
+- React to a user session being revoked, end the IdP session @julien-nc [#1181](https://github.com/nextcloud/user_oidc/pull/1181)
+
+### Changed
+
+- Only check oidc login token if logged in via user_oidc @julien-nc [#1162](https://github.com/nextcloud/user_oidc/pull/1162)
+
+### Fixed
+
+- fix(backchannel-logout): handle those logout token cases: sid, sid+sub, sub. If only sub is set: kill all sessions for this sub @julien-nc [#1184](https://github.com/nextcloud/user_oidc/pull/1184)
+- fix(bearer-validation): fix mistake in soft auto provisioning logic, same as #1170 @julien-nc [#1192](https://github.com/nextcloud/user_oidc/pull/1192)
+- fix(backend-registration): use OC_User::useBackend before 32 @julien-nc [#1193](https://github.com/nextcloud/user_oidc/pull/1193)
+
 ## 7.3.2 – 2025-08-22
 
 ### Changed
