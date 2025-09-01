@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\ServerException;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
+use OCA\UserOIDC\Exception\TokenRefreshLockedException;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Model\Token;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
@@ -38,6 +39,7 @@ use Psr\Log\LoggerInterface;
 class TokenService {
 
 	private const SESSION_TOKEN_KEY = Application::APP_ID . '-user-token';
+	private const REFRESH_LOCK_KEY = Application::APP_ID . '-refresh-lock';
 
 	private IClient $client;
 
@@ -122,7 +124,12 @@ class TokenService {
 			return;
 		}
 
-		$token = $this->getToken();
+		try {
+			$token = $this->getToken();
+		} catch (TokenRefreshLockedException) {
+			$this->logger->debug('[TokenService] checkLoginToken: the token refresh is locked by another process');
+			return;
+		}
 		if ($token === null) {
 			$this->logger->debug('[TokenService] checkLoginToken: token is null');
 			// if we don't have a token but we had one once,
@@ -152,11 +159,20 @@ class TokenService {
 	/**
 	 * @param Token $token
 	 * @return Token
-	 * @throws \JsonException
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
+	 * @throws TokenRefreshLockedException
+	 * @throws \JsonException
 	 */
 	public function refresh(Token $token): Token {
+		// check lock
+		$sessionLocked = $this->session->get(self::REFRESH_LOCK_KEY);
+		if ($sessionLocked !== null) {
+			throw new TokenRefreshLockedException();
+		}
+		// acquire lock
+		$this->session->set(self::REFRESH_LOCK_KEY, 1);
+
 		$oidcProvider = $this->providerMapper->getProvider($token->getProviderId());
 		$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
 
@@ -188,13 +204,16 @@ class TokenService {
 
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] ---- Refresh token success');
-			return $this->storeToken(
+			$refreshedToken = $this->storeToken(
 				array_merge(
 					$bodyArray,
 					['provider_id' => $token->getProviderId()],
 				)
 			);
+			$this->session->remove(self::REFRESH_LOCK_KEY);
+			return $refreshedToken;
 		} catch (\Exception $e) {
+			$this->session->remove(self::REFRESH_LOCK_KEY);
 			$this->logger->error('[TokenService] Failed to refresh token ', ['exception' => $e]);
 			// Failed to refresh, return old token which will be retried or otherwise timeout if expired
 			return $token;
@@ -229,7 +248,12 @@ class TokenService {
 		}
 		$this->logger->debug('[TokenService] Starting token exchange');
 
-		$loginToken = $this->getToken();
+		try {
+			$loginToken = $this->getToken();
+		} catch (TokenRefreshLockedException $e) {
+			$this->logger->error('[TokenService] Failed to exchange token. The login token refresh failed because it was locked');
+			throw new TokenExchangeFailedException('Failed to exchange token. The login token refresh failed because it was locked', 0, $e);
+		}
 		if ($loginToken === null) {
 			$this->logger->debug('[TokenService] Failed to exchange token, no login token found in the session');
 			throw new TokenExchangeFailedException('Failed to exchange token, no login token found in the session');
