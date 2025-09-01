@@ -44,6 +44,8 @@ class ProviderService {
 	public const SETTING_MAPPING_BIOGRAPHY = 'mappingBiography';
 	public const SETTING_MAPPING_PHONE = 'mappingPhonenumber';
 	public const SETTING_MAPPING_GENDER = 'mappingGender';
+	public const SETTING_MAPPING_PRONOUNS = 'mappingPronouns';
+	public const SETTING_MAPPING_BIRTHDATE = 'mappingBirthdate';
 	public const SETTING_EXTRA_CLAIMS = 'extraClaims';
 	public const SETTING_JWKS_CACHE = 'jwksCache';
 	public const SETTING_JWKS_CACHE_TIMESTAMP = 'jwksCacheTimestamp';
@@ -161,6 +163,8 @@ class ProviderService {
 			self::SETTING_MAPPING_BIOGRAPHY,
 			self::SETTING_MAPPING_PHONE,
 			self::SETTING_MAPPING_GENDER,
+			self::SETTING_MAPPING_PRONOUNS,
+			self::SETTING_MAPPING_BIRTHDATE,
 			self::SETTING_UNIQUE_UID,
 			self::SETTING_CHECK_BEARER,
 			self::SETTING_SEND_ID_TOKEN_HINT,

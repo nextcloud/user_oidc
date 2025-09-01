@@ -189,6 +189,12 @@ class ProvisioningService {
 		$biographyAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography');
 		$biography = $this->getClaimValue($idTokenPayload, $biographyAttribute, $providerId);//$idTokenPayload->{$biographyAttribute} ?? null;
 
+		$pronounsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns');
+		$pronouns = $idTokenPayload->{$pronounsAttribute} ?? null;
+
+		$birthdateAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate');
+		$birthdate = $idTokenPayload->{$birthdateAttribute} ?? null;
+
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $tokenUserId);
 		$this->eventDispatcher->dispatchTyped($event);
 
@@ -297,14 +303,6 @@ class ProvisioningService {
 			}
 		}
 
-		// Update the phone number
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_PHONE, $idTokenPayload, $phone);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Phone mapping event dispatched');
-		if ($event->hasValue()) {
-			$account->setProperty('phone', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_PHONE] ?? $fallbackScope, '1', '');
-		}
-
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_LANGUAGE, $idTokenPayload, $language);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Language mapping event dispatched');
@@ -350,75 +348,12 @@ class ProvisioningService {
 			$address = str_replace('  ', ' ', implode(', ', $addressParts));
 		}
 
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ADDRESS, $idTokenPayload, $address);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Address mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('address', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_ADDRESS] ?? $fallbackScope, '1', '');
-		}
-
-		// Update the website
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_WEBSITE, $idTokenPayload, $website);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Website mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('website', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_WEBSITE] ?? $fallbackScope, '1', '');
-		}
-
 		// Update the avatar
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_AVATAR, $idTokenPayload, $avatar);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Avatar mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
 			$this->setUserAvatar($user->getUID(), $event->getValue());
-		}
-
-		// Update twitter/X
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_TWITTER, $idTokenPayload, $twitter);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Twitter mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('twitter', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_TWITTER] ?? $fallbackScope, '1', '');
-		}
-
-		// Update fediverse
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_FEDIVERSE, $idTokenPayload, $fediverse);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Fediverse mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('fediverse', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_FEDIVERSE] ?? $fallbackScope, '1', '');
-		}
-
-		// Update the organisation
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ORGANISATION, $idTokenPayload, $organisation);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Organisation mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('organisation', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_ORGANISATION] ?? $fallbackScope, '1', '');
-		}
-
-		// Update role
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ROLE, $idTokenPayload, $role);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Role mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('role', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_ROLE] ?? $fallbackScope, '1', '');
-		}
-
-		// Update the headline
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_HEADLINE, $idTokenPayload, $headline);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Headline mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('headline', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_HEADLINE] ?? $fallbackScope, '1', '');
-		}
-
-		// Update the biography
-		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_BIOGRAPHY, $idTokenPayload, $biography);
-		$this->eventDispatcher->dispatchTyped($event);
-		$this->logger->debug('Biography mapping event dispatched');
-		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('biography', $event->getValue(), $defaultScopes[IAccountManager::PROPERTY_BIOGRAPHY] ?? $fallbackScope, '1', '');
 		}
 
 		// Update the gender
@@ -429,6 +364,34 @@ class ProvisioningService {
 		$this->logger->debug('Gender mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
 			$account->setProperty('gender', $event->getValue(), $fallbackScope, '1', '');
+		}
+
+		$simpleAccountPropertyAttributes = [
+			IAccountManager::PROPERTY_PHONE => ['value' => $phone, 'setting_key' => ProviderService::SETTING_MAPPING_PHONE],
+			IAccountManager::PROPERTY_ADDRESS => ['value' => $address, 'setting_key' => ProviderService::SETTING_MAPPING_PHONE],
+			IAccountManager::PROPERTY_WEBSITE => ['value' => $website, 'setting_key' => ProviderService::SETTING_MAPPING_WEBSITE],
+			IAccountManager::PROPERTY_TWITTER => ['value' => $twitter, 'setting_key' => ProviderService::SETTING_MAPPING_TWITTER],
+			IAccountManager::PROPERTY_FEDIVERSE => ['value' => $fediverse, 'setting_key' => ProviderService::SETTING_MAPPING_FEDIVERSE],
+			IAccountManager::PROPERTY_ORGANISATION => ['value' => $organisation, 'setting_key' => ProviderService::SETTING_MAPPING_ORGANISATION],
+			IAccountManager::PROPERTY_ROLE => ['value' => $role, 'setting_key' => ProviderService::SETTING_MAPPING_ROLE],
+			IAccountManager::PROPERTY_HEADLINE => ['value' => $headline, 'setting_key' => ProviderService::SETTING_MAPPING_HEADLINE],
+			IAccountManager::PROPERTY_BIOGRAPHY => ['value' => $biography, 'setting_key' => ProviderService::SETTING_MAPPING_BIOGRAPHY],
+		];
+		// properties that appeared after 28 (our min supported NC version)
+		if (defined(IAccountManager::class . '::PROPERTY_PRONOUNS')) {
+			$simpleAccountPropertyAttributes[IAccountManager::PROPERTY_PRONOUNS] = ['value' => $pronouns, 'setting_key' => ProviderService::SETTING_MAPPING_PRONOUNS];
+		}
+		if (defined(IAccountManager::class . '::PROPERTY_BIRTHDATE')) {
+			$simpleAccountPropertyAttributes[IAccountManager::PROPERTY_BIRTHDATE] = ['value' => $birthdate, 'setting_key' => ProviderService::SETTING_MAPPING_BIRTHDATE];
+		}
+
+		foreach ($simpleAccountPropertyAttributes as $property => $values) {
+			$event = new AttributeMappedEvent($values['setting_key'], $idTokenPayload, $values['value']);
+			$this->eventDispatcher->dispatchTyped($event);
+			$this->logger->debug($property . ' mapping event dispatched');
+			if ($event->hasValue()) {
+				$account->setProperty($property, $event->getValue(), $defaultScopes[$property] ?? $fallbackScope, '1', '');
+			}
 		}
 
 		while (true) {
