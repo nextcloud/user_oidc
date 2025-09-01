@@ -53,6 +53,15 @@
 				placeholder="(Optional)">
 		</p>
 		<p>
+			<label for="oidc-post-logout-uri">{{ t('user_oidc', 'Post logout URI') }}</label>
+			<input id="oidc-post-logout-uri"
+				v-model="localProvider.postLogoutUri"
+				class="italic-placeholder"
+				type="text"
+				maxlength="255"
+				placeholder="(Optional)">
+		</p>
+		<p>
 			<label for="oidc-scope">{{ t('user_oidc', 'Scope') }}</label>
 			<input id="oidc-scope"
 				v-model="localProvider.scope"
