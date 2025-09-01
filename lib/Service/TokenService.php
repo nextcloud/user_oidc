@@ -10,6 +10,7 @@ namespace OCA\UserOIDC\Service;
 
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
+use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
@@ -19,6 +20,10 @@ use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+use OCP\Authentication\Exceptions\ExpiredTokenException;
+use OCP\Authentication\Exceptions\InvalidTokenException;
+use OCP\Authentication\Exceptions\WipeTokenException;
+use OCP\Authentication\Token\IToken;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClient;
 use OCP\IConfig;
@@ -28,6 +33,7 @@ use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\PreConditionNotMetException;
 use OCP\Security\ICrypto;
+use OCP\Session\Exceptions\SessionNotAvailableException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,6 +51,7 @@ class TokenService {
 		public HttpClientHelper $clientService,
 		private ISession $session,
 		private IUserSession $userSession,
+		private IProvider $tokenProvider,
 		private IConfig $config,
 		private LoggerInterface $logger,
 		private ICrypto $crypto,
@@ -111,6 +118,7 @@ class TokenService {
 		if (!$storeLoginTokenEnabled) {
 			return;
 		}
+		$this->logger->debug('[TokenService] checkLoginToken: store_login_token is enabled');
 
 		$currentUser = $this->userSession->getUser();
 		if (!$this->userSession->isLoggedIn() || $currentUser === null) {
@@ -122,6 +130,27 @@ class TokenService {
 			return;
 		}
 
+		// Do not check the OIDC login token when not logged in via user_oidc (app password or direct login for example)
+		// Inspired from https://github.com/nextcloud/server/pull/43942/files#diff-c5cef03f925f97933ff9b3eb10217d21ef6516342e5628762756f1ba0469ac84R81-R92
+		try {
+			$sessionId = $this->session->getId();
+			$sessionAuthToken = $this->tokenProvider->getToken($sessionId);
+		} catch (SessionNotAvailableException|InvalidTokenException|WipeTokenException|ExpiredTokenException $e) {
+			// States we do not deal with here.
+			$this->logger->debug('[TokenService] checkLoginToken: error getting the session auth token', ['exception' => $e]);
+			return;
+		}
+		$scope = $sessionAuthToken->getScopeAsArray();
+		if (defined(IToken::class . '::SCOPE_SKIP_PASSWORD_VALIDATION')
+			&& (
+				!isset($scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION])
+					|| $scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION] === false
+			)
+		) {
+			$this->logger->debug('[TokenService] checkLoginToken: most likely not using user_oidc, the session auth token does not have the "skip pwd validation" scope');
+			return;
+		}
+
 		$token = $this->getToken();
 		if ($token === null) {
 			$this->logger->debug('[TokenService] checkLoginToken: token is null');
@@ -130,11 +159,14 @@ class TokenService {
 			// so we need to reauthenticate
 			$this->logger->debug('[TokenService] checkLoginToken: token is null and user had_token_once -> logout');
 			$this->userSession->logout();
+			return;
 		} elseif ($token->isExpired()) {
 			$this->logger->debug('[TokenService] checkLoginToken: token is still expired -> reauthenticate');
 			// if the token is not valid, it means we couldn't refresh it so we need to reauthenticate to get a fresh token
 			$this->reauthenticate($token->getProviderId());
+			return;
 		}
+		$this->logger->debug('[TokenService] checkLoginToken: all good');
 	}
 
 	public function reauthenticate(int $providerId) {
