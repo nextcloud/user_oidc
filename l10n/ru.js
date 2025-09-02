@@ -3,6 +3,7 @@ OC.L10N.register(
     {
     "Error" : "Ошибка",
     "Access forbidden" : "Доступ запрещён",
+    "User conflict" : "Конфликт пользователей",
     "Client ID" : "ID клиента",
     "Update" : "Обновление",
     "Remove" : "Исключить",
