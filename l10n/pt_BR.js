@@ -73,6 +73,8 @@ OC.L10N.register(
     "Groups mapping" : "Mapeamento de grupos",
     "Extra attributes mapping" : "Mapeamento de atributos extras",
     "Display name mapping" : "Mapeamento de nome de exibição",
+    "Birth date mapping" : "Mapeamento de data de nascimento",
+    "Pronouns mapping" : "Mapeamento de pronomes",
     "Gender mapping" : "Mapeamento de gênero",
     "Email mapping" : "Mapeamento de e-mail",
     "Phone mapping" : "Mapeamento de telefone",

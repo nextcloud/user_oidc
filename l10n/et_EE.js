@@ -40,6 +40,8 @@ OC.L10N.register(
     "Client secret" : "Kliendi salasõna",
     "Leave empty to keep existing" : "Olemasoleva säilitamiseks jäta tühjaks",
     "Scope" : "Kehtivusala",
+    "Birth date mapping" : "Sünnikuupäevade vastendamine",
+    "Pronouns mapping" : "Asesõnade vastendamine",
     "X (formerly Twitter) mapping" : "X-i (varasemalt Twitter) vastendus",
     "Use unique user ID" : "Kasuta unikaalset kasutajatunnust",
     "Back to %s" : "Tagasi siia: %s",
