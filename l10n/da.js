@@ -92,7 +92,7 @@ OC.L10N.register(
     "Use unique user ID" : "Brug unikt Bruger ID",
     "By default every user will get a unique user ID that is a hashed value of the provider and user ID. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then." : "Som standard vil hver bruger få en unik Bruger ID, der er en hashed værdi af udbyderen og Bruger ID. Dette kan slukkes, men unikke af brugerne på tværs af flere bruger backends og udbydere er ikke længere bevaret dengang.",
     "Use provider identifier as prefix for IDs" : "Brug udbyderens id som præfiks for ID'er",
-    "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "For at holde ID'er i almindelig tekst, men også bevare unikke af dem på tværs af flere udbydere, et præfiks med udbyderne navn tilføjes.",
+    "To keep IDs in plain text, but also preserve uniqueness of them across multiple providers, a prefix with the providers name is added." : "For at holde ID'er i almindelig tekst, men også bevare unikke af dem på tværs af flere udbydere, et præfiks med udbyderens navn tilføjes.",
     "Use group provisioning." : "Brug gruppereservation.",
     "Group whitelist regex" : "Gruppe whitelisted regex",
     "Restrict login for users that are not in any whitelisted group" : "Begræns login for brugere, der ikke er i nogen whitelisted gruppe",

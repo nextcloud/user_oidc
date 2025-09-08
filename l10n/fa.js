@@ -13,6 +13,7 @@ OC.L10N.register(
     "Client secret" : "رمز مشتری",
     "Scope" : "حوزه",
     "Attribute mapping" : "Attribute mapping",
+    "Fediverse/Nickname mapping" : "نگاشت فدیورس/نام مستعار",
     "Back to %s" : "بازگشت به %s",
     "Domain" : "دامنه"
 },
