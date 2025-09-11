@@ -14,7 +14,7 @@ use OCA\UserOIDC\Exception\GetExternalTokenFailedException;
 use OCA\UserOIDC\Service\TokenService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -26,7 +26,7 @@ class ExternalTokenRequestedListener implements IEventListener {
 	public function __construct(
 		private IUserSession $userSession,
 		private TokenService $tokenService,
-		private IConfig $config,
+		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 	) {
 	}
@@ -42,7 +42,7 @@ class ExternalTokenRequestedListener implements IEventListener {
 
 		$this->logger->debug('[ExternalTokenRequestedListener] received request');
 
-		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			throw new GetExternalTokenFailedException('Failed to get external token, login token is not stored', 0);
 		}

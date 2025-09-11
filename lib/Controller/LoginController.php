@@ -42,6 +42,7 @@ use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Token\IToken;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -81,6 +82,7 @@ class LoginController extends BaseOidcController {
 		private ITimeFactory $timeFactory,
 		private IEventDispatcher $eventDispatcher,
 		private IConfig $config,
+		private IAppConfig $appConfig,
 		private IProvider $authTokenProvider,
 		private SessionMapper $sessionMapper,
 		private ProvisioningService $provisioningService,
@@ -593,7 +595,7 @@ class LoginController extends BaseOidcController {
 			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $user->getUID(), null, false));
 		}
 
-		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0') === '1';
 		if ($storeLoginTokenEnabled) {
 			// store all token information for potential token exchange requests
 			$tokenData = array_merge(
