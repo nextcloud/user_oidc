@@ -385,10 +385,15 @@ class LoginController extends BaseOidcController {
 			}
 
 			$headers = [];
-			$tokenEndpointAuthMethod = 'client_secret_basic';
 			// follow what is described in https://openid.net/specs/openid-connect-discovery-1_0.html
 			// about token_endpoint_auth_methods_supported: "If omitted, the default is client_secret_basic"
 			// Use client_secret_post if supported
+			// We still allow changing the default auth method in config.php
+			$tokenEndpointAuthMethod = $oidcSystemConfig['default_token_endpoint_auth_method'] ?? 'client_secret_basic';
+			// deal with invalid values
+			if (!in_array($tokenEndpointAuthMethod, ['client_secret_basic', 'client_secret_post'], true)) {
+				$tokenEndpointAuthMethod = 'client_secret_basic';
+			}
 			if (
 				array_key_exists('token_endpoint_auth_methods_supported', $discovery)
 				&& is_array($discovery['token_endpoint_auth_methods_supported'])
