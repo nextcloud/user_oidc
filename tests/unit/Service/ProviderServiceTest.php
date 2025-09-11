@@ -11,16 +11,16 @@ declare(strict_types=1);
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
 class ProviderServiceTest extends TestCase {
 
 	/**
-	 * @var IConfig|\PHPUnit\Framework\MockObject\MockObject
+	 * @var IAppConfig|\PHPUnit\Framework\MockObject\MockObject
 	 */
-	private $config;
+	private $appConfig;
 	/**
 	 * @var ProviderMapper|\PHPUnit\Framework\MockObject\MockObject
 	 */
@@ -32,9 +32,9 @@ class ProviderServiceTest extends TestCase {
 
 	public function setUp(): void {
 		parent::setUp();
-		$this->config = $this->createMock(IConfig::class);
+		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->providerMapper = $this->createMock(ProviderMapper::class);
-		$this->providerService = new ProviderService($this->config, $this->providerMapper);
+		$this->providerService = new ProviderService($this->appConfig, $this->providerMapper);
 	}
 
 	public function testGetProvidersWithSettings() {
@@ -48,8 +48,8 @@ class ProviderServiceTest extends TestCase {
 			->method('getProviders')
 			->willReturn($providers);
 
-		$this->config->expects(self::any())
-			->method('getAppValue')
+		$this->appConfig->expects(self::any())
+			->method('getValueString')
 			->willReturn('1');
 
 		Assert::assertEquals([
@@ -183,8 +183,8 @@ class ProviderServiceTest extends TestCase {
 			'restrictLoginToGroups' => false,
 			'nestedAndFallbackClaims' => false,
 		];
-		$this->config->expects(self::any())
-			->method('getAppValue')
+		$this->appConfig->expects(self::any())
+			->method('getValueString')
 			->willReturnMap([
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_DISPLAYNAME, '', 'dn'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_EMAIL, '', 'mail'],
@@ -249,8 +249,8 @@ class ProviderServiceTest extends TestCase {
 		$realKeysToDelete = array_map(function ($setting) {
 			return 'provider-1-' . $setting;
 		}, $keysToDelete);
-		$this->config->expects(self::exactly(count($keysToDelete)))
-			->method('deleteAppValue')
+		$this->appConfig->expects(self::exactly(count($keysToDelete)))
+			->method('deleteKey')
 			->willReturnCallback(function ($appName, $key) use ($realKeysToDelete) {
 				$this->assertEquals(Application::APP_ID, $appName);
 				$this->assertContains($key, $realKeysToDelete);
@@ -260,8 +260,8 @@ class ProviderServiceTest extends TestCase {
 	}
 
 	public function testSetSetting() {
-		$this->config->expects(self::once())
-			->method('setAppValue')
+		$this->appConfig->expects(self::once())
+			->method('setValueString')
 			->with(Application::APP_ID, 'provider-1-key', 'value');
 
 		$this->providerService->setSetting(1, 'key', 'value');
@@ -276,8 +276,8 @@ class ProviderServiceTest extends TestCase {
 
 	/** @dataProvider dataGetSetting */
 	public function testGetSetting($providerId, $key, $stored, $expected, $default = '') {
-		$this->config->expects(self::once())
-			->method('getAppValue')
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
 			->with(Application::APP_ID, 'provider-' . $providerId . '-' . $key, '')
 			->willReturn($stored);
 
