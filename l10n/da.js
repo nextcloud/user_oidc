@@ -47,7 +47,7 @@ OC.L10N.register(
     "Discovery endpoint" : "Discovery endpoint",
     "Backchannel Logout URL" : "Backchannel Logout URL",
     "Redirect URI (to be authorized in the provider client configuration)" : "Omdirigér URI (for godkendelse i udbyderens klient konfiguration)",
-    "Update" : "Opdater",
+    "Update" : "Opdatér",
     "Remove" : "Fjern",
     "Update provider settings" : "Opdatér udbyderindstillinger",
     "Update provider" : "Opdatér udbyder",
