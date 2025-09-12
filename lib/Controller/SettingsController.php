@@ -20,7 +20,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Http\Client\IClientService;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
@@ -29,7 +29,7 @@ class SettingsController extends Controller {
 
 	public function __construct(
 		IRequest $request,
-		private IConfig $config,
+		private IAppConfig $appConfig,
 		private ProviderMapper $providerMapper,
 		private ID4MeService $id4meService,
 		private ProviderService $providerService,
@@ -180,7 +180,7 @@ class SettingsController extends Controller {
 	public function setAdminConfig(array $values): JSONResponse {
 		foreach ($values as $key => $value) {
 			if ($key === 'store_login_token' && is_bool($value)) {
-				$this->config->setAppValue(Application::APP_ID, 'store_login_token', $value ? '1' : '0');
+				$this->appConfig->setValueString(Application::APP_ID, 'store_login_token', $value ? '1' : '0');
 			}
 		}
 		return new JSONResponse([]);

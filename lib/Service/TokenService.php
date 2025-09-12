@@ -26,6 +26,7 @@ use OCP\Authentication\Exceptions\WipeTokenException;
 use OCP\Authentication\Token\IToken;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClient;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -53,6 +54,7 @@ class TokenService {
 		private IUserSession $userSession,
 		private IProvider $tokenProvider,
 		private IConfig $config,
+		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private ICrypto $crypto,
 		private IRequest $request,
@@ -114,7 +116,7 @@ class TokenService {
 	 * @throws PreConditionNotMetException
 	 */
 	public function checkLoginToken(): void {
-		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			return;
 		}
@@ -141,6 +143,7 @@ class TokenService {
 			return;
 		}
 		$scope = $sessionAuthToken->getScopeAsArray();
+		// since 30, we still support 29
 		if (defined(IToken::class . '::SCOPE_SKIP_PASSWORD_VALIDATION')
 			&& (
 				!isset($scope[IToken::SCOPE_SKIP_PASSWORD_VALIDATION])
@@ -252,7 +255,7 @@ class TokenService {
 	 * @throws \JsonException
 	 */
 	public function getExchangedToken(string $targetAudience, array $extraScopes = []): Token {
-		$storeLoginTokenEnabled = $this->config->getAppValue(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0') === '1';
 		if (!$storeLoginTokenEnabled) {
 			throw new TokenExchangeFailedException(
 				'Failed to exchange token, storing the login token is disabled. It can be enabled in config.php',
