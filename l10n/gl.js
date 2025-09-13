@@ -19,6 +19,7 @@ OC.L10N.register(
     "Delete" : "Eliminar",
     "Submit" : "Enviar",
     "Client secret" : "Segredo do cliente",
+    "Leave empty to keep existing" : "Déixeo baleiro para conservar o existente",
     "Scope" : "Ámbito",
     "Attribute mapping" : "Asignación de atributos",
     "Back to %s" : "Volver a %s",
