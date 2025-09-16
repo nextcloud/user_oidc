@@ -8,6 +8,7 @@ OC.L10N.register(
     "Remove" : "O'chirish",
     "Cancel" : "Bekor qilish",
     "Delete" : "O'chirish",
+    "Submit" : "Submit",
     "Back to %s" : "%sga qaytish"
 },
 "nplurals=1; plural=0;");
