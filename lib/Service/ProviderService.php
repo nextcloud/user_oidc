@@ -14,7 +14,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
-use OCP\IConfig;
+use OCP\IAppConfig;
 
 class ProviderService {
 	public const SETTING_CHECK_BEARER = 'checkBearer';
@@ -67,7 +67,7 @@ class ProviderService {
 	];
 
 	public function __construct(
-		private IConfig $config,
+		private IAppConfig $appConfig,
 		private ProviderMapper $providerMapper,
 	) {
 	}
@@ -117,18 +117,18 @@ class ProviderService {
 
 	public function deleteSettings(int $providerId): void {
 		foreach ($this->getSupportedSettings() as $setting) {
-			$this->config->deleteAppValue(Application::APP_ID, $this->getSettingsKey($providerId, $setting));
+			$this->appConfig->deleteKey(Application::APP_ID, $this->getSettingsKey($providerId, $setting));
 		}
-		$this->config->deleteAppValue(Application::APP_ID, $this->getSettingsKey($providerId, self::SETTING_JWKS_CACHE));
-		$this->config->deleteAppValue(Application::APP_ID, $this->getSettingsKey($providerId, self::SETTING_JWKS_CACHE_TIMESTAMP));
+		$this->appConfig->deleteKey(Application::APP_ID, $this->getSettingsKey($providerId, self::SETTING_JWKS_CACHE));
+		$this->appConfig->deleteKey(Application::APP_ID, $this->getSettingsKey($providerId, self::SETTING_JWKS_CACHE_TIMESTAMP));
 	}
 
 	public function setSetting(int $providerId, string $key, string $value): void {
-		$this->config->setAppValue(Application::APP_ID, $this->getSettingsKey($providerId, $key), $value);
+		$this->appConfig->setValueString(Application::APP_ID, $this->getSettingsKey($providerId, $key), $value);
 	}
 
 	public function getSetting(int $providerId, string $key, string $default = ''): string {
-		$value = $this->config->getAppValue(Application::APP_ID, $this->getSettingsKey($providerId, $key), '');
+		$value = $this->appConfig->getValueString(Application::APP_ID, $this->getSettingsKey($providerId, $key), '');
 		if ($value === '') {
 			return $default;
 		}

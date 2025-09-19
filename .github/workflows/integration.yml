@@ -30,9 +30,6 @@ jobs:
             - php-versions: 8.1
               databases: mysql
               server-versions: stable30
-            - php-versions: 8.2
-              databases: mysql
-              server-versions: stable30
             - php-versions: 8.1
               databases: mysql
               server-versions: stable31
