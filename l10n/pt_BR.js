@@ -64,6 +64,7 @@ OC.L10N.register(
     "Leave empty to keep existing" : "Deixe em branco para manter o existente",
     "Warning, if the protocol of the URLs in the discovery content is HTTP, the ID token will be delivered through an insecure connection." : "Aviso: se o protocolo dos URLs no conteúdo da descoberta for HTTP, o token de ID será transmitido por meio de uma conexão insegura.",
     "Custom end session endpoint" : "Endpoint personalizado para terminação de sessões",
+    "Post logout URI" : "URI pós-logout",
     "Scope" : "Escopo",
     "Extra claims" : "Reivindicações extras",
     "Attribute mapping" : "Mapeamento de atributos",
