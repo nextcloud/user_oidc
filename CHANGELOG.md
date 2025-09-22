@@ -8,6 +8,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.0.0 – 2025-09-22
+
+### Added
+
+- Add pronouns and birthdate mapping, factorize simple mapping attributes handling when provisioning @julien-nc [#1102](https://github.com/nextcloud/user_oidc/pull/1102)
+- Add optional provider-specific post_logout_uri setting, pass it as a GET param to the end_session_endpoint @julien-nc [#1120](https://github.com/nextcloud/user_oidc/pull/1120)
+- Add support for Nextcloud 33
+- Allow setting the default token endpoint auth method in config.php (if `token_endpoint_auth_methods_supported` is not set in the discovery payload) @julien-nc [#1199](https://github.com/nextcloud/user_oidc/pull/1199)
+
+### Changed
+
+- Adjust testing matrix for Nextcloud 32 on main @nickvergessen [#1196](https://github.com/nextcloud/user_oidc/pull/1196)
+- Drop support for Nextcloud 28, remove deprecated IConfig::setAppValue usages @julien-nc [#1200](https://github.com/nextcloud/user_oidc/pull/1200)
+- :warning: Use client_secret_basic as token endpoint auth by default, use client_secret_post if supported @julien-nc [#1199](https://github.com/nextcloud/user_oidc/pull/1199)
+
 ## 7.4.0 – 2025-09-01
 
 ### Added
