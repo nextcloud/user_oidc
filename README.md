@@ -55,6 +55,22 @@ for private or internal applications without requiring user consent or interacti
 Documentation for all supported prompt values is available here:
 [Oauth2 passport server prompts-supported](https://gitlab.com/elyerr/oauth2-passport-server/-/wikis/home/prompts-supported)
 
+## `user_oidc.default_token_endpoint_auth_method`
+
+The OIDC specifications are clear on this. It is stated in https://openid.net/specs/openid-connect-discovery-1_0.html
+that if `token_endpoint_auth_methods_supported` is not set in the provider discovery endpoint payload,
+`client_secret_basic` should be used as default authentication method.
+
+But it has been reported that, with Authelia for example, only `client_secret_post` might be allowed while `token_endpoint_auth_methods_supported`
+is not set in the discovery. In such case, you can set the default token endpoint authentication method with:
+
+```php
+'user_oidc' => [
+  'default_token_endpoint_auth_method' => 'client_secret_post'
+]
+```
+
+
 ---
 
 ### User IDs
