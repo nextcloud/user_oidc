@@ -3,7 +3,12 @@ OC.L10N.register(
     {
     "Error" : "Памылка",
     "Access forbidden" : "Доступ забаронены",
+    "The received token is expired." : "Тэрмін дзеяння атрыманага токена скончыўся.",
+    "Failed to contact the OIDC provider token endpoint" : "Не атрымалася звязацца з канцавой кропкай токена пастаўшчыка OIDC",
+    "Could not save storeLoginToken state: {msg}" : "Не ўдалося захаваць стан storeLoginToken: {msg}",
     "Enable ID4me" : "Уключыць ID4me",
+    "Store login tokens" : "Токены ўваходу ў краму",
+    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "Гэта патрэбна, калі вы карыстаецеся іншымі праграмамі, якія хочуць выкарыстоўваць абмен токенаў user_oidc або проста атрымліваць токен уваходу.",
     "Client ID" : "Ідэнтыфікатар кліента",
     "Update" : "Абнавіць",
     "Remove" : "Выдаліць",
@@ -13,6 +18,10 @@ OC.L10N.register(
     "Submit" : "Адправіць",
     "Client configuration" : "Канфігурацыя кліента",
     "Identifier (max 128 characters)" : "Ідэнтыфікатар (максімум 128 сімвалаў)",
+    "Warning, if the protocol of the URLs in the discovery content is HTTP, the ID token will be delivered through an insecure connection." : "Папярэджанне: калі пратакол URL-адрасоў у кантэнце выяўлення — HTTP, токен ідэнтыфікацыі будзе дастаўлены праз неабароненае злучэнне.",
+    "Check Bearer token on API and WebDAV requests" : "Праверка токена носьбіта ў запытах API і WebDAV",
+    "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?" : "Вы хочаце дазволіць выклікі API і запыты WebDAV, якія аўтэнтыфікуюцца з дапамогай токена OIDC ID або токена доступу?",
+    "Auto provision user when accessing API and WebDAV with Bearer token" : "Аўтаматычнае забеспячэнне карыстальніка пры доступе да API і WebDAV з дапамогай токена-носьбіта",
     "Back to %s" : "Назад да %s",
     "Domain" : "Дамен",
     "your.domain" : "your.domain"
