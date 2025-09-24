@@ -90,7 +90,7 @@
     "Biography mapping" : "Mapeado de biografía",
     "X (formerly Twitter) mapping" : "Mapeado de X (antes twitter)",
     "Fediverse/Nickname mapping" : "Mapeado de Fediverso/Apodo",
-    "Headline mapping" : "Mapeado de titular",
+    "Headline mapping" : "Mapeado de título",
     "Authentication and Access Control Settings" : "Ajustes de autenticación y de control de acceso",
     "Use unique user ID" : "ID de usuario único",
     "By default every user will get a unique user ID that is a hashed value of the provider and user ID. This can be turned off but uniqueness of users accross multiple user backends and providers is no longer preserved then." : "Por defecto, cada usuario obtendrá un ID de usuario único que es un valor en hash del proveedor y el ID de usuario. Esto puede deshabilitarse, pero la unicidad de los usuarios entre varios backends de usuarios y proveedores no se conservará.",
