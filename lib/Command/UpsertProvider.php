@@ -63,6 +63,10 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_LANGUAGE,
 			'description' => 'Attribute mapping of the account language',
 		],
+		'mapping-locale' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_LOCALE,
+			'description' => 'Attribute mapping of the account locale',
+		],
 		'mapping-website' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_WEBSITE,
 			'description' => 'Attribute mapping of the website',
