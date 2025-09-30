@@ -141,6 +141,9 @@ class ProvisioningService {
 		$languageAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language');
 		$language = $this->getClaimValue($idTokenPayload, $languageAttribute, $providerId);//$idTokenPayload->{$languageAttribute} ?? null;
 
+		$localeAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_LOCALE, 'locale');
+		$locale = $this->getClaimValue($idTokenPayload, $localeAttribute, $providerId);
+
 		$genderAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender');
 		$gender = $this->getClaimValue($idTokenPayload, $genderAttribute, $providerId);//$idTokenPayload->{$genderAttribute} ?? null;
 
@@ -300,6 +303,22 @@ class ProvisioningService {
 				}, $groups);
 				$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 				$oidcGssUserData[$groupsAttribute] = $groupIds;
+			}
+		}
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_LOCALE, $idTokenPayload, $locale);
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Locale mapping event dispatched');
+		if ($event->hasValue()) {
+			$locale = $event->getValue();
+			$locales = $this->l10nFactory->findAvailableLocales();
+			$localeCodes = array_map(static function ($l) {
+				return $l['code'];
+			}, $locales);
+			if (in_array($locale, $localeCodes, true) || $locale === 'en') {
+				$this->config->setUserValue($user->getUID(), 'core', 'locale', $locale);
+			} else {
+				$this->logger->debug('Invalid locale in ID token', ['locale' => $locale]);
 			}
 		}
 

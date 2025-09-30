@@ -28,6 +28,7 @@ class ProviderService {
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
 	public const SETTING_MAPPING_GROUPS = 'mappingGroups';
 	public const SETTING_MAPPING_LANGUAGE = 'mappingLanguage';
+	public const SETTING_MAPPING_LOCALE = 'mappingLocale';
 	public const SETTING_MAPPING_ADDRESS = 'mappingAddress';
 	public const SETTING_MAPPING_STREETADDRESS = 'mappingStreetaddress';
 	public const SETTING_MAPPING_POSTALCODE = 'mappingPostalcode';
@@ -147,6 +148,7 @@ class ProviderService {
 			self::SETTING_MAPPING_UID,
 			self::SETTING_MAPPING_GROUPS,
 			self::SETTING_MAPPING_LANGUAGE,
+			self::SETTING_MAPPING_LOCALE,
 			self::SETTING_MAPPING_ADDRESS,
 			self::SETTING_MAPPING_STREETADDRESS,
 			self::SETTING_MAPPING_POSTALCODE,
