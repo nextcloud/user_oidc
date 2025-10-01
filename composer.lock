@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d04dc4373433d9ac88a4fd120a014533",
+    "content-hash": "2c4f937df9960ebd989efe94d706e93b",
     "packages": [
         {
             "name": "bamarni/composer-bin-plugin",
@@ -280,6 +280,60 @@
                 }
             ],
             "time": "2026-01-27T09:11:52+00:00"
+        },
+        {
+            "name": "strobotti/php-jwk",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Strobotti/php-jwk.git",
+                "reference": "a78580b55380f25bd8110452a5a031e36043551e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Strobotti/php-jwk/zipball/a78580b55380f25bd8110452a5a031e36043551e",
+                "reference": "a78580b55380f25bd8110452a5a031e36043551e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-openssl": "*",
+                "php": ">=7.2.0",
+                "phpseclib/phpseclib": "^2.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "phpunit/phpunit": "^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Strobotti\\JWK\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Juha Jantunen",
+                    "email": "juha@strobotti.com",
+                    "homepage": "https://www.strobotti.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A small PHP library to handle JWKs (Json Web Keys)",
+            "homepage": "https://github.com/Strobotti/php-jwk",
+            "keywords": [
+                "JWK",
+                "JWKS"
+            ],
+            "support": {
+                "issues": "https://github.com/Strobotti/php-jwk/issues",
+                "source": "https://github.com/Strobotti/php-jwk/tree/master"
+            },
+            "time": "2020-04-01T03:22:04+00:00"
         }
     ],
     "packages-dev": [
@@ -358,16 +412,16 @@
         },
         {
             "name": "kubawerlos/php-cs-fixer-custom-fixers",
-            "version": "v3.36.0",
+            "version": "v3.36.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kubawerlos/php-cs-fixer-custom-fixers.git",
-                "reference": "e1f97f6463f0b2a22e0dd320948a04132ff9c501"
+                "reference": "ec9776e80f5ea9bf0d8ec16d662e431bfab19a24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kubawerlos/php-cs-fixer-custom-fixers/zipball/e1f97f6463f0b2a22e0dd320948a04132ff9c501",
-                "reference": "e1f97f6463f0b2a22e0dd320948a04132ff9c501",
+                "url": "https://api.github.com/repos/kubawerlos/php-cs-fixer-custom-fixers/zipball/ec9776e80f5ea9bf0d8ec16d662e431bfab19a24",
+                "reference": "ec9776e80f5ea9bf0d8ec16d662e431bfab19a24",
                 "shasum": ""
             },
             "require": {
@@ -398,7 +452,7 @@
             "description": "A set of custom fixers for PHP CS Fixer",
             "support": {
                 "issues": "https://github.com/kubawerlos/php-cs-fixer-custom-fixers/issues",
-                "source": "https://github.com/kubawerlos/php-cs-fixer-custom-fixers/tree/v3.36.0"
+                "source": "https://github.com/kubawerlos/php-cs-fixer-custom-fixers/tree/v3.36.1"
             },
             "funding": [
                 {
@@ -406,7 +460,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-01-31T07:02:11+00:00"
+            "time": "2026-03-07T11:35:13+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -519,12 +573,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/nextcloud-deps/ocp.git",
-                "reference": "b85f287380a30008cfc5264e8d56cbe6c8b58424"
+                "reference": "6e97cdf621ae674246fec9efc7d12c9130346a60"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/b85f287380a30008cfc5264e8d56cbe6c8b58424",
-                "reference": "b85f287380a30008cfc5264e8d56cbe6c8b58424",
+                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/6e97cdf621ae674246fec9efc7d12c9130346a60",
+                "reference": "6e97cdf621ae674246fec9efc7d12c9130346a60",
                 "shasum": ""
             },
             "require": {
@@ -555,7 +609,7 @@
                 "issues": "https://github.com/nextcloud-deps/ocp/issues",
                 "source": "https://github.com/nextcloud-deps/ocp/tree/stable29"
             },
-            "time": "2026-02-11T01:18:39+00:00"
+            "time": "2026-02-20T01:07:13+00:00"
         },
         {
             "name": "nextcloud/openapi-extractor",
@@ -782,16 +836,16 @@
         },
         {
             "name": "php-cs-fixer/shim",
-            "version": "v3.94.1",
+            "version": "v3.94.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHP-CS-Fixer/shim.git",
-                "reference": "886842d646b54f475bd91cd812d1698e3e3bc57b"
+                "reference": "80fd29f44a736136a2f05bae5464816a444b91d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHP-CS-Fixer/shim/zipball/886842d646b54f475bd91cd812d1698e3e3bc57b",
-                "reference": "886842d646b54f475bd91cd812d1698e3e3bc57b",
+                "url": "https://api.github.com/repos/PHP-CS-Fixer/shim/zipball/80fd29f44a736136a2f05bae5464816a444b91d1",
+                "reference": "80fd29f44a736136a2f05bae5464816a444b91d1",
                 "shasum": ""
             },
             "require": {
@@ -828,9 +882,9 @@
             "description": "A tool to automatically fix PHP code style",
             "support": {
                 "issues": "https://github.com/PHP-CS-Fixer/shim/issues",
-                "source": "https://github.com/PHP-CS-Fixer/shim/tree/v3.94.1"
+                "source": "https://github.com/PHP-CS-Fixer/shim/tree/v3.94.2"
             },
-            "time": "2026-02-18T12:25:03+00:00"
+            "time": "2026-02-20T16:14:17+00:00"
         },
         {
             "name": "phpstan/phpdoc-parser",
