@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "62be19eb0dc43640d32350e3d43c6bf0",
+    "content-hash": "52f029a74514042a7716ebe169f2ab90",
     "packages": [
         {
             "name": "bamarni/composer-bin-plugin",
@@ -279,6 +279,60 @@
                 }
             ],
             "time": "2025-12-15T11:48:50+00:00"
+        },
+        {
+            "name": "strobotti/php-jwk",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Strobotti/php-jwk.git",
+                "reference": "a78580b55380f25bd8110452a5a031e36043551e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Strobotti/php-jwk/zipball/a78580b55380f25bd8110452a5a031e36043551e",
+                "reference": "a78580b55380f25bd8110452a5a031e36043551e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-openssl": "*",
+                "php": ">=7.2.0",
+                "phpseclib/phpseclib": "^2.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "phpunit/phpunit": "^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Strobotti\\JWK\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Juha Jantunen",
+                    "email": "juha@strobotti.com",
+                    "homepage": "https://www.strobotti.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A small PHP library to handle JWKs (Json Web Keys)",
+            "homepage": "https://github.com/Strobotti/php-jwk",
+            "keywords": [
+                "JWK",
+                "JWKS"
+            ],
+            "support": {
+                "issues": "https://github.com/Strobotti/php-jwk/issues",
+                "source": "https://github.com/Strobotti/php-jwk/tree/master"
+            },
+            "time": "2020-04-01T03:22:04+00:00"
         }
     ],
     "packages-dev": [
