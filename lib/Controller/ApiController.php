@@ -10,8 +10,11 @@ namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
+use OCA\UserOIDC\Service\JwkService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
@@ -25,13 +28,12 @@ class ApiController extends Controller {
 		private IRootFolder $root,
 		private UserMapper $userMapper,
 		private IUserManager $userManager,
+		private JwkService $jwkService,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @param int $providerId
 	 * @param string $userId
 	 * @param string|null $displayName
@@ -39,6 +41,7 @@ class ApiController extends Controller {
 	 * @param string|null $quota
 	 * @return DataResponse
 	 */
+	#[NoCSRFRequired]
 	public function createUser(int $providerId, string $userId, ?string $displayName = null,
 		?string $email = null, ?string $quota = null): DataResponse {
 		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
@@ -71,11 +74,10 @@ class ApiController extends Controller {
 	}
 
 	/**
-	 * @NoCSRFRequired
-	 *
 	 * @param string $userId
 	 * @return DataResponse
 	 */
+	#[NoCSRFRequired]
 	public function deleteUser(string $userId): DataResponse {
 		$user = $this->userManager->get($userId);
 		if (is_null($user) || $user->getBackendClassName() !== Application::APP_ID) {
@@ -84,5 +86,16 @@ class ApiController extends Controller {
 
 		$user->delete();
 		return new DataResponse(['user_id' => $userId], Http::STATUS_OK);
+	}
+
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function getJwks(): DataResponse {
+		$jwks = $this->jwkService->getJwks();
+		return new DataResponse([
+			'keys' => [
+				$jwks['public'],
+			],
+		]);
 	}
 }
