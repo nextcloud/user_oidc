@@ -134,6 +134,12 @@ class DiscoveryService {
 		}
 
 		foreach ($jwks['keys'] as $index => $key) {
+			// php-jwt fails in JWK::parseKeySet the keyset contains one key with P-521 curve
+			// see https://github.com/firebase/php-jwt/blob/main/src/JWK.php#L31
+			if (isset($key['crv']) && $key['crv'] === 'P-521') {
+				unset($jwks['keys'][$index]);
+			}
+
 			// Only fix the key being referred to in the JWT.
 			if ($jwtHeader['kid'] != $key['kid']) {
 				continue;
