@@ -12,10 +12,11 @@ namespace OCA\UserOIDC\Controller;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Service\JwkService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\Attribute\PublicPage;
-use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 
 #[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
@@ -30,12 +31,12 @@ class ApiController extends Controller {
 
 	#[NoCSRFRequired]
 	#[PublicPage]
-	public function getJwks(): DataResponse {
-		$jwks = $this->jwkService->getJwks();
-		return new DataResponse([
-			'keys' => [
-				$jwks['public'],
-			],
-		]);
+	public function getJwks(): JSONResponse {
+		try {
+			$jwk = $this->jwkService->getJwk();
+			return new JSONResponse(['keys' => [$jwk]]);
+		} catch (\Exception|\Throwable $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 	}
 }
