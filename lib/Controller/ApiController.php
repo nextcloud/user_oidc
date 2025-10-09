@@ -17,6 +17,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IRequest;
@@ -86,12 +87,13 @@ class ApiController extends Controller {
 
 	#[NoCSRFRequired]
 	#[PublicPage]
-	public function getJwks(): DataResponse {
-		$jwks = $this->jwkService->getJwks();
-		return new DataResponse([
-			'keys' => [
-				$jwks['public'],
-			],
-		]);
+	public function getJwks(): JSONResponse {
+		try {
+			$jwk = $this->jwkService->getJwk();
+			return new JSONResponse(['keys' => [$jwk]]);
+			// return new JSONResponse($this->jwkService->debug());
+		} catch (\Exception|\Throwable $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 	}
 }
