@@ -129,29 +129,31 @@ class DiscoveryService {
 	private function fixJwksAlg(array $jwks, string $jwt): array {
 		$jwtParts = explode('.', $jwt);
 		$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
-		if (!isset($jwtHeader['kid'])) {
-			throw new \Exception('Error: kid must be provided in JWT header.');
-		}
+		$kid = $jwtHeader['kid'] ?? null;
 
 		foreach ($jwks['keys'] as $index => $key) {
-			// Only fix the key being referred to in the JWT.
-			if ($jwtHeader['kid'] != $key['kid']) {
-				continue;
-			}
-
-			// Only fix the key if the alg is missing.
+			// Skip if alg is already set
 			if (!empty($key['alg'])) {
 				continue;
 			}
 
-			// The header alg must match the key type (family) specified in the JWK's kty.
-			if (!isset(self::SUPPORTED_JWK_ALGS[$jwtHeader['alg']]) || self::SUPPORTED_JWK_ALGS[$jwtHeader['alg']] !== $key['kty']) {
-				throw new \Exception('Error: Alg specified in the JWT header is incompatible with the JWK key type');
+			// Match by kid if present, or by alg and kty if kid is missing
+			if ($kid !== null && $jwtHeader['kid'] != $key['kid']) {
+				continue;
 			}
 
+			// Validate algorithm compatibility
+			// Skip incompatible keys
+			if (!isset(self::SUPPORTED_JWK_ALGS[$jwtHeader['alg']]) || self::SUPPORTED_JWK_ALGS[$jwtHeader['alg']] !== $key['kty']) {
+				continue;
+			}
+
+			// Set alg for the matching key
 			$jwks['keys'][$index]['alg'] = $jwtHeader['alg'];
+
+			return $jwks; // Return early after fixing the first match
 		}
 
-		return $jwks;
+		throw new \Exception('Error: No matching key found in JWKS for alg ' . ($jwtHeader['alg'] ?? 'unknown'));
 	}
 }
