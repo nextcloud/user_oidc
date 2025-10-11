@@ -121,35 +121,69 @@ class DiscoveryService {
 	/**
 	 * Inspired by https://github.com/snake/moodle/compare/880462a1685...MDL-77077-master
 	 *
-	 * @param array $jwks
-	 * @param string $jwt
-	 * @return array
-	 * @throws \Exception
+	 * @param array $jwks The JSON Web Key Set
+	 * @param string $jwt The JWT token
+	 * @return array The modified JWKS
+	 * @throws \RuntimeException if no matching key is found or algorithm is unsupported
 	 */
 	private function fixJwksAlg(array $jwks, string $jwt): array {
-		$jwtParts = explode('.', $jwt);
-		$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
-		if (!isset($jwtHeader['kid'])) {
-			throw new \Exception('Error: kid must be provided in JWT header.');
+		$jwtParts = explode('.', $jwt, 3);
+		$header = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
+		$kid = $header['kid'] ?? null;
+		$alg = $header['alg'] ?? null;
+
+		$expectedKty = self::SUPPORTED_JWK_ALGS[$alg] ?? null;
+		if ($expectedKty === null) {
+			throw new \RuntimeException('Unsupported JWT alg: ' . ($alg ?? 'unknown'));
 		}
 
-		foreach ($jwks['keys'] as $index => $key) {
-			// Only fix the key being referred to in the JWT.
-			if ($jwtHeader['kid'] != $key['kid']) {
+		$keys = $jwks['keys'] ?? null;
+		if (!is_array($keys)) {
+			throw new \RuntimeException('Invalid JWKS: missing "keys" array');
+		}
+
+		$matchingIndex = null;
+
+		foreach ($keys as $index => $key) {
+			$keyKty = $key['kty'] ?? null;
+			$keyUse = $key['use'] ?? null;
+
+			// Skip keys with incompatible type
+			if ($keyKty !== $expectedKty) {
 				continue;
 			}
 
-			// Only fix the key if the alg is missing.
-			if (!empty($key['alg'])) {
+			// Skip keys not intended for signature
+			if ($keyUse !== null && $keyUse !== 'sig') {
 				continue;
 			}
 
-			// The header alg must match the key type (family) specified in the JWK's kty.
-			if (!isset(self::SUPPORTED_JWK_ALGS[$jwtHeader['alg']]) || self::SUPPORTED_JWK_ALGS[$jwtHeader['alg']] !== $key['kty']) {
-				throw new \Exception('Error: Alg specified in the JWT header is incompatible with the JWK key type');
+			// If JWT has a kid, match strictly
+			if ($kid !== null) {
+				if (($key['kid'] ?? null) !== $kid) {
+					continue;
+				}
+				$matchingIndex = $index;
+				break;
 			}
 
-			$jwks['keys'][$index]['alg'] = $jwtHeader['alg'];
+			// If no kid, select the first compatible key
+			if ($matchingIndex === null) {
+				$matchingIndex = $index;
+			}
+		}
+
+		if ($matchingIndex === null) {
+			throw new \RuntimeException(sprintf(
+				'No matching key found in JWKS (alg=%s, kid=%s)',
+				$alg ?? 'unknown',
+				$kid ?? 'none'
+			));
+		}
+
+		// Set 'alg' field if missing
+		if (empty($jwks['keys'][$matchingIndex]['alg'])) {
+			$jwks['keys'][$matchingIndex]['alg'] = $alg;
 		}
 
 		return $jwks;
