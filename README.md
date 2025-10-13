@@ -175,7 +175,7 @@ login. Admins can still use the regular login through adding the `?direct=1`
 parameter to the login URL.
 
 ```bash
-sudo -u www-data php var/www/nextcloud/occ config:app:set --value=0 user_oidc allow_multiple_user_backends
+sudo -u www-data php var/www/nextcloud/occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
 ```
 
 ### PKCE
