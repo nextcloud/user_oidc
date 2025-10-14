@@ -11,20 +11,34 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCP\Exceptions\AppConfigTypeConflictException;
 use OCP\IAppConfig;
+use Psr\Log\LoggerInterface;
 
 class SettingsService {
 
 	public function __construct(
 		private IAppConfig $appConfig,
+		private LoggerInterface $logger,
 	) {
 	}
 
 	public function getAllowMultipleUserBackEnds(): bool {
-		return $this->appConfig->getValueString(Application::APP_ID, 'allow_multiple_user_backends', '1') === '1';
+		try {
+			return $this->appConfig->getValueString(Application::APP_ID, 'allow_multiple_user_backends', '1') === '1';
+		} catch (AppConfigTypeConflictException $e) {
+			$this->logger->warning('Incorrect app config type when getting "allow_multiple_user_backends"', ['exception' => $e]);
+			return true;
+		}
 	}
 
 	public function setAllowMultipleUserBackEnds(bool $value): void {
-		$this->appConfig->setValueString(Application::APP_ID, 'allow_multiple_user_backends', $value ? '1' : '0');
+		try {
+			$this->appConfig->setValueString(Application::APP_ID, 'allow_multiple_user_backends', $value ? '1' : '0');
+		} catch (AppConfigTypeConflictException $e) {
+			$this->logger->warning('Incorrect app config type when setting "allow_multiple_user_backends"', ['exception' => $e]);
+			$this->appConfig->deleteKey(Application::APP_ID, 'allow_multiple_user_backends');
+			$this->appConfig->setValueString(Application::APP_ID, 'allow_multiple_user_backends', $value ? '1' : '0');
+		}
 	}
 }

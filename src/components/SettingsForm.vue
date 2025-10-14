@@ -165,6 +165,13 @@
 					placeholder="language">
 			</p>
 			<p>
+				<label for="mapping-locale">{{ t('user_oidc', 'Locale mapping') }}</label>
+				<input id="mapping-locale"
+					v-model="localProvider.settings.mappingLocale"
+					type="text"
+					placeholder="locale">
+			</p>
+			<p>
 				<label for="mapping-role">{{ t('user_oidc', 'Role/Title mapping') }}</label>
 				<input id="mapping-role"
 					v-model="localProvider.settings.mappingRole"
