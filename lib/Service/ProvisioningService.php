@@ -547,9 +547,16 @@ class ProvisioningService {
 					continue;
 				}
 
-				if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->gid)) {
-					$this->logger->debug('Skipped group `' . $group->gid . '` for importing as not part of whitelist');
-					continue;
+				if ($groupsWhitelistRegex) {
+					$matchResult = preg_match($groupsWhitelistRegex, $group->gid);
+					if ($matchResult !== 1) {
+						if ($matchResult === 0) {
+							$this->logger->debug('Skipped group `' . $group->gid . '` for importing as not part of whitelist (not matching the regex)');
+						} else {
+							$this->logger->debug('Skipped group `' . $group->gid . '` for importing as not part of whitelist (failure when matching)', ['match_result' => $matchResult]);
+						}
+						continue;
+					}
 				}
 
 				$group->gid = $this->idService->getId($providerId, $group->gid);
