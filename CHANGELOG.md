@@ -8,6 +8,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.1.0 – 2025-10-15
+
+### Added
+
+- Add locale mapping @julien-nc [#1213](https://github.com/nextcloud/user_oidc/pull/1213)
+
+### Changed
+
+- Explain jwks cache invalidation in the README @julien-nc [#1225](https://github.com/nextcloud/user_oidc/pull/1225)
+- Add more debug log when a group does not match the whitelist regex @julien-nc [#1228](https://github.com/nextcloud/user_oidc/pull/1228)
+
+### Fixed
+
+- Handle missing KID in JWT token @solracsf [#1220](https://github.com/nextcloud/user_oidc/pull/1220)
+- Handle AppConfigTypeConflictException when getting/setting allow_multiple_user_backends @julien-nc [#1209](https://github.com/nextcloud/user_oidc/pull/1209)
+
 ## 8.0.0 – 2025-09-22
 
 ### Added

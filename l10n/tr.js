@@ -80,6 +80,7 @@ OC.L10N.register(
     "Email mapping" : "E-posta adresi eşleştirmesi",
     "Phone mapping" : "Telefon numarası eşleştirmesi",
     "Language mapping" : "Dil eşleştirmesi",
+    "Locale mapping" : "Yerel ayar eşleştirmesi",
     "Role/Title mapping" : "Rol/Unvan eşleştirmesi",
     "Street mapping" : "Sokak eşleştirmesi",
     "Postal code mapping" : "Posta kodu eşleştirmesi",

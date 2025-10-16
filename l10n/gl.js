@@ -80,6 +80,7 @@ OC.L10N.register(
     "Email mapping" : "Asignación do correo-e",
     "Phone mapping" : "Asignación do teléfono",
     "Language mapping" : "Asignación do idioma",
+    "Locale mapping" : "Asignación de configuración rexional",
     "Role/Title mapping" : "Asignación do rol/título",
     "Street mapping" : "Asignación da rúa",
     "Postal code mapping" : "Asignación do código postal",

@@ -114,6 +114,19 @@ To skip the confirmation, use `--force`.
 ***Warning***: be careful with the deletion of a provider because in some setup, this invalidates access to all
 NextCloud accounts associated with this provider.
 
+#### JWKS cache invalidation
+
+A provider-specific JWKS cache is stored by user_oidc. This cache is valid for one hour.
+If the JWKS changed on the IdP side, you can clear this JWKS
+cache by editing the provider with occ. You don't have to change any value. For example, if your provider identifier is
+`my_identifier` and the client ID is `my_client_id`, you can run:
+
+```
+occ user_oidc:provider my_identifier --clientid my_client_id
+```
+
+to clear the JWKS cache of the provider `my_identifier`.
+
 #### Avatar support
 
 The avatar attribute on your IdP side may contain a URL pointing to an image file or directly a base64 encoded image.

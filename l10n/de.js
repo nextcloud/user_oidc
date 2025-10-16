@@ -80,6 +80,7 @@ OC.L10N.register(
     "Email mapping" : "E-Mail-Mapping",
     "Phone mapping" : "Telefon-Mapping",
     "Language mapping" : "Sprachen-Mapping",
+    "Locale mapping" : "Gebietszuordnung",
     "Role/Title mapping" : "Rollen/Titel--Mapping",
     "Street mapping" : "Straßen-Mapping",
     "Postal code mapping" : "Postleitzahl-Mapping",
