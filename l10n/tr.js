@@ -15,7 +15,7 @@ OC.L10N.register(
     "The audience does not match ours" : "Hedef kitle bizimkiyle eşleşmiyor",
     "The authorized party does not match ours" : "Yetkili taraf bizimkiyle eşleşmiyor",
     "No authorized party" : "Herhangi bir yetkili taraf yok",
-    "The nonce does not match" : "Rastgele zaman eşleşmiyor",
+    "The nonce does not match" : "Rastgele kod eşleşmiyor",
     "You must access Nextcloud with HTTPS to use OpenID Connect." : "OpenID Connect kullanmak için Nextcloud erişimini HTTPS üzerinden yapmalısınız.",
     "There is no such OpenID Connect provider." : "Böyle bir OpenID Connect hizmeti sağlayıcısı bulunamadı.",
     "Could not reach the OpenID Connect provider." : "OpenID Connect hizmeti sağlayıcısına erişilemedi.",
