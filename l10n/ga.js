@@ -80,6 +80,7 @@ OC.L10N.register(
     "Email mapping" : "Mapáil ríomhphoist",
     "Phone mapping" : "Léarscáiliú fón",
     "Language mapping" : "Mapáil teanga",
+    "Locale mapping" : "Mapáil logánta",
     "Role/Title mapping" : "Mapáil Róil/Teidil",
     "Street mapping" : "Léarscáiliú sráide",
     "Postal code mapping" : "Léarscáil cód poist",
