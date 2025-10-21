@@ -240,6 +240,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 					$this->eventDispatcher->dispatchTyped($validationEvent);
 					$oidcProviderUserId = $validationEvent->getUserId();
 					if ($oidcProviderUserId !== null) {
+						$this->session->set('app_api', true);
 						return $oidcProviderUserId;
 					} else {
 						$this->logger->debug('[NextcloudOidcProviderValidator] The bearer token validation has failed');
@@ -306,10 +307,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 
 							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->session->set('app_api', true);
 							return $userId;
 						} elseif ($this->userExists($tokenUserId)) {
 							$this->checkFirstLogin($tokenUserId);
 							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->session->set('app_api', true);
 							return $tokenUserId;
 						} else {
 							// check if the user exists locally
@@ -331,6 +334,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 							$this->checkFirstLogin($tokenUserId);
 							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->session->set('app_api', true);
 							return $tokenUserId;
 						}
 					}
