@@ -32,7 +32,8 @@ class DiscoveryService {
 		'RS512' => 'RSA',
 		'ES256' => 'EC',
 		'ES384' => 'EC',
-		'ES512' => 'EC'
+		'ES512' => 'EC',
+		'EdDSA' => 'EdDSA'
 	];
 
 	private ICache $cache;
