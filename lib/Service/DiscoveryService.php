@@ -125,7 +125,7 @@ class DiscoveryService {
 	 *  - EC keys use one of the allowed curves: P-256, P-384, P-521.
 	 *  - EdDSA keys use the Ed25519 curve.
 	 *
-	 * @param array  $key The key data as an associative array (JWK format).
+	 * @param array $key The key data as an associative array (JWK format).
 	 * @param string $alg The algorithm intended to be used with this key (e.g., 'RS256', 'ES256').
 	 *
 	 * @throws \RuntimeException If the key is missing required fields, has an unsupported type,
