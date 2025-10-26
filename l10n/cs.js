@@ -80,6 +80,7 @@ OC.L10N.register(
     "Email mapping" : "Mapování e-mailu",
     "Phone mapping" : "Mapování telefonu",
     "Language mapping" : "Mapování jazyka",
+    "Locale mapping" : "Mapování místních a jazykových nastavení",
     "Role/Title mapping" : "Mapování role/oslovení",
     "Street mapping" : "Mapování ulice",
     "Postal code mapping" : "Mapování PSČ",

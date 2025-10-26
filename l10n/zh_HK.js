@@ -80,6 +80,7 @@ OC.L10N.register(
     "Email mapping" : "電子郵件映射",
     "Phone mapping" : "電話映射",
     "Language mapping" : "語言映射",
+    "Locale mapping" : "語言場景映射",
     "Role/Title mapping" : "角色/標題映射",
     "Street mapping" : "街道映射",
     "Postal code mapping" : "郵政編碼映射",
