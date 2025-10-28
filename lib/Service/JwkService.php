@@ -55,17 +55,20 @@ class JwkService {
 	 */
 	public function generatePemPrivateKey(): string {
 		$config = [
-			'digest_alg' => 'sha512',
-			'private_key_bits' => 4096,
-			// 'private_key_type' => OPENSSL_KEYTYPE_EC,
-			'private_key_type' => OPENSSL_KEYTYPE_RSA,
+			// 'digest_alg' => 'sha512',
+			// 'private_key_bits' => 4096,
+			'private_key_type' => OPENSSL_KEYTYPE_EC,
+			// 'private_key_type' => OPENSSL_KEYTYPE_RSA,
+			// 'curve_name' => 'secp256r1',
+			'curve_name' => 'secp384r1',
+			// 'curve_name' => 'secp521r1',
 		];
 
 		// Create the private and public key
 		$key = openssl_pkey_new($config);
-		openssl_pkey_export($key, $privKeyPem);
+		openssl_pkey_export($key, $privateKeyPem);
 
-		return $privKeyPem;
+		return $privateKeyPem;
 	}
 
 	/**
@@ -80,8 +83,21 @@ class JwkService {
 		$myPemPrivateKey = $this->getMyPemPrivateKey();
 		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
 		$sslPublicKey = openssl_pkey_get_details($sslPrivateKey);
-		$pubKeyPem = $sslPublicKey['key'];
-		return $this->getJwkFromPem($pubKeyPem)->jsonSerialize();
+		return $this->getSigJwkFromSslKey($sslPublicKey);
+		// $pubKeyPem = $sslPublicKey['key'];
+		// return $this->getJwkFromPem($pubKeyPem)->jsonSerialize();
+	}
+
+	public function getSigJwkFromSslKey(array $sslKey): array {
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+		return [
+			'kty' => 'EC',
+			'use' => 'sig',
+			'kid' => 'sig_key_' . $pemPrivateKeyExpiresAt,
+			'crv' => 'P-384',
+			'x' => \rtrim(\strtr(\base64_encode($sslKey['ec']['x']), '+/', '-_'), '='),
+			'y' => \rtrim(\strtr(\base64_encode($sslKey['ec']['y']), '+/', '-_'), '='),
+		];
 	}
 
 	/**
@@ -96,7 +112,7 @@ class JwkService {
 		$options = [
 			'use' => 'sig',
 			'alg' => 'RS512',
-			'kid' => 'key_' . $pemPrivateKeyExpiresAt,
+			'kid' => 'sig_key_' . $pemPrivateKeyExpiresAt,
 		];
 		$keyFactory = new KeyFactory();
 		return $keyFactory->createFromPem($pemKey, $options);
@@ -123,7 +139,34 @@ class JwkService {
 
 		$payload = ['lll' => 'aaa'];
 		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
-		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'key_' . $pemPrivateKeyExpiresAt, 'RS512');
+		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, 'RS512');
+
+		// check content of JWT
+		$rawJwks = ['keys' => [$this->getSigJwkFromSslKey($pubKey)]];
+		$jwks = JWK::parseKeySet($rawJwks, 'RS512');
+		$jwtPayload = JWT::decode($signedJwtToken, $jwks);
+		$jwtPayloadArray = json_decode(json_encode($jwtPayload), true);
+
+		return [
+			'public_jwk' => $this->getSigJwkFromSslKey($pubKey),
+			'public_pem' => $pubKeyPem,
+			'private_pem' => $myPemPrivateKey,
+			'payload' => $payload,
+			'signed_jwt' => $signedJwtToken,
+			'jwt_payload' => $jwtPayloadArray,
+			'arrays_are_equal' => $payload === $jwtPayloadArray,
+		];
+	}
+
+	public function debugRSA(): array {
+		$myPemPrivateKey = $this->getMyPemPrivateKey();
+		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
+		$pubKey = openssl_pkey_get_details($sslPrivateKey);
+		$pubKeyPem = $pubKey['key'];
+
+		$payload = ['lll' => 'aaa'];
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt);
 
 		// check content of JWT
 		$rawJwks = ['keys' => [$this->getJwkFromPem($pubKeyPem)->jsonSerialize()]];
