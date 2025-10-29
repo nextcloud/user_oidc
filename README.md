@@ -202,6 +202,22 @@ parameter to the login URL.
 sudo -u www-data php var/www/nextcloud/occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
 ```
 
+### Private key JWT authentication
+
+This app supports private key JWT authentication.
+See the `private_key_jwt` authentication method in https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication
+This can be enabled for each provider individually in their settings
+(in Nextcloud's admin settings or with the `occ user_oidc:provider` command`).
+
+If you enable that for a provider, you must configure the client accordingly on the IdP side.
+In the IdP client settings, you should be able to make it accept a signed JWT and set the JWKS URL.
+
+The JWKS URL you should set in your IdP's client settings is `https://<your-nextcloud-url>/index.php/apps/user_oidc/jwks`.
+The exact URL is displayed in the user_oidc admin settings.
+
+In Keycloak, you can set the JWKS URL in the "Keys" tab of the client settings. Then you can choose "Signed Jwt"
+as the "Client Authenticator" in the "Credentials" tab.
+
 ### PKCE
 
 This app supports PKCE (Proof Key for Code Exchange).
