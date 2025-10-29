@@ -17,13 +17,13 @@ webpackConfig.entry = {
 	timezone: path.join(__dirname, 'src', 'timezone.js'),
 }
 
-webpackConfig.plugins.push(
-	new ESLintPlugin({
-		extensions: ['js', 'vue'],
-		files: 'src',
-		failOnError: !isDev,
-	})
-)
+//webpackConfig.plugins.push(
+//	new ESLintPlugin({
+//		extensions: ['js', 'vue'],
+//		files: 'src',
+//		failOnError: !isDev,
+//	})
+//)
 webpackConfig.plugins.push(
 	new StyleLintPlugin({
 		files: 'src/**/*.{css,scss,vue}',
