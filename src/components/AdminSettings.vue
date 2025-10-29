@@ -197,6 +197,7 @@ export default {
 				endSessionEndpoint: '',
 				postLogoutUri: '',
 				settings: {
+					usePrivateKeyJwt: false,
 					uniqueUid: true,
 					checkBearer: false,
 					bearerProvisioning: false,
