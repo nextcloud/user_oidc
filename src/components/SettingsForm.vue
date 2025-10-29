@@ -23,13 +23,21 @@
 				type="text"
 				required>
 		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.usePrivateKeyJwt"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Use private key JWT authentication method') }}
+		</NcCheckboxRadioSwitch>
+		<!-- TODO: link to https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication -->
+		<!-- TODO: give the JWKs URL to configure the IdP -->
 		<p>
 			<label for="oidc-client-secret">{{ t('user_oidc', 'Client secret') }}</label>
 			<input id="oidc-client-secret"
 				v-model="localProvider.clientSecret"
-				:placeholder="update ? t('user_oidc', 'Leave empty to keep existing') : null"
+				:placeholder="clientSecretPlaceholder"
 				type="text"
-				:required="!update"
+				:disabled="localProvider.settings.usePrivateKeyJwt"
+				:required="!update && !localProvider.settings.usePrivateKeyJwt"
 				autocomplete="off">
 		</p>
 		<p class="settings-hint warning-hint">
@@ -396,6 +404,14 @@ export default {
 	computed: {
 		identifierLength() {
 			return this.localProvider.identifier.length
+		},
+		clientSecretPlaceholder() {
+			if (this.localProvider.settings.usePrivateKeyJwt) {
+				return t('user_oidc', 'Not used with private key JWT authentication')
+			}
+			return this.update
+				? t('user_oidc', 'Leave empty to keep existing')
+				: null
 		},
 	},
 	created() {

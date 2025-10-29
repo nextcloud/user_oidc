@@ -128,10 +128,8 @@ class JwkService {
 			'crv' => 'P-384',
 			'x' => \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['x']), '+/', '-_'), '='),
 			'y' => \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['y']), '+/', '-_'), '='),
+			'alg' => $isEncryptionKey ? 'ECDH-ES+A192KW' : 'ES384',
 		];
-		if ($isEncryptionKey) {
-			$jwk['alg'] = 'ECDH-ES+A192KW';
-		}
 		return $jwk;
 	}
 
