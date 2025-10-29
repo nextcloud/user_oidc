@@ -19,9 +19,13 @@ use Strobotti\JWK\KeyFactory;
 
 class JwkService {
 
-	public const PEM_PRIVATE_KEY_SETTINGS_KEY = 'pemPrivateKey';
-	public const PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY = 'pemPrivateKeyExpiresAt';
-	public const PEM_PRIVATE_KEY_EXPIRES_IN_SECONDS = 60 * 2;
+	public const PEM_SIG_KEY_SETTINGS_KEY = 'pemSignatureKey';
+	public const PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY = 'pemSignatureKeyExpiresAt';
+	public const PEM_SIG_KEY_EXPIRES_IN_SECONDS = 60 * 2;
+
+	public const PEM_ENC_KEY_SETTINGS_KEY = 'pemEncryptionKey';
+	public const PEM_ENC_KEY_EXPIRES_AT_SETTINGS_KEY = 'pemEncryptionKeyExpiresAt';
+	public const PEM_ENC_KEY_EXPIRES_IN_SECONDS = 60 * 2;
 
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -29,23 +33,43 @@ class JwkService {
 	}
 
 	/**
-	 * Get our stored private PEM key (or regenerate it if it's expired)
+	 * Get our stored signature PEM key (or regenerate it if it's expired)
 	 *
 	 * @param bool $refresh
 	 * @return string
 	 * @throws AppConfigTypeConflictException
 	 */
-	public function getMyPemPrivateKey(bool $refresh = true): string {
-		$pemPrivateKey = $this->appConfig->getAppValueString(self::PEM_PRIVATE_KEY_SETTINGS_KEY, lazy: true);
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+	public function getMyPemSignatureKey(bool $refresh = true): string {
+		$pemSignatureKey = $this->appConfig->getAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, lazy: true);
+		$pemSignatureKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
 
-		if ($pemPrivateKey === '' || $pemPrivateKeyExpiresAt === 0 || ($refresh && time() > $pemPrivateKeyExpiresAt)) {
-			$pemPrivateKey = $this->generatePemPrivateKey();
+		if ($pemSignatureKey === '' || $pemSignatureKeyExpiresAt === 0 || ($refresh && time() > $pemSignatureKeyExpiresAt)) {
+			$pemSignatureKey = $this->generatePemPrivateKey();
 			// store the key
-			$this->appConfig->setAppValueString(self::PEM_PRIVATE_KEY_SETTINGS_KEY, $pemPrivateKey, lazy: true);
-			$this->appConfig->setAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, time() + self::PEM_PRIVATE_KEY_EXPIRES_IN_SECONDS, lazy: true);
+			$this->appConfig->setAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, $pemSignatureKey, lazy: true);
+			$this->appConfig->setAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, time() + self::PEM_SIG_KEY_EXPIRES_IN_SECONDS, lazy: true);
 		}
-		return $pemPrivateKey;
+		return $pemSignatureKey;
+	}
+
+	/**
+	 * Get our stored encryption PEM key (or regenerate it if it's expired)
+	 *
+	 * @param bool $refresh
+	 * @return string
+	 * @throws AppConfigTypeConflictException
+	 */
+	public function getMyEncryptionKey(bool $refresh = true): string {
+		$pemEncryptionKey = $this->appConfig->getAppValueString(self::PEM_ENC_KEY_SETTINGS_KEY, lazy: true);
+		$pemEncryptionKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_ENC_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+
+		if ($pemEncryptionKey === '' || $pemEncryptionKeyExpiresAt === 0 || ($refresh && time() > $pemEncryptionKeyExpiresAt)) {
+			$pemEncryptionKey = $this->generatePemPrivateKey();
+			// store the key
+			$this->appConfig->setAppValueString(self::PEM_ENC_KEY_SETTINGS_KEY, $pemEncryptionKey, lazy: true);
+			$this->appConfig->setAppValueInt(self::PEM_ENC_KEY_EXPIRES_AT_SETTINGS_KEY, time() + self::PEM_ENC_KEY_EXPIRES_IN_SECONDS, lazy: true);
+		}
+		return $pemEncryptionKey;
 	}
 
 	/**
@@ -55,7 +79,7 @@ class JwkService {
 	 */
 	public function generatePemPrivateKey(): string {
 		$config = [
-			// 'digest_alg' => 'sha512',
+			// 'digest_alg' => 'ES384',
 			// 'private_key_bits' => 4096,
 			'private_key_type' => OPENSSL_KEYTYPE_EC,
 			// 'private_key_type' => OPENSSL_KEYTYPE_RSA,
@@ -79,25 +103,36 @@ class JwkService {
 	 * @return array
 	 * @throws AppConfigTypeConflictException
 	 */
-	public function getJwk(): array {
-		$myPemPrivateKey = $this->getMyPemPrivateKey();
-		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
-		$sslPublicKey = openssl_pkey_get_details($sslPrivateKey);
-		return $this->getSigJwkFromSslKey($sslPublicKey);
+	public function getJwks(): array {
+		$myPemSignatureKey = $this->getMyPemSignatureKey(false);
+		$sslSignatureKey = openssl_pkey_get_private($myPemSignatureKey);
+		$sslSignatureKeyDetails = openssl_pkey_get_details($sslSignatureKey);
+
+		$myPemEncryptionKey = $this->getMyEncryptionKey(true);
+		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
+		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
+		return [
+			$this->getJwkFromSslKey($sslSignatureKeyDetails),
+			$this->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true),
+		];
 		// $pubKeyPem = $sslPublicKey['key'];
 		// return $this->getJwkFromPem($pubKeyPem)->jsonSerialize();
 	}
 
-	public function getSigJwkFromSslKey(array $sslKey): array {
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
-		return [
+	public function getJwkFromSslKey(array $sslKeyDetails, bool $isEncryptionKey = false): array {
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+		$jwk = [
 			'kty' => 'EC',
-			'use' => 'sig',
-			'kid' => 'sig_key_' . $pemPrivateKeyExpiresAt,
+			'use' => $isEncryptionKey ? 'enc' : 'sig',
+			'kid' => ($isEncryptionKey ? 'enc' : 'sig') . '_key_' . $pemPrivateKeyExpiresAt,
 			'crv' => 'P-384',
-			'x' => \rtrim(\strtr(\base64_encode($sslKey['ec']['x']), '+/', '-_'), '='),
-			'y' => \rtrim(\strtr(\base64_encode($sslKey['ec']['y']), '+/', '-_'), '='),
+			'x' => \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['x']), '+/', '-_'), '='),
+			'y' => \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['y']), '+/', '-_'), '='),
 		];
+		if ($isEncryptionKey) {
+			$jwk['alg'] = 'ECDH-ES+A192KW';
+		}
+		return $jwk;
 	}
 
 	/**
@@ -108,7 +143,7 @@ class JwkService {
 	 * @throws AppConfigTypeConflictException
 	 */
 	public function getJwkFromPem(string $pemKey): KeyInterface {
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
 		$options = [
 			'use' => 'sig',
 			'alg' => 'RS512',
@@ -132,40 +167,45 @@ class JwkService {
 	}
 
 	public function debug(): array {
-		$myPemPrivateKey = $this->getMyPemPrivateKey();
+		$myPemPrivateKey = $this->getMyPemSignatureKey();
 		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
 		$pubKey = openssl_pkey_get_details($sslPrivateKey);
 		$pubKeyPem = $pubKey['key'];
 
 		$payload = ['lll' => 'aaa'];
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
-		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, 'RS512');
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, 'ES384');
 
 		// check content of JWT
-		$rawJwks = ['keys' => [$this->getSigJwkFromSslKey($pubKey)]];
-		$jwks = JWK::parseKeySet($rawJwks, 'RS512');
+		$rawJwks = ['keys' => [$this->getJwkFromSslKey($pubKey)]];
+		$jwks = JWK::parseKeySet($rawJwks, 'ES384');
 		$jwtPayload = JWT::decode($signedJwtToken, $jwks);
 		$jwtPayloadArray = json_decode(json_encode($jwtPayload), true);
 
+		// check header of JWT
+		$jwtParts = explode('.', $signedJwtToken, 3);
+		$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
+
 		return [
-			'public_jwk' => $this->getSigJwkFromSslKey($pubKey),
+			'public_jwk' => $this->getJwkFromSslKey($pubKey),
 			'public_pem' => $pubKeyPem,
 			'private_pem' => $myPemPrivateKey,
-			'payload' => $payload,
+			'initial_payload' => $payload,
 			'signed_jwt' => $signedJwtToken,
-			'jwt_payload' => $jwtPayloadArray,
+			'jwt_header' => $jwtHeader,
+			'decoded_jwt_payload' => $jwtPayloadArray,
 			'arrays_are_equal' => $payload === $jwtPayloadArray,
 		];
 	}
 
 	public function debugRSA(): array {
-		$myPemPrivateKey = $this->getMyPemPrivateKey();
+		$myPemPrivateKey = $this->getMyPemSignatureKey();
 		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
 		$pubKey = openssl_pkey_get_details($sslPrivateKey);
 		$pubKeyPem = $pubKey['key'];
 
 		$payload = ['lll' => 'aaa'];
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_PRIVATE_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
 		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt);
 
 		// check content of JWT

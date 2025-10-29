@@ -89,8 +89,8 @@ class ApiController extends Controller {
 	#[PublicPage]
 	public function getJwks(): JSONResponse {
 		try {
-			$jwk = $this->jwkService->getJwk();
-			return new JSONResponse(['keys' => [$jwk]]);
+			$jwks = $this->jwkService->getJwks();
+			return new JSONResponse(['keys' => $jwks]);
 			// return new JSONResponse($this->jwkService->debug());
 		} catch (\Exception|\Throwable $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
