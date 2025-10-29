@@ -21,6 +21,7 @@ use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\JwkService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
@@ -96,6 +97,7 @@ class LoginController extends BaseOidcController {
 		private ICrypto $crypto,
 		private TokenService $tokenService,
 		private OidcService $oidcService,
+		private JwkService $jwkService,
 	) {
 		parent::__construct($request, $config, $l10n);
 	}
@@ -384,6 +386,7 @@ class LoginController extends BaseOidcController {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
 		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+		$usePrivateKeyJwt = $this->providerService->getSetting($providerId, ProviderService::SETTING_USE_PRIVATE_KEY_JWT, '0') !== '0';
 
 		try {
 			$requestBody = [
@@ -413,7 +416,8 @@ class LoginController extends BaseOidcController {
 				$tokenEndpointAuthMethod = 'client_secret_post';
 			}
 
-			if ($tokenEndpointAuthMethod === 'client_secret_basic') {
+			// private key JWT auth does not work with client_secret_basic, we don't wanna pass the client secret
+			if ($tokenEndpointAuthMethod === 'client_secret_basic' && !$usePrivateKeyJwt) {
 				$headers = [
 					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
 					'Content-Type' => 'application/x-www-form-urlencoded',
@@ -421,7 +425,12 @@ class LoginController extends BaseOidcController {
 			} else {
 				// Assuming client_secret_post as no other option is supported currently
 				$requestBody['client_id'] = $provider->getClientId();
-				$requestBody['client_secret'] = $providerClientSecret;
+				if ($usePrivateKeyJwt) {
+					$requestBody['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+					$requestBody['client_assertion'] = $this->jwkService->generateClientAssertion($provider, $discovery['issuer'], $code);
+				} else {
+					$requestBody['client_secret'] = $providerClientSecret;
+				}
 			}
 
 			$body = $this->clientService->post(
