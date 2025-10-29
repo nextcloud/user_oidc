@@ -23,13 +23,24 @@
 				type="text"
 				required>
 		</p>
-		<NcCheckboxRadioSwitch
-			v-model="localProvider.settings.usePrivateKeyJwt"
-			wrapper-element="div">
-			{{ t('user_oidc', 'Use private key JWT authentication method') }}
-		</NcCheckboxRadioSwitch>
-		<!-- TODO: link to https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication -->
-		<!-- TODO: give the JWKs URL to configure the IdP -->
+		<div class="line">
+			<NcCheckboxRadioSwitch
+				v-model="localProvider.settings.usePrivateKeyJwt"
+				wrapper-element="div">
+				{{ t('user_oidc', 'Use private key JWT authentication method') }}
+			</NcCheckboxRadioSwitch>
+			<a href="https://github.com/nextcloud/user_oidc#private-key-jwt-authentication" target="_blank">
+				<NcButton variant="tertiary"
+					:title="t('user_oidc', 'More details on private key JWT authentication method')">
+					<template #icon>
+						<HelpCircleOutlineIcon />
+					</template>
+				</NcButton>
+			</a>
+		</div>
+		<NcNoteCard v-if="localProvider.settings.usePrivateKeyJwt" type="info">
+			{{ t('user_oidc', 'Use this JWKS URL in your IdP\'s client settings: {jwksUrl}', { jwksUrl }) }}
+		</NcNoteCard>
 		<p>
 			<label for="oidc-client-secret">{{ t('user_oidc', 'Client secret') }}</label>
 			<input id="oidc-client-secret"
@@ -357,19 +368,25 @@ import AlertOutlineIcon from 'vue-material-design-icons/AlertOutline.vue'
 import CheckIcon from 'vue-material-design-icons/Check.vue'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import ChevronDownIcon from 'vue-material-design-icons/ChevronDown.vue'
+import HelpCircleOutlineIcon from 'vue-material-design-icons/HelpCircleOutline.vue'
 
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcButton from '@nextcloud/vue/components/NcButton'
+import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'SettingsForm',
 	components: {
 		NcCheckboxRadioSwitch,
 		NcButton,
+		NcNoteCard,
 		AlertOutlineIcon,
 		CheckIcon,
 		ChevronRightIcon,
 		ChevronDownIcon,
+		HelpCircleOutlineIcon,
 	},
 	props: {
 		submitText: {
@@ -394,6 +411,7 @@ export default {
 			localProvider: null,
 			maxIdentifierLength: 128,
 			showProfileAttributes: false,
+			jwksUrl: window.location.protocol + '//' + window.location.host + generateUrl('/apps/user_oidc/jwks'),
 		}
 	},
 	computed: {
@@ -443,6 +461,12 @@ export default {
 		.icon {
 			margin-right: 8px;
 		}
+	}
+
+	.line {
+		display: flex;
+		align-items: center;
+		margin: 4px 0;
 	}
 
 	.warning-hint {
