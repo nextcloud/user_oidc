@@ -77,7 +77,7 @@ class SettingsController extends Controller {
 	}
 
 	#[PasswordConfirmationRequired]
-	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
+	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint, string $bearerSecret,
 		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null,
 		?string $postLogoutUri = null): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
@@ -102,6 +102,8 @@ class SettingsController extends Controller {
 		$provider->setEndSessionEndpoint($endSessionEndpoint ?: null);
 		$provider->setPostLogoutUri($postLogoutUri ?: null);
 		$provider->setScope($scope);
+		$encryptedBearerSecret = $this->crypto->encrypt($this->base64UrlEncode($bearerSecret));
+		$provider->setBearerSecret($encryptedBearerSecret);
 		$provider = $this->providerMapper->insert($provider);
 
 		$providerSettings = $this->providerService->setSettings($provider->getId(), $settings);
@@ -110,7 +112,7 @@ class SettingsController extends Controller {
 	}
 
 	#[PasswordConfirmationRequired]
-	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, ?string $clientSecret = null,
+	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, ?string $clientSecret = null, ?string $bearerSecret = null,
 		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null,
 		?string $postLogoutUri = null): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
@@ -133,6 +135,9 @@ class SettingsController extends Controller {
 		if ($clientSecret) {
 			$encryptedClientSecret = $this->crypto->encrypt($clientSecret);
 			$provider->setClientSecret($encryptedClientSecret);
+		}
+		if ($bearerSecret) {
+			$provider->setBearerSecret($this->base64UrlEncode($bearerSecret));
 		}
 		$provider->setDiscoveryEndpoint($discoveryEndpoint);
 		$provider->setEndSessionEndpoint($endSessionEndpoint ?: null);
@@ -184,5 +189,9 @@ class SettingsController extends Controller {
 			}
 		}
 		return new JSONResponse([]);
+	}
+
+	private function base64UrlEncode(string $data): string {
+		return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 	}
 }
