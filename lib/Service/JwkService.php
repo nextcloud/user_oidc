@@ -10,6 +10,7 @@ namespace OCA\UserOIDC\Service;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Services\IAppConfig;
@@ -162,6 +163,27 @@ class JwkService {
 	 */
 	public function createJwt(array $payload, \OpenSSLAsymmetricKey $key, string $keyId, string $alg = 'RS512'): string {
 		return JWT::encode($payload, $key, $alg, $keyId);
+	}
+
+	public function generateClientAssertion(Provider $provider, string $discoveryIssuer, ?string $code = null): string {
+		$myPemPrivateKey = $this->getMyPemSignatureKey();
+		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+
+		$payload = [
+			'sub' => $provider->getClientId(),
+			'aud' => $discoveryIssuer,
+			'iss' => $provider->getClientId(),
+			'iat' => time(),
+			'exp' => time() + 60,
+			'jti' => \bin2hex(\random_bytes(16)),
+		];
+
+		if ($code !== null) {
+			$payload['code'] = $code;
+		}
+
+		return $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, 'ES384');
 	}
 
 	public function debug(): array {
