@@ -27,6 +27,10 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_UNIQUE_UID,
 			'description' => 'Determines if unique user ids shall be used or not. 1 to enable, 0 to disable',
 		],
+		'use-private-key-jwt' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_USE_PRIVATE_KEY_JWT,
+			'description' => 'If enabled, user_oidc will use the private key JWT authentication method instead of using the client secret. 1 to enable, 0 to disable (default when creating a new provider)',
+		],
 		'check-bearer' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_CHECK_BEARER,
 			'description' => 'Determines if Nextcloud API/WebDav calls should check the Bearer token against this provider or not. 1 to enable, 0 to disable (default when creating a new provider)',
