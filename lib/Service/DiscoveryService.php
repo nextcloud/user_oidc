@@ -23,7 +23,6 @@ class DiscoveryService {
 
 	/**
 	 *
-	 * See https://www.imsglobal.org/spec/security/v1p1#approved-jwt-signing-algorithms.
 	 * @var string[]
 	 */
 	private const SUPPORTED_JWK_ALGS = [
@@ -32,7 +31,8 @@ class DiscoveryService {
 		'RS512' => 'RSA',
 		'ES256' => 'EC',
 		'ES384' => 'EC',
-		'ES512' => 'EC'
+		'ES512' => 'EC',
+		'EdDSA' => 'EdDSA'
 	];
 
 	private ICache $cache;
@@ -119,6 +119,55 @@ class DiscoveryService {
 	}
 
 	/**
+	 * Validates the strength and correctness of a cryptographic key.
+	 *
+	 * This method checks:
+	 *  - RSA keys have a modulus of at least 2048 bits.
+	 *  - EC keys use one of the allowed curves: P-256, P-384, P-521.
+	 *  - EdDSA keys use the Ed25519 curve.
+	 *
+	 * @param array $key The key data as an associative array (JWK format).
+	 * @param string $alg The algorithm intended to be used with this key (e.g., 'RS256', 'ES256').
+	 *
+	 * @throws \RuntimeException If the key is missing required fields, has an unsupported type,
+	 *                           or does not meet the minimum security requirements.
+	 */
+	private function validateKeyStrength(array $key, string $alg): void {
+		$kty = $key['kty'] ?? throw new \RuntimeException('Key missing kty');
+
+		switch ($kty) {
+			case 'RSA':
+				if (empty($key['n'])) {
+					throw new \RuntimeException('RSA key missing modulus (n)');
+				}
+				$modulus = JWT::urlsafeB64Decode($key['n']);
+				$modulusBits = strlen($modulus) * 8;
+				if ($modulusBits < 2048) {
+					throw new \RuntimeException('RSA key too short: ' . $modulusBits . ' bits');
+				}
+				break;
+
+			case 'EC':
+				$curve = $key['crv'] ?? throw new \RuntimeException('EC key missing crv');
+				$allowedCurves = ['P-256', 'P-384', 'P-521'];
+				if (!in_array($curve, $allowedCurves, true)) {
+					throw new \RuntimeException('Unsupported EC curve: ' . $curve);
+				}
+				break;
+
+			case 'EdDSA':
+				$curve = $key['crv'] ?? throw new \RuntimeException('EdDSA key missing crv');
+				if ($curve !== 'Ed25519') {
+					throw new \RuntimeException('Unsupported EdDSA curve: ' . $curve);
+				}
+				break;
+
+			default:
+				throw new \RuntimeException('Unsupported key type: ' . $kty);
+		}
+	}
+
+	/**
 	 * Inspired by https://github.com/snake/moodle/compare/880462a1685...MDL-77077-master
 	 *
 	 * @param array $jwks The JSON Web Key Set
@@ -157,6 +206,9 @@ class DiscoveryService {
 			if ($keyUse !== null && $keyUse !== 'sig') {
 				continue;
 			}
+
+			// Validate key strength
+			$this->validateKeyStrength($key, $alg);
 
 			// If JWT has a kid, match strictly
 			if ($kid !== null) {
