@@ -22,11 +22,11 @@ class JwkService {
 
 	public const PEM_SIG_KEY_SETTINGS_KEY = 'pemSignatureKey';
 	public const PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY = 'pemSignatureKeyExpiresAt';
-	public const PEM_SIG_KEY_EXPIRES_IN_SECONDS = 60 * 2;
+	public const PEM_SIG_KEY_EXPIRES_IN_SECONDS = 60 * 60;
 
 	public const PEM_ENC_KEY_SETTINGS_KEY = 'pemEncryptionKey';
 	public const PEM_ENC_KEY_EXPIRES_AT_SETTINGS_KEY = 'pemEncryptionKeyExpiresAt';
-	public const PEM_ENC_KEY_EXPIRES_IN_SECONDS = 60 * 2;
+	public const PEM_ENC_KEY_EXPIRES_IN_SECONDS = 60 * 60;
 
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -105,6 +105,7 @@ class JwkService {
 	 * @throws AppConfigTypeConflictException
 	 */
 	public function getJwks(): array {
+		// we don't refresh here to make sure the IdP will get the key that was used to sign the client assertion
 		$myPemSignatureKey = $this->getMyPemSignatureKey(false);
 		$sslSignatureKey = openssl_pkey_get_private($myPemSignatureKey);
 		$sslSignatureKeyDetails = openssl_pkey_get_details($sslSignatureKey);
@@ -166,6 +167,7 @@ class JwkService {
 	}
 
 	public function generateClientAssertion(Provider $provider, string $discoveryIssuer, ?string $code = null): string {
+		// we refresh (if needed) here to make sure we use a key that will be served to the IdP in a few seconds
 		$myPemPrivateKey = $this->getMyPemSignatureKey();
 		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
 		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
