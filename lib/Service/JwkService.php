@@ -23,10 +23,14 @@ class JwkService {
 	public const PEM_SIG_KEY_SETTINGS_KEY = 'pemSignatureKey';
 	public const PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY = 'pemSignatureKeyExpiresAt';
 	public const PEM_SIG_KEY_EXPIRES_IN_SECONDS = 60 * 60;
+	public const PEM_SIG_KEY_ALGORITHM = 'ES384';
+	public const PEM_SIG_KEY_CURVE = 'P-384';
 
 	public const PEM_ENC_KEY_SETTINGS_KEY = 'pemEncryptionKey';
 	public const PEM_ENC_KEY_EXPIRES_AT_SETTINGS_KEY = 'pemEncryptionKeyExpiresAt';
 	public const PEM_ENC_KEY_EXPIRES_IN_SECONDS = 60 * 60;
+	public const PEM_ENC_KEY_ALGORITHM = 'ECDH-ES+A192KW';
+	public const PEM_ENC_KEY_CURVE = 'P-384';
 
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -127,10 +131,10 @@ class JwkService {
 			'kty' => 'EC',
 			'use' => $isEncryptionKey ? 'enc' : 'sig',
 			'kid' => ($isEncryptionKey ? 'enc' : 'sig') . '_key_' . $pemPrivateKeyExpiresAt,
-			'crv' => 'P-384',
+			'crv' => $isEncryptionKey ? self::PEM_ENC_KEY_CURVE : self::PEM_SIG_KEY_CURVE,
 			'x' => \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['x']), '+/', '-_'), '='),
 			'y' => \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['y']), '+/', '-_'), '='),
-			'alg' => $isEncryptionKey ? 'ECDH-ES+A192KW' : 'ES384',
+			'alg' => $isEncryptionKey ? self::PEM_ENC_KEY_ALGORITHM : self::PEM_SIG_KEY_ALGORITHM,
 		];
 		return $jwk;
 	}
@@ -185,7 +189,7 @@ class JwkService {
 			$payload['code'] = $code;
 		}
 
-		return $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, 'ES384');
+		return $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, self::PEM_SIG_KEY_ALGORITHM);
 	}
 
 	public function debug(): array {
@@ -196,11 +200,11 @@ class JwkService {
 
 		$payload = ['lll' => 'aaa'];
 		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
-		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, 'ES384');
+		$signedJwtToken = $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemPrivateKeyExpiresAt, self::PEM_SIG_KEY_ALGORITHM);
 
 		// check content of JWT
 		$rawJwks = ['keys' => [$this->getJwkFromSslKey($pubKey)]];
-		$jwks = JWK::parseKeySet($rawJwks, 'ES384');
+		$jwks = JWK::parseKeySet($rawJwks, self::PEM_SIG_KEY_ALGORITHM);
 		$jwtPayload = JWT::decode($signedJwtToken, $jwks);
 		$jwtPayloadArray = json_decode(json_encode($jwtPayload), true);
 

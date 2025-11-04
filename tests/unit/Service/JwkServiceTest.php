@@ -41,19 +41,19 @@ class JwkServiceTest extends TestCase {
 		$initialPayload = ['nice' => 'example'];
 		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(JwkService::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
 		$jwkId = 'sig_key_' . $pemPrivateKeyExpiresAt;
-		$signedJwtToken = $this->jwkService->createJwt($initialPayload, $sslPrivateKey, $jwkId, 'ES384');
+		$signedJwtToken = $this->jwkService->createJwt($initialPayload, $sslPrivateKey, $jwkId, JwkService::PEM_SIG_KEY_ALGORITHM);
 
 		// check JWK
 		$jwk = $this->jwkService->getJwkFromSslKey($pubKey);
 		$this->assertEquals('EC', $jwk['kty']);
 		$this->assertEquals('sig', $jwk['use']);
 		$this->assertEquals($jwkId, $jwk['kid']);
-		$this->assertEquals('P-384', $jwk['crv']);
-		$this->assertEquals('ES384', $jwk['alg']);
+		$this->assertEquals(JwkService::PEM_SIG_KEY_CURVE, $jwk['crv']);
+		$this->assertEquals(JwkService::PEM_SIG_KEY_ALGORITHM, $jwk['alg']);
 
 		// check content of JWT
 		$rawJwks = ['keys' => [$jwk]];
-		$jwks = JWK::parseKeySet($rawJwks, 'ES384');
+		$jwks = JWK::parseKeySet($rawJwks, JwkService::PEM_SIG_KEY_ALGORITHM);
 		$jwtPayload = JWT::decode($signedJwtToken, $jwks);
 		$jwtPayloadArray = json_decode(json_encode($jwtPayload), true);
 		$this->assertEquals($initialPayload, $jwtPayloadArray);
@@ -62,7 +62,23 @@ class JwkServiceTest extends TestCase {
 		$jwtParts = explode('.', $signedJwtToken, 3);
 		$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
 		$this->assertEquals('JWT', $jwtHeader['typ']);
-		$this->assertEquals('ES384', $jwtHeader['alg']);
+		$this->assertEquals(JwkService::PEM_SIG_KEY_ALGORITHM, $jwtHeader['alg']);
 		$this->assertEquals($jwkId, $jwtHeader['kid']);
+	}
+
+	public function testEncryptionKey() {
+		$myPemEncryptionKey = $this->jwkService->getMyEncryptionKey();
+		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
+		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
+		$encJwk = $this->jwkService->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true);
+
+		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(JwkService::PEM_ENC_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
+		$encJwkId = 'enc_key_' . $pemPrivateKeyExpiresAt;
+
+		$this->assertEquals('EC', $encJwk['kty']);
+		$this->assertEquals('enc', $encJwk['use']);
+		$this->assertEquals($encJwkId, $encJwk['kid']);
+		$this->assertEquals(JwkService::PEM_ENC_KEY_CURVE, $encJwk['crv']);
+		$this->assertEquals(JwkService::PEM_ENC_KEY_ALGORITHM, $encJwk['alg']);
 	}
 }
