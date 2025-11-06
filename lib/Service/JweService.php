@@ -146,7 +146,6 @@ class JweService {
 	}
 
 	public function debug(): array {
-		// get encryption key, both formats
 		$myPemEncryptionKey = $this->jwkService->getMyEncryptionKey(true);
 		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
 		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
