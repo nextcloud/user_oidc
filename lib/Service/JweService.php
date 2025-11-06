@@ -27,14 +27,25 @@ use Jose\Component\Encryption\Serializer\JWESerializerManager;
 
 class JweService {
 
+	public const CONTENT_ENCRYPTION_ALGORITHM = 'A192CBC-HS384';
+
 	public function __construct(
 		private JwkService $jwkService,
 	) {
 	}
 
-	public function createSerializedJwe(array $payloadArray, array $encryptionJwk): string {
-		// encrypt a JWT payload with the enc key => JWE
-
+	/**
+	 * @param array $payloadArray the content of the JWE
+	 * @param array $encryptionJwk the public key in JWK format
+	 * @param string $keyEncryptionAlg the algorithm to use for the key encryption
+	 * @param string $contentEncryptionAlg the algorithm to use for the content encryption
+	 * @return string
+	 */
+	public function createSerializedJwe(
+		array $payloadArray, array $encryptionJwk,
+		string $keyEncryptionAlg = JwkService::PEM_ENC_KEY_ALGORITHM,
+		string $contentEncryptionAlg = self::CONTENT_ENCRYPTION_ALGORITHM,
+	): string {
 		$algorithmManager = new AlgorithmManager([
 			new A256KW(),
 			new A256CBCHS512(),
@@ -64,10 +75,10 @@ class JweService {
 			->withSharedProtectedHeader([
 				// Key Encryption Algorithm
 				// 'alg' => 'A256KW',
-				'alg' => 'ECDH-ES+A192KW',
+				'alg' => $keyEncryptionAlg,
 				// Content Encryption Algorithm
 				// 'enc' => 'A256CBC-HS512',
-				'enc' => 'A192CBC-HS384',
+				'enc' => $contentEncryptionAlg,
 				//'zip' => 'DEF'            // Not recommended.
 			])
 			->addRecipient($jwk)    // We add a recipient (a shared key or public key).
@@ -77,6 +88,12 @@ class JweService {
 		return $serializer->serialize($jwe, 0); // We serialize the recipient at index 0 (we only have one recipient).
 	}
 
+	/**
+	 * @param string $serializedJwe the JWE token
+	 * @param array $jwkArray the private key in JWK format (with the 'd' attribute)
+	 * @return string
+	 * @throws \Exception
+	 */
 	public function decryptSerializedJwe(string $serializedJwe, array $jwkArray): string {
 		$algorithmManager = new AlgorithmManager([
 			new A256KW(),
@@ -119,8 +136,8 @@ class JweService {
 			[
 				new AlgorithmChecker(
 					// $keyEncryptionAlgorithmManager->list()
-					$algorithmManager->list()
-				)
+					$algorithmManager->list(),
+				),
 			],
 			// Provide the appropriate TokenTypeSupport[].
 			[
