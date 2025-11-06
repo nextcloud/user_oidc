@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 /**
- * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2025 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
@@ -15,8 +15,6 @@ use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Services\IAppConfig;
 use OCP\Exceptions\AppConfigTypeConflictException;
-use Strobotti\JWK\Key\KeyInterface;
-use Strobotti\JWK\KeyFactory;
 
 class JwkService {
 
@@ -121,11 +119,9 @@ class JwkService {
 			$this->getJwkFromSslKey($sslSignatureKeyDetails),
 			$this->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true),
 		];
-		// $pubKeyPem = $sslPublicKey['key'];
-		// return $this->getJwkFromPem($pubKeyPem)->jsonSerialize();
 	}
 
-	public function getJwkFromSslKey(array $sslKeyDetails, bool $isEncryptionKey = false): array {
+	public function getJwkFromSslKey(array $sslKeyDetails, bool $isEncryptionKey = false, bool $includePrivateKey = false): array {
 		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
 		$jwk = [
 			'kty' => 'EC',
@@ -136,25 +132,10 @@ class JwkService {
 			'y' => \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['y']), '+/', '-_'), '='),
 			'alg' => $isEncryptionKey ? self::PEM_ENC_KEY_ALGORITHM : self::PEM_SIG_KEY_ALGORITHM,
 		];
+		if ($includePrivateKey) {
+			$jwk['d'] = \rtrim(\strtr(\base64_encode($sslKeyDetails['ec']['d']), '+/', '-_'), '=');
+		}
 		return $jwk;
-	}
-
-	/**
-	 * Build a JWK from a PEM (public) key
-	 *
-	 * @param string $pemKey
-	 * @return KeyInterface
-	 * @throws AppConfigTypeConflictException
-	 */
-	public function getJwkFromPem(string $pemKey): KeyInterface {
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
-		$options = [
-			'use' => 'sig',
-			'alg' => 'RS512',
-			'kid' => 'sig_key_' . $pemPrivateKeyExpiresAt,
-		];
-		$keyFactory = new KeyFactory();
-		return $keyFactory->createFromPem($pemKey, $options);
 	}
 
 	/**
