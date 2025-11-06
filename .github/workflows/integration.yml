@@ -24,18 +24,6 @@ jobs:
         databases: ['sqlite', 'mysql', 'pgsql']
         server-versions: ['master']
         include:
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable29
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable30
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable31
-            - php-versions: 8.1
-              databases: mysql
-              server-versions: stable32
             - php-versions: 8.3
               databases: mysql
               server-versions: master
