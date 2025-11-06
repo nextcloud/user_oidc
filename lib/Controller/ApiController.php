@@ -11,6 +11,7 @@ namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
+use OCA\UserOIDC\Service\JweService;
 use OCA\UserOIDC\Service\JwkService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -31,6 +32,7 @@ class ApiController extends Controller {
 		private UserMapper $userMapper,
 		private IUserManager $userManager,
 		private JwkService $jwkService,
+		private JweService $jweService,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -91,7 +93,26 @@ class ApiController extends Controller {
 		try {
 			$jwks = $this->jwkService->getJwks();
 			return new JSONResponse(['keys' => $jwks]);
-			// return new JSONResponse($this->jwkService->debug());
+		} catch (\Exception|\Throwable $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function debugJwk(): JSONResponse {
+		try {
+			return new JSONResponse($this->jwkService->debug());
+		} catch (\Exception|\Throwable $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	#[NoCSRFRequired]
+	#[PublicPage]
+	public function debugJwe(): JSONResponse {
+		try {
+			return new JSONResponse($this->jweService->debug());
 		} catch (\Exception|\Throwable $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
