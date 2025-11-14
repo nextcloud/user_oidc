@@ -83,17 +83,29 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		}
 	}
 
-	public function getUsers($search = '', $limit = null, $offset = null) {
+	public function getUsers($search = '', $limit = null, $offset = null): array {
+		if (!is_string($search)
+			|| ($limit !== null && !is_int($limit))
+			|| ($offset !== null && !is_int($offset))
+		) {
+			return [];
+		}
 		return array_map(function ($user) {
 			return $user->getUserId();
 		}, $this->userMapper->find($search, $limit, $offset));
 	}
 
 	public function userExists($uid): bool {
+		if (!is_string($uid)) {
+			return false;
+		}
 		return $this->userMapper->userExists($uid);
 	}
 
 	public function getDisplayName($uid): string {
+		if (!is_string($uid)) {
+			return (string)$uid;
+		}
 		try {
 			$user = $this->userMapper->getUser($uid);
 		} catch (DoesNotExistException $e) {
@@ -104,6 +116,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	public function getDisplayNames($search = '', $limit = null, $offset = null): array {
+		if (!is_string($search)
+			|| ($limit !== null && !is_int($limit))
+			|| ($offset !== null && !is_int($offset))
+		) {
+			return [];
+		}
 		return $this->userMapper->findDisplayNames($search, $limit, $offset);
 	}
 

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Db;
 
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
@@ -31,7 +32,7 @@ class Id4MeMapper extends QBMapper {
 		$qb->select('*')
 			->from($this->getTableName())
 			->where(
-				$qb->expr()->eq('identifier', $qb->createNamedParameter($identifier))
+				$qb->expr()->eq('identifier', $qb->createNamedParameter($identifier, IQueryBuilder::PARAM_STR))
 			);
 
 		return $this->findEntity($qb);

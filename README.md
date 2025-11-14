@@ -317,7 +317,7 @@ is enabled.
 	  ],
 	  ```
 * Do not create users if they don't exist
-    * Update attributes of existing users (create by user_oidc or any other backend):
+    * Update attributes of existing users (created by user_oidc or any other backend):
 	  ``` php
 	  'user_oidc' => [
 	  	'auto_provision' => true, // default: true

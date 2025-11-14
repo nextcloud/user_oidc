@@ -12,6 +12,7 @@ use OCA\UserOIDC\Service\LocalIdService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\Cache\CappedMemoryCache;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IConfig;
 use OCP\IDBConnection;
 
@@ -47,7 +48,7 @@ class UserMapper extends QBMapper {
 		$qb->select('*')
 			->from($this->getTableName())
 			->where(
-				$qb->expr()->eq('user_id', $qb->createNamedParameter($uid))
+				$qb->expr()->eq('user_id', $qb->createNamedParameter($uid, IQueryBuilder::PARAM_STR))
 			);
 
 		/** @var User $user */
@@ -56,7 +57,7 @@ class UserMapper extends QBMapper {
 		return $user;
 	}
 
-	public function find(string $search, $limit = null, $offset = null): array {
+	public function find(string $search, ?int $limit = null, ?int $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
@@ -72,23 +73,31 @@ class UserMapper extends QBMapper {
 				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
 				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
 				->orWhere($qb->expr()->iLike('configvalue', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-				->orderBy($qb->func()->lower('user_id'), 'ASC')
-				->setMaxResults($limit)
-				->setFirstResult($offset);
+				->orderBy($qb->func()->lower('user_id'), 'ASC');
+			if ($limit !== null) {
+				$qb->setMaxResults($limit);
+			}
+			if ($offset !== null) {
+				$qb->setFirstResult($offset);
+			}
 		} else {
 			$qb->select('user_id', 'display_name')
 				->from($this->getTableName())
 				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
 				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-				->orderBy($qb->func()->lower('user_id'), 'ASC')
-				->setMaxResults($limit)
-				->setFirstResult($offset);
+				->orderBy($qb->func()->lower('user_id'), 'ASC');
+			if ($limit !== null) {
+				$qb->setMaxResults($limit);
+			}
+			if ($offset !== null) {
+				$qb->setFirstResult($offset);
+			}
 		}
 
 		return $this->findEntities($qb);
 	}
 
-	public function findDisplayNames(string $search, $limit = null, $offset = null): array {
+	public function findDisplayNames(string $search, ?int $limit = null, ?int $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
@@ -104,17 +113,25 @@ class UserMapper extends QBMapper {
 				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
 				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
 				->orWhere($qb->expr()->iLike('configvalue', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-				->orderBy($qb->func()->lower('user_id'), 'ASC')
-				->setMaxResults($limit)
-				->setFirstResult($offset);
+				->orderBy($qb->func()->lower('user_id'), 'ASC');
+			if ($limit !== null) {
+				$qb->setMaxResults($limit);
+			}
+			if ($offset !== null) {
+				$qb->setFirstResult($offset);
+			}
 		} else {
 			$qb->select('user_id', 'display_name')
 				->from($this->getTableName())
 				->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
 				->orWhere($qb->expr()->iLike('display_name', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
-				->orderBy($qb->func()->lower('user_id'), 'ASC')
-				->setMaxResults($limit)
-				->setFirstResult($offset);
+				->orderBy($qb->func()->lower('user_id'), 'ASC');
+			if ($limit !== null) {
+				$qb->setMaxResults($limit);
+			}
+			if ($offset !== null) {
+				$qb->setFirstResult($offset);
+			}
 		}
 
 		$result = $qb->executeQuery();
