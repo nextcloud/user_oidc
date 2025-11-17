@@ -32,7 +32,8 @@ class DiscoveryService {
 		'ES256' => 'EC',
 		'ES384' => 'EC',
 		'ES512' => 'EC',
-		'EdDSA' => 'EdDSA'
+		// Map EdDSA to OKP per RFC 8037 (Ed25519)
+		'EdDSA' => 'OKP'
 	];
 
 	private ICache $cache;
@@ -124,7 +125,7 @@ class DiscoveryService {
 	 * This method checks:
 	 *  - RSA keys have a modulus of at least 2048 bits.
 	 *  - EC keys use one of the allowed curves: P-256, P-384, P-521.
-	 *  - EdDSA keys use the Ed25519 curve.
+	 *  - OKP (EdDSA) keys use the Ed25519 curve.
 	 *
 	 * @param array $key The key data as an associative array (JWK format).
 	 * @param string $alg The algorithm intended to be used with this key (e.g., 'RS256', 'ES256').
@@ -155,10 +156,10 @@ class DiscoveryService {
 				}
 				break;
 
-			case 'EdDSA':
-				$curve = $key['crv'] ?? throw new \RuntimeException('EdDSA key missing crv');
+			case 'OKP':
+				$curve = $key['crv'] ?? throw new \RuntimeException('OKP key missing crv');
 				if ($curve !== 'Ed25519') {
-					throw new \RuntimeException('Unsupported EdDSA curve: ' . $curve);
+					throw new \RuntimeException('Unsupported OKP curve: ' . $curve);
 				}
 				break;
 
