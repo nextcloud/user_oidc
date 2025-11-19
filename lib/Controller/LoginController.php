@@ -22,6 +22,7 @@ use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Event\UserObtainedTokenEvent;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\JweService;
 use OCA\UserOIDC\Service\JwkService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\OIDCService;
@@ -114,6 +115,7 @@ class LoginController extends BaseOidcController {
 		private TokenService $tokenService,
 		private OidcService $oidcService,
 		private JwkService $jwkService,
+		private JweService $jweService,
 	) {
 		parent::__construct($request, $config, $l10n);
 	}
@@ -545,6 +547,22 @@ class LoginController extends BaseOidcController {
 
 		// TODO: proper error handling
 		$idTokenRaw = $data['id_token'];
+		if ($usePrivateKeyJwt) {
+			// we could check the header there
+			// if kid is our private JWK, we have a JWE to decrypt
+			// if typ=JWT, we have a classic JWT to decode
+			$jwtParts = explode('.', $idTokenRaw, 3);
+			$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
+			$this->logger->warning('JWT HEADER', ['jwt_header' => $jwtHeader]);
+			if (isset($jwtHeader['typ']) && $jwtHeader['typ'] === 'JWT') {
+				// we have a JWT
+			} elseif (isset($jwtHeader['cty']) && $jwtHeader['cty'] === 'JWT') {
+				// we have a JWE
+			}
+
+			// $dec = $this->jweService->decryptSerializedJwe($idTokenRaw);
+			// $this->logger->warning('decrypted JWE', ['decrypted_jwe' => json_decode($dec, true)]);
+		}
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
 		try {
