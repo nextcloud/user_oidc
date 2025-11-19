@@ -6,6 +6,7 @@ OC.L10N.register(
     "Client ID" : "Идентификатор на клиент",
     "Update" : "Обновяване",
     "Remove" : "Премахване",
+    "Confirm deletion" : "Потвърдете изтриването",
     "Cancel" : "Отказ",
     "Delete" : "Изтриване",
     "Submit" : "Изпращане",
