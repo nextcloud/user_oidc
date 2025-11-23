@@ -50,16 +50,56 @@ class DiscoveryService {
 	public function obtainDiscovery(Provider $provider): array {
 		$cacheKey = 'discovery-' . $provider->getDiscoveryEndpoint();
 		$cachedDiscovery = $this->cache->get($cacheKey);
-		if ($cachedDiscovery === null) {
+
+		// Get cache time from provider settings or use default
+		$wellKnownCachingTime = (int)$this->providerService->getConfigValue(
+			$provider->getId(),
+			ProviderService::SETTING_WELL_KNOWN_CACHING_TIME,
+			self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS
+		);
+
+		if ($cachedDiscovery === null || $wellKnownCachingTime === 0) {
 			$url = $provider->getDiscoveryEndpoint();
 			$this->logger->debug('Obtaining discovery endpoint: ' . $url);
 
-			$cachedDiscovery = $this->clientService->get($url);
+			// Get TLS verify setting for this provider
+			$tlsVerify = $this->providerService->getConfigValue(
+				$provider->getId(),
+				ProviderService::SETTING_TLS_VERIFY,
+				true
+			);
+			$options = ['verify' => $tlsVerify];
 
-			$this->cache->set($cacheKey, $cachedDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
+			$cachedDiscovery = $this->clientService->get($url, [], $options);
+
+			$cacheTime = $wellKnownCachingTime === 0 ? 0 : max($wellKnownCachingTime, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
+			if ($cacheTime > 0) {
+				$this->cache->set($cacheKey, $cachedDiscovery, $cacheTime);
+			}
 		}
 
-		return json_decode($cachedDiscovery, true, 512, JSON_THROW_ON_ERROR);
+		$discovery = json_decode($cachedDiscovery, true, 512, JSON_THROW_ON_ERROR);
+
+		// Apply URL overrides from provider settings
+		$jwksUriOverride = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_OVERRIDE_JWKS_URI, '');
+		if ($jwksUriOverride !== '') {
+			$discovery['jwks_uri'] = $jwksUriOverride;
+			$this->logger->debug('Using overridden jwks_uri: ' . $jwksUriOverride);
+		}
+
+		$tokenEndpointOverride = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_OVERRIDE_TOKEN_ENDPOINT, '');
+		if ($tokenEndpointOverride !== '') {
+			$discovery['token_endpoint'] = $tokenEndpointOverride;
+			$this->logger->debug('Using overridden token_endpoint: ' . $tokenEndpointOverride);
+		}
+
+		$userinfoEndpointOverride = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_OVERRIDE_USERINFO_ENDPOINT, '');
+		if ($userinfoEndpointOverride !== '') {
+			$discovery['userinfo_endpoint'] = $userinfoEndpointOverride;
+			$this->logger->debug('Using overridden userinfo_endpoint: ' . $userinfoEndpointOverride);
+		}
+
+		return $discovery;
 	}
 
 	/**
@@ -70,14 +110,47 @@ class DiscoveryService {
 	 * @throws \JsonException
 	 */
 	public function obtainJWK(Provider $provider, string $tokenToDecode, bool $useCache = true): array {
+		// Get cache time settings
+		$publicKeyCachingTime = (int)$this->providerService->getConfigValue(
+			$provider->getId(),
+			ProviderService::SETTING_PUBLIC_KEY_CACHING_TIME,
+			self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS
+		);
+		$minTimeBetweenJwksRequests = (int)$this->providerService->getConfigValue(
+			$provider->getId(),
+			ProviderService::SETTING_MIN_TIME_BETWEEN_JWKS_REQUESTS,
+			0
+		);
+
 		$lastJwksRefresh = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
-		if ($lastJwksRefresh !== '' && $useCache && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
+		$cacheTime = $publicKeyCachingTime === 0 ? 0 : max($publicKeyCachingTime, self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS);
+
+		// Check if we should use cache
+		$shouldUseCache = $useCache && $cacheTime > 0 && $lastJwksRefresh !== '';
+		if ($minTimeBetweenJwksRequests > 0 && $lastJwksRefresh !== '') {
+			$timeSinceLastRequest = time() - (int)$lastJwksRefresh;
+			if ($timeSinceLastRequest < $minTimeBetweenJwksRequests) {
+				$shouldUseCache = true;
+			}
+		}
+
+		if ($shouldUseCache && (int)$lastJwksRefresh > time() - $cacheTime) {
 			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
 			$rawJwks = json_decode($rawJwks, true);
 			$this->logger->debug('[obtainJWK] jwks cache content', ['jwks_cache' => $rawJwks]);
 		} else {
 			$discovery = $this->obtainDiscovery($provider);
-			$responseBody = $this->clientService->get($discovery['jwks_uri']);
+			// obtainDiscovery already applies jwks_uri override
+
+			// Get TLS verify setting for this provider
+			$tlsVerify = $this->providerService->getConfigValue(
+				$provider->getId(),
+				ProviderService::SETTING_TLS_VERIFY,
+				true
+			);
+			$options = ['verify' => $tlsVerify];
+
+			$responseBody = $this->clientService->get($discovery['jwks_uri'], [], $options);
 			$rawJwks = json_decode($responseBody, true);
 			$this->logger->debug('[obtainJWK] getting fresh jwks', ['jwks' => $rawJwks]);
 			// cache jwks

@@ -28,10 +28,15 @@ class HttpClientHelper implements HttpClient {
 		$client = $this->clientService->newClient();
 
 		$debugModeEnabled = $this->config->getSystemValueBool('debug', false);
-		if ($debugModeEnabled
-			|| (isset($oidcConfig['httpclient.allowselfsigned'])
-				&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true))) {
-			$options['verify'] = false;
+
+		// Check if TLS verify is explicitly set in options (per-provider setting)
+		if (!isset($options['verify'])) {
+			// Check global config
+			if ($debugModeEnabled
+				|| (isset($oidcConfig['httpclient.allowselfsigned'])
+					&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true))) {
+				$options['verify'] = false;
+			}
 		}
 
 		return $client->get($url, $options)->getBody();
@@ -46,11 +51,48 @@ class HttpClientHelper implements HttpClient {
 			'body' => $body,
 		];
 
-		if (isset($oidcConfig['httpclient.allowselfsigned'])
-			&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
-			$options['verify'] = false;
+		// Check if TLS verify is explicitly set in options (per-provider setting)
+		if (!isset($options['verify'])) {
+			// Check global config
+			if (isset($oidcConfig['httpclient.allowselfsigned'])
+				&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
+				$options['verify'] = false;
+			}
 		}
 
 		return $client->post($url, $options)->getBody();
+	}
+
+	/**
+	 * POST request with additional options (e.g., TLS verify)
+	 *
+	 * @param string $url
+	 * @param mixed $body
+	 * @param array $headers
+	 * @param array $options Additional options like 'verify' for TLS
+	 * @return string
+	 */
+	public function postWithOptions($url, $body, array $headers = [], array $options = []): string {
+		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+		$client = $this->clientService->newClient();
+
+		$requestOptions = [
+			'headers' => $headers,
+			'body' => $body,
+		];
+
+		// Merge in provided options
+		$requestOptions = array_merge($requestOptions, $options);
+
+		// Check if TLS verify is explicitly set in options (per-provider setting)
+		if (!isset($requestOptions['verify'])) {
+			// Check global config
+			if (isset($oidcConfig['httpclient.allowselfsigned'])
+				&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
+				$requestOptions['verify'] = false;
+			}
+		}
+
+		return $client->post($url, $requestOptions)->getBody();
 	}
 }

@@ -11,6 +11,7 @@ namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Helper\HttpClientHelper;
+use OCA\UserOIDC\Service\ProviderService;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -22,6 +23,7 @@ class OIDCService {
 		private LoggerInterface $logger,
 		private HttpClientHelper $clientService,
 		private ICrypto $crypto,
+		private ProviderService $providerService,
 	) {
 	}
 
@@ -32,10 +34,19 @@ class OIDCService {
 		}
 
 		$this->logger->debug('Fetching user info endpoint');
+
+		// Get TLS verify setting for this provider
+		$tlsVerify = $this->providerService->getConfigValue(
+			$provider->getId(),
+			ProviderService::SETTING_TLS_VERIFY,
+			true
+		);
+
 		$options = [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $accessToken,
 			],
+			'verify' => $tlsVerify,
 		];
 		try {
 			return json_decode($this->clientService->get($url, [], $options), true);
@@ -59,12 +70,20 @@ class OIDCService {
 		$this->logger->debug('Fetching user info endpoint');
 
 		try {
-			$body = $this->clientService->post(
+			// Get TLS verify setting for this provider
+			$tlsVerify = $this->providerService->getConfigValue(
+				$provider->getId(),
+				ProviderService::SETTING_TLS_VERIFY,
+				true
+			);
+
+			$body = $this->clientService->postWithOptions(
 				$url,
 				['token' => $accessToken],
 				[
 					'Authorization' => base64_encode($provider->getClientId() . ':' . $providerClientSecret),
-				]
+				],
+				['verify' => $tlsVerify]
 			);
 
 			return json_decode($body, true);

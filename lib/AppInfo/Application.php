@@ -21,6 +21,7 @@ use OCA\UserOIDC\Listener\InternalTokenRequestedListener;
 use OCA\UserOIDC\Listener\TimezoneHandlingListener;
 use OCA\UserOIDC\Listener\TokenInvalidatedListener;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\Service\TokenService;
 use OCA\UserOIDC\User\Backend;
@@ -92,7 +93,7 @@ class Application extends App implements IBootstrap {
 		$tokenService->checkLoginToken();
 	}
 
-	private function registerRedirect(IRequest $request, IURLGenerator $urlGenerator, SettingsService $settings, ProviderMapper $providerMapper): void {
+	private function registerRedirect(IRequest $request, IURLGenerator $urlGenerator, SettingsService $settings, ProviderMapper $providerMapper, ProviderService $providerService, IConfig $config): void {
 		$providers = $this->getCachedProviders($providerMapper);
 		$redirectUrl = $request->getParam('redirect_url');
 		$absoluteRedirectUrl = !empty($redirectUrl) ? $urlGenerator->getAbsoluteURL($redirectUrl) : $redirectUrl;
@@ -104,29 +105,50 @@ class Application extends App implements IBootstrap {
 		} catch (Exception $e) {
 			// in case any errors happen when checking for the path do not apply redirect logic as it is only needed for the login
 		}
-		if ($isDefaultLogin && !$settings->getAllowMultipleUserBackEnds() && count($providers) === 1) {
-			$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
-				'providerId' => $providers[0]->getId(),
-				'redirectUrl' => $absoluteRedirectUrl
-			]);
-			header('Location: ' . $targetUrl);
-			exit();
+
+		if ($isDefaultLogin && count($providers) === 1) {
+			$provider = $providers[0];
+			// Check per-provider auto_redirect setting, then global config, then default behavior
+			$autoRedirect = $providerService->getConfigValue(
+				$provider->getId(),
+				ProviderService::SETTING_AUTO_REDIRECT,
+				false
+			);
+
+			// If auto_redirect is enabled for this provider, or if multiple backends are not allowed (legacy behavior)
+			if ($autoRedirect || (!$settings->getAllowMultipleUserBackEnds() && $autoRedirect !== false)) {
+				$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
+					'providerId' => $provider->getId(),
+					'redirectUrl' => $absoluteRedirectUrl
+				]);
+				header('Location: ' . $targetUrl);
+				exit();
+			}
 		}
 	}
 
 	private function registerLogin(
-		IRequest $request, IL10N $l10n, IURLGenerator $urlGenerator, IConfig $config, ProviderMapper $providerMapper,
+		IRequest $request, IL10N $l10n, IURLGenerator $urlGenerator, IConfig $config, ProviderMapper $providerMapper, ProviderService $providerService,
 	): void {
 		$redirectUrl = $request->getParam('redirect_url');
 		$absoluteRedirectUrl = !empty($redirectUrl) ? $urlGenerator->getAbsoluteURL($redirectUrl) : $redirectUrl;
 		$providers = $this->getCachedProviders($providerMapper);
 		$customLoginLabel = $config->getSystemValue('user_oidc', [])['login_label'] ?? '';
 		foreach ($providers as $provider) {
+			// Get per-provider button text, fallback to global config, then default
+			$buttonText = $providerService->getConfigValue(
+				$provider->getId(),
+				ProviderService::SETTING_BUTTON_TEXT,
+				$customLoginLabel
+			);
+
+			$loginName = $buttonText
+				? preg_replace('/{name}/', $provider->getIdentifier(), $buttonText)
+				: $l10n->t('Login with %1s', [$provider->getIdentifier()]);
+
 			// FIXME: Move to IAlternativeLogin but requires boot due to db connection
 			OC_App::registerLogIn([
-				'name' => $customLoginLabel
-					? preg_replace('/{name}/', $provider->getIdentifier(), $customLoginLabel)
-					: $l10n->t('Login with %1s', [$provider->getIdentifier()]),
+				'name' => $loginName,
 				'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login', ['providerId' => $provider->getId(), 'redirectUrl' => $absoluteRedirectUrl]),
 			]);
 		}

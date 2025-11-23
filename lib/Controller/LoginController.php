@@ -413,10 +413,18 @@ class LoginController extends BaseOidcController {
 				$requestBody['client_secret'] = $providerClientSecret;
 			}
 
-			$body = $this->clientService->post(
+			// Get TLS verify setting for this provider
+			$tlsVerify = $this->providerService->getConfigValue(
+				$providerId,
+				ProviderService::SETTING_TLS_VERIFY,
+				true
+			);
+
+			$body = $this->clientService->postWithOptions(
 				$discovery['token_endpoint'],
 				$requestBody,
-				$headers
+				$headers,
+				['verify' => $tlsVerify]
 			);
 		} catch (ClientException|ServerException $e) {
 			$response = $e->getResponse();

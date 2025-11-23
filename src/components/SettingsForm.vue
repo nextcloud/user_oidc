@@ -330,6 +330,187 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider.') }}
 		</p>
+
+		<h3><b>{{ t('user_oidc', 'URL Overrides') }}</b></h3>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Override OIDC discovery endpoint URLs. Useful when the discovery endpoint returns external URLs that cannot be resolved from the Nextcloud backend (e.g., in Kubernetes environments).') }}
+		</p>
+		<p>
+			<label for="override-jwks-uri">{{ t('user_oidc', 'JWKS URI Override') }}</label>
+			<input id="override-jwks-uri"
+				v-model="localProvider.settings.overrideJwksUri"
+				class="italic-placeholder"
+				type="text"
+				placeholder="(Optional)">
+		</p>
+		<p>
+			<label for="override-token-endpoint">{{ t('user_oidc', 'Token Endpoint Override') }}</label>
+			<input id="override-token-endpoint"
+				v-model="localProvider.settings.overrideTokenEndpoint"
+				class="italic-placeholder"
+				type="text"
+				placeholder="(Optional)">
+		</p>
+		<p>
+			<label for="override-userinfo-endpoint">{{ t('user_oidc', 'UserInfo Endpoint Override') }}</label>
+			<input id="override-userinfo-endpoint"
+				v-model="localProvider.settings.overrideUserinfoEndpoint"
+				class="italic-placeholder"
+				type="text"
+				placeholder="(Optional)">
+		</p>
+
+		<h3><b>{{ t('user_oidc', 'Login Behavior') }}</b></h3>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.autoRedirect"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Auto-redirect to OIDC provider on login page') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Automatically redirect users to the OIDC provider when they visit the login page') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.hidePasswordForm"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Hide built-in password login form') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Hide the default Nextcloud password login form') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.redirectFallback"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Redirect fallback') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Enable fallback redirect behavior') }}
+		</p>
+		<p>
+			<label for="button-text">{{ t('user_oidc', 'Login button text') }}</label>
+			<input id="button-text"
+				v-model="localProvider.settings.buttonText"
+				class="italic-placeholder"
+				type="text"
+				placeholder="(Optional)">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Custom text for the login button. Use {name} as placeholder for provider name.') }}
+		</p>
+		<p>
+			<label for="alt-login-page">{{ t('user_oidc', 'Alternative login page') }}</label>
+			<input id="alt-login-page"
+				v-model="localProvider.settings.altLoginPage"
+				class="italic-placeholder"
+				type="text"
+				placeholder="(Optional)">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Path to alternative login page (e.g., assets/login.php)') }}
+		</p>
+
+		<h3><b>{{ t('user_oidc', 'Authentication Options') }}</b></h3>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.passwordAuthentication"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Allow password authentication fallback') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Allow users to authenticate with passwords as a fallback') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.webdavEnabled"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Enable WebDAV authentication') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Enable WebDAV requests with OIDC authentication') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.useIdToken"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Use ID token for authentication') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Use ID token instead of access token for authentication') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.disableRegistration"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Disable user registration') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Prevent new user registration through this provider') }}
+		</p>
+
+		<h3><b>{{ t('user_oidc', 'Cache Configuration') }}</b></h3>
+		<p>
+			<label for="public-key-caching-time">{{ t('user_oidc', 'Public key caching time (seconds)') }}</label>
+			<input id="public-key-caching-time"
+				v-model="localProvider.settings.publicKeyCachingTime"
+				type="number"
+				min="0"
+				placeholder="3600">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Time to cache public keys. Set to 0 to disable caching.') }}
+		</p>
+		<p>
+			<label for="min-time-between-jwks-requests">{{ t('user_oidc', 'Minimum time between JWKS requests (seconds)') }}</label>
+			<input id="min-time-between-jwks-requests"
+				v-model="localProvider.settings.minTimeBetweenJwksRequests"
+				type="number"
+				min="0"
+				placeholder="0">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Minimum time to wait between JWKS requests. Set to 0 to disable.') }}
+		</p>
+		<p>
+			<label for="well-known-caching-time">{{ t('user_oidc', 'Well-known discovery caching time (seconds)') }}</label>
+			<input id="well-known-caching-time"
+				v-model="localProvider.settings.wellKnownCachingTime"
+				type="number"
+				min="0"
+				placeholder="3600">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Time to cache well-known discovery endpoint. Set to 0 to disable caching.') }}
+		</p>
+
+		<h3><b>{{ t('user_oidc', 'Advanced Options') }}</b></h3>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.updateAvatar"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Update user avatar from OIDC') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Automatically update user avatar from OIDC provider') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.tlsVerify"
+			wrapper-element="div">
+			{{ t('user_oidc', 'TLS certificate verification') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Verify TLS certificates when connecting to OIDC provider. Disable for self-signed certificates or internal CAs.') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.useExternalStorage"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Use external storage') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Enable external storage integration') }}
+		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.proxyLdap"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Proxy LDAP requests') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Proxy LDAP requests through OIDC provider') }}
+		</p>
+
 		<div class="provider-edit--footer">
 			<NcButton @click="$emit('cancel-form')">
 				{{ t('user_oidc', 'Cancel') }}

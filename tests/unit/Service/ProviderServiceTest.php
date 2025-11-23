@@ -12,6 +12,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
@@ -26,6 +27,10 @@ class ProviderServiceTest extends TestCase {
 	 */
 	private $providerMapper;
 	/**
+	 * @var IConfig|\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $config;
+	/**
 	 * @var ProviderService
 	 */
 	private $providerService;
@@ -34,7 +39,8 @@ class ProviderServiceTest extends TestCase {
 		parent::setUp();
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->providerMapper = $this->createMock(ProviderMapper::class);
-		$this->providerService = new ProviderService($this->appConfig, $this->providerMapper);
+		$this->config = $this->createMock(IConfig::class);
+		$this->providerService = new ProviderService($this->appConfig, $this->providerMapper, $this->config);
 	}
 
 	public function testGetProvidersWithSettings() {
@@ -318,6 +324,116 @@ class ProviderServiceTest extends TestCase {
 		Assert::assertEquals($stored, $raw);
 		$actual = self::invokePrivate($this->providerService, 'convertToJSON', [$key, $raw]);
 		Assert::assertEquals($expected, $actual);
+	}
+
+	public function testGetConfigValuePerProviderSetting() {
+		// Test that per-provider setting takes precedence
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AUTO_REDIRECT, '')
+			->willReturn('1');
+
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT, false);
+		Assert::assertTrue($result);
+	}
+
+	public function testGetConfigValueGlobalConfig() {
+		// Test that global config is used when per-provider setting is empty
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AUTO_REDIRECT, '')
+			->willReturn('');
+
+		$this->config->expects(self::once())
+			->method('getSystemValue')
+			->with('user_oidc', [])
+			->willReturn(['oidc_auto_redirect' => true]);
+
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT, false);
+		Assert::assertTrue($result);
+	}
+
+	public function testGetConfigValueDefault() {
+		// Test that default is used when neither per-provider nor global config is set
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AUTO_REDIRECT, '')
+			->willReturn('');
+
+		$this->config->expects(self::once())
+			->method('getSystemValue')
+			->with('user_oidc', [])
+			->willReturn([]);
+
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT, false);
+		Assert::assertFalse($result);
+	}
+
+	public function testGetConfigValueBooleanDefault() {
+		// Test that boolean default from BOOLEAN_SETTINGS_DEFAULT_VALUES is used
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AUTO_REDIRECT, '')
+			->willReturn('');
+
+		$this->config->expects(self::once())
+			->method('getSystemValue')
+			->with('user_oidc', [])
+			->willReturn([]);
+
+		// SETTING_AUTO_REDIRECT default is false
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT);
+		Assert::assertFalse($result);
+	}
+
+	public function testGetConfigValueIntegerSetting() {
+		// Test that integer settings are converted properly
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_PUBLIC_KEY_CACHING_TIME, '')
+			->willReturn('7200');
+
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_PUBLIC_KEY_CACHING_TIME, 3600);
+		Assert::assertEquals(7200, $result);
+		Assert::assertIsInt($result);
+	}
+
+	public function testGetConfigValueStringSetting() {
+		// Test that string settings work correctly
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_BUTTON_TEXT, '')
+			->willReturn('Custom Login');
+
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_BUTTON_TEXT, 'Default');
+		Assert::assertEquals('Custom Login', $result);
+	}
+
+	public function testGetConfigValueGlobalConfigCamelCase() {
+		// Test that camelCase global config keys work
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AUTO_REDIRECT, '')
+			->willReturn('');
+
+		$this->config->expects(self::once())
+			->method('getSystemValue')
+			->with('user_oidc', [])
+			->willReturn(['autoRedirect' => true]);
+
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT, false);
+		Assert::assertTrue($result);
+	}
+
+	public function testGetConfigValueUrlOverride() {
+		// Test URL override settings
+		$this->appConfig->expects(self::once())
+			->method('getValueString')
+			->with(Application::APP_ID, 'provider-1-' . ProviderService::SETTING_OVERRIDE_JWKS_URI, '')
+			->willReturn('http://internal.example.com/jwks');
+
+		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_OVERRIDE_JWKS_URI, '');
+		Assert::assertEquals('http://internal.example.com/jwks', $result);
 	}
 
 	protected static function invokePrivate($object, $methodName, array $parameters = []) {

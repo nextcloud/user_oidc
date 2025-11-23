@@ -15,6 +15,7 @@ use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
+use OCP\IConfig;
 
 class ProviderService {
 	public const SETTING_CHECK_BEARER = 'checkBearer';
@@ -56,6 +57,29 @@ class ProviderService {
 	public const SETTING_RESTRICT_LOGIN_TO_GROUPS = 'restrictLoginToGroups';
 	public const SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING = 'nestedAndFallbackClaims';
 
+	// URL Override settings
+	public const SETTING_OVERRIDE_JWKS_URI = 'overrideJwksUri';
+	public const SETTING_OVERRIDE_TOKEN_ENDPOINT = 'overrideTokenEndpoint';
+	public const SETTING_OVERRIDE_USERINFO_ENDPOINT = 'overrideUserinfoEndpoint';
+
+	// Missing configuration options
+	public const SETTING_AUTO_REDIRECT = 'autoRedirect';
+	public const SETTING_HIDE_PASSWORD_FORM = 'hidePasswordForm';
+	public const SETTING_REDIRECT_FALLBACK = 'redirectFallback';
+	public const SETTING_DISABLE_REGISTRATION = 'disableRegistration';
+	public const SETTING_WEBDAV_ENABLED = 'webdavEnabled';
+	public const SETTING_PASSWORD_AUTHENTICATION = 'passwordAuthentication';
+	public const SETTING_USE_ID_TOKEN = 'useIdToken';
+	public const SETTING_PUBLIC_KEY_CACHING_TIME = 'publicKeyCachingTime';
+	public const SETTING_MIN_TIME_BETWEEN_JWKS_REQUESTS = 'minTimeBetweenJwksRequests';
+	public const SETTING_WELL_KNOWN_CACHING_TIME = 'wellKnownCachingTime';
+	public const SETTING_UPDATE_AVATAR = 'updateAvatar';
+	public const SETTING_BUTTON_TEXT = 'buttonText';
+	public const SETTING_ALT_LOGIN_PAGE = 'altLoginPage';
+	public const SETTING_TLS_VERIFY = 'tlsVerify';
+	public const SETTING_USE_EXTERNAL_STORAGE = 'useExternalStorage';
+	public const SETTING_PROXY_LDAP = 'proxyLdap';
+
 	public const BOOLEAN_SETTINGS_DEFAULT_VALUES = [
 		self::SETTING_GROUP_PROVISIONING => false,
 		self::SETTING_PROVIDER_BASED_ID => false,
@@ -65,11 +89,23 @@ class ProviderService {
 		self::SETTING_SEND_ID_TOKEN_HINT => false,
 		self::SETTING_RESTRICT_LOGIN_TO_GROUPS => false,
 		self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING => false,
+		self::SETTING_AUTO_REDIRECT => false,
+		self::SETTING_HIDE_PASSWORD_FORM => false,
+		self::SETTING_REDIRECT_FALLBACK => false,
+		self::SETTING_DISABLE_REGISTRATION => false,
+		self::SETTING_WEBDAV_ENABLED => true,
+		self::SETTING_PASSWORD_AUTHENTICATION => true,
+		self::SETTING_USE_ID_TOKEN => true,
+		self::SETTING_UPDATE_AVATAR => false,
+		self::SETTING_TLS_VERIFY => true,
+		self::SETTING_USE_EXTERNAL_STORAGE => false,
+		self::SETTING_PROXY_LDAP => false,
 	];
 
 	public function __construct(
 		private IAppConfig $appConfig,
 		private ProviderMapper $providerMapper,
+		private IConfig $config,
 	) {
 	}
 
@@ -136,6 +172,66 @@ class ProviderService {
 		return $value;
 	}
 
+	/**
+	 * Get configuration value with precedence: per-provider setting > global config > default
+	 *
+	 * @param int $providerId Provider ID
+	 * @param string $key Setting key
+	 * @param mixed $default Default value if not found
+	 * @return mixed Configuration value
+	 */
+	public function getConfigValue(int $providerId, string $key, $default = null) {
+		// First check per-provider setting
+		$providerValue = $this->getSetting($providerId, $key, '');
+		if ($providerValue !== '') {
+			// Convert boolean settings
+			if (array_key_exists($key, self::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
+				return $providerValue === '1';
+			}
+			// Convert integer settings
+			if (in_array($key, [
+				self::SETTING_PUBLIC_KEY_CACHING_TIME,
+				self::SETTING_MIN_TIME_BETWEEN_JWKS_REQUESTS,
+				self::SETTING_WELL_KNOWN_CACHING_TIME,
+			], true)) {
+				return (int)$providerValue;
+			}
+			return $providerValue;
+		}
+
+		// Then check global config.php
+		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+
+		// Try various key formats that might be used in config.php
+		// Convert camelCase to snake_case for oidc_login compatibility
+		$snakeKey = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $key));
+		$oidcKey = 'oidc_' . $snakeKey;
+		$camelKey = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
+
+		// Check in order: oidc_snake_case, camelCase, original key
+		if (isset($oidcConfig[$oidcKey])) {
+			return $oidcConfig[$oidcKey];
+		}
+		if (isset($oidcConfig[$camelKey])) {
+			return $oidcConfig[$camelKey];
+		}
+		if (isset($oidcConfig[$key])) {
+			return $oidcConfig[$key];
+		}
+
+		// Return default
+		if ($default !== null) {
+			return $default;
+		}
+
+		// Return boolean default if it's a boolean setting
+		if (array_key_exists($key, self::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
+			return self::BOOLEAN_SETTINGS_DEFAULT_VALUES[$key];
+		}
+
+		return null;
+	}
+
 	private function getSettingsKey(int $providerId, string $key): string {
 		return 'provider-' . strval($providerId) . '-' . $key;
 	}
@@ -177,6 +273,27 @@ class ProviderService {
 			self::SETTING_GROUP_WHITELIST_REGEX,
 			self::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 			self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
+			// URL Overrides
+			self::SETTING_OVERRIDE_JWKS_URI,
+			self::SETTING_OVERRIDE_TOKEN_ENDPOINT,
+			self::SETTING_OVERRIDE_USERINFO_ENDPOINT,
+			// Missing configuration options
+			self::SETTING_AUTO_REDIRECT,
+			self::SETTING_HIDE_PASSWORD_FORM,
+			self::SETTING_REDIRECT_FALLBACK,
+			self::SETTING_DISABLE_REGISTRATION,
+			self::SETTING_WEBDAV_ENABLED,
+			self::SETTING_PASSWORD_AUTHENTICATION,
+			self::SETTING_USE_ID_TOKEN,
+			self::SETTING_PUBLIC_KEY_CACHING_TIME,
+			self::SETTING_MIN_TIME_BETWEEN_JWKS_REQUESTS,
+			self::SETTING_WELL_KNOWN_CACHING_TIME,
+			self::SETTING_UPDATE_AVATAR,
+			self::SETTING_BUTTON_TEXT,
+			self::SETTING_ALT_LOGIN_PAGE,
+			self::SETTING_TLS_VERIFY,
+			self::SETTING_USE_EXTERNAL_STORAGE,
+			self::SETTING_PROXY_LDAP,
 		];
 	}
 

@@ -16,6 +16,7 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Model\Token;
+use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -63,6 +64,7 @@ class TokenService {
 		private IAppManager $appManager,
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
+		private ProviderService $providerService,
 	) {
 
 	}
@@ -205,14 +207,24 @@ class TokenService {
 				}
 			}
 			$this->logger->debug('[TokenService] Refreshing the token: ' . $discovery['token_endpoint']);
-			$body = $this->clientService->post(
+
+			// Get TLS verify setting for this provider
+			$tlsVerify = $this->providerService->getConfigValue(
+				$oidcProvider->getId(),
+				ProviderService::SETTING_TLS_VERIFY,
+				true
+			);
+
+			$body = $this->clientService->postWithOptions(
 				$discovery['token_endpoint'],
 				[
 					'client_id' => $oidcProvider->getClientId(),
 					'client_secret' => $clientSecret,
 					'grant_type' => 'refresh_token',
 					'refresh_token' => $token->getRefreshToken(),
-				]
+				],
+				[],
+				['verify' => $tlsVerify]
 			);
 			$this->logger->debug('[TokenService] Token refresh request params', [
 				'client_id' => $oidcProvider->getClientId(),
@@ -310,9 +322,19 @@ class TokenService {
 				$tokenEndpointParams['prompt'] = $oidcConfig['prompt'];
 			}
 			// more in https://www.keycloak.org/securing-apps/token-exchange
-			$body = $this->clientService->post(
+
+			// Get TLS verify setting for this provider
+			$tlsVerify = $this->providerService->getConfigValue(
+				$oidcProvider->getId(),
+				ProviderService::SETTING_TLS_VERIFY,
+				true
+			);
+
+			$body = $this->clientService->postWithOptions(
 				$discovery['token_endpoint'],
 				$tokenEndpointParams,
+				[],
+				['verify' => $tlsVerify]
 			);
 			$this->logger->debug('[TokenService] Token exchange request params', [
 				'client_id' => $oidcProvider->getClientId(),
