@@ -35,14 +35,14 @@ class JweService {
 	}
 
 	/**
-	 * @param array $payloadArray the content of the JWE
+	 * @param string $payload the content of the JWE
 	 * @param array $encryptionJwk the public key in JWK format
 	 * @param string $keyEncryptionAlg the algorithm to use for the key encryption
 	 * @param string $contentEncryptionAlg the algorithm to use for the content encryption
 	 * @return string
 	 */
 	public function createSerializedJweWithKey(
-		array $payloadArray, array $encryptionJwk,
+		string $payload, array $encryptionJwk,
 		string $keyEncryptionAlg = JwkService::PEM_ENC_KEY_ALGORITHM,
 		string $contentEncryptionAlg = self::CONTENT_ENCRYPTION_ALGORITHM,
 	): string {
@@ -66,11 +66,8 @@ class JweService {
 		// Our key.
 		$jwk = new JWK($encryptionJwk);
 
-		// The payload we want to encrypt. It MUST be a string.
-		$payload = json_encode($payloadArray);
-
 		$jwe = $jweBuilder
-			->create()              // We want to create a new JWE
+			->create()            // We want to create a new JWE
 			->withPayload($payload) // We set the payload
 			->withSharedProtectedHeader([
 				// Key Encryption Algorithm
@@ -80,12 +77,14 @@ class JweService {
 				// 'enc' => 'A256CBC-HS512',
 				'enc' => $contentEncryptionAlg,
 				//'zip' => 'DEF'            // Not recommended.
+				'cty' => 'JWT',
 			])
 			->addRecipient($jwk)    // We add a recipient (a shared key or public key).
 			->build();
 
-		$serializer = new CompactSerializer(); // The serializer
-		return $serializer->serialize($jwe, 0); // We serialize the recipient at index 0 (we only have one recipient).
+		$serializer = new CompactSerializer();
+		// We serialize the recipient at index 0 (we only have one recipient).
+		return $serializer->serialize($jwe, 0);
 	}
 
 	/**
@@ -171,13 +170,13 @@ class JweService {
 		return $this->decryptSerializedJweWithKey($serializedJwe, $encPrivJwk);
 	}
 
-	public function createSerializedJwe(array $payloadArray): string {
+	public function createSerializedJwe(string $payload): string {
 		$myPemEncryptionKey = $this->jwkService->getMyEncryptionKey(true);
 		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
 		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
 		$encPublicJwk = $this->jwkService->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true);
 
-		return $this->createSerializedJweWithKey($payloadArray, $encPublicJwk);
+		return $this->createSerializedJweWithKey($payload, $encPublicJwk);
 	}
 
 	public function debug(): array {
@@ -203,7 +202,7 @@ class JweService {
 		$serializedJweToken = $this->createSerializedJwe($payloadArray, $exampleJwkArray);
 		$decryptedJweString = $this->decryptSerializedJwe($serializedJweToken, $exampleJwkArray);
 		*/
-		$serializedJweToken = $this->createSerializedJweWithKey($payloadArray, $encPublicJwk);
+		$serializedJweToken = $this->createSerializedJweWithKey(json_encode($payloadArray), $encPublicJwk);
 		$jwtParts = explode('.', $serializedJweToken, 3);
 		$jwtHeader = json_decode(base64_decode($jwtParts[0]), true);
 		$decryptedJweString = $this->decryptSerializedJweWithKey($serializedJweToken, $encPrivJwk);
