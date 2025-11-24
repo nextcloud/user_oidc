@@ -19,9 +19,9 @@
 	</types>
 	<category>integration</category>
 	<category>social</category>
-	<website>https://github.com/nextcloud/user_oidc</website>
-	<bugs>https://github.com/nextcloud/user_oidc/issues</bugs>
-	<repository>https://github.com/nextcloud/user_oidc</repository>
+	<website>https://github.com/junovy/nextcloud_user_oidc</website>
+	<bugs>https://github.com/junovy/nextcloud_user_oidc/issues</bugs>
+	<repository>https://github.com/junovy/nextcloud_user_oidc</repository>
 	<dependencies>
 		<nextcloud min-version="29" max-version="33"/>
 	</dependencies>
