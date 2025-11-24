@@ -24,7 +24,7 @@
     "Failed to provision the user" : "Der Benutzer konnte nicht bereitgestellt werden",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Sie haben keine Berechtigung, sich bei dieser Instanz anzumelden. Wenn Sie denken, dass dies ein Fehler ist, wenden Sie sich bitte an die Administration.",
     "User conflict" : "Benutzerkonflikt",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "OpenID Connect-Benutzer-Backend",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Ein OpenID Connect-Backend verwenden, um sich bei Ihrer Nextcloud anzumelden",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Ermöglicht die flexible Konfiguration eines OIDC-Servers als Nextcloud-Anmeldebenutzer-Backend.",

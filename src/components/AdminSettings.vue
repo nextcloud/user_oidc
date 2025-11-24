@@ -213,7 +213,7 @@ export default {
 			customActionsStyle: {
 				'--color-background-hover': 'var(--color-background-darker)',
 			},
-			redirectUri: window.location.protocol + '//' + window.location.host + generateUrl('/apps/user_oidc/code'),
+			redirectUri: window.location.protocol + '//' + window.location.host + generateUrl('/apps/junovy_user_oidc/code'),
 			showDeletionConfirmation: false,
 			providerToDelete: null,
 		}
@@ -233,7 +233,7 @@ export default {
 			this.loadingId4Me = true
 			try {
 				await confirmPassword()
-				const url = generateUrl('/apps/user_oidc/provider/id4me')
+				const url = generateUrl('/apps/junovy_user_oidc/provider/id4me')
 
 				await axios.post(url, {
 					enabled: newValue,
@@ -251,7 +251,7 @@ export default {
 			this.loadingStoreLoginToken = true
 			try {
 				await confirmPassword()
-				const url = generateUrl('/apps/user_oidc/admin-config')
+				const url = generateUrl('/apps/junovy_user_oidc/admin-config')
 
 				await axios.post(url, {
 					values: {
@@ -275,7 +275,7 @@ export default {
 			await confirmPassword()
 			logger.info('Update oidc provider', { data: provider })
 
-			const url = generateUrl(`/apps/user_oidc/provider/${provider.id}`)
+			const url = generateUrl(`/apps/junovy_user_oidc/provider/${provider.id}`)
 			try {
 				await axios.put(url, provider)
 				this.editProvider = null
@@ -298,7 +298,7 @@ export default {
 			await confirmPassword()
 			logger.info('Remove oidc provider', { provider })
 
-			const url = generateUrl(`/apps/user_oidc/provider/${provider.id}`)
+			const url = generateUrl(`/apps/junovy_user_oidc/provider/${provider.id}`)
 			try {
 				await axios.delete(url)
 
@@ -313,7 +313,7 @@ export default {
 			await confirmPassword()
 			logger.info('Add new oidc provider', { data: this.newProvider })
 
-			const url = generateUrl('/apps/user_oidc/provider')
+			const url = generateUrl('/apps/junovy_user_oidc/provider')
 			try {
 				const response = await axios.post(url, this.newProvider)
 
@@ -333,7 +333,7 @@ export default {
 		},
 		getBackchannelUrl(provider) {
 			return window.location.protocol + '//' + window.location.host
-				+ generateUrl('/apps/user_oidc/backchannel-logout/{identifier}', { identifier: provider.identifier })
+				+ generateUrl('/apps/junovy_user_oidc/backchannel-logout/{identifier}', { identifier: provider.identifier })
 		},
 	},
 }

@@ -24,7 +24,7 @@
     "Failed to provision the user" : "Није успело снабдевање корисника",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Немате права да се пријавите на ову инстанцу. Ако мислите да је у питању грешка, молимо вас да се обратите администратору сервера.",
     "User conflict" : "Конфликт корисника",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "OpenID Connect кориснички позадински механизам",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Користите OpenID Connect позадински механизам да се пријавите на свој Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Омогућава прилагодљиву конфигурација OIDC сервера као корисничког позадинског механизма за пријаву на Nextcloud.",

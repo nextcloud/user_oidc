@@ -24,7 +24,7 @@
     "Failed to provision the user" : "Αποτυχία παροχής του χρήστη",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Δεν έχετε δικαίωμα σύνδεσης σε αυτή την εμφάνιση. Αν πιστεύετε ότι πρόκειται για λάθος, παρακαλώ επικοινωνήστε με έναν διαχειριστή.",
     "User conflict" : "Σύγκρουση χρήστη",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "Backend χρήστη OpenID Connect",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Χρησιμοποιήστε ένα backend OpenID Connect για να συνδεθείτε στο Nextcloud σας",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Επιτρέπει την ευέλικτη διαμόρφωση ενός διακομιστή OIDC ως backend χρήστη σύνδεσης στο Nextcloud.",

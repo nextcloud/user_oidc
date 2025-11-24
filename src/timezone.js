@@ -10,13 +10,16 @@ import jstz from 'jstz'
 
 console.debug('updating timezone and offset for OIDC user')
 
-const url = generateUrl('/apps/user_oidc/config/timezone')
+const url = generateUrl('/apps/junovy_user_oidc/config/timezone')
 const params = {
 	timezone: jstz.determine().name(),
-	timezoneOffset: (-new Date().getTimezoneOffset() / 60),
+	timezoneOffset: -new Date().getTimezoneOffset() / 60,
 }
-axios.post(url, params).then(response => {
-	console.debug('Successfully set OIDC user\'s timezone')
-}).catch((error) => {
-	console.error('Error while setting the OIDC user\'s timezone', error)
-})
+axios
+	.post(url, params)
+	.then((response) => {
+		console.debug("Successfully set OIDC user's timezone")
+	})
+	.catch((error) => {
+		console.error("Error while setting the OIDC user's timezone", error)
+	})

@@ -19,7 +19,7 @@
     "Failed to provision the user" : "Impossible de provisionner l'utilisateur",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Vous n'avez pas l'autorisation de vous connecter à cette instance. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter un administrateur.",
     "User conflict" : "Conflit utilisateur",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "Are you sure you want to delete the provider \"{providerName}\"?" : "Êtes-vous sûr de vouloir supprimer le fournisseur \"{providerName}\" ?",
     "Could not save ID4me state: {msg}" : "Impossible d'enregistrer l'état ID4me : {msg}",
     "Could not update the provider:" : "Impossible de mettre à jour le fournisseur :",

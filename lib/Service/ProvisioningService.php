@@ -208,7 +208,7 @@ class ProvisioningService {
 			// if disable_account_creation is true, user_oidc should not create any user
 			// so we just exit
 			// but it will accept connection from users it might have created in the past (before disable_account_creation was enabled)
-			$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+			$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 			$isUserCreationDisabled = isset($oidcSystemConfig['disable_account_creation'])
 				&& in_array($oidcSystemConfig['disable_account_creation'], [true, 'true', 1, '1'], true);
 			if ($isUserCreationDisabled) {

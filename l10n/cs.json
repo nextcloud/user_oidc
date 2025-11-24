@@ -24,7 +24,7 @@
     "Failed to provision the user" : "Nepodařilo se zprovoznit uživatele",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Nemáte oprávnění se přihlásit k této instanci. Pokud se domníváte, že se jedná o chybu, obraťte se na správce.",
     "User conflict" : "Kolize uživatelů",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "Podpůrná vrstva uživatelských účtů pro OpenID Connect",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Použít podpůrnou vrstvu OpenID Connect pro přihlášení se k vámi využívanému Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Umožňuje flexibilní nastavení OIDC serveru coby podpůrné vrstvy uživatelských účtů pro přihlašování do Nextcloud.",

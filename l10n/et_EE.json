@@ -9,7 +9,7 @@
     "Could not reach the OpenID Connect provider." : "See OpenID Connecti teenusepakkuja pole kättesaadav.",
     "The identity provider failed to authenticate the user." : "Tuvastusteenuse pakkuja ei suutnud kasutajat tuvastada.",
     "Failed to decrypt the OIDC provider client secret" : "OpenID Connecti teenusepakkuja kliendipoolse saladuse dekrüptimine ei õnnestunud",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "OpenID Connecti taustateenus kasutajatele",
     "Are you sure you want to delete the provider \"{providerName}\"?" : "Kas oled kindel, et soovid kustutada „{providerName}“ teenusepakkuja?",
     "Could not remove provider: {msg}" : "Teenusepakkuja eemaldamine ei õnnestunud: {msg}",

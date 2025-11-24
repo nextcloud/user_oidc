@@ -28,7 +28,7 @@ class UserMapper extends QBMapper {
 		private LocalIdService $idService,
 		private IConfig $config,
 	) {
-		parent::__construct($db, 'user_oidc', User::class);
+		parent::__construct($db, 'junovy_user_oidc', User::class);
 		$this->userCache = new CappedMemoryCache();
 	}
 
@@ -60,7 +60,7 @@ class UserMapper extends QBMapper {
 	public function find(string $search, ?int $limit = null, ?int $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$matchEmails = !isset($oidcSystemConfig['user_search_match_emails']) || $oidcSystemConfig['user_search_match_emails'] === true;
 		if ($matchEmails) {
 			$qb->select('user_id', 'display_name')
@@ -100,7 +100,7 @@ class UserMapper extends QBMapper {
 	public function findDisplayNames(string $search, ?int $limit = null, ?int $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$matchEmails = !isset($oidcSystemConfig['user_search_match_emails']) || $oidcSystemConfig['user_search_match_emails'] === true;
 		if ($matchEmails) {
 			$qb->select('user_id', 'display_name')

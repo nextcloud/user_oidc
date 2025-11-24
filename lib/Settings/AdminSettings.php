@@ -45,7 +45,7 @@ class AdminSettings implements ISettings {
 		);
 		$this->initialStateService->provideInitialState(
 			'redirectUrl',
-			$this->urlGenerator->linkToRouteAbsolute('user_oidc.login.code')
+			$this->urlGenerator->linkToRouteAbsolute('junovy_user_oidc.login.code')
 		);
 
 		Util::addScript(Application::APP_ID, Application::APP_ID . '-admin-settings');

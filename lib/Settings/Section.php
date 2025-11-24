@@ -33,7 +33,7 @@ class Section implements IIconSection {
 	 * {@inheritdoc}
 	 */
 	public function getName() {
-		return $this->l->t('OpenID Connect');
+		return $this->l->t('Junovy OpenID');
 	}
 
 	/**

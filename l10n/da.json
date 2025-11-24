@@ -23,7 +23,7 @@
     "Failed to provision the user" : "Kunne ikke provisionere brugeren",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Du har ikke tilladelse til at logge på denne instans. Hvis du mener at det er en fejl, så kontakt venligst en administrator.",
     "User conflict" : "Brugerkonfliktconflict",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "OpenID Connect bruger backend",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Anvend en OpenID Connect backend for at logge på din Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Giver mulighed for fleksibel konfiguration af en OIDC server som Nextcloud log på bruger backend.",

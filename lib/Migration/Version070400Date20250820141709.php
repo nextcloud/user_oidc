@@ -28,8 +28,8 @@ class Version070400Date20250820141709 extends SimpleMigrationStep {
 
 		$schemaChanged = false;
 
-		if ($schema->hasTable('user_oidc_sessions')) {
-			$table = $schema->getTable('user_oidc_sessions');
+		if ($schema->hasTable('junovy_user_oidc_sessions')) {
+			$table = $schema->getTable('junovy_user_oidc_sessions');
 			if (!$table->hasColumn('id_token')) {
 				$table->addColumn('id_token', Types::TEXT, [
 					'notnull' => false,

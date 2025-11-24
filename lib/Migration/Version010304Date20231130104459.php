@@ -29,8 +29,8 @@ class Version010304Date20231130104459 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('user_oidc_providers')) {
-			$table = $schema->getTable('user_oidc_providers');
+		if ($schema->hasTable('junovy_user_oidc_providers')) {
+			$table = $schema->getTable('junovy_user_oidc_providers');
 			if (!$table->hasColumn('end_session_endpoint')) {
 				$table->addColumn('end_session_endpoint', Types::STRING, [
 					'notnull' => false,

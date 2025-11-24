@@ -178,7 +178,7 @@ class LoginController extends BaseOidcController {
 		$nonce = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::NONCE, $nonce);
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
 		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
 
@@ -262,7 +262,7 @@ class LoginController extends BaseOidcController {
 			}
 		}
 
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 
 		$data += [
 			'client_id' => $provider->getClientId(),
@@ -370,7 +370,7 @@ class LoginController extends BaseOidcController {
 
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
 		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
 
@@ -571,7 +571,7 @@ class LoginController extends BaseOidcController {
 			// use potential user from other backend, create it in our backend if it does not exist
 			$provisioningResult = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $existingUser);
 			$user = $provisioningResult['user'];
-			$this->session->set('user_oidc.oidcUserData', $provisioningResult['userData']);
+			$this->session->set('junovy_user_oidc.oidcUserData', $provisioningResult['userData']);
 		} else {
 			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
 			$user = $existingUser;
@@ -671,7 +671,7 @@ class LoginController extends BaseOidcController {
 	 */
 	public function singleLogoutService() {
 		// TODO throttle in all failing cases
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
 		if (!isset($oidcSystemConfig['single_logout']) || $oidcSystemConfig['single_logout']) {
 			$isFromGS = ($this->config->getSystemValueBool('gs.enabled', false)

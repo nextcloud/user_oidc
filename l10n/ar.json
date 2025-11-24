@@ -23,7 +23,7 @@
     "Failed to provision the user" : "فشل في توفير المستخدِم",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "ليس لديك إذن لتسجيل الدخول إلى هذه الحالة. إذا كنت تعتقد غير ذلك، فيرجى الاتصال بالمُشرِف.",
     "User conflict" : "تضارب المستخدِم",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "واجهة المستخدِم الخلفية لـ OpenID Connect ",
     "Use an OpenID Connect backend to login to your Nextcloud" : "إستَعمِل الواجهة الخلفية لـ OpenID لتسجيل الدخول إلى نكست كلاود",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "السماح بالتهيئة المرنة لخادوم OIDC كواجهة مستخدم خلفية لتسجيل الدخول إلى نكست كلاود.",

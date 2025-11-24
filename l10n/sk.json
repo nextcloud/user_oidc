@@ -10,7 +10,7 @@
     "Authority not found" : "Autorita nebola nájdená",
     "The received token is expired." : "Prijatý token expiroval.",
     "User conflict" : "Konflikt užívateľov",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "Uživateľký backend OpenID Connect",
     "Could not remove provider: {msg}" : "Nepodarilo sa odstrániť poskytovateľa: {msg}",
     "Could not register provider:" : "Nepodarilo sa zaregistrovať poskytovateľa:",

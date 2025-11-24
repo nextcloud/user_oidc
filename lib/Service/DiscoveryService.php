@@ -44,7 +44,7 @@ class DiscoveryService {
 		private ProviderService $providerService,
 		ICacheFactory $cacheFactory,
 	) {
-		$this->cache = $cacheFactory->createDistributed('user_oidc');
+		$this->cache = $cacheFactory->createDistributed('junovy_user_oidc');
 	}
 
 	public function obtainDiscovery(Provider $provider): array {

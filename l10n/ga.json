@@ -24,7 +24,7 @@
     "Failed to provision the user" : "Theip ar an úsáideoir a sholáthar",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Níl cead agat logáil isteach sa chás seo. Má cheapann tú gur earráid é seo, déan teagmháil le riarthóir.",
     "User conflict" : "Coimhlint úsáideora",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "Inneall úsáideora OpenID Connect",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Úsáid inneall OpenID Connect chun logáil isteach ar do Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Ligeann sé seo cumraíocht sholúbtha ar fhreastalaí OIDC mar inneall logáil isteach úsáideora Nextcloud.",

@@ -29,8 +29,8 @@ class Version070500Date20250515141105 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		if ($schema->hasTable('user_oidc_providers')) {
-			$table = $schema->getTable('user_oidc_providers');
+		if ($schema->hasTable('junovy_user_oidc_providers')) {
+			$table = $schema->getTable('junovy_user_oidc_providers');
 			if (!$table->hasColumn('post_logout_uri')) {
 				$table->addColumn('post_logout_uri', Types::STRING, [
 					'notnull' => false,

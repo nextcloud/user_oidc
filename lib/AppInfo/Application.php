@@ -38,7 +38,7 @@ use OCP\IUserSession;
 use Throwable;
 
 class Application extends App implements IBootstrap {
-	public const APP_ID = 'user_oidc';
+	public const APP_ID = 'junovy_user_oidc';
 	public const OIDC_API_REQ_HEADER = 'Authorization';
 
 	private $backend;
@@ -133,7 +133,7 @@ class Application extends App implements IBootstrap {
 		$redirectUrl = $request->getParam('redirect_url');
 		$absoluteRedirectUrl = !empty($redirectUrl) ? $urlGenerator->getAbsoluteURL($redirectUrl) : $redirectUrl;
 		$providers = $this->getCachedProviders($providerMapper);
-		$customLoginLabel = $config->getSystemValue('user_oidc', [])['login_label'] ?? '';
+		$customLoginLabel = $config->getSystemValue('junovy_user_oidc', [])['login_label'] ?? '';
 		foreach ($providers as $provider) {
 			// Get per-provider button text, fallback to global config, then default
 			$buttonText = $providerService->getConfigValue(

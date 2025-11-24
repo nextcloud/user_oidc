@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+build/
+js/
+dist/
+
+# Generated files
+*.min.js
+*.map
+
+# Lock files
+package-lock.json
+composer.lock
+
+# Documentation
+*.md
+!README.md
+
+# Config files that shouldn't be formatted
+.eslintrc.cjs
+webpack.js
+babel.config.js
+stylelint.config.cjs
+

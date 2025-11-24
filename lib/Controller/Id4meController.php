@@ -83,7 +83,7 @@ class Id4meController extends BaseOidcController {
 		}
 
 		Util::addStyle(Application::APP_ID, 'id4me-login');
-		$response = new Http\TemplateResponse('user_oidc', 'id4me/login', [], 'guest');
+		$response = new Http\TemplateResponse('junovy_user_oidc', 'id4me/login', [], 'guest');
 
 		$csp = new Http\ContentSecurityPolicy();
 		$csp->addAllowedFormActionDomain('*');

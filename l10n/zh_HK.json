@@ -24,7 +24,7 @@
     "Failed to provision the user" : "用戶配置失敗",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "您沒有權限登錄此實例。如果您認為這是錯誤，請聯絡管理員。",
     "User conflict" : "用戶衝突",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "OpenID Connect 用戶後端",
     "Use an OpenID Connect backend to login to your Nextcloud" : "使用 OpenID Connect 後端系統登錄您的 Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "允許靈活配置 OIDC 伺服器作為 Nextcloud 登錄用戶後端系統。",

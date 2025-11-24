@@ -24,7 +24,7 @@
     "Failed to provision the user" : "Produciuse un fallo fornecer o usuario",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Vde. non ten permiso para acceder a esta instancia. Se pensa que se trata dun erro, póñase en contacto coa administración.",
     "User conflict" : "Conflito de usuario",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "Infraestrutura de usuario de OpenID Connect",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Empregar unha infraestrutura de OpenID Connect para acceder ao seu Nextcloud",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Permite a configuración flexíbel dun servidor OIDC como infraestrutura de usuario de acceso a Nextcloud.",

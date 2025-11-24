@@ -40,7 +40,7 @@ class Version010304Date20231121102449 extends SimpleMigrationStep {
 		$schema = $schemaClosure();
 
 		$schemaChanged = false;
-		foreach (['user_oidc_providers', 'user_oidc_id4me'] as $tableName) {
+		foreach (['junovy_user_oidc_providers', 'junovy_user_oidc_id4me'] as $tableName) {
 			if ($schema->hasTable($tableName)) {
 				$table = $schema->getTable($tableName);
 				if ($table->hasColumn('client_secret')) {

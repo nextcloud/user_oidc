@@ -59,7 +59,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 			return null;
 		}
 
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		// ref https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
 		$checkAudience = !isset($oidcSystemConfig['selfencoded_bearer_validation_audience_check'])
 			|| !in_array($oidcSystemConfig['selfencoded_bearer_validation_audience_check'], [false, 'false', 0, '0'], true);

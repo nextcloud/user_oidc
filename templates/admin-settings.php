@@ -4,4 +4,4 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 ?>
-<div id="user-oidc-settings"></div>
+<div id="junovy-user-oidc-settings"></div>

@@ -24,7 +24,7 @@
     "Failed to provision the user" : "Kullanıcı yetkilendirilemedi",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Bu kopyada oturum açma izniniz yok. Bir yanlışlık olduğunu düşünüyorsanız, lütfen bir yönetici ile görüşün.",
     "User conflict" : "Kullanıcı çakışması",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "OpenID Connect kullanıcı arka yüzü",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Nextcloud kopyanızda oturum açmak için bir OpenID Connect arka yüzü kullanın",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "Nextcloud oturum açma kullanıcı arka yüzü olarak esnek bir OIDC sunucusu yapılandırması sağlar.",

@@ -23,7 +23,7 @@
     "Failed to provision the user" : "사용자 프로비저닝에 실패했습니다.",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "이 인스턴스에 로그인할 수 있는 권한이 없습니다. 오류라고 생각되시면 관리자에게 연락하시기 바랍니다.",
     "User conflict" : "사용자 충돌",
-    "OpenID Connect" : "OpenID Connect",
+    "OpenID Connect" : "Junovy OpenID",
     "OpenID Connect user backend" : "OpenID Connect 사용자 백엔드",
     "Use an OpenID Connect backend to login to your Nextcloud" : "Nextcloud 로그인에 OpenID Connect 백엔드 사용",
     "Allows flexible configuration of an OIDC server as Nextcloud login user backend." : "OIDC 서버의 유연한 구성을 Nextcloud 로그인 사용자 백엔드로 허용합니다.",

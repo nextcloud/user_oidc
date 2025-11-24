@@ -27,7 +27,7 @@ class Version00003Date20200420120107 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->createTable('user_oidc_id4me');
+		$table = $schema->createTable('junovy_user_oidc_id4me');
 		$table->addColumn('id', 'integer', [
 			'autoincrement' => true,
 			'notnull' => true,

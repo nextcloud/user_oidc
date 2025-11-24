@@ -10,10 +10,10 @@ import { createApp } from 'vue'
 import App from './components/AdminSettings.vue'
 
 const app = createApp(App, {
-	initialId4MeState: loadState('user_oidc', 'id4meState'),
-	initialStoreLoginTokenState: loadState('user_oidc', 'storeLoginTokenState'),
-	initialProviders: loadState('user_oidc', 'providers'),
-	redirectUrl: loadState('user_oidc', 'redirectUrl'),
+	initialId4MeState: loadState('junovy_user_oidc', 'id4meState'),
+	initialStoreLoginTokenState: loadState('junovy_user_oidc', 'storeLoginTokenState'),
+	initialProviders: loadState('junovy_user_oidc', 'providers'),
+	redirectUrl: loadState('junovy_user_oidc', 'redirectUrl'),
 })
 app.mixin({ methods: { t, n } })
-app.mount('#user-oidc-settings')
+app.mount('#junovy-user-oidc-settings')

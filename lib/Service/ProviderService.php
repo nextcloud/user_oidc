@@ -200,7 +200,7 @@ class ProviderService {
 		}
 
 		// Then check global config.php
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 
 		// Try various key formats that might be used in config.php
 		// Convert camelCase to snake_case for oidc_login compatibility

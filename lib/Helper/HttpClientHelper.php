@@ -23,7 +23,7 @@ class HttpClientHelper implements HttpClient {
 	}
 
 	public function get($url, array $headers = [], array $options = []) {
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 
 		$client = $this->clientService->newClient();
 
@@ -43,7 +43,7 @@ class HttpClientHelper implements HttpClient {
 	}
 
 	public function post($url, $body, array $headers = []) {
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$client = $this->clientService->newClient();
 
 		$options = [
@@ -73,7 +73,7 @@ class HttpClientHelper implements HttpClient {
 	 * @return string
 	 */
 	public function postWithOptions($url, $body, array $headers = [], array $options = []): string {
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$client = $this->clientService->newClient();
 
 		$requestOptions = [

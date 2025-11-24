@@ -19,7 +19,7 @@ class Version00007Date20210730170713 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->getTable('user_oidc_providers');
+		$table = $schema->getTable('junovy_user_oidc_providers');
 		$table->addColumn('scope', 'string', [
 			'length' => 128,
 			'default' => 'openid email profile',

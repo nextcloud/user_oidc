@@ -162,7 +162,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 */
 	public function getLogoutUrl(): string {
 		return $this->urlGenerator->linkToRouteAbsolute(
-			'user_oidc.login.singleLogoutService',
+			'junovy_user_oidc.login.singleLogoutService',
 			[
 				'requesttoken' => \OC::$server->getCsrfTokenManager()->getToken()->getEncryptedValue(),
 			]
@@ -174,13 +174,13 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * Inspired by user_saml
 	 */
 	public function getUserData(): array {
-		$userData = $this->session->get('user_oidc.oidcUserData');
+		$userData = $this->session->get('junovy_user_oidc.oidcUserData');
 		$providerId = (int)$this->session->get(LoginController::PROVIDERID);
 		$userData = $this->formatUserData($providerId, $userData);
 
 		// make sure that a valid UID is given
 		if (empty($userData['formatted']['uid'])) {
-			$this->logger->error('No valid uid given, please check your attribute mapping. Got uid: {uid}', ['app' => 'user_oidc', 'uid' => $userData['formatted']['uid']]);
+			$this->logger->error('No valid uid given, please check your attribute mapping. Got uid: {uid}', ['app' => 'junovy_user_oidc', 'uid' => $userData['formatted']['uid']]);
 			throw new \InvalidArgumentException('No valid uid given, please check your attribute mapping. Got uid: ' . $userData['formatted']['uid']);
 		}
 
@@ -220,7 +220,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @since 6.0.0
 	 */
 	public function getCurrentUserId(): string {
-		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$oidcSystemConfig = $this->config->getSystemValue('junovy_user_oidc', []);
 		$ncOidcProviderBearerValidation = isset($oidcSystemConfig['oidc_provider_bearer_validation']) && $oidcSystemConfig['oidc_provider_bearer_validation'] === true;
 
 		$providers = $this->providerMapper->getProviders();

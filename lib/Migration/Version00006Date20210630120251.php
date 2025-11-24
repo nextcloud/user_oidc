@@ -19,8 +19,8 @@ class Version00006Date20210630120251 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->getTable('user_oidc_providers');
-		$table->addUniqueIndex(['identifier'], 'user_oidc_prov_idtf');
+		$table = $schema->getTable('junovy_user_oidc_providers');
+		$table->addUniqueIndex(['identifier'], 'junovy_user_oidc_prov_idtf');
 
 		return $schema;
 	}
