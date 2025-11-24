@@ -44,8 +44,9 @@ class JweServiceTest extends TestCase {
 			'iss' => 'My service',
 			'aud' => 'Your application',
 		];
+		$inputPayload = json_encode($inputPayloadArray);
 
-		$serializedJweToken = $this->jweService->createSerializedJweWithKey($inputPayloadArray, $encPublicJwk);
+		$serializedJweToken = $this->jweService->createSerializedJweWithKey($inputPayload, $encPublicJwk);
 		$decryptedJweString = $this->jweService->decryptSerializedJweWithKey($serializedJweToken, $encPrivJwk);
 
 		$outputPayloadArray = json_decode($decryptedJweString, true);
