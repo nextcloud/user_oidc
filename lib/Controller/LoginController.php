@@ -478,13 +478,15 @@ class LoginController extends BaseOidcController {
 			$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
 			$this->logger->warning('JWT HEADER', ['jwt_header' => $jwtHeader]);
 			if (isset($jwtHeader['typ']) && $jwtHeader['typ'] === 'JWT') {
-				// we have a JWT
+				// we have a JWT, do nothing
 			} elseif (isset($jwtHeader['cty']) && $jwtHeader['cty'] === 'JWT') {
-				// we have a JWE
+				// we have a JWE that contains the JWT string (the ID token)
+				$idTokenRaw = $this->jweService->decryptSerializedJwe($idTokenRaw);
+				$this->logger->warning('raw decrypted JWE', ['decrypted_jwe' => $idTokenRaw]);
+				$this->logger->warning('decrypted+decoded JWE', ['decrypted_jwe' => json_decode($idTokenRaw, true)]);
+			} else {
+				$this->logger->warning('Unsupported id_token when using "private key JWT"', ['id_token' => $idTokenRaw]);
 			}
-
-			// $dec = $this->jweService->decryptSerializedJwe($idTokenRaw);
-			// $this->logger->warning('decrypted JWE', ['decrypted_jwe' => json_decode($dec, true)]);
 		}
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
