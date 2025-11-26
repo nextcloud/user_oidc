@@ -231,6 +231,15 @@ You can also manually disable it in `config.php`:
 ],
 ```
 
+You can also force the use of PKCE with:
+``` php
+'user_oidc' => [
+    'use_pkce' => 'force',
+],
+```
+This will make user_oidc use PKCE even if the `code_challenge_methods_supported` value of the provider's discovery endpoint
+is not defined or does not contain `S256`.
+
 ### Single logout
 
 Single logout is enabled by default. When logging out of Nextcloud,
