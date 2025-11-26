@@ -347,7 +347,7 @@ class LoginController extends BaseOidcController {
 				], Http::STATUS_FORBIDDEN);
 			}
 			$message = $this->l10n->t('The identity provider failed to authenticate the user.');
-			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false, errorDescription: $error_description);
 		}
 
 		$storedState = $this->session->get(self::STATE);
