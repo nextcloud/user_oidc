@@ -195,10 +195,11 @@ class LoginController extends BaseOidcController {
 		$this->session->set(self::NONCE, $nonce);
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
-		// TODO add config param to force PKCE even if not supported in discovery
 		// condition becomes: ($isPkceSupported || $force) && ($oidcSystemConfig['use_pkce'] ?? true)
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
-		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+		$usePkce = $oidcSystemConfig['use_pkce'] ?? true;
+		$forcePkce = $usePkce === 'force';
+		$isPkceEnabled = $forcePkce || ($isPkceSupported && $usePkce);
 
 		if ($isPkceEnabled) {
 			// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
@@ -389,7 +390,9 @@ class LoginController extends BaseOidcController {
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
-		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+		$usePkce = $oidcSystemConfig['use_pkce'] ?? true;
+		$forcePkce = $usePkce === 'force';
+		$isPkceEnabled = $forcePkce || ($isPkceSupported && $usePkce);
 		$usePrivateKeyJwt = $this->providerService->getSetting($providerId, ProviderService::SETTING_USE_PRIVATE_KEY_JWT, '0') !== '0';
 
 		try {
