@@ -90,6 +90,28 @@ The OpenID Connect backend will ensure that user ids are unique even when multip
 id to ensure that a user cannot identify for the same Nextcloud account through different providers.
 Therefore, a hash of the provider id and the user id is used. This behaviour can be turned off in the provider options.
 
+### Parsing user IDs from claims
+
+If your ID tokens do not contain the user ID directly in an attribute/claim,
+you can configure user_oidc to apply a regular expression to extract the user ID from the claim.
+
+```php
+'user_oidc' => [
+  'user_id_regexp' => 'u=([^,]+)'
+]
+```
+
+This regular expression may or may not contain parenthesis. If it does, only the selected block will be extracted.
+Examples:
+
+* `'[a-zA-Z]+'`
+  * `'123-abc-123'` will give `'abc'`
+  * `'123-abc-345-def'` will give `'abc'`
+* `'u=([^,]+)'`
+  * `'u=123'` will give `'123'`
+  * `'anything,u=123,anything'` will give `'123'`
+  * `'anything,u=123,anything,u=345'` will give `'123'`
+
 ## Commandline settings
 The app could also be configured by commandline.
 
