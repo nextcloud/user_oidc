@@ -570,6 +570,8 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
 
+		$userId = $this->settingsService->parseUserId($userId);
+
 		// prevent login of users that are not in a whitelisted group (if activated)
 		$restrictLoginToGroups = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0');
 		if ($restrictLoginToGroups === '1') {
