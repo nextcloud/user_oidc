@@ -21,6 +21,8 @@ use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\JweService;
+use OCA\UserOIDC\Service\JwkService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
@@ -91,6 +93,8 @@ class LoginController extends BaseOidcController {
 		private ICrypto $crypto,
 		private TokenService $tokenService,
 		private OidcService $oidcService,
+		private JwkService $jwkService,
+		private JweService $jweService,
 	) {
 		parent::__construct($request, $config, $l10n);
 	}
@@ -179,8 +183,11 @@ class LoginController extends BaseOidcController {
 		$this->session->set(self::NONCE, $nonce);
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		// condition becomes: ($isPkceSupported || $force) && ($oidcSystemConfig['use_pkce'] ?? true)
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
-		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+		$usePkce = $oidcSystemConfig['use_pkce'] ?? true;
+		$forcePkce = $usePkce === 'force';
+		$isPkceEnabled = $forcePkce || ($isPkceSupported && $usePkce);
 
 		if ($isPkceEnabled) {
 			// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
@@ -329,7 +336,7 @@ class LoginController extends BaseOidcController {
 				], Http::STATUS_FORBIDDEN);
 			}
 			$message = $this->l10n->t('The identity provider failed to authenticate the user.');
-			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false, errorDescription: $error_description);
 		}
 
 		$storedState = $this->session->get(self::STATE);
@@ -372,7 +379,10 @@ class LoginController extends BaseOidcController {
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
-		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+		$usePkce = $oidcSystemConfig['use_pkce'] ?? true;
+		$forcePkce = $usePkce === 'force';
+		$isPkceEnabled = $forcePkce || ($isPkceSupported && $usePkce);
+		$usePrivateKeyJwt = $this->providerService->getSetting($providerId, ProviderService::SETTING_USE_PRIVATE_KEY_JWT, '0') !== '0';
 
 		try {
 			$requestBody = [
@@ -402,7 +412,8 @@ class LoginController extends BaseOidcController {
 				$tokenEndpointAuthMethod = 'client_secret_post';
 			}
 
-			if ($tokenEndpointAuthMethod === 'client_secret_basic') {
+			// private key JWT auth does not work with client_secret_basic, we don't wanna pass the client secret
+			if ($tokenEndpointAuthMethod === 'client_secret_basic' && !$usePrivateKeyJwt) {
 				$headers = [
 					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
 					'Content-Type' => 'application/x-www-form-urlencoded',
@@ -410,7 +421,12 @@ class LoginController extends BaseOidcController {
 			} else {
 				// Assuming client_secret_post as no other option is supported currently
 				$requestBody['client_id'] = $provider->getClientId();
-				$requestBody['client_secret'] = $providerClientSecret;
+				if ($usePrivateKeyJwt) {
+					$requestBody['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+					$requestBody['client_assertion'] = $this->jwkService->generateClientAssertion($provider, $discovery['issuer'], $code);
+				} else {
+					$requestBody['client_secret'] = $providerClientSecret;
+				}
 			}
 
 			$body = $this->clientService->post(
@@ -441,11 +457,29 @@ class LoginController extends BaseOidcController {
 		}
 
 		$data = json_decode($body, true);
-		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
+		$this->logger->warning('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
 		// TODO: proper error handling
 		$idTokenRaw = $data['id_token'];
+		if ($usePrivateKeyJwt) {
+			// we could check the header there
+			// if kid is our private JWK, we have a JWE to decrypt
+			// if typ=JWT, we have a classic JWT to decode
+			$jwtParts = explode('.', $idTokenRaw, 3);
+			$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
+			$this->logger->warning('JWT HEADER', ['jwt_header' => $jwtHeader]);
+			if (isset($jwtHeader['typ']) && $jwtHeader['typ'] === 'JWT') {
+				// we have a JWT, do nothing
+			} elseif (isset($jwtHeader['cty']) && $jwtHeader['cty'] === 'JWT') {
+				// we have a JWE that contains the JWT string (the ID token)
+				$idTokenRaw = $this->jweService->decryptSerializedJwe($idTokenRaw);
+				$this->logger->warning('raw decrypted JWE', ['decrypted_jwe' => $idTokenRaw]);
+				$this->logger->warning('decrypted+decoded JWE', ['decrypted_jwe' => json_decode($idTokenRaw, true)]);
+			} else {
+				$this->logger->warning('Unsupported id_token when using "private key JWT"', ['id_token' => $idTokenRaw]);
+			}
+		}
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
 		try {
@@ -524,6 +558,8 @@ class LoginController extends BaseOidcController {
 			$message = $this->l10n->t('Failed to provision the user');
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
+
+		$userId = $this->settingsService->parseUserId($userId);
 
 		// prevent login of users that are not in a whitelisted group (if activated)
 		$restrictLoginToGroups = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0');
