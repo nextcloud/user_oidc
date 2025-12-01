@@ -125,22 +125,22 @@ class ProviderService {
 	}
 
 	public function setSetting(int $providerId, string $key, string $value): void {
-		$this->appConfig->setValueString(Application::APP_ID, $this->getSettingsKey($providerId, $key), $value);
+		$this->appConfig->setValueString(Application::APP_ID, $this->getSettingsKey($providerId, $key), $value, lazy: true);
 	}
 
 	public function getSetting(int $providerId, string $key, string $default = ''): string {
-		$value = $this->appConfig->getValueString(Application::APP_ID, $this->getSettingsKey($providerId, $key), '');
+		$value = $this->appConfig->getValueString(Application::APP_ID, $this->getSettingsKey($providerId, $key), '', lazy: true);
 		if ($value === '') {
 			return $default;
 		}
 		return $value;
 	}
 
-	private function getSettingsKey(int $providerId, string $key): string {
+	public function getSettingsKey(int $providerId, string $key): string {
 		return 'provider-' . strval($providerId) . '-' . $key;
 	}
 
-	private function getSupportedSettings(): array {
+	public function getSupportedSettings(): array {
 		return [
 			self::SETTING_MAPPING_DISPLAYNAME,
 			self::SETTING_MAPPING_EMAIL,
