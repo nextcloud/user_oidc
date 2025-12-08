@@ -40,7 +40,7 @@ class Version010303Date20230602125945 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		foreach (['junovy_user_oidc_providers', 'junovy_user_oidc_id4me'] as $tableName) {
+		foreach (['jnvy_oidc_providers', 'jnvy_oidc_id4me'] as $tableName) {
 			if ($schema->hasTable($tableName)) {
 				$table = $schema->getTable($tableName);
 				if ($table->hasColumn('client_secret')) {
@@ -56,7 +56,7 @@ class Version010303Date20230602125945 extends SimpleMigrationStep {
 
 	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {
 		// update secrets in user_oidc_providers and user_oidc_id4me
-		foreach (['junovy_user_oidc_providers', 'junovy_user_oidc_id4me'] as $tableName) {
+		foreach (['jnvy_oidc_providers', 'jnvy_oidc_id4me'] as $tableName) {
 			$qbUpdate = $this->connection->getQueryBuilder();
 			$qbUpdate->update($tableName)
 				->set('client_secret', $qbUpdate->createParameter('updateSecret'))

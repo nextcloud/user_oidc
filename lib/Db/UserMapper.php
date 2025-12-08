@@ -28,7 +28,7 @@ class UserMapper extends QBMapper {
 		private LocalIdService $idService,
 		private IConfig $config,
 	) {
-		parent::__construct($db, 'junovy_user_oidc', User::class);
+		parent::__construct($db, 'jnvy_oidc', User::class);
 		$this->userCache = new CappedMemoryCache();
 	}
 

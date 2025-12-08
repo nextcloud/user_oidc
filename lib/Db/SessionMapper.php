@@ -26,7 +26,7 @@ class SessionMapper extends QBMapper {
 		IDBConnection $db,
 		private ICrypto $crypto,
 	) {
-		parent::__construct($db, 'junovy_user_oidc_sessions', Session::class);
+		parent::__construct($db, 'jnvy_oidc_sessions', Session::class);
 	}
 
 	/**

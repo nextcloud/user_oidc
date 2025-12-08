@@ -22,7 +22,7 @@ use OCP\IDBConnection;
  */
 class ProviderMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
-		parent::__construct($db, 'junovy_user_oidc_providers', Provider::class);
+		parent::__construct($db, 'jnvy_oidc_providers', Provider::class);
 	}
 
 	/**

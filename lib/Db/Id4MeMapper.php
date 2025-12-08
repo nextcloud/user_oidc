@@ -17,7 +17,7 @@ use OCP\IDBConnection;
  */
 class Id4MeMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
-		parent::__construct($db, 'junovy_user_oidc_id4me', Id4Me::class);
+		parent::__construct($db, 'jnvy_oidc_id4me', Id4Me::class);
 	}
 
 	/**

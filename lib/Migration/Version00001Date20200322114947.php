@@ -30,7 +30,7 @@ class Version00001Date20200322114947 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->createTable('junovy_user_oidc');
+		$table = $schema->createTable('jnvy_oidc');
 		$table->addColumn('id', 'integer', [
 			'autoincrement' => true,
 			'notnull' => true,
@@ -41,7 +41,7 @@ class Version00001Date20200322114947 extends SimpleMigrationStep {
 			'length' => 64,
 		]);
 		$table->setPrimaryKey(['id']);
-		$table->addUniqueIndex(['user_id'], 'junovy_user_oidc_uid');
+		$table->addUniqueIndex(['user_id'], 'jnvy_oidc_uid');
 
 		return $schema;
 	}

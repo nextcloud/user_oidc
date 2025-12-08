@@ -29,7 +29,7 @@ class Version00005Date20200428123958 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->getTable('junovy_user_oidc');
+		$table = $schema->getTable('jnvy_oidc');
 		$table->addColumn('display_name', 'string', [
 			'length' => 255,
 			'default' => '',

@@ -31,7 +31,7 @@ class Version01021Date20220719114355 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->createTable('junovy_user_oidc_sessions');
+		$table = $schema->createTable('jnvy_oidc_sessions');
 		$table->addColumn('id', Types::INTEGER, [
 			'autoincrement' => true,
 			'notnull' => true,
@@ -64,9 +64,9 @@ class Version01021Date20220719114355 extends SimpleMigrationStep {
 			'unsigned' => true,
 		]);
 		$table->setPrimaryKey(['id']);
-		$table->addIndex(['created_at'], 'junovy_user_oidc_sess_crat');
-		$table->addUniqueIndex(['sid'], 'junovy_user_oidc_sess_sid');
-		$table->addUniqueIndex(['nc_session_id'], 'junovy_user_oidc_sess_sess_id');
+		$table->addIndex(['created_at'], 'jnvy_oidc_sess_crat');
+		$table->addUniqueIndex(['sid'], 'jnvy_oidc_sess_sid');
+		$table->addUniqueIndex(['nc_session_id'], 'jnvy_oidc_sess_sess_id');
 
 		return $schema;
 	}

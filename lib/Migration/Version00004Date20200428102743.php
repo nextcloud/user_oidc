@@ -30,7 +30,7 @@ class Version00004Date20200428102743 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->createTable('junovy_user_oidc_providers');
+		$table = $schema->createTable('jnvy_oidc_providers');
 		$table->addColumn('id', 'integer', [
 			'autoincrement' => true,
 			'notnull' => true,
