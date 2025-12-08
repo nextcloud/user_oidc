@@ -9,6 +9,8 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\UseSession;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -27,14 +29,13 @@ class TimezoneController extends Controller {
 	}
 
 	/**
-	 * @NoAdminRequired
-	 * @UseSession
-	 *
 	 * @param string $timezone
 	 * @param int $timezoneOffset
 	 * @return JSONResponse
 	 * @throws \OCP\PreConditionNotMetException
 	 */
+	#[NoAdminRequired]
+	#[UseSession]
 	public function setTimezone(string $timezone, int $timezoneOffset) {
 		$this->config->setUserValue($this->userId, 'core', 'timezone', $timezone);
 		$this->session->set('timezone', $timezoneOffset);
