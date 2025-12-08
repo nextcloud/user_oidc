@@ -256,4 +256,3 @@ class SettingsControllerTest extends TestCase {
 		$this->assertStringContainsString('Failed to resync groups', $data['message']);
 	}
 }
-

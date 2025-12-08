@@ -78,4 +78,3 @@ foreach ($stubOrder as $stubFile) {
 		require_once $stubPath;
 	}
 }
-

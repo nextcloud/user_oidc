@@ -320,6 +320,3 @@ class CirclesService {
 		}
 	}
 }
-
-
-

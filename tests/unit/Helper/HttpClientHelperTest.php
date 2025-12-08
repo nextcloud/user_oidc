@@ -182,4 +182,3 @@ class HttpClientHelperTest extends TestCase {
 		Assert::assertEquals('response body', $result);
 	}
 }
-
