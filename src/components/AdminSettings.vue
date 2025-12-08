@@ -10,40 +10,34 @@
 			<p>
 				{{ t('user_oidc', 'Allows users to authenticate via OpenID Connect providers.') }}
 			</p>
-			<p>
-				<NcCheckboxRadioSwitch
-					v-model="id4meState"
-					wrapper-element="div"
-					@update:model-value="onId4MeChange">
-					{{ t('user_oidc', 'Enable ID4me') }}
-				</NcCheckboxRadioSwitch>
-			</p>
-			<p class="line">
-				<NcCheckboxRadioSwitch
-					v-model="storeLoginTokenState"
-					wrapper-element="div"
-					@update:model-value="onStoreLoginTokenChange">
-					{{ t('user_oidc', 'Store login tokens') }}
-				</NcCheckboxRadioSwitch>
-				<NcButton variant="tertiary"
-					:title="t('user_oidc', 'This is needed if you are using other apps that want to use user_oidc\'s token exchange or simply get the login token')">
-					<template #icon>
-						<HelpCircleOutlineIcon />
-					</template>
-				</NcButton>
-			</p>
+			<div class="top-boxes">
+				<NcFormBox>
+					<NcFormBoxSwitch
+						v-model="id4meState"
+						@update:model-value="onId4MeChange">
+						{{ t('user_oidc', 'Enable ID4me') }}
+					</NcFormBoxSwitch>
+					<NcFormBoxSwitch
+						v-model="storeLoginTokenState"
+						@update:model-value="onStoreLoginTokenChange">
+						{{ t('user_oidc', 'Store login tokens') }}
+					</NcFormBoxSwitch>
+				</NcFormBox>
+				<NcNoteCard type="info">
+					{{ t('user_oidc', '"Store login tokens" is needed if you are using other apps that want to use user_oidc\'s token exchange or simply get the login token') }}
+				</NcNoteCard>
+			</div>
 		</div>
 		<div class="section">
-			<h2>
+			<h2 class="register-title">
 				{{ t('user_oidc', 'Registered Providers') }}
-				<NcActions>
-					<NcActionButton @click="showNewProvider=true">
-						<template #icon>
-							<PlusIcon :size="20" />
-						</template>
-						{{ t('user_oidc', 'Register new provider') }}
-					</NcActionButton>
-				</NcActions>
+				<NcButton variant="secondary"
+					:title="t('user_oidc', 'Register new provider')"
+					@click="showNewProvider = true">
+					<template #icon>
+						<PlusIcon :size="20" />
+					</template>
+				</NcButton>
 			</h2>
 
 			<NcModal v-if="showNewProvider"
@@ -133,20 +127,22 @@
 </template>
 
 <script>
-import HelpCircleOutlineIcon from 'vue-material-design-icons/HelpCircleOutline.vue'
 import PencilOutlineIcon from 'vue-material-design-icons/PencilOutline.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
 import TrashCanOutlineIcon from 'vue-material-design-icons/TrashCanOutline.vue'
 
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
 import NcActions from '@nextcloud/vue/components/NcActions'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcModal from '@nextcloud/vue/components/NcModal'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcDialog from '@nextcloud/vue/components/NcDialog'
+import NcFormBoxSwitch from '@nextcloud/vue/components/NcFormBoxSwitch'
+import NcFormBox from '@nextcloud/vue/components/NcFormBox'
+import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { showError } from '@nextcloud/dialogs'
 import { confirmPassword } from '@nextcloud/password-confirmation'
 
 import logger from '../logger.js'
@@ -159,13 +155,14 @@ export default {
 		NcActions,
 		NcActionButton,
 		NcModal,
-		NcCheckboxRadioSwitch,
 		NcButton,
+		NcFormBoxSwitch,
+		NcFormBox,
+		NcNoteCard,
 		PencilOutlineIcon,
 		TrashCanOutlineIcon,
 		NcDialog,
 		PlusIcon,
-		HelpCircleOutlineIcon,
 	},
 	props: {
 		initialId4MeState: {
@@ -339,14 +336,24 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-h2 .action-item {
-	vertical-align: middle;
+h2.register-title {
 	margin-top: -2px;
+	display: flex;
+	align-items: center;
+	justify-content: start;
+	gap: 8px;
 }
 
 h3 {
 	font-weight: bold;
 	padding-bottom: 12px;
+}
+
+.top-boxes {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-width: 900px;
 }
 
 .line {
