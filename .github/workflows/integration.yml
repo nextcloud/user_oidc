@@ -11,7 +11,7 @@ on:
       - stable*
 
 env:
-  APP_NAME: user_oidc
+  APP_NAME: junovy_user_oidc
 
 jobs:
   integration:
@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Checkout server
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v4
         with:
           repository: nextcloud/server
           ref: ${{ matrix.server-versions }}
@@ -78,7 +78,7 @@ jobs:
           git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
 
       - name: Checkout app
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v4
         with:
           path: apps/${{ env.APP_NAME }}
 
@@ -117,7 +117,7 @@ jobs:
           ./occ config:system:set allow_local_remote_servers --value true --type bool
           ./occ config:system:set debug --value true --type bool
           cat config/config.php
-          ./occ user_oidc:provider nextcloudci -c nextcloud -s ff75b7c7-20f9-460b-b27c-16bd5d9b4cd0 -d http://127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
+          ./occ junovy_user_oidc:provider nextcloudci -c nextcloud -s ff75b7c7-20f9-460b-b27c-16bd5d9b4cd0 -d http://127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
           php -S localhost:8080 &
           curl -v http://127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
 

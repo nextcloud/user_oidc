@@ -173,7 +173,7 @@ class UpsertProvider extends Base {
 
 	protected function configure() {
 		$this
-			->setName('user_oidc:provider')
+			->setName('junovy_user_oidc:provider')
 			->setDescription('Create, show or update a OpenId connect provider config given the identifier of a provider')
 			->addArgument('identifier', InputArgument::OPTIONAL, 'Administrative identifier name of the provider in the setup')
 			->addOption('clientid', 'c', InputOption::VALUE_REQUIRED, 'OpenID client identifier')

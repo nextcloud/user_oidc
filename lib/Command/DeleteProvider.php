@@ -32,7 +32,7 @@ class DeleteProvider extends Base {
 
 	protected function configure() {
 		$this
-			->setName('user_oidc:provider:delete')
+			->setName('junovy_user_oidc:provider:delete')
 			->setDescription('Delete an OpenId connect provider')
 			->addArgument('identifier', InputArgument::REQUIRED, 'Administrative identifier name of the provider to delete')
 			->addOption('force', 'f', InputOption::VALUE_NONE, 'Skip confirmation');
