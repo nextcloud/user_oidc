@@ -318,7 +318,7 @@ class ProvisioningServiceTest extends TestCase {
 			],
 			[
 				'group2',
-				'',
+				'group2', // For string groups, displayName is set to the group name
 				(object)[
 					'groups' => [
 						'group2'
@@ -347,7 +347,7 @@ class ProvisioningServiceTest extends TestCase {
 			],
 			[
 				'users_nextcloud',
-				'',
+				'users_nextcloud', // For string groups, displayName is set to the group name
 				(object)[
 					'groups' => [
 						'users_nextcloud',
