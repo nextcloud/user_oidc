@@ -28,7 +28,7 @@ class Test extends \Test\TestCase {
 	public function setUp(): void {
 		parent::setUp();
 
-		\OC::$server->getAppManager()->enableApp('user_oidc');
+		\OC::$server->getAppManager()->enableApp('junovy_user_oidc');
 
 		if (getenv('IDP_URL')) {
 			$this->oidcIdp = getenv('IDP_URL');
@@ -65,13 +65,13 @@ class Test extends \Test\TestCase {
 		self::assertEquals([
 			[
 				'name' => 'Login with nextcloudci',
-				'href' => '/index.php/apps/user_oidc/login/1'
+				'href' => '/index.php/apps/junovy_user_oidc/login/1'
 			]
 		], OC_App::getAlternativeLogIns());
 	}
 
 	public function testLoginRedirect() {
-		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/junovy_user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		self::assertStringStartsWith($this->oidcIdp, $headersRedirect[0]);
 	}
@@ -83,14 +83,14 @@ class Test extends \Test\TestCase {
 	}
 
 	public function testLoginRedirectCallback() {
-		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/junovy_user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		self::assertStringStartsWith($this->oidcIdp, $headersRedirect[0]);
 
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$userId = $this->getUserHtmlData($response)['userId'];
-		self::assertStringStartsWith($this->baseUrl . '/index.php/apps/user_oidc/code?', $headersRedirect[0]);
+		self::assertStringStartsWith($this->baseUrl . '/index.php/apps/junovy_user_oidc/code?', $headersRedirect[0]);
 		self::assertEquals($this->baseUrl . '/index.php/apps/dashboard/', $headersRedirect[1]);
 
 		// Validate login with correct user data
@@ -146,12 +146,12 @@ class Test extends \Test\TestCase {
 
 		/** @var IConfig $config */
 		$config = \OC::$server->get(IConfig::class);
-		$config->setSystemValue('user_oidc', [ 'auto_provision' => false ]);
+		$config->setSystemValue('junovy_user_oidc', [ 'auto_provision' => false ]);
 
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '0');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, 'preferred_username');
 
-		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/junovy_user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
 		$status = $response->getStatusCode();
@@ -170,7 +170,7 @@ class Test extends \Test\TestCase {
 
 		// restore initial settings
 		$localUser->delete();
-		$config->setSystemValue('user_oidc', [ 'auto_provision' => true ]);
+		$config->setSystemValue('junovy_user_oidc', [ 'auto_provision' => true ]);
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '1');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
 		sleep(5);
@@ -188,7 +188,7 @@ class Test extends \Test\TestCase {
 
 		try {
 			$client = new Client(['allow_redirects' => ['track_redirects' => true]]);
-			$response = $client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+			$response = $client->get($this->baseUrl . '/index.php/apps/junovy_user_oidc/login/1');
 		} catch (\Exception $e) {
 			$response = $e->getResponse();
 		}
@@ -203,7 +203,7 @@ class Test extends \Test\TestCase {
 	public function testNonUnique() {
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '0');
 
-		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/junovy_user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
 		$userId = $this->getUserHtmlData($response)['userId'];
@@ -214,7 +214,7 @@ class Test extends \Test\TestCase {
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '0');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, 'preferred_username');
 
-		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/junovy_user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
 		$userId = $this->getUserHtmlData($response)['userId'];
@@ -224,7 +224,7 @@ class Test extends \Test\TestCase {
 	public function testUniqueMapping() {
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, 'preferred_username');
 
-		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/junovy_user_oidc/login/1');
 		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
 		$userId = $this->getUserHtmlData($response)['userId'];

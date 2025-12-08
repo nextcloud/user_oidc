@@ -346,7 +346,7 @@ class ProviderServiceTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn(['oidc_auto_redirect' => true]);
 
 		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT, false);
@@ -362,7 +362,7 @@ class ProviderServiceTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn([]);
 
 		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT, false);
@@ -378,7 +378,7 @@ class ProviderServiceTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn([]);
 
 		// SETTING_AUTO_REDIRECT default is false
@@ -418,7 +418,7 @@ class ProviderServiceTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn(['autoRedirect' => true]);
 
 		$result = $this->providerService->getConfigValue(1, ProviderService::SETTING_AUTO_REDIRECT, false);

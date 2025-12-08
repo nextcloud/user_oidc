@@ -55,7 +55,7 @@ class DiscoveryServiceTest extends TestCase {
 		$this->cache = $this->createMock(ICache::class);
 		$this->cacheFactory->expects(self::once())
 			->method('createDistributed')
-			->with('user_oidc')
+			->with('junovy_user_oidc')
 			->willReturn($this->cache);
 		$this->discoveryService = new DiscoveryService($this->logger, $this->clientHelper, $this->providerService, $this->cacheFactory);
 	}

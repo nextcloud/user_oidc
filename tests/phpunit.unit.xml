@@ -4,7 +4,7 @@
   - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <phpunit bootstrap="bootstrap.unit.php" convertDeprecationsToExceptions="true">
-	<testsuite name='user_oidc unit tests'>
+	<testsuite name='junovy_user_oidc unit tests'>
 		<directory>unit</directory>
 	</testsuite>
 </phpunit>

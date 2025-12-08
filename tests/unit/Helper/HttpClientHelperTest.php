@@ -54,7 +54,7 @@ class HttpClientHelperTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn([]);
 
 		$this->config->expects(self::once())
@@ -79,7 +79,7 @@ class HttpClientHelperTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn(['httpclient.allowselfsigned' => true]);
 
 		$this->config->expects(self::once())
@@ -104,7 +104,7 @@ class HttpClientHelperTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn([]);
 
 		$this->client->expects(self::once())
@@ -133,7 +133,7 @@ class HttpClientHelperTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn(['httpclient.allowselfsigned' => true]);
 
 		$this->client->expects(self::once())
@@ -160,7 +160,7 @@ class HttpClientHelperTest extends TestCase {
 
 		$this->config->expects(self::once())
 			->method('getSystemValue')
-			->with('user_oidc', [])
+			->with('junovy_user_oidc', [])
 			->willReturn(['httpclient.allowselfsigned' => true]);
 
 		// Even though global config says allow self-signed, the explicit verify=true should override
