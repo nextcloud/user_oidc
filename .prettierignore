@@ -27,4 +27,3 @@ composer.lock
 webpack.js
 babel.config.js
 stylelint.config.cjs
-

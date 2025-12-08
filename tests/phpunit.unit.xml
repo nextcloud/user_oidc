@@ -8,6 +8,3 @@
 		<directory>unit</directory>
 	</testsuite>
 </phpunit>
-
-
-

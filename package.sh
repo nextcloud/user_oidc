@@ -278,4 +278,3 @@ echo "  1. Extract the package to your Nextcloud apps/ directory"
 echo "  2. Set permissions: sudo chown -R www-data:www-data /path/to/nextcloud/apps/junovy_user_oidc"
 echo "  3. Enable: sudo -u www-data php occ app:enable junovy_user_oidc"
 echo ""
-

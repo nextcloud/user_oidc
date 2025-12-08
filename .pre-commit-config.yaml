@@ -1,0 +1,54 @@
+# Pre-commit hooks for junovy_user_oidc
+# See https://pre-commit.com for more information
+#
+# Install: pre-commit install
+# Run all hooks: pre-commit run --all-files
+# Run unit tests: pre-commit run phpunit-unit --all-files --hook-stage manual
+#
+# Note: Unit tests require Nextcloud server dependencies and may not run locally.
+#       They run automatically in GitHub Actions CI.
+
+repos:
+  # PHP Coding Standards (php-cs-fixer)
+  - repo: local
+    hooks:
+      - id: php-cs-fixer
+        name: PHP CS Fixer
+        entry: ./vendor/bin/php-cs-fixer fix --dry-run --diff
+        language: system
+        types: [php]
+        pass_filenames: false
+
+  # PHP Syntax Check
+  - repo: local
+    hooks:
+      - id: php-lint
+        name: PHP Lint
+        entry: bash -c 'errors=$(find lib tests -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax errors detected"); if [ -n "$errors" ]; then echo "$errors"; exit 1; fi'
+        language: system
+        types: [php]
+        pass_filenames: false
+
+  # PHPUnit Tests (manual stage - requires Nextcloud server dependencies)
+  # Run with: pre-commit run phpunit-unit --all-files --hook-stage manual
+  - repo: local
+    hooks:
+      - id: phpunit-unit
+        name: PHPUnit Unit Tests
+        entry: ./vendor/bin/phpunit -c tests/phpunit.unit.xml
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(vendor/|vendor-bin/|js/|node_modules/)
+      - id: end-of-file-fixer
+        exclude: ^(vendor/|vendor-bin/|js/|node_modules/)
+      - id: check-yaml
+      - id: check-json
+        exclude: ^(vendor/|vendor-bin/|node_modules/)
+      - id: check-merge-conflict

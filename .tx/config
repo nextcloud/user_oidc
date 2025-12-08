@@ -7,4 +7,3 @@ file_filter = translationfiles/<lang>/user_oidc.po
 source_file = translationfiles/templates/user_oidc.pot
 source_lang = en
 type        = PO
-

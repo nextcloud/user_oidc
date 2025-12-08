@@ -13,6 +13,8 @@ use Nextcloud\CodingStandard\Config;
 
 $config = new Config();
 $config
+	// Allow running on PHP versions newer than what php-cs-fixer officially supports
+	->setUnsupportedPhpVersionAllowed(true)
 	->getFinder()
 	->notPath('build')
 	->notPath('node_modules')
