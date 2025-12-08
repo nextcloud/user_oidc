@@ -11,7 +11,6 @@ namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Helper\HttpClientHelper;
-use OCA\UserOIDC\Service\ProviderService;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;

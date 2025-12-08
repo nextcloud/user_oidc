@@ -141,6 +141,3 @@ class CirclesServiceTest extends TestCase {
 		$this->assertNull($result);
 	}
 }
-
-
-
