@@ -6,5 +6,13 @@
 <phpunit bootstrap="bootstrap.unit.php" convertDeprecationsToExceptions="true">
 	<testsuite name='junovy_user_oidc unit tests'>
 		<directory>unit</directory>
+		<!-- Exclude tests that require full Nextcloud environment -->
+		<exclude>unit/Db/UserMapperTest.php</exclude>
 	</testsuite>
+	<groups>
+		<exclude>
+			<!-- Tests that require OC\Accounts\AccountManager or other NC core classes -->
+			<group>requires-nextcloud</group>
+		</exclude>
+	</groups>
 </phpunit>

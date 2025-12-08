@@ -111,6 +111,9 @@ class ProvisioningServiceTest extends TestCase {
 		);
 	}
 
+	/**
+	 * @group requires-nextcloud
+	 */
 	public function testProvisionUserAutoProvisioning(): void {
 		$user = $this->createMock(IUser::class);
 		$email = 'userEmail@email.com';
@@ -186,6 +189,9 @@ class ProvisioningServiceTest extends TestCase {
 		);
 	}
 
+	/**
+	 * @group requires-nextcloud
+	 */
 	public function testProvisionUserInvalidProperties(): void {
 		$user = $this->createMock(IUser::class);
 		$email = 'userEmail@email.com';
