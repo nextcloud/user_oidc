@@ -86,7 +86,7 @@ class SettingsControllerTest extends TestCase {
 
 		$hashedGroup2 = $this->createMock(IGroup::class);
 		$hashedGroup2->method('getGID')
-			->willReturn('a901a3bc1234567890abcdef1234567890abcdef1234567890abcdef1234567890'); // SHA256 hash
+			->willReturn('a901a3bc1234567890abcdef1234567890abcdef1234567890abcdef12345678'); // SHA256 hash (64 chars)
 
 		$normalGroup = $this->createMock(IGroup::class);
 		$normalGroup->method('getGID')

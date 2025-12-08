@@ -317,8 +317,8 @@ class ProvisioningServiceTest extends TestCase {
 				true,
 			],
 			[
-				'1',
 				'group2',
+				'',
 				(object)[
 					'groups' => [
 						'group2'
@@ -346,8 +346,8 @@ class ProvisioningServiceTest extends TestCase {
 				false
 			],
 			[
-				'1',
 				'users_nextcloud',
+				'',
 				(object)[
 					'groups' => [
 						'users_nextcloud',

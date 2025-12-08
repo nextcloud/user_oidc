@@ -178,6 +178,31 @@ class ProviderServiceTest extends TestCase {
 			'groupWhitelistRegex' => '',
 			'restrictLoginToGroups' => false,
 			'nestedAndFallbackClaims' => false,
+			// Teams provisioning settings
+			'teamsProvisioning' => false,
+			'mappingOrganizations' => '',
+			'teamsWhitelistRegex' => '',
+			// URL override settings
+			'overrideJwksUri' => '',
+			'overrideTokenEndpoint' => '',
+			'overrideUserinfoEndpoint' => '',
+			// Additional settings
+			'autoRedirect' => false,
+			'hidePasswordForm' => false,
+			'redirectFallback' => false,
+			'disableRegistration' => false,
+			'webdavEnabled' => false,
+			'passwordAuthentication' => false,
+			'useIdToken' => false,
+			'publicKeyCachingTime' => '',
+			'minTimeBetweenJwksRequests' => '',
+			'wellKnownCachingTime' => '',
+			'updateAvatar' => false,
+			'buttonText' => '',
+			'altLoginPage' => '',
+			'tlsVerify' => false,
+			'useExternalStorage' => false,
+			'proxyLdap' => false,
 		];
 		$this->appConfig->expects(self::any())
 			->method('getValueString')
@@ -217,6 +242,31 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', ''],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '', '0'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '', '0'],
+				// Teams provisioning settings
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_TEAMS_PROVISIONING, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MAPPING_ORGANIZATIONS, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_TEAMS_WHITELIST_REGEX, '', ''],
+				// URL override settings
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_OVERRIDE_JWKS_URI, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_OVERRIDE_TOKEN_ENDPOINT, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_OVERRIDE_USERINFO_ENDPOINT, '', ''],
+				// Additional settings
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AUTO_REDIRECT, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_HIDE_PASSWORD_FORM, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_REDIRECT_FALLBACK, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_DISABLE_REGISTRATION, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_WEBDAV_ENABLED, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_PASSWORD_AUTHENTICATION, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_USE_ID_TOKEN, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_PUBLIC_KEY_CACHING_TIME, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_MIN_TIME_BETWEEN_JWKS_REQUESTS, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_WELL_KNOWN_CACHING_TIME, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_UPDATE_AVATAR, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_BUTTON_TEXT, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_ALT_LOGIN_PAGE, '', ''],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_TLS_VERIFY, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_USE_EXTERNAL_STORAGE, '', '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_PROXY_LDAP, '', '0'],
 			]);
 
 		Assert::assertEquals(
