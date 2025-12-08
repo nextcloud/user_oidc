@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  - SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<phpunit bootstrap="bootstrap.unit.php" convertDeprecationsToExceptions="true">
+	<testsuite name='user_oidc unit tests'>
+		<directory>unit</directory>
+	</testsuite>
+</phpunit>
+
+
+

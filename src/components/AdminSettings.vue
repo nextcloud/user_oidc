@@ -129,6 +129,22 @@
 				</template>
 			</NcDialog>
 		</div>
+		<div class="section">
+			<h2>{{ t('user_oidc', 'Group Management') }}</h2>
+			<p>
+				{{ t('user_oidc', 'If groups were incorrectly synced as hashed values, you can resync them. This will remove users from hashed groups. Users will get proper groups on their next login.') }}
+			</p>
+			<p>
+				<NcButton
+					:disabled="resyncingGroups"
+					@click="onResyncGroupsClick">
+					<template #icon>
+						<RefreshIcon v-if="!resyncingGroups" />
+					</template>
+					{{ resyncingGroups ? t('user_oidc', 'Resyncing...') : t('user_oidc', 'Resync Groups') }}
+				</NcButton>
+			</p>
+		</div>
 	</div>
 </template>
 
@@ -137,10 +153,11 @@ import HelpCircleOutlineIcon from 'vue-material-design-icons/HelpCircleOutline.v
 import PencilOutlineIcon from 'vue-material-design-icons/PencilOutline.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
 import TrashCanOutlineIcon from 'vue-material-design-icons/TrashCanOutline.vue'
+import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import NcActions from '@nextcloud/vue/components/NcActions'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcModal from '@nextcloud/vue/components/NcModal'
@@ -166,6 +183,7 @@ export default {
 		NcDialog,
 		PlusIcon,
 		HelpCircleOutlineIcon,
+		RefreshIcon,
 	},
 	props: {
 		initialId4MeState: {
@@ -206,6 +224,9 @@ export default {
 					providerBasedId: false,
 					groupProvisioning: false,
 					sendIdTokenHint: true,
+					teamsProvisioning: false,
+					mappingOrganizations: '',
+					teamsWhitelistRegex: '',
 				},
 			},
 			showNewProvider: false,
@@ -216,6 +237,7 @@ export default {
 			redirectUri: window.location.protocol + '//' + window.location.host + generateUrl('/apps/junovy_user_oidc/code'),
 			showDeletionConfirmation: false,
 			providerToDelete: null,
+			resyncingGroups: false,
 		}
 	},
 	computed: {
@@ -334,6 +356,32 @@ export default {
 		getBackchannelUrl(provider) {
 			return window.location.protocol + '//' + window.location.host
 				+ generateUrl('/apps/junovy_user_oidc/backchannel-logout/{identifier}', { identifier: provider.identifier })
+		},
+		async onResyncGroupsClick() {
+			await confirmPassword()
+			logger.info('Resyncing groups')
+
+			this.resyncingGroups = true
+			try {
+				const url = generateUrl('/apps/junovy_user_oidc/resync-groups')
+				const response = await axios.post(url)
+
+				if (response.data.success) {
+					const stats = response.data.stats
+					const message = t('user_oidc', 'Groups resynced successfully. Found {count} hashed groups, removed {users} users. Users will get proper groups on their next login.', {
+						count: stats.hashed_groups_found,
+						users: stats.users_removed,
+					})
+					showSuccess(message)
+				} else {
+					showError(t('user_oidc', 'Failed to resync groups: {msg}', { msg: response.data.message || 'Unknown error' }))
+				}
+			} catch (error) {
+				logger.error('Could not resync groups: ' + error.message, { error })
+				showError(t('user_oidc', 'Could not resync groups: {msg}', { msg: error.response?.data?.message || error.message }))
+			} finally {
+				this.resyncingGroups = false
+			}
 		},
 	},
 }

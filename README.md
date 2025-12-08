@@ -468,6 +468,73 @@ sudo -u www-data php /var/www/nextcloud/occ junovy_user_oidc:provider demoprovid
                 --group-provisioning=1 --group-whitelist-regex='/<regex>/' --group-restrict-login-to-whitelist=1
 ```
 
+### Teams/Circles provisioning from Keycloak Organizations
+
+This feature enables automatic creation and management of Nextcloud Teams (Circles) based on organization membership from your Identity Provider. When users authenticate via OIDC, their organization memberships from the `organizations` claim will be synced to Nextcloud Circles.
+
+#### Requirements
+
+-   **Nextcloud Circles app** must be installed and enabled
+-   Your IdP must provide organization membership in the ID token
+
+#### Configuration
+
+You can configure Teams provisioning for each provider in the admin settings:
+
+1. **Enable Teams/Circles provisioning** - Toggle to enable syncing organizations to Circles
+2. **Organizations claim mapping** - The claim name containing organization data (default: `organizations`)
+3. **Teams whitelist regex** - Optional regex to filter which organizations are synced
+
+#### Supported Token Formats
+
+**Keycloak Organizations format** (Keycloak 24+):
+
+```json
+{
+	"organizations": {
+		"org-id-1": {
+			"name": "Engineering",
+			"roles": ["member", "admin"]
+		},
+		"org-id-2": {
+			"name": "Marketing",
+			"roles": ["member"]
+		}
+	}
+}
+```
+
+**Simple array format**:
+
+```json
+{
+	"organizations": ["Engineering", "Marketing", "Sales"]
+}
+```
+
+#### Behavior
+
+When a user logs in with Teams provisioning enabled:
+
+1. Organizations are extracted from the configured claim
+2. The whitelist regex is applied (if configured)
+3. Circles are created for any organizations that don't exist
+4. The user is added to Circles matching their organizations
+5. The user is removed from Circles they no longer belong to (within the whitelist scope)
+
+#### Graceful Degradation
+
+If the Circles app is not installed or enabled, Teams provisioning will be silently skipped and a debug message will be logged. This ensures the login flow is not disrupted.
+
+#### Example Configuration
+
+To sync only organizations starting with "team-":
+
+-   **Organizations claim mapping**: `organizations`
+-   **Teams whitelist regex**: `/^team-/`
+
+This would sync organizations like "team-engineering" and "team-marketing" but ignore "admin" or "guests".
+
 ### Disable audience and azp checks
 
 The `audience` and `azp` token claims will be checked when validating a login ID token.

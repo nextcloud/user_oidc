@@ -57,6 +57,11 @@ class ProviderService {
 	public const SETTING_RESTRICT_LOGIN_TO_GROUPS = 'restrictLoginToGroups';
 	public const SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING = 'nestedAndFallbackClaims';
 
+	// Teams/Circles provisioning settings (from Keycloak Organizations)
+	public const SETTING_TEAMS_PROVISIONING = 'teamsProvisioning';
+	public const SETTING_MAPPING_ORGANIZATIONS = 'mappingOrganizations';
+	public const SETTING_TEAMS_WHITELIST_REGEX = 'teamsWhitelistRegex';
+
 	// URL Override settings
 	public const SETTING_OVERRIDE_JWKS_URI = 'overrideJwksUri';
 	public const SETTING_OVERRIDE_TOKEN_ENDPOINT = 'overrideTokenEndpoint';
@@ -100,6 +105,7 @@ class ProviderService {
 		self::SETTING_TLS_VERIFY => true,
 		self::SETTING_USE_EXTERNAL_STORAGE => false,
 		self::SETTING_PROXY_LDAP => false,
+		self::SETTING_TEAMS_PROVISIONING => false,
 	];
 
 	public function __construct(
@@ -273,6 +279,10 @@ class ProviderService {
 			self::SETTING_GROUP_WHITELIST_REGEX,
 			self::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 			self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
+			// Teams/Circles provisioning
+			self::SETTING_TEAMS_PROVISIONING,
+			self::SETTING_MAPPING_ORGANIZATIONS,
+			self::SETTING_TEAMS_WHITELIST_REGEX,
 			// URL Overrides
 			self::SETTING_OVERRIDE_JWKS_URI,
 			self::SETTING_OVERRIDE_TOKEN_ENDPOINT,

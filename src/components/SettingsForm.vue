@@ -305,6 +305,38 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Users that are not part of any whitelisted group are not created and can not login') }}
 		</p>
+
+		<h3><b>{{ t('user_oidc', 'Teams/Circles Provisioning') }}</b></h3>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.teamsProvisioning"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Use Teams/Circles provisioning from Organizations') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'This will create and update Nextcloud Teams (Circles) based on the organizations claim from the IdP (e.g., Keycloak Organizations). Requires the Circles app to be installed.') }}
+		</p>
+		<p>
+			<label for="mapping-organizations">{{ t('user_oidc', 'Organizations claim mapping') }}</label>
+			<input id="mapping-organizations"
+				v-model="localProvider.settings.mappingOrganizations"
+				type="text"
+				placeholder="organizations"
+				:disabled="!localProvider.settings.teamsProvisioning">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'The claim containing organization membership. Supports Keycloak Organizations format or simple array format.') }}
+		</p>
+		<p>
+			<label for="teams-whitelist-regex">{{ t('user_oidc', 'Teams whitelist regex') }}</label>
+			<input id="teams-whitelist-regex"
+				v-model="localProvider.settings.teamsWhitelistRegex"
+				type="text"
+				:disabled="!localProvider.settings.teamsProvisioning">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Only organizations matching the whitelist regex will be synced to Teams/Circles. Leave empty to sync all organizations.') }}
+		</p>
+
 		<NcCheckboxRadioSwitch
 			v-model="localProvider.settings.checkBearer"
 			wrapper-element="div">

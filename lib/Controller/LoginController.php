@@ -582,6 +582,13 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
 
+		// Provision Teams/Circles from Keycloak Organizations if enabled
+		$teamsProvisioning = $this->providerService->getSetting($providerId, ProviderService::SETTING_TEAMS_PROVISIONING, '0');
+		if ($teamsProvisioning === '1') {
+			$this->logger->debug('Teams provisioning enabled, syncing organizations to Circles');
+			$this->provisioningService->provisionUserTeams($user, $providerId, $idTokenPayload);
+		}
+
 		$this->session->set(self::ID_TOKEN, $idTokenRaw);
 
 		$this->logger->debug('Logging user in');

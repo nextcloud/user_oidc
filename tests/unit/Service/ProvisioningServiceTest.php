@@ -7,6 +7,8 @@
 
 use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
+use OCA\UserOIDC\Event\AttributeMappedEvent;
+use OCA\UserOIDC\Service\CirclesService;
 use OCA\UserOIDC\Service\LocalIdService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
@@ -71,6 +73,9 @@ class ProvisioningServiceTest extends TestCase {
 	 */
 	private $l10nFactory;
 
+	/** @var CirclesService | MockObject */
+	private $circlesService;
+
 	public function setUp(): void {
 		parent::setUp();
 		$this->idService = $this->createMock(LocalIdService::class);
@@ -86,6 +91,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->avatarManager = $this->createMock(IAvatarManager::class);
 		$this->session = $this->createMock(ISession::class);
 		$this->l10nFactory = $this->createMock(IFactory::class);
+		$this->circlesService = $this->createMock(CirclesService::class);
 
 		$this->provisioningService = new ProvisioningService(
 			$this->idService,
@@ -101,6 +107,7 @@ class ProvisioningServiceTest extends TestCase {
 			$this->config,
 			$this->session,
 			$this->l10nFactory,
+			$this->circlesService,
 		);
 	}
 
@@ -383,8 +390,10 @@ class ProvisioningServiceTest extends TestCase {
 			->method('removeUser')
 			->with($user);
 
-		$this->idService->method('getId')
-			->willReturn($gid);
+		// Verify that idService->getId() is NOT called for groups
+		// Groups should NOT be hashed - they should use their original names
+		$this->idService->expects(self::never())
+			->method('getId');
 
 		$this->groupManager->expects(self::once())
 			->method('createGroup')
@@ -403,5 +412,362 @@ class ProvisioningServiceTest extends TestCase {
 			$providerId,
 			$payload
 		);
+	}
+
+	/**
+	 * Test that groups are NOT hashed when retrieved from token
+	 * This verifies the fix for the bug where groups were incorrectly hashed
+	 */
+	public function testGetSyncGroupsOfTokenGroupsNotHashed(): void {
+		$providerId = 123;
+		$originalGroupName = 'junovy-office-basic';
+		$tokenPayload = (object)[
+			'groups' => [
+				$originalGroupName,
+				'rfe-admin',
+				'rfe-board'
+			]
+		];
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
+					[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', ''],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				]
+			));
+
+		// Mock the event dispatcher to return the groups as-is
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function ($event) {
+				if ($event instanceof AttributeMappedEvent && $event->getAttribute() === ProviderService::SETTING_MAPPING_GROUPS) {
+					// Simulate event returning the groups JSON
+					$groups = ['junovy-office-basic', 'rfe-admin', 'rfe-board'];
+					$event->setValue(json_encode($groups));
+				}
+			});
+
+		// Verify that idService->getId() is NEVER called for groups
+		$this->idService->expects(self::never())
+			->method('getId');
+
+		$result = $this->provisioningService->getSyncGroupsOfToken($providerId, $tokenPayload);
+
+		// Verify groups are returned with their original names (not hashed)
+		$this->assertNotNull($result);
+		$this->assertCount(3, $result);
+		$this->assertEquals($originalGroupName, $result[0]->gid);
+		$this->assertEquals('rfe-admin', $result[1]->gid);
+		$this->assertEquals('rfe-board', $result[2]->gid);
+
+		// Verify none of the group IDs are hashes (64 hex characters)
+		foreach ($result as $group) {
+			$this->assertNotEquals(64, strlen($group->gid), 'Group ID should not be a SHA256 hash');
+			$this->assertDoesNotMatchRegularExpression('/^[a-f0-9]{64}$/i', $group->gid, 'Group ID should not match SHA256 hash pattern');
+		}
+	}
+
+	/**
+	 * Test that groups with special characters are preserved correctly
+	 */
+	public function testGetSyncGroupsOfTokenPreservesSpecialCharacters(): void {
+		$providerId = 456;
+		$groupWithSpecialChars = 'group-with-dashes_123';
+		$tokenPayload = (object)[
+			'groups' => [$groupWithSpecialChars]
+		];
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
+					[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', ''],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				]
+			));
+
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function ($event) use ($groupWithSpecialChars) {
+				if ($event instanceof AttributeMappedEvent && $event->getAttribute() === ProviderService::SETTING_MAPPING_GROUPS) {
+					$event->setValue(json_encode([$groupWithSpecialChars]));
+				}
+			});
+
+		$this->idService->expects(self::never())
+			->method('getId');
+
+		$result = $this->provisioningService->getSyncGroupsOfToken($providerId, $tokenPayload);
+
+		$this->assertNotNull($result);
+		$this->assertCount(1, $result);
+		$this->assertEquals($groupWithSpecialChars, $result[0]->gid);
+	}
+
+	/**
+	 * Test getOrganizationsFromToken with Keycloak Organizations format
+	 */
+	public function testGetOrganizationsFromTokenKeycloakFormat(): void {
+		$providerId = 789;
+		$tokenPayload = (object)[
+			'organizations' => [
+				'org-id-1' => ['name' => 'Engineering', 'roles' => ['member', 'admin']],
+				'org-id-2' => ['name' => 'Marketing', 'roles' => ['member']],
+			]
+		];
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_ORGANIZATIONS, 'organizations', 'organizations'],
+					[$providerId, ProviderService::SETTING_TEAMS_WHITELIST_REGEX, '', ''],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				]
+			));
+
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function ($event) {
+				if ($event instanceof AttributeMappedEvent && $event->getAttribute() === ProviderService::SETTING_MAPPING_ORGANIZATIONS) {
+					$event->setValue(json_encode([
+						'org-id-1' => ['name' => 'Engineering', 'roles' => ['member', 'admin']],
+						'org-id-2' => ['name' => 'Marketing', 'roles' => ['member']],
+					]));
+				}
+			});
+
+		$result = $this->provisioningService->getOrganizationsFromToken($providerId, $tokenPayload);
+
+		$this->assertNotNull($result);
+		$this->assertCount(2, $result);
+		$this->assertEquals('org-id-1', $result[0]->id);
+		$this->assertEquals('Engineering', $result[0]->name);
+		$this->assertEquals(['member', 'admin'], $result[0]->roles);
+		$this->assertEquals('org-id-2', $result[1]->id);
+		$this->assertEquals('Marketing', $result[1]->name);
+	}
+
+	/**
+	 * Test getOrganizationsFromToken with simple array format
+	 */
+	public function testGetOrganizationsFromTokenArrayFormat(): void {
+		$providerId = 789;
+		$tokenPayload = (object)[
+			'organizations' => ['Engineering', 'Marketing']
+		];
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_ORGANIZATIONS, 'organizations', 'organizations'],
+					[$providerId, ProviderService::SETTING_TEAMS_WHITELIST_REGEX, '', ''],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				]
+			));
+
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function ($event) {
+				if ($event instanceof AttributeMappedEvent && $event->getAttribute() === ProviderService::SETTING_MAPPING_ORGANIZATIONS) {
+					$event->setValue(json_encode(['Engineering', 'Marketing']));
+				}
+			});
+
+		$result = $this->provisioningService->getOrganizationsFromToken($providerId, $tokenPayload);
+
+		$this->assertNotNull($result);
+		$this->assertCount(2, $result);
+		$this->assertEquals('Engineering', $result[0]->id);
+		$this->assertEquals('Engineering', $result[0]->name);
+		$this->assertEquals('Marketing', $result[1]->id);
+		$this->assertEquals('Marketing', $result[1]->name);
+	}
+
+	/**
+	 * Test getOrganizationsFromToken with whitelist regex
+	 */
+	public function testGetOrganizationsFromTokenWithWhitelistRegex(): void {
+		$providerId = 789;
+		$tokenPayload = (object)[
+			'organizations' => ['eng-team', 'marketing', 'eng-backend']
+		];
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_ORGANIZATIONS, 'organizations', 'organizations'],
+					[$providerId, ProviderService::SETTING_TEAMS_WHITELIST_REGEX, '', '/^eng-/'],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				]
+			));
+
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function ($event) {
+				if ($event instanceof AttributeMappedEvent && $event->getAttribute() === ProviderService::SETTING_MAPPING_ORGANIZATIONS) {
+					$event->setValue(json_encode(['eng-team', 'marketing', 'eng-backend']));
+				}
+			});
+
+		$result = $this->provisioningService->getOrganizationsFromToken($providerId, $tokenPayload);
+
+		$this->assertNotNull($result);
+		$this->assertCount(2, $result);
+		$this->assertEquals('eng-team', $result[0]->name);
+		$this->assertEquals('eng-backend', $result[1]->name);
+	}
+
+	/**
+	 * Test provisionUserTeams when Circles is not enabled
+	 */
+	public function testProvisionUserTeamsCirclesNotEnabled(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('testuser');
+		$providerId = 789;
+		$tokenPayload = (object)[
+			'organizations' => ['Engineering']
+		];
+
+		$this->circlesService
+			->method('isCirclesEnabled')
+			->willReturn(false);
+
+		$result = $this->provisioningService->provisionUserTeams($user, $providerId, $tokenPayload);
+
+		$this->assertNull($result);
+	}
+
+	/**
+	 * Test provisionUserTeams creates circles and adds users
+	 */
+	public function testProvisionUserTeamsCreatesCirclesAndAddsUsers(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('testuser');
+		$providerId = 789;
+		$tokenPayload = (object)[
+			'organizations' => ['Engineering', 'Marketing']
+		];
+
+		$this->circlesService
+			->method('isCirclesEnabled')
+			->willReturn(true);
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_ORGANIZATIONS, 'organizations', 'organizations'],
+					[$providerId, ProviderService::SETTING_TEAMS_WHITELIST_REGEX, '', ''],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				]
+			));
+
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function ($event) {
+				if ($event instanceof AttributeMappedEvent && $event->getAttribute() === ProviderService::SETTING_MAPPING_ORGANIZATIONS) {
+					$event->setValue(json_encode(['Engineering', 'Marketing']));
+				}
+			});
+
+		// Mock circles
+		$circle1 = new \stdClass();
+		$circle1->name = 'Engineering';
+		$circle2 = new \stdClass();
+		$circle2->name = 'Marketing';
+
+		$this->circlesService
+			->method('getUserCircles')
+			->willReturn([]);
+
+		$this->circlesService
+			->method('getOrCreateCircle')
+			->willReturnOnConsecutiveCalls($circle1, $circle2);
+
+		$this->circlesService
+			->expects($this->exactly(2))
+			->method('addMember');
+
+		$result = $this->provisioningService->provisionUserTeams($user, $providerId, $tokenPayload);
+
+		$this->assertNotNull($result);
+		$this->assertCount(2, $result);
+	}
+
+	/**
+	 * Test provisionUserTeams removes user from circles they no longer belong to
+	 */
+	public function testProvisionUserTeamsRemovesUserFromOldCircles(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('testuser');
+		$providerId = 789;
+		$tokenPayload = (object)[
+			'organizations' => ['Engineering']
+		];
+
+		$this->circlesService
+			->method('isCirclesEnabled')
+			->willReturn(true);
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap(
+				[
+					[$providerId, ProviderService::SETTING_MAPPING_ORGANIZATIONS, 'organizations', 'organizations'],
+					[$providerId, ProviderService::SETTING_TEAMS_WHITELIST_REGEX, '', ''],
+					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				]
+			));
+
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function ($event) {
+				if ($event instanceof AttributeMappedEvent && $event->getAttribute() === ProviderService::SETTING_MAPPING_ORGANIZATIONS) {
+					$event->setValue(json_encode(['Engineering']));
+				}
+			});
+
+		// Mock circles - user is currently in both Engineering and Marketing
+		$oldCircle = $this->createMock(\stdClass::class);
+		// We need an actual object with getDisplayName method
+		$oldCircle = new class {
+			public function getDisplayName(): string {
+				return 'Marketing';
+			}
+		};
+
+		$this->circlesService
+			->method('getUserCircles')
+			->willReturn([$oldCircle]);
+
+		$newCircle = new \stdClass();
+		$newCircle->name = 'Engineering';
+
+		$this->circlesService
+			->method('getOrCreateCircle')
+			->willReturn($newCircle);
+
+		// Should remove user from Marketing (the old circle)
+		$this->circlesService
+			->expects($this->once())
+			->method('removeMember')
+			->with($oldCircle, $user);
+
+		$this->circlesService
+			->expects($this->once())
+			->method('addMember')
+			->with($newCircle, $user);
+
+		$result = $this->provisioningService->provisionUserTeams($user, $providerId, $tokenPayload);
+
+		$this->assertNotNull($result);
+		$this->assertCount(1, $result);
 	}
 }

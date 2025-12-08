@@ -21,7 +21,9 @@ use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUserManager;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 
@@ -36,6 +38,8 @@ class SettingsController extends Controller {
 		private ICrypto $crypto,
 		private IClientService $clientService,
 		private LoggerInterface $logger,
+		private IGroupManager $groupManager,
+		private IUserManager $userManager,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -184,5 +188,77 @@ class SettingsController extends Controller {
 			}
 		}
 		return new JSONResponse([]);
+	}
+
+	/**
+	 * Resync groups for OIDC users by removing them from hashed groups.
+	 * This fixes the issue where groups were incorrectly hashed with SHA256.
+	 * Users will get proper groups on their next login.
+	 *
+	 * @param int|null $providerId Optional provider ID to resync only for a specific provider
+	 * @return JSONResponse Statistics about the resync operation
+	 */
+	#[PasswordConfirmationRequired]
+	public function resyncGroups(?int $providerId = null): JSONResponse {
+		$stats = [
+			'hashed_groups_found' => 0,
+			'users_removed' => 0,
+			'groups_cleaned' => 0,
+		];
+
+		try {
+			// Find all groups that look like SHA256 hashes (64 hex characters)
+			$allGroups = $this->groupManager->search('');
+			$hashedGroups = [];
+
+			foreach ($allGroups as $group) {
+				$gid = $group->getGID();
+				// Check if group ID looks like a SHA256 hash (64 hex characters)
+				if (preg_match('/^[a-f0-9]{64}$/i', $gid)) {
+					$hashedGroups[] = $group;
+					$stats['hashed_groups_found']++;
+				}
+			}
+
+			// Remove users from hashed groups
+			foreach ($hashedGroups as $group) {
+				$users = $group->getUsers();
+				foreach ($users as $user) {
+					// Only process users from OIDC backend if providerId is specified
+					if ($providerId !== null) {
+						// Check if user belongs to OIDC backend
+						if ($user->getBackendClassName() === Application::APP_ID) {
+							// This is an OIDC user, remove from hashed group
+							$group->removeUser($user);
+							$stats['users_removed']++;
+						}
+					} else {
+						// Remove all users from hashed groups
+						$group->removeUser($user);
+						$stats['users_removed']++;
+					}
+				}
+
+				// If group is now empty, optionally delete it
+				// For now, we'll leave empty groups (they can be cleaned up manually)
+				if (count($group->getUsers()) === 0) {
+					$stats['groups_cleaned']++;
+				}
+			}
+
+			$this->logger->info('Group resync completed', $stats);
+
+			return new JSONResponse([
+				'success' => true,
+				'message' => 'Groups resynced successfully. Users will get proper groups on their next login.',
+				'stats' => $stats,
+			]);
+		} catch (\Exception $e) {
+			$this->logger->error('Group resync failed', ['exception' => $e]);
+			return new JSONResponse([
+				'success' => false,
+				'message' => 'Failed to resync groups: ' . $e->getMessage(),
+			], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 	}
 }

@@ -48,6 +48,7 @@ class ProvisioningService {
 		private IConfig $config,
 		private ISession $session,
 		private IFactory $l10nFactory,
+		private ?CirclesService $circlesService = null,
 	) {
 	}
 
@@ -559,7 +560,10 @@ class ProvisioningService {
 					}
 				}
 
-				$group->gid = $this->idService->getId($providerId, $group->gid);
+				// Note: Do NOT hash group IDs like user IDs. Group names from the IdP
+				// should be used as-is to maintain readability and proper group membership.
+				// The idService->getId() was incorrectly hashing group names with SHA256
+				// when SETTING_UNIQUE_UID was enabled.
 
 				$syncGroups[] = $group;
 			}
@@ -615,5 +619,189 @@ class ProvisioningService {
 		}
 
 		return $regex;
+	}
+
+	/**
+	 * Get the Teams whitelist regex for filtering organization-based circles
+	 */
+	public function getTeamsWhitelistRegex(int $providerId): string {
+		$regex = $this->providerService->getSetting($providerId, ProviderService::SETTING_TEAMS_WHITELIST_REGEX, '');
+
+		// If regex does not start with '/', add '/' to the beginning and end
+		if ($regex && substr($regex, 0, 1) !== '/') {
+			$regex = '/' . $regex . '/';
+		}
+
+		return $regex;
+	}
+
+	/**
+	 * Get organizations from the ID token payload
+	 * Supports both Keycloak Organizations format and simple array format
+	 *
+	 * Keycloak Organizations format:
+	 * {
+	 *   "organizations": {
+	 *     "org-id-1": { "name": "Engineering", "roles": ["member", "admin"] },
+	 *     "org-id-2": { "name": "Marketing", "roles": ["member"] }
+	 *   }
+	 * }
+	 *
+	 * Simple array format:
+	 * { "organizations": ["org1", "org2"] }
+	 *
+	 * @param int $providerId The provider ID
+	 * @param object $idTokenPayload The ID token payload
+	 * @return array|null Array of organization objects with 'id' and 'name', or null if not available
+	 */
+	public function getOrganizationsFromToken(int $providerId, object $idTokenPayload): ?array {
+		$orgAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_ORGANIZATIONS, 'organizations');
+		$orgData = $this->getClaimValues($idTokenPayload, $orgAttribute, $providerId);
+
+		$teamsWhitelistRegex = $this->getTeamsWhitelistRegex($providerId);
+
+		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_ORGANIZATIONS, $idTokenPayload, json_encode($orgData));
+		$this->eventDispatcher->dispatchTyped($event);
+		$this->logger->debug('Organization mapping event dispatched');
+
+		if (!$event->hasValue() || $event->getValue() === null) {
+			return null;
+		}
+
+		$orgsRaw = json_decode($event->getValue() ?? '', true);
+		if ($orgsRaw === null) {
+			return null;
+		}
+
+		$organizations = [];
+
+		// Handle Keycloak Organizations format (object with org IDs as keys)
+		if (is_array($orgsRaw) && !array_is_list($orgsRaw)) {
+			foreach ($orgsRaw as $orgId => $orgData) {
+				$orgName = is_array($orgData) && isset($orgData['name']) ? $orgData['name'] : $orgId;
+				$org = (object)[
+					'id' => $orgId,
+					'name' => $orgName,
+					'roles' => is_array($orgData) && isset($orgData['roles']) ? $orgData['roles'] : [],
+				];
+
+				// Apply whitelist regex
+				if ($teamsWhitelistRegex) {
+					$matchResult = preg_match($teamsWhitelistRegex, $org->name);
+					if ($matchResult !== 1) {
+						$this->logger->debug('Skipped organization `' . $org->name . '` for Teams provisioning (not matching whitelist regex)');
+						continue;
+					}
+				}
+
+				$organizations[] = $org;
+			}
+		}
+		// Handle simple array format
+		elseif (is_array($orgsRaw) && array_is_list($orgsRaw)) {
+			foreach ($orgsRaw as $orgName) {
+				if (!is_string($orgName)) {
+					continue;
+				}
+
+				$org = (object)[
+					'id' => $orgName,
+					'name' => $orgName,
+					'roles' => [],
+				];
+
+				// Apply whitelist regex
+				if ($teamsWhitelistRegex) {
+					$matchResult = preg_match($teamsWhitelistRegex, $org->name);
+					if ($matchResult !== 1) {
+						$this->logger->debug('Skipped organization `' . $org->name . '` for Teams provisioning (not matching whitelist regex)');
+						continue;
+					}
+				}
+
+				$organizations[] = $org;
+			}
+		}
+
+		return count($organizations) > 0 ? $organizations : null;
+	}
+
+	/**
+	 * Provision user's Teams/Circles based on their organization memberships
+	 * Creates circles if they don't exist, adds user to circles they should belong to,
+	 * and removes them from circles they no longer belong to (within whitelist scope)
+	 *
+	 * @param IUser $user The user to provision teams for
+	 * @param int $providerId The provider ID
+	 * @param object $idTokenPayload The ID token payload containing organization claims
+	 * @return array|null Array of provisioned organizations, or null if Teams provisioning is disabled
+	 */
+	public function provisionUserTeams(IUser $user, int $providerId, object $idTokenPayload): ?array {
+		// Check if CirclesService is available
+		if ($this->circlesService === null) {
+			$this->logger->debug('CirclesService not available, skipping Teams provisioning');
+			return null;
+		}
+
+		// Check if Circles app is enabled
+		if (!$this->circlesService->isCirclesEnabled()) {
+			$this->logger->debug('Circles app is not enabled, skipping Teams provisioning');
+			return null;
+		}
+
+		$teamsWhitelistRegex = $this->getTeamsWhitelistRegex($providerId);
+		$syncOrganizations = $this->getOrganizationsFromToken($providerId, $idTokenPayload);
+
+		if ($syncOrganizations === null) {
+			$this->logger->debug('No organizations found in token for user ' . $user->getUID());
+			return null;
+		}
+
+		$this->logger->info('Provisioning Teams for user ' . $user->getUID() . ' with ' . count($syncOrganizations) . ' organizations');
+
+		// Get user's current circles for cleanup
+		$currentCircles = $this->circlesService->getUserCircles($user);
+		$currentCircleNames = [];
+		foreach ($currentCircles as $circle) {
+			$currentCircleNames[] = $circle->getDisplayName();
+		}
+
+		// Track which circles the user should be in
+		$targetCircleNames = array_map(function ($org) {
+			return $org->name;
+		}, $syncOrganizations);
+
+		// Remove user from circles they no longer belong to (within whitelist scope)
+		foreach ($currentCircles as $circle) {
+			$circleName = $circle->getDisplayName();
+
+			// Skip if circle is in target list
+			if (in_array($circleName, $targetCircleNames)) {
+				continue;
+			}
+
+			// Skip if circle doesn't match whitelist (we only manage whitelisted circles)
+			if ($teamsWhitelistRegex && !preg_match($teamsWhitelistRegex, $circleName)) {
+				continue;
+			}
+
+			// Remove user from circle
+			$this->circlesService->removeMember($circle, $user);
+		}
+
+		// Add user to circles they should belong to
+		foreach ($syncOrganizations as $org) {
+			// Create or get the circle
+			$circle = $this->circlesService->getOrCreateCircle($org->id, $org->name);
+			if ($circle === null) {
+				$this->logger->warning('Failed to get or create circle for organization: ' . $org->name);
+				continue;
+			}
+
+			// Add user to circle
+			$this->circlesService->addMember($circle, $user);
+		}
+
+		return $syncOrganizations;
 	}
 }

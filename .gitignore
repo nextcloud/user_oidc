@@ -12,3 +12,6 @@ node_modules/
 tests/.phpunit.result.cache
 /vendor-bin/mozart/vendor
 composer.phar
+certs/*
+local*
+.envrc

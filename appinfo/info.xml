@@ -8,7 +8,7 @@
 	<name>Junovy OpenID Connect user backend</name>
 	<summary>Use an OpenID Connect backend to login to your Nextcloud</summary>
 	<description>Allows flexible configuration of an OIDC server as Nextcloud login user backend.</description>
-	<version>8.1.0</version>
+	<version>1.2.0</version>
 	<licence>agpl</licence>
 	<author>Roeland Jago Douma</author>
 	<author>Julius Härtl</author>
@@ -19,9 +19,9 @@
 	</types>
 	<category>integration</category>
 	<category>social</category>
-	<website>https://github.com/junovy/nextcloud_user_oidc</website>
-	<bugs>https://github.com/junovy/nextcloud_user_oidc/issues</bugs>
-	<repository>https://github.com/junovy/nextcloud_user_oidc</repository>
+	<website>https://github.com/junovy-hosting/junovy_user_oidc</website>
+	<bugs>https://github.com/junovy-hosting/junovy_user_oidc/issues</bugs>
+	<repository>https://github.com/junovy-hosting/junovy_user_oidc</repository>
 	<dependencies>
 		<nextcloud min-version="29" max-version="33"/>
 	</dependencies>

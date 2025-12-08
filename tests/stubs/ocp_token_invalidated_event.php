@@ -6,7 +6,12 @@
  */
 
 namespace OCP\Authentication\Events {
-	interface TokenInvalidatedEvent extends \OCP\EventDispatcher\Event {
-		public function getToken(): \OCP\Authentication\Token\IToken;
+
+	use OCP\EventDispatcher\Event;
+
+	class TokenInvalidatedEvent extends Event {
+		public function getToken(): \OCP\Authentication\Token\IToken {
+			throw new \RuntimeException('Stub method');
+		}
 	}
 }

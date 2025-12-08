@@ -29,6 +29,7 @@ return [
 		['name' => 'Settings#deleteProvider', 'url' => '/provider/{providerId}', 'verb' => 'DELETE'],
 		['name' => 'Settings#setID4ME', 'url' => '/provider/id4me', 'verb' => 'POST'],
 		['name' => 'Settings#setAdminConfig', 'url' => '/admin-config', 'verb' => 'POST'],
+		['name' => 'Settings#resyncGroups', 'url' => '/resync-groups', 'verb' => 'POST'],
 
 		['name' => 'Timezone#setTimezone', 'url' => '/config/timezone', 'verb' => 'POST'],
 	],
