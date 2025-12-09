@@ -34,3 +34,9 @@ path = ["img/app-dark.svg"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2017 OpenID Foundation"
 SPDX-License-Identifier = "LicenseRef-OIDFTrademarks"
+
+[[annotations]]
+path = [".prettierrc.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 Junovy and contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"

@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: 2024 Junovy and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Run PHPUnit tests in a Docker container matching the CI environment
 #

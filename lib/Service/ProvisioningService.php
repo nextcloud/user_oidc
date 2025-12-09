@@ -696,9 +696,8 @@ class ProvisioningService {
 
 				$organizations[] = $org;
 			}
-		}
-		// Handle simple array format
-		elseif (is_array($orgsRaw) && array_is_list($orgsRaw)) {
+		} else {
+			// Handle simple array format (list of strings)
 			foreach ($orgsRaw as $orgName) {
 				if (!is_string($orgName)) {
 					continue;

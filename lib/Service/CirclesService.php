@@ -21,16 +21,25 @@ use Throwable;
 class CirclesService {
 
 	private const CIRCLES_APP_ID = 'circles';
+	private const FALLBACK_MEMBER_TYPE_USER = 1;
+	private const FALLBACK_MEMBER_TYPE_APP = 10000;
+	private const FALLBACK_MEMBER_APP_DEFAULT = 11000;
+	private const FALLBACK_MEMBER_APP_CIRCLES = 10001;
 
-	/** @var \OCA\Circles\CirclesManager|null */
-	private $circlesManager = null;
+	/** @var object|null CirclesManager instance when the Circles app is available */
+	private ?object $circlesManager = null;
 
 	private bool $circlesManagerInitialized = false;
 
 	public function __construct(
 		private IAppManager $appManager,
 		private LoggerInterface $logger,
+		?object $circlesManager = null,
 	) {
+		if ($circlesManager !== null) {
+			$this->circlesManager = $circlesManager;
+			$this->circlesManagerInitialized = true;
+		}
 	}
 
 	/**
@@ -127,11 +136,17 @@ class CirclesService {
 				return $circle;
 			}
 
+			$appOwner = $this->getCirclesAppOwner($manager);
+			if ($appOwner === null) {
+				$this->logger->warning('Failed to resolve Circles owner for team provisioning: ' . $circleId);
+				return null;
+			}
+
 			// Create new circle
 			// Circle types: https://github.com/nextcloud/circles/blob/master/lib/Model/Circle.php
 			// CFG_OPEN = 1, CFG_VISIBLE = 2, CFG_REQUEST = 4, CFG_INVITE = 8, etc.
 			// Using CFG_VISIBLE (2) + CFG_INVITE (8) = 10 for a visible, invite-only circle
-			$circle = $manager->createCircle($displayName, null, false, false);
+			$circle = $manager->createCircle($displayName, $appOwner, false, false);
 			$this->logger->info('Created new circle: ' . $displayName);
 			return $circle;
 		} catch (Throwable $e) {
@@ -188,7 +203,7 @@ class CirclesService {
 
 		try {
 			// Get federated user representation
-			$federatedUser = $manager->getFederatedUser($user->getUID(), \OCA\Circles\Model\Member::TYPE_USER);
+			$federatedUser = $manager->getFederatedUser($user->getUID(), $this->getCirclesMemberConstant('TYPE_USER', self::FALLBACK_MEMBER_TYPE_USER));
 
 			// Check if user is already a member
 			try {
@@ -237,7 +252,7 @@ class CirclesService {
 
 		try {
 			// Get federated user representation
-			$federatedUser = $manager->getFederatedUser($user->getUID(), \OCA\Circles\Model\Member::TYPE_USER);
+			$federatedUser = $manager->getFederatedUser($user->getUID(), $this->getCirclesMemberConstant('TYPE_USER', self::FALLBACK_MEMBER_TYPE_USER));
 
 			// Remove member from circle
 			$manager->removeMember($circle->getSingleId(), $federatedUser);
@@ -273,7 +288,7 @@ class CirclesService {
 		}
 
 		try {
-			$federatedUser = $manager->getFederatedUser($user->getUID(), \OCA\Circles\Model\Member::TYPE_USER);
+			$federatedUser = $manager->getFederatedUser($user->getUID(), $this->getCirclesMemberConstant('TYPE_USER', self::FALLBACK_MEMBER_TYPE_USER));
 			$manager->startSession($federatedUser);
 			$circles = $manager->probeCircles();
 			$manager->stopSession();
@@ -318,5 +333,67 @@ class CirclesService {
 		} finally {
 			$this->stopSuperSession();
 		}
+	}
+
+	/**
+	 * Resolve the Circles app owner federated user so that new circles have a valid owner context.
+	 */
+	private function getCirclesAppOwner(object $manager): ?object {
+		$this->startCirclesAppSession($manager);
+
+		try {
+			$typeApp = $this->getCirclesMemberConstant('TYPE_APP', self::FALLBACK_MEMBER_TYPE_APP);
+			return $manager->getFederatedUser(self::CIRCLES_APP_ID, $typeApp);
+		} catch (Throwable $e) {
+			$this->logger->warning('Failed to resolve Circles app owner', ['exception' => $e]);
+			return null;
+		}
+	}
+
+	/**
+	 * Start an app session if the Circles manager supports it to mimic the OCC command behaviour.
+	 */
+	private function startCirclesAppSession(object $manager): void {
+		if (!method_exists($manager, 'startAppSession')) {
+			return;
+		}
+
+		try {
+			$appSerial = $this->getCirclesAppSerial();
+			$manager->startAppSession(self::CIRCLES_APP_ID, $appSerial);
+		} catch (Throwable $e) {
+			$this->logger->debug('Failed to start Circles app session', ['exception' => $e]);
+		}
+	}
+
+	/**
+	 * Determine which app serial to use when starting the Circles session.
+	 */
+	private function getCirclesAppSerial(): int {
+		$constName = 'OCA\\Circles\\Model\\Member::APP_CIRCLES';
+		if (defined($constName)) {
+			$value = constant($constName);
+			if (is_int($value)) {
+				return $value;
+			}
+		}
+
+		return $this->getCirclesMemberConstant('APP_DEFAULT', self::FALLBACK_MEMBER_APP_DEFAULT);
+	}
+
+	/**
+	 * Safely fetch Circles Member constants, falling back to known defaults when the Circles app classes
+	 * are not available (e.g. during isolated unit tests).
+	 */
+	private function getCirclesMemberConstant(string $name, int $fallback): int {
+		$constName = 'OCA\\Circles\\Model\\Member::' . $name;
+		if (defined($constName)) {
+			$value = constant($constName);
+			if (is_int($value)) {
+				return $value;
+			}
+		}
+
+		return $fallback;
 	}
 }

@@ -1,3 +1,8 @@
+<!--
+  - SPDX-FileCopyrightText: 2024 Junovy and contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Manual Installation Instructions for junovy_user_oidc
 
 ## Quick Start

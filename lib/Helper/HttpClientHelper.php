@@ -51,13 +51,10 @@ class HttpClientHelper implements HttpClient {
 			'body' => $body,
 		];
 
-		// Check if TLS verify is explicitly set in options (per-provider setting)
-		if (!isset($options['verify'])) {
-			// Check global config
-			if (isset($oidcConfig['httpclient.allowselfsigned'])
-				&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
-				$options['verify'] = false;
-			}
+		// Check global config for self-signed certificates
+		if (isset($oidcConfig['httpclient.allowselfsigned'])
+			&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
+			$options['verify'] = false;
 		}
 
 		return $client->post($url, $options)->getBody();
@@ -68,8 +65,8 @@ class HttpClientHelper implements HttpClient {
 	 *
 	 * @param string $url
 	 * @param mixed $body
-	 * @param array $headers
-	 * @param array $options Additional options like 'verify' for TLS
+	 * @param array<string, mixed> $headers
+	 * @param array{verify?: bool} $options Additional options like 'verify' for TLS
 	 * @return string
 	 */
 	public function postWithOptions($url, $body, array $headers = [], array $options = []): string {
@@ -81,8 +78,10 @@ class HttpClientHelper implements HttpClient {
 			'body' => $body,
 		];
 
-		// Merge in provided options
-		$requestOptions = array_merge($requestOptions, $options);
+		// Merge in provided options (verify key)
+		if (isset($options['verify'])) {
+			$requestOptions['verify'] = $options['verify'];
+		}
 
 		// Check if TLS verify is explicitly set in options (per-provider setting)
 		if (!isset($requestOptions['verify'])) {
@@ -93,6 +92,11 @@ class HttpClientHelper implements HttpClient {
 			}
 		}
 
-		return $client->post($url, $requestOptions)->getBody();
+		$body = $client->post($url, $requestOptions)->getBody();
+		if (is_resource($body)) {
+			$contents = stream_get_contents($body);
+			return $contents !== false ? $contents : '';
+		}
+		return $body;
 	}
 }

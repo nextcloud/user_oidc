@@ -140,4 +140,99 @@ class CirclesServiceTest extends TestCase {
 
 		$this->assertNull($result);
 	}
+
+	public function testGetOrCreateCircleCreatesCircleWithAppOwner(): void {
+		$this->appManager
+			->method('isEnabledForUser')
+			->with('circles')
+			->willReturn(true);
+
+		$manager = new FakeCirclesManager();
+		$manager->federatedUser = (object)['id' => 'circles-owner'];
+
+		$service = new CirclesService(
+			$this->appManager,
+			$this->logger,
+			$manager,
+		);
+
+		$result = $service->getOrCreateCircle('org-123', 'Engineering');
+
+		$this->assertNotNull($result);
+		$this->assertCount(1, $manager->createCircleCalls);
+		$this->assertSame('Engineering', $manager->createCircleCalls[0][0]);
+		$this->assertSame($manager->federatedUser, $manager->createCircleCalls[0][1]);
+		$this->assertTrue($manager->appSessionStarted);
+	}
+
+	public function testGetOrCreateCircleReturnsNullWhenOwnerCannotBeResolved(): void {
+		$this->appManager
+			->method('isEnabledForUser')
+			->with('circles')
+			->willReturn(true);
+
+		$manager = new FakeCirclesManager();
+		$manager->throwOnGetFederatedUser = true;
+
+		$service = new CirclesService(
+			$this->appManager,
+			$this->logger,
+			$manager,
+		);
+
+		$result = $service->getOrCreateCircle('org-123', 'Engineering');
+
+		$this->assertNull($result);
+		$this->assertSame([], $manager->createCircleCalls);
+	}
+}
+
+class FakeCirclesManager {
+	public array $createCircleCalls = [];
+	public bool $appSessionStarted = false;
+	public array $probeCirclesResult = [];
+	public ?object $federatedUser = null;
+	public bool $throwOnGetFederatedUser = false;
+	public array $startAppSessionArgs = [];
+
+	public function startSuperSession(): void {
+	}
+
+	public function stopSession(): void {
+	}
+
+	public function startAppSession(string $appId, int $serial = 0): void {
+		$this->appSessionStarted = true;
+		$this->startAppSessionArgs[] = [$appId, $serial];
+	}
+
+	public function probeCircles(): array {
+		return $this->probeCirclesResult;
+	}
+
+	public function getFederatedUser(string $federatedId, int $type): object {
+		if ($this->throwOnGetFederatedUser) {
+			throw new RuntimeException('No owner available');
+		}
+
+		if ($this->federatedUser === null) {
+			$this->federatedUser = (object)['id' => $federatedId, 'type' => $type];
+		}
+
+		return $this->federatedUser;
+	}
+
+	public function createCircle(string $displayName, ?object $owner = null, bool $personal = false, bool $local = false): object {
+		$this->createCircleCalls[] = [$displayName, $owner, $personal, $local];
+		return (object)['displayName' => $displayName, 'owner' => $owner];
+	}
+
+	public function addMember(string $circleId, object $federatedUser): void {
+	}
+
+	public function removeMember(string $circleId, object $federatedUser): void {
+	}
+
+	public function startSession(object $federatedUser): void {
+	}
 }
