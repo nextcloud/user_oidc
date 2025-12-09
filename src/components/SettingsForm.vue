@@ -295,7 +295,17 @@
 				type="text">
 		</p>
 		<p class="settings-hint">
-			{{ t('user_oidc', 'Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}', { regex: '/^blue/', substr: 'blue' }) }}
+			{{ t('user_oidc', 'Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex1} allows all groups which ID starts with {substr1}, or {regex2} allows groups starting with {substr2a}, {substr2b}, or {substr2c}', { regex1: '/^blue/', substr1: 'blue', regex2: '/^(blue|red|green)/', substr2a: 'blue', substr2b: 'red', substr2c: 'green' }) }}
+		</p>
+		<p>
+			<label for="protected-groups">{{ t('user_oidc', 'Protected groups') }}</label>
+			<input id="protected-groups"
+				v-model="localProvider.settings.protectedGroups"
+				type="text"
+				placeholder="users,admin">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Comma-separated list of groups that should never have users removed from them. Users will remain in these groups even if they are not present in the OIDC token. Default: users,admin') }}
 		</p>
 		<NcCheckboxRadioSwitch
 			v-model="localProvider.settings.restrictLoginToGroups"

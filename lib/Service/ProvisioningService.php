@@ -583,9 +583,15 @@ class ProvisioningService {
 			return null;
 		}
 
+		$protectedGroups = $this->getProtectedGroups($providerId);
 		$userGroups = $this->groupManager->getUserGroups($user);
 		foreach ($userGroups as $group) {
 			if (!in_array($group->getGID(), array_column($syncGroups, 'gid'))) {
+				// Skip protected groups - never remove users from these groups
+				if (in_array($group->getGID(), $protectedGroups)) {
+					$this->logger->debug('Skipped removing user from protected group `' . $group->getGID() . '`');
+					continue;
+				}
 				if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->getGID())) {
 					continue;
 				}
@@ -619,6 +625,35 @@ class ProvisioningService {
 		}
 
 		return $regex;
+	}
+
+	/**
+	 * Get list of protected groups that should never have users removed from them
+	 * These are Nextcloud system groups that are not managed by OIDC/Keycloak
+	 *
+	 * @param int $providerId The provider ID
+	 * @return array Array of protected group IDs
+	 */
+	private function getProtectedGroups(int $providerId): array {
+		$protectedGroupsSetting = $this->providerService->getSetting($providerId, ProviderService::SETTING_PROTECTED_GROUPS, 'users,admin');
+
+		if (empty($protectedGroupsSetting)) {
+			return ['users', 'admin'];
+		}
+
+		// Split comma-separated string and trim whitespace
+		$groups = array_map('trim', explode(',', $protectedGroupsSetting));
+		// Filter out empty values
+		$groups = array_filter($groups, function ($group) {
+			return !empty($group);
+		});
+
+		// Return default if no valid groups found
+		if (empty($groups)) {
+			return ['users', 'admin'];
+		}
+
+		return array_values($groups);
 	}
 
 	/**

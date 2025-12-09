@@ -1,0 +1,205 @@
+# SPDX-FileCopyrightText: 2024 Junovy and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: 🚀 Release
+run-name: 🚀 Release v${{ github.event.inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semantic version to release (e.g., 1.2.3 or 1.2.3-rc.1)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.version || 'manual' }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: 8.2
+  APP_NAME: junovy_user_oidc
+  VERSION: ${{ github.event.inputs.version }}
+
+jobs:
+  preflight:
+    name: Preflight checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version input
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          # POSIX ERE-compatible SemVer v2.0.0 regex (no non-capturing groups)
+          SEMVER_REGEX='^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9A-Za-z-][0-9A-Za-z-]*)([.](0|[1-9][0-9]*|[0-9A-Za-z-][0-9A-Za-z-]*))*))?([+]([0-9A-Za-z-]+([.][0-9A-Za-z-]+)*))?$'
+          if [[ ! "${VERSION}" =~ $SEMVER_REGEX ]]; then
+            echo "::error::Input version '${VERSION}' is not valid SemVer (MAJOR.MINOR.PATCH with optional -prerelease and +build)." >&2
+            exit 1
+          fi
+          echo "✓ Version format is valid: ${VERSION}"
+
+      - name: Ensure tag does not already exist
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "::error::Tag ${TAG} already exists. Choose a new version." >&2
+            exit 1
+          fi
+          echo "✓ Tag ${TAG} does not exist"
+
+  build-and-release:
+    name: Build package and create release
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read package.json node and npm engines version
+        uses: skjnldsv/read-package-engines-version-actions@8205673bab74a63eb9b8093402fd9e0e018663a1 # v2.2
+        id: versions
+        continue-on-error: true
+        with:
+          fallbackNode: "^20"
+          fallbackNpm: "^10"
+
+      - name: Set up Node.js ${{ steps.versions.outputs.nodeVersion }}
+        if: ${{ steps.versions.outputs.nodeVersion }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.versions.outputs.nodeVersion }}
+
+      - name: Set up npm ${{ steps.versions.outputs.npmVersion }}
+        if: ${{ steps.versions.outputs.npmVersion }}
+        run: npm i -g npm@"${{ steps.versions.outputs.npmVersion }}"
+
+      - name: Set up PHP ${{ env.PHP_VERSION }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update version in appinfo/info.xml
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          # Update version in appinfo/info.xml
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS uses BSD sed
+            sed -i '' "s|<version>[^<]*</version>|<version>${VERSION}</version>|g" appinfo/info.xml
+          else
+            # Linux uses GNU sed
+            sed -i "s|<version>[^<]*</version>|<version>${VERSION}</version>|g" appinfo/info.xml
+          fi
+          echo "✓ Updated version to ${VERSION} in appinfo/info.xml"
+          # Verify the change
+          grep -o '<version>[^<]*</version>' appinfo/info.xml
+
+      - name: Commit version update
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          git config user.name "$ACTOR"
+          git config user.email "$ACTOR@users.noreply.github.com"
+          git add appinfo/info.xml
+          if git diff --staged --quiet; then
+            echo "No changes to commit (version may already be set)"
+          else
+            git commit -m "chore: bump version to ${VERSION}"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
+      - name: Install composer dependencies
+        run: |
+          if [ -f "composer.phar" ]; then
+            php composer.phar install --no-dev -o
+          else
+            composer install --no-dev -o
+          fi
+
+      - name: Build JavaScript
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+        run: |
+          npm ci
+          npm run build
+
+      - name: Package app
+        run: |
+          chmod +x package.sh
+          ./package.sh
+
+      - name: Get package files
+        id: package
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          PACKAGE_NAME="${APP_NAME}-${VERSION}"
+          TARBALL="${PACKAGE_NAME}.tar.gz"
+          ZIPFILE="${PACKAGE_NAME}.zip"
+
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          echo "TARBALL=build/$TARBALL" >> $GITHUB_OUTPUT
+          echo "ZIPFILE=build/$ZIPFILE" >> $GITHUB_OUTPUT
+
+          ls -lh build/
+          echo "✓ Package files ready"
+
+      - name: Validate version input (safety check)
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          # POSIX ERE-compatible SemVer v2.0.0 regex (no non-capturing groups)
+          SEMVER_REGEX='^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9A-Za-z-][0-9A-Za-z-]*)([.](0|[1-9][0-9]*|[0-9A-Za-z-][0-9A-Za-z-]*))*))?([+]([0-9A-Za-z-]+([.][0-9A-Za-z-]+)*))?$'
+          if [[ ! "$VERSION" =~ $SEMVER_REGEX ]]; then
+            echo "::error::Input version '$VERSION' is not valid SemVer." >&2
+            exit 1
+          fi
+
+      - name: Create and push git tag
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+          git config user.name "$ACTOR"
+          git config user.email "$ACTOR@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "refs/tags/$TAG"
+          echo "✓ Created and pushed tag: $TAG"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ github.event.inputs.version }}
+          tag_name: v${{ github.event.inputs.version }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.event.inputs.version, '-') }}
+          files: |
+            build/${{ steps.package.outputs.PACKAGE_NAME }}.tar.gz
+            build/${{ steps.package.outputs.PACKAGE_NAME }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

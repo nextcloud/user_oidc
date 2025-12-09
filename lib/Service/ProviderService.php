@@ -55,6 +55,7 @@ class ProviderService {
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
 	public const SETTING_GROUP_WHITELIST_REGEX = 'groupWhitelistRegex';
 	public const SETTING_RESTRICT_LOGIN_TO_GROUPS = 'restrictLoginToGroups';
+	public const SETTING_PROTECTED_GROUPS = 'protectedGroups';
 	public const SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING = 'nestedAndFallbackClaims';
 
 	// Teams/Circles provisioning settings (from Keycloak Organizations)
@@ -278,6 +279,7 @@ class ProviderService {
 			self::SETTING_GROUP_PROVISIONING,
 			self::SETTING_GROUP_WHITELIST_REGEX,
 			self::SETTING_RESTRICT_LOGIN_TO_GROUPS,
+			self::SETTING_PROTECTED_GROUPS,
 			self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
 			// Teams/Circles provisioning
 			self::SETTING_TEAMS_PROVISIONING,

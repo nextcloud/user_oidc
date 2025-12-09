@@ -227,6 +227,7 @@ export default {
 					teamsProvisioning: false,
 					mappingOrganizations: '',
 					teamsWhitelistRegex: '',
+					protectedGroups: 'users,admin',
 				},
 			},
 			showNewProvider: false,
