@@ -1,5 +1,5 @@
 <!--
-  - SPDX-FileCopyrightText: 2024 Junovy and contributors
+  - SPDX-FileCopyrightText: 2025 Junovy and contributors
   - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
@@ -297,5 +297,5 @@ sudo rm -rf /var/www/nextcloud/apps/junovy_user_oidc
 ## Support
 
 -   **Documentation**: See README.md in the package
--   **Issues**: https://github.com/nextcloud/user_oidc/issues
+-   **Issues**: [Junovy-Hosting/junovy_user_oidc](https://github.com/Junovy-Hosting/junovy_user_oidc/issues)
 -   **Nextcloud Logs**: `/var/www/nextcloud/data/nextcloud.log`
