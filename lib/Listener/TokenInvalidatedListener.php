@@ -56,7 +56,7 @@ class TokenInvalidatedListener implements IEventListener {
 		try {
 			$oidcSession = $this->sessionMapper->getSessionByAuthTokenAndUid($eventTokenId, $eventTokenUserId);
 		} catch (Exception|DoesNotExistException|MultipleObjectsReturnedException $e) {
-			$this->logger->warning('[TokenInvalidatedListener] Could not find the OIDC session related with an invalidated token', [
+			$this->logger->debug('[TokenInvalidatedListener] Could not find the OIDC session related with an invalidated token', [
 				'token_id' => $eventTokenId,
 				'user_id' => $eventTokenUserId,
 				'exception' => $e,
@@ -65,7 +65,7 @@ class TokenInvalidatedListener implements IEventListener {
 		}
 		// we have nothing to do if we know the idp session is already closed
 		if ($oidcSession->getIdpSessionClosed() !== 0) {
-			$this->logger->warning('[TokenInvalidatedListener] The session is already closed on the IdP side', [
+			$this->logger->debug('[TokenInvalidatedListener] The session is already closed on the IdP side', [
 				'token_id' => $eventTokenId,
 				'user_id' => $eventTokenUserId,
 			]);
@@ -110,7 +110,7 @@ class TokenInvalidatedListener implements IEventListener {
 		$endSessionEndpoint .= '&client_id=' . $provider->getClientId();
 		$endSessionEndpoint .= '&id_token_hint=' . $decryptedIdToken;
 
-		$this->logger->warning('[TokenInvalidatedListener] requesting ' . $endSessionEndpoint);
+		$this->logger->debug('[TokenInvalidatedListener] requesting ' . $endSessionEndpoint);
 		try {
 			$this->httpClientHelper->get($endSessionEndpoint, [], ['timeout' => 5]);
 		} catch (ClientException|ServerException $e) {
