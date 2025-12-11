@@ -231,7 +231,7 @@ class ProvisioningService {
 		}
 
 		$account = $this->accountManager->getAccount($user);
-		$fallbackScope = 'v2-local';
+		$fallbackScope = IAccountManager::SCOPE_LOCAL;
 		$defaultScopes = array_merge(
 			AccountManager::DEFAULT_SCOPES,
 			$this->config->getSystemValue('account_manager.default_property_scope', []) ?? []
@@ -382,7 +382,7 @@ class ProvisioningService {
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Gender mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
-			$account->setProperty('gender', $event->getValue(), $fallbackScope, '1', '');
+			$account->setProperty('gender', $event->getValue(), $fallbackScope, IAccountManager::VERIFIED, '');
 		}
 
 		$simpleAccountPropertyAttributes = [
@@ -409,7 +409,7 @@ class ProvisioningService {
 			$this->eventDispatcher->dispatchTyped($event);
 			$this->logger->debug($property . ' mapping event dispatched');
 			if ($event->hasValue()) {
-				$account->setProperty($property, $event->getValue(), $defaultScopes[$property] ?? $fallbackScope, '1', '');
+				$account->setProperty($property, $event->getValue(), $defaultScopes[$property] ?? $fallbackScope, IAccountManager::VERIFIED, '');
 			}
 		}
 
