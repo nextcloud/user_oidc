@@ -36,5 +36,6 @@
 	<commands>
 		<command>OCA\UserOIDC\Command\UpsertProvider</command>
 		<command>OCA\UserOIDC\Command\DeleteProvider</command>
+		<command>OCA\UserOIDC\Command\ListProviders</command>
 	</commands>
 </info>
