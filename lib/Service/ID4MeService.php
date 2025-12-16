@@ -19,10 +19,10 @@ class ID4MeService {
 	}
 
 	public function setID4ME(bool $enabled): void {
-		$this->appConfig->setValueString(Application::APP_ID, 'id4me_enabled', $enabled ? '1' : '0');
+		$this->appConfig->setValueString(Application::APP_ID, 'id4me_enabled', $enabled ? '1' : '0', lazy: true);
 	}
 
 	public function getID4ME(): bool {
-		return $this->appConfig->getValueString(Application::APP_ID, 'id4me_enabled', '0') === '1';
+		return $this->appConfig->getValueString(Application::APP_ID, 'id4me_enabled', '0', lazy: true) === '1';
 	}
 }

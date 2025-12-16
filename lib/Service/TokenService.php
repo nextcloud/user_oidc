@@ -116,7 +116,7 @@ class TokenService {
 	 * @throws PreConditionNotMetException
 	 */
 	public function checkLoginToken(): void {
-		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0', lazy: true) === '1';
 		if (!$storeLoginTokenEnabled) {
 			return;
 		}
@@ -255,7 +255,7 @@ class TokenService {
 	 * @throws \JsonException
 	 */
 	public function getExchangedToken(string $targetAudience, array $extraScopes = []): Token {
-		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0') === '1';
+		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0', lazy: true) === '1';
 		if (!$storeLoginTokenEnabled) {
 			throw new TokenExchangeFailedException(
 				'Failed to exchange token, storing the login token is disabled. It can be enabled in config.php',

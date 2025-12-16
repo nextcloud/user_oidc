@@ -13,6 +13,7 @@ OC.L10N.register(
     "Client secret" : "Klienthemlighet",
     "Scope" : "Sammanhang",
     "Attribute mapping" : "Attributmappning",
+    "Pronouns mapping" : "Pronomenmappning",
     "Back to %s" : "Tillbaka till %s",
     "Domain" : "Domän"
 },
