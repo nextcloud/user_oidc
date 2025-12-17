@@ -8,6 +8,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.2.0 – 2025-12-17
+
+### Added
+
+- Add EdDSA to the algorithm mapping in DiscoveryService @solracsf [#1236](https://github.com/nextcloud/user_oidc/pull/1236)
+- Add key strength validation for cryptographic keys @solracsf @julien-nc [#1237](https://github.com/nextcloud/user_oidc/pull/1237) [#1272](https://github.com/nextcloud/user_oidc/pull/1272)
+- Command to list all providers and their configuration @julien-nc [#1271](https://github.com/nextcloud/user_oidc/pull/1271)
+
+### Changed
+
+- Use lazy loading for all config values @julien-nc [#1262](https://github.com/nextcloud/user_oidc/pull/1262)
+- Use controller method attributes instead of doc annotations
+- Modernize settings @julien-nc [#1266](https://github.com/nextcloud/user_oidc/pull/1266)
+- Use IAccountManager constants in provisioning service @julien-nc [#1269](https://github.com/nextcloud/user_oidc/pull/1269)
+- Reduce log level of non-critical messages in TokenInvalidatedListener @julien-nc [#1270](https://github.com/nextcloud/user_oidc/pull/1270)
+- Improve check on redirect URL @julien-nc [#1273](https://github.com/nextcloud/user_oidc/pull/1273)
+
+### Fixed
+
+- Stricter typing in query builder method calls @julien-nc [#1251](https://github.com/nextcloud/user_oidc/pull/1251)
+- Update EdDSA mapping to OKP in DiscoveryService @joshtrichards [#1254](https://github.com/nextcloud/user_oidc/pull/1254)
+
 ## 8.1.0 – 2025-10-15
 
 ### Added
