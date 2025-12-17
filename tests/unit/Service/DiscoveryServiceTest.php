@@ -12,6 +12,7 @@ use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\ICacheFactory;
+use OCP\IConfig;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -19,25 +20,17 @@ use Psr\Log\LoggerInterface;
 
 class DiscoveryServiceTest extends TestCase {
 
-	/**
-	 * @var MockObject|LoggerInterface
-	 */
+	/** @var MockObject|LoggerInterface */
 	private $logger;
-	/**
-	 * @var HttpClientHelper|MockObject
-	 */
+	/** @var HttpClientHelper|MockObject */
 	private $clientHelper;
-	/**
-	 * @var ProviderService|MockObject
-	 */
+	/** @var ProviderService|MockObject */
 	private $providerService;
-	/**
-	 * @var ICacheFactory|MockObject
-	 */
+	/** @var IConfig|MockObject */
+	private $config;
+	/** @var ICacheFactory|MockObject */
 	private $cacheFactory;
-	/**
-	 * @var DiscoveryService
-	 */
+	/** @var DiscoveryService */
 	private $discoveryService;
 
 	public function setUp(): void {
@@ -45,8 +38,9 @@ class DiscoveryServiceTest extends TestCase {
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->clientHelper = $this->createMock(HttpClientHelper::class);
 		$this->providerService = $this->createMock(ProviderService::class);
+		$this->config = $this->createMock(IConfig::class);
 		$this->cacheFactory = $this->createMock(ICacheFactory::class);
-		$this->discoveryService = new DiscoveryService($this->logger, $this->clientHelper, $this->providerService, $this->cacheFactory);
+		$this->discoveryService = new DiscoveryService($this->logger, $this->clientHelper, $this->providerService, $this->config, $this->cacheFactory);
 	}
 
 	public function testBuildAuthorizationUrl() {
