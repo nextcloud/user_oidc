@@ -21,7 +21,6 @@ class Version080101Date20251201121749 extends SimpleMigrationStep {
 
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ProviderService $providerService,
 		private ProviderMapper $providerMapper,
 	) {
 	}
@@ -50,12 +49,50 @@ class Version080101Date20251201121749 extends SimpleMigrationStep {
 
 		// make all provider settings lazy
 		$providers = $this->providerMapper->getProviders();
-		$supportedSettingKeys = $this->providerService->getSupportedSettings();
+		// equivalent of $this->providerService->getSupportedSettings()
+		$supportedSettingKeys = [
+			ProviderService::SETTING_MAPPING_DISPLAYNAME,
+			ProviderService::SETTING_MAPPING_EMAIL,
+			ProviderService::SETTING_MAPPING_QUOTA,
+			ProviderService::SETTING_MAPPING_UID,
+			ProviderService::SETTING_MAPPING_GROUPS,
+			ProviderService::SETTING_MAPPING_LANGUAGE,
+			ProviderService::SETTING_MAPPING_LOCALE,
+			ProviderService::SETTING_MAPPING_ADDRESS,
+			ProviderService::SETTING_MAPPING_STREETADDRESS,
+			ProviderService::SETTING_MAPPING_POSTALCODE,
+			ProviderService::SETTING_MAPPING_LOCALITY,
+			ProviderService::SETTING_MAPPING_REGION,
+			ProviderService::SETTING_MAPPING_COUNTRY,
+			ProviderService::SETTING_MAPPING_WEBSITE,
+			ProviderService::SETTING_MAPPING_AVATAR,
+			ProviderService::SETTING_MAPPING_TWITTER,
+			ProviderService::SETTING_MAPPING_FEDIVERSE,
+			ProviderService::SETTING_MAPPING_ORGANISATION,
+			ProviderService::SETTING_MAPPING_ROLE,
+			ProviderService::SETTING_MAPPING_HEADLINE,
+			ProviderService::SETTING_MAPPING_BIOGRAPHY,
+			ProviderService::SETTING_MAPPING_PHONE,
+			ProviderService::SETTING_MAPPING_GENDER,
+			ProviderService::SETTING_MAPPING_PRONOUNS,
+			ProviderService::SETTING_MAPPING_BIRTHDATE,
+			ProviderService::SETTING_UNIQUE_UID,
+			ProviderService::SETTING_CHECK_BEARER,
+			ProviderService::SETTING_SEND_ID_TOKEN_HINT,
+			ProviderService::SETTING_BEARER_PROVISIONING,
+			ProviderService::SETTING_EXTRA_CLAIMS,
+			ProviderService::SETTING_PROVIDER_BASED_ID,
+			ProviderService::SETTING_GROUP_PROVISIONING,
+			ProviderService::SETTING_GROUP_WHITELIST_REGEX,
+			ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS,
+			ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
+		];
 		$supportedSettingKeys[] = ProviderService::SETTING_JWKS_CACHE;
 		$supportedSettingKeys[] = ProviderService::SETTING_JWKS_CACHE_TIMESTAMP;
 		foreach ($supportedSettingKeys as $key) {
 			foreach ($providers as $provider) {
-				$realKey = $this->providerService->getSettingsKey($provider->getId(), $key);
+				// equivalent of $this->providerService->getSettingsKey($provider->getId(), $key)
+				$realKey = 'provider-' . strval($provider->getId()) . '-' . $key;
 				if ($this->appConfig->hasKey(Application::APP_ID, $realKey)) {
 					try {
 						$value = $this->appConfig->getValueString(Application::APP_ID, $realKey);
