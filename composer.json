@@ -4,7 +4,7 @@
   "license": "AGPL3",
   "config": {
     "optimize-autoloader": true,
-    "classmap-authoritative": true,
+    "classmap-authoritative": false,
     "allow-plugins": {
       "bamarni/composer-bin-plugin": true
     }
