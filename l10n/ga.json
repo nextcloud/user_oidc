@@ -37,7 +37,6 @@
     "Allows users to authenticate via OpenID Connect providers." : "Ligeann sé d'úsáideoirí fíordheimhniú a dhéanamh trí sholáthraithe OpenID Connect.",
     "Enable ID4me" : "Cumasaigh ID4me",
     "Store login tokens" : "Stóráil comharthaí logáil isteach",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "Tá sé seo riachtanach má tá aipeanna eile á n-úsáid agat ar mian leo malartú comharthaí user_oidc a úsáid nó an comhartha logáil isteach a fháil",
     "Registered Providers" : "Soláthraithe Cláraithe",
     "Register new provider" : "Cláraigh soláthraí nua",
     "Register a new provider" : "Cláraigh soláthraí nua",

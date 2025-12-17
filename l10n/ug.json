@@ -37,7 +37,6 @@
     "Allows users to authenticate via OpenID Connect providers." : "ئىشلەتكۈچىلەرنىڭ OpenID ئۇلىنىش تەمىنلىگۈچىلەر ئارقىلىق كىرىشىگە يوق قويىدۇ.",
     "Enable ID4me" : "ID4me نى قوزغات",
     "Store login tokens" : "كىرىش بەلگىلىرىنى ساقلا",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "ئەگەر سىز user_oidc نىڭ بەلگە ئالماشتۇرۇش ئىقتىدارىنى ئىشلىتىشنى ياكى پەقەت كىرىش بەلگىسىنى ئېلىشنى خالايدىغان باشقا ئەپلەرنى ئىشلەتسىڭىز، بۇ لازىم.",
     "Registered Providers" : "تىزىملىتىلغان تەمىنلىگۈچىلەر",
     "Register new provider" : "يېڭى تەمىنلىگۈچى تىزىملا",
     "Register a new provider" : "يېڭى بىر تەمىنلىگۈچى تىزىملا",

@@ -37,7 +37,6 @@
     "Allows users to authenticate via OpenID Connect providers." : "Inaruhusu watumiaji kuthibitisha kupitia watoa huduma wa OpenID Connect.",
     "Enable ID4me" : "Wezesha ID4me",
     "Store login tokens" : "Hifadhi tokeni za kuingia",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "Hii inahitajika ikiwa unatumia programu zingine zinazotaka kutumia ubadilishaji wa tokeni wa user_oidc au kupata tokeni ya kuingia.",
     "Registered Providers" : "Watoa Huduma Waliosajiliwa",
     "Register new provider" : "Sajili mtoa huduma mpya",
     "Register a new provider" : "Sajili mtoa huduma mpya",

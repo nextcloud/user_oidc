@@ -39,7 +39,6 @@ OC.L10N.register(
     "Allows users to authenticate via OpenID Connect providers." : "Дозволяє користувачам автентифікуватися через провайдерів OpenID Connect.",
     "Enable ID4me" : "Увімкнути ID4me",
     "Store login tokens" : "Великі токени для входу",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "Це потрібно, якщо ви використовуєте інші програми, які хочуть використовувати обмін токенами user_oidc або просто отримати токен для входу",
     "Registered Providers" : "Зареєстровані провайдери",
     "Register new provider" : "Зареєструвати нового провайдера",
     "Register a new provider" : "Зареєструвати нового постачальника",

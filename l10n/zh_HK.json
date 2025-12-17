@@ -37,7 +37,6 @@
     "Allows users to authenticate via OpenID Connect providers." : "允許用戶通過 OpenID Connect 提供者進行身份驗證。",
     "Enable ID4me" : "啟用 ID4me",
     "Store login tokens" : "儲存登入權杖",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "如果你正在使用其他想要使用 user_oidc 的權杖交換或只是取得登入權杖的應用程式，則需要這樣做",
     "Registered Providers" : "已註冊的提供者",
     "Register new provider" : "註冊新提供者",
     "Register a new provider" : "註冊新提供者",

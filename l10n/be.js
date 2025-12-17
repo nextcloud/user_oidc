@@ -8,7 +8,6 @@ OC.L10N.register(
     "Could not save storeLoginToken state: {msg}" : "Не ўдалося захаваць стан storeLoginToken: {msg}",
     "Enable ID4me" : "Уключыць ID4me",
     "Store login tokens" : "Токены ўваходу ў краму",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "Гэта патрэбна, калі вы карыстаецеся іншымі праграмамі, якія хочуць выкарыстоўваць абмен токенаў user_oidc або проста атрымліваць токен уваходу.",
     "Client ID" : "Ідэнтыфікатар кліента",
     "Update" : "Абнавіць",
     "Remove" : "Выдаліць",

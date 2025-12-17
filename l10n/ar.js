@@ -37,7 +37,6 @@ OC.L10N.register(
     "Allows users to authenticate via OpenID Connect providers." : "يسمح للمستخدِمين بالدخول عن طريق مزودي OpenUD Connect.",
     "Enable ID4me" : "تمكين ID4me",
     "Store login tokens" : "تخزين أَمَارَات تسجيل الدخول login tokens",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "تحتاج إلى هذا إذا كنت تستعمل تطبيقات أخرى ترغب في استعمال تبادل أَمَارَة user_oidc أو ترغب في الحصول على أَمَارَة تسجيل الدخول login token",
     "Registered Providers" : "مُزوِّدُون مُدرَجُون",
     "Register new provider" : "إدراج مُزوِّد جديد",
     "Register a new provider" : "إدراج مُزوِّد جديد",

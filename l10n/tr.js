@@ -39,7 +39,6 @@ OC.L10N.register(
     "Allows users to authenticate via OpenID Connect providers." : "Kullanıcıların OpenID Connect hizmeti sağlayıcıları ile kimliklerini doğrulamasını sağlar.",
     "Enable ID4me" : "ID4me kullanılsın",
     "Store login tokens" : "Mağaza oturum açma kodları",
-    "This is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "user_oidc kod değişimini kullanıyorsanız veya yalnızca oturum açma kodunu almak isteyen diğer uygulamaları kullanıyorsanız gereklidir.",
     "Registered Providers" : "Kayıtlı hizmet sağlayıcılar",
     "Register new provider" : "Yeni hizmet sağlayıcı kaydet",
     "Register a new provider" : "Yeni bir hizmet sağlayıcı kaydet",
