@@ -70,6 +70,17 @@ is not set in the discovery. In such case, you can set the default token endpoin
 ]
 ```
 
+## `user_oidc.validate_jwk_strength`
+
+By default, user_oidc validates the strength of the JWK keys received from the discovery endpoint.
+It will check that RSA keys are long enough and that EC/OKP keys have the correct curve.
+This can be disabled with:
+
+```php
+'user_oidc' => [
+  'validate_jwk_strength' => false
+]
+```
 
 ---
 

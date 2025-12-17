@@ -15,6 +15,7 @@ use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
 class DiscoveryService {
@@ -42,6 +43,7 @@ class DiscoveryService {
 		private LoggerInterface $logger,
 		private HttpClientHelper $clientService,
 		private ProviderService $providerService,
+		private IConfig $config,
 		ICacheFactory $cacheFactory,
 	) {
 		$this->cache = $cacheFactory->createDistributed('user_oidc');
@@ -208,8 +210,12 @@ class DiscoveryService {
 				continue;
 			}
 
-			// Validate key strength
-			$this->validateKeyStrength($key, $alg);
+			$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+			if (!isset($oidcSystemConfig['validate_jwk_strength'])
+				|| !in_array($oidcSystemConfig['validate_jwk_strength'], [false, 'false', 0, '0'], true)) {
+				// Validate key strength
+				$this->validateKeyStrength($key, $alg);
+			}
 
 			// If JWT has a kid, match strictly
 			if ($kid !== null) {
