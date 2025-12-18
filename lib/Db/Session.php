@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Db;
 
 use OCP\AppFramework\Db\Entity;
+use OCP\DB\Types;
 
 /**
  * @method \string getSid()
@@ -56,16 +57,16 @@ class Session extends Entity implements \JsonSerializable {
 	protected $idpSessionClosed;
 
 	public function __construct() {
-		$this->addType('sid', 'string');
-		$this->addType('sub', 'string');
-		$this->addType('iss', 'string');
-		$this->addType('authtoken_id', 'integer');
-		$this->addType('nc_session_id', 'string');
-		$this->addType('created_at', 'integer');
-		$this->addType('id_token', 'string');
-		$this->addType('user_id', 'string');
-		$this->addType('provider_id', 'integer');
-		$this->addType('idp_session_closed', 'integer');
+		$this->addType('sid', Types::STRING);
+		$this->addType('sub', Types::STRING);
+		$this->addType('iss', Types::STRING);
+		$this->addType('authtokenId', Types::INTEGER);
+		$this->addType('ncSessionId', Types::STRING);
+		$this->addType('createdAt', Types::INTEGER);
+		$this->addType('idToken', Types::STRING);
+		$this->addType('userId', Types::STRING);
+		$this->addType('providerId', Types::INTEGER);
+		$this->addType('idpSessionClosed', Types::INTEGER);
 	}
 
 	#[\ReturnTypeWillChange]

@@ -9,12 +9,13 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Db;
 
 use OCP\AppFramework\Db\Entity;
+use OCP\DB\Types;
 
 /**
- * @method string getUserId()
- * @method void setUserId(string $userId)
- * @method string getDisplayName()
- * @method void setDisplayName(string $displayName)
+ * @method \string getUserId()
+ * @method \void setUserId(string $userId)
+ * @method \string getDisplayName()
+ * @method \void setDisplayName(string $displayName)
  */
 class User extends Entity {
 
@@ -25,6 +26,6 @@ class User extends Entity {
 	protected $displayName;
 
 	public function __construct() {
-		$this->addType('user_id', 'string');
+		$this->addType('userId', Types::STRING);
 	}
 }
