@@ -32,6 +32,8 @@ use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 use OCP\PreConditionNotMetException;
 use OCP\Security\ICrypto;
 use OCP\Session\Exceptions\SessionNotAvailableException;
@@ -45,6 +47,7 @@ use Psr\Log\LoggerInterface;
 class TokenService {
 
 	private const SESSION_TOKEN_KEY = Application::APP_ID . '-user-token';
+	private const REFRESH_LOCK_KEY = Application::APP_ID . '-lock-key';
 
 	private IClient $client;
 
@@ -63,8 +66,8 @@ class TokenService {
 		private IAppManager $appManager,
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
+		private ILockingProvider $lockingProvider,
 	) {
-
 	}
 
 	public function storeToken(array $tokenData): Token {
@@ -192,18 +195,56 @@ class TokenService {
 	 * @throws MultipleObjectsReturnedException
 	 */
 	public function refresh(Token $token): Token {
-		$oidcProvider = $this->providerMapper->getProvider($token->getProviderId());
-		$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
+		$lockKey = self::REFRESH_LOCK_KEY . '_' . $this->session->getId();
+
+		// Retry loop to acquire lock with timeout
+		$maxRetries = 50; // 5 seconds total (50 × 100ms)
+		$retryCount = 0;
+		$lockAcquired = false;
+
+		while (!$lockAcquired && $retryCount < $maxRetries) {
+			try {
+				$this->lockingProvider->acquireLock($lockKey, ILockingProvider::LOCK_EXCLUSIVE);
+				$lockAcquired = true;
+				$this->logger->debug('[TokenService] Acquired lock for token refresh');
+			} catch (LockedException $e) {
+				// Another request is refreshing, wait and retry
+				$retryCount++;
+				if ($retryCount >= $maxRetries) {
+					$this->logger->warning('[TokenService] Failed to acquire lock after retries, returning old token');
+					return $token;
+				}
+				usleep(100000); // 100ms between retries
+			}
+		}
 
 		try {
+			// Double-check: the token might have been refreshed:
+			//   * while we were waiting for the lock (another request held it)
+			//   * OR in another process between the moment this process checked
+			//     the token expiration and the moment it attempted to acquire the lock
+			$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
+			if ($sessionData) {
+				$currentToken = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR));
+				if (!$currentToken->isExpired()) {
+					$this->logger->debug('[TokenService] Token already refreshed by another request');
+					return $currentToken;
+				}
+			}
+
+			// Token still expired, proceed with refresh
+			$oidcProvider = $this->providerMapper->getProvider($token->getProviderId());
+			$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
+
 			$clientSecret = $oidcProvider->getClientSecret();
 			if ($clientSecret !== '') {
 				try {
 					$clientSecret = $this->crypto->decrypt($clientSecret);
 				} catch (\Exception $e) {
-					$this->logger->error('[TokenService] Failed to decrypt oidc client secret to refresh the token');
+					$this->logger->error('[TokenService] Failed to decrypt oidc client secret');
 				}
 			}
+
 			$this->logger->debug('[TokenService] Refreshing the token: ' . $discovery['token_endpoint']);
 			$body = $this->clientService->post(
 				$discovery['token_endpoint'],
@@ -214,25 +255,24 @@ class TokenService {
 					'refresh_token' => $token->getRefreshToken(),
 				]
 			);
-			$this->logger->debug('[TokenService] Token refresh request params', [
-				'client_id' => $oidcProvider->getClientId(),
-				// 'client_secret' => $clientSecret,
-				'grant_type' => 'refresh_token',
-				// 'refresh_token' => $token->getRefreshToken(),
-			]);
 
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] ---- Refresh token success');
 			return $this->storeToken(
-				array_merge(
-					$bodyArray,
-					['provider_id' => $token->getProviderId()],
-				)
+				array_merge($bodyArray, ['provider_id' => $token->getProviderId()])
 			);
 		} catch (\Exception $e) {
-			$this->logger->error('[TokenService] Failed to refresh token ', ['exception' => $e]);
-			// Failed to refresh, return old token which will be retried or otherwise timeout if expired
+			$this->logger->error('[TokenService] Failed to refresh token', ['exception' => $e]);
 			return $token;
+		} finally {
+			if ($lockAcquired) {
+				try {
+					$this->lockingProvider->releaseLock($lockKey, ILockingProvider::LOCK_EXCLUSIVE);
+					$this->logger->debug('[TokenService] Released lock for token refresh');
+				} catch (\Exception $e) {
+					$this->logger->error('[TokenService] Failed to release lock', ['exception' => $e]);
+				}
+			}
 		}
 	}
 
@@ -316,9 +356,7 @@ class TokenService {
 			);
 			$this->logger->debug('[TokenService] Token exchange request params', [
 				'client_id' => $oidcProvider->getClientId(),
-				// 'client_secret' => $clientSecret,
 				'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
-				// 'subject_token' => $loginToken->getAccessToken(),
 				'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
 				'requested_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
 				'audience' => $targetAudience,
