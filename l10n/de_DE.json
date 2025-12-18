@@ -37,6 +37,7 @@
     "Allows users to authenticate via OpenID Connect providers." : "Ermöglicht Benutzern die Authentifizierung über OpenID Connect-Anbieter.",
     "Enable ID4me" : "ID4me aktivieren",
     "Store login tokens" : "Store-Login-Token",
+    "\"Store login tokens\" is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "\"Login-Token speichern\" wird benötigt, wenn andere Apps verwendet werden, die den Token-Austausch von user_oidc nutzen oder einfach das Login-Token erhalten möchten",
     "Registered Providers" : "Registrierte Anbieter",
     "Register new provider" : "Neuen Anbieter registrieren",
     "Register a new provider" : "Einen neuen Anbieter registrieren",
