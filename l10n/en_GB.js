@@ -39,6 +39,7 @@ OC.L10N.register(
     "Allows users to authenticate via OpenID Connect providers." : "Allows users to authenticate via OpenID Connect providers.",
     "Enable ID4me" : "Enable ID4me",
     "Store login tokens" : "Store login tokens",
+    "\"Store login tokens\" is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "\"Store login tokens\" is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token",
     "Registered Providers" : "Registered Providers",
     "Register new provider" : "Register new provider",
     "Register a new provider" : "Register a new provider",

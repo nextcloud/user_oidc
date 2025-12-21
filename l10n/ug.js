@@ -39,6 +39,7 @@ OC.L10N.register(
     "Allows users to authenticate via OpenID Connect providers." : "ئىشلەتكۈچىلەرنىڭ OpenID ئۇلىنىش تەمىنلىگۈچىلەر ئارقىلىق كىرىشىگە يوق قويىدۇ.",
     "Enable ID4me" : "ID4me نى قوزغات",
     "Store login tokens" : "كىرىش بەلگىلىرىنى ساقلا",
+    "\"Store login tokens\" is needed if you are using other apps that want to use user_oidc's token exchange or simply get the login token" : "ئەگەر سىز user_oidc نىڭ بەلگە ئالماشتۇرۇشىنى ئىشلىتىشنى ياكى پەقەت كىرىش بەلگىسىنى ئېلىشنى خالايدىغان باشقا ئەپلەرنى ئىشلەتسىڭىز، «كىرىش بەلگىلىرىنى ساقلاش» كېرەك.",
     "Registered Providers" : "تىزىملىتىلغان تەمىنلىگۈچىلەر",
     "Register new provider" : "يېڭى تەمىنلىگۈچى تىزىملا",
     "Register a new provider" : "يېڭى بىر تەمىنلىگۈچى تىزىملا",
