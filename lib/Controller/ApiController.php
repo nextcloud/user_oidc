@@ -103,7 +103,6 @@ class ApiController extends Controller {
 	}
 
 	#[NoCSRFRequired]
-	#[PublicPage]
 	public function debugJwk(): JSONResponse {
 		try {
 			return new JSONResponse($this->jwkService->debug());
@@ -113,7 +112,6 @@ class ApiController extends Controller {
 	}
 
 	#[NoCSRFRequired]
-	#[PublicPage]
 	public function debugJwe(): JSONResponse {
 		try {
 			return new JSONResponse($this->jweService->debug());
