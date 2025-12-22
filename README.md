@@ -97,17 +97,17 @@ you can configure user_oidc to apply a regular expression to extract the user ID
 
 ```php
 'user_oidc' => [
-  'user_id_regexp' => 'u=([^,]+)'
+  'user_id_regexp' => '/u=([^,]+)/'
 ]
 ```
 
 This regular expression may or may not contain parenthesis. If it does, only the selected block will be extracted.
 Examples:
 
-* `'[a-zA-Z]+'`
+* `'/[a-zA-Z]+/'`
   * `'123-abc-123'` will give `'abc'`
   * `'123-abc-345-def'` will give `'abc'`
-* `'u=([^,]+)'`
+* `'/u=([^,]+)/'`
   * `'u=123'` will give `'123'`
   * `'anything,u=123,anything'` will give `'123'`
   * `'anything,u=123,anything,u=345'` will give `'123'`
