@@ -13,6 +13,7 @@ use OCA\UserOIDC\Service\JwkService;
 use OCP\AppFramework\Services\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class JweServiceTest extends TestCase {
 
@@ -27,7 +28,11 @@ class JweServiceTest extends TestCase {
 		parent::setUp();
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->jwkService = new JwkService($this->appConfig);
-		$this->jweService = new JweService($this->jwkService);
+		$this->jweService = new JweService(
+			$this->jwkService,
+			$this->appConfig,
+			$this->createMock(LoggerInterface::class),
+		);
 	}
 
 	public function testJweEncryptionDecryption() {
