@@ -24,6 +24,8 @@ use Jose\Component\Encryption\JWELoader;
 use Jose\Component\Encryption\JWETokenSupport;
 use Jose\Component\Encryption\Serializer\CompactSerializer;
 use Jose\Component\Encryption\Serializer\JWESerializerManager;
+use OCP\AppFramework\Services\IAppConfig;
+use Psr\Log\LoggerInterface;
 
 class JweService {
 
@@ -31,6 +33,8 @@ class JweService {
 
 	public function __construct(
 		private JwkService $jwkService,
+		private IAppConfig $appConfig,
+		private LoggerInterface $logger,
 	) {
 	}
 
@@ -165,9 +169,28 @@ class JweService {
 		$myPemEncryptionKey = $this->jwkService->getMyEncryptionKey(true);
 		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
 		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
-		$encPrivJwk = $this->jwkService->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true, includePrivateKey: true);
+		$encryptionPrivateJwk = $this->jwkService->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true, includePrivateKey: true);
 
-		return $this->decryptSerializedJweWithKey($serializedJwe, $encPrivJwk);
+		try {
+			return $this->decryptSerializedJweWithKey($serializedJwe, $encryptionPrivateJwk);
+		} catch (\Exception $e) {
+			// try the old expired key
+			$oldPemEncryptionKey = $this->appConfig->getAppValueString(JwkService::PEM_EXPIRED_ENC_KEY_SETTINGS_KEY, lazy: true);
+			$oldPemEncryptionKeyCreatedAt = $this->appConfig->getAppValueInt(JwkService::PEM_EXPIRED_ENC_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+			if ($oldPemEncryptionKey === '' || $oldPemEncryptionKeyCreatedAt === 0) {
+				$this->logger->debug('JWE decryption failed with a fresh key and there is no old key');
+				throw $e;
+			}
+			// the old encryption key is expired for more than an hour, we can't use it
+			if (time() > $oldPemEncryptionKeyCreatedAt + JwkService::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS + (60 * 60)) {
+				$this->logger->debug('JWE decryption failed with a fresh key and the old key is expired for more than an hour');
+				throw $e;
+			}
+			$oldSslEncryptionKey = openssl_pkey_get_private($oldPemEncryptionKey);
+			$oldSslEncryptionKeyDetails = openssl_pkey_get_details($oldSslEncryptionKey);
+			$oldEncryptionPrivateJwk = $this->jwkService->getJwkFromSslKey($oldSslEncryptionKeyDetails, isEncryptionKey: true, includePrivateKey: true);
+			return $this->decryptSerializedJweWithKey($serializedJwe, $oldEncryptionPrivateJwk);
+		}
 	}
 
 	public function createSerializedJwe(string $payload): string {
