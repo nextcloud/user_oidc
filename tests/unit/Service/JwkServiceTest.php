@@ -39,8 +39,8 @@ class JwkServiceTest extends TestCase {
 		$this->assertStringContainsString('-----END PRIVATE KEY-----', $myPemPrivateKey);
 
 		$initialPayload = ['nice' => 'example'];
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(JwkService::PEM_SIG_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
-		$jwkId = 'sig_key_' . $pemPrivateKeyExpiresAt;
+		$pemSignatureKeyCreatedAt = $this->appConfig->getAppValueInt(JwkService::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+		$jwkId = 'sig_key_' . $pemSignatureKeyCreatedAt;
 		$signedJwtToken = $this->jwkService->createJwt($initialPayload, $sslPrivateKey, $jwkId, JwkService::PEM_SIG_KEY_ALGORITHM);
 
 		// check JWK
@@ -72,8 +72,8 @@ class JwkServiceTest extends TestCase {
 		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
 		$encJwk = $this->jwkService->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true);
 
-		$pemPrivateKeyExpiresAt = $this->appConfig->getAppValueInt(JwkService::PEM_ENC_KEY_EXPIRES_AT_SETTINGS_KEY, lazy: true);
-		$encJwkId = 'enc_key_' . $pemPrivateKeyExpiresAt;
+		$pemEncryptionKeyCreatedAt = $this->appConfig->getAppValueInt(JwkService::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+		$encJwkId = 'enc_key_' . $pemEncryptionKeyCreatedAt;
 
 		$this->assertEquals('EC', $encJwk['kty']);
 		$this->assertEquals('enc', $encJwk['use']);
