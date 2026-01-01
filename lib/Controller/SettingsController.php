@@ -29,13 +29,13 @@ class SettingsController extends Controller {
 
 	public function __construct(
 		IRequest $request,
-		private IAppConfig $appConfig,
-		private ProviderMapper $providerMapper,
-		private ID4MeService $id4meService,
-		private ProviderService $providerService,
-		private ICrypto $crypto,
-		private IClientService $clientService,
-		private LoggerInterface $logger,
+		private readonly IAppConfig $appConfig,
+		private readonly ProviderMapper $providerMapper,
+		private readonly ID4MeService $id4meService,
+		private readonly ProviderService $providerService,
+		private readonly ICrypto $crypto,
+		private readonly IClientService $clientService,
+		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -55,7 +55,7 @@ class SettingsController extends Controller {
 			// Check if the request was successful
 			if ($httpCode === Http::STATUS_OK && !empty($body)) {
 				$result['isReachable'] = true;
-				$data = json_decode($body, true);
+				$data = json_decode($body, true, JSON_THROW_ON_ERROR);
 
 				// Check for required fields as defined in: https://openid.net/specs/openid-connect-discovery-1_0.html
 				$requiredFields = [

@@ -20,8 +20,8 @@ class BaseOidcController extends Controller {
 
 	public function __construct(
 		IRequest $request,
-		private IConfig $config,
-		private IL10N $l,
+		private readonly IConfig $config,
+		private readonly IL10N $l,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -33,14 +33,8 @@ class BaseOidcController extends Controller {
 		return $this->config->getSystemValueBool('debug', false);
 	}
 
-	/**
-	 * @param string $message
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	protected function buildErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+	protected function buildErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [],
+		?bool $throttle = null): TemplateResponse {
 		$params = [
 			'message' => $message,
 			'title' => $this->l->t('Error'),
@@ -48,14 +42,8 @@ class BaseOidcController extends Controller {
 		return $this->buildFailureTemplateResponse($params, $statusCode, $throttleMetadata, $throttle);
 	}
 
-	/**
-	 * @param string $message
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	protected function build403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+	protected function build403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [],
+		?bool $throttle = null): TemplateResponse {
 		$params = [
 			'message' => $message,
 			'title' => $this->l->t('Access forbidden'),
@@ -63,16 +51,8 @@ class BaseOidcController extends Controller {
 		return $this->buildFailureTemplateResponse($params, $statusCode, $throttleMetadata, $throttle);
 	}
 
-	/**
-	 * @param array $params
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	protected function buildFailureTemplateResponse(
-		array $params, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null,
-	): TemplateResponse {
+	protected function buildFailureTemplateResponse(array $params, int $statusCode, array $throttleMetadata = [],
+		?bool $throttle = null): TemplateResponse {
 		$response = new TemplateResponse(
 			Application::APP_ID,
 			'error',
@@ -80,6 +60,7 @@ class BaseOidcController extends Controller {
 			TemplateResponse::RENDER_AS_ERROR
 		);
 		$response->setStatus($statusCode);
+
 		// if not specified, throttle if debug mode is off
 		if (($throttle === null && !$this->isDebugModeEnabled()) || $throttle) {
 			$response->throttle($throttleMetadata);
@@ -89,15 +70,8 @@ class BaseOidcController extends Controller {
 
 	// TODO: use the following methods only when 32 is the min supported version
 	// as it includes the "back to NC" button
-
-	/**
-	 * @param string $message
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	protected function buildCoreErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+	protected function buildCoreErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [],
+		?bool $throttle = null): TemplateResponse {
 		$params = [
 			'errors' => [
 				['error' => $message],
@@ -106,27 +80,12 @@ class BaseOidcController extends Controller {
 		return $this->buildCoreFailureTemplateResponse('', 'error', $params, $statusCode, $throttleMetadata, $throttle);
 	}
 
-	/**
-	 * @param string $message
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
-	protected function buildCore403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+	protected function buildCore403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [],
+		?bool $throttle = null): TemplateResponse {
 		$params = ['message' => $message];
 		return $this->buildCoreFailureTemplateResponse('core', '403', $params, $statusCode, $throttleMetadata, $throttle);
 	}
 
-	/**
-	 * @param string $appName
-	 * @param string $templateName
-	 * @param array $params
-	 * @param int $statusCode
-	 * @param array $throttleMetadata
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
 	protected function buildCoreFailureTemplateResponse(string $appName, string $templateName, array $params, int $statusCode,
 		array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
 		$response = new TemplateResponse(
@@ -136,6 +95,7 @@ class BaseOidcController extends Controller {
 			TemplateResponse::RENDER_AS_ERROR
 		);
 		$response->setStatus($statusCode);
+
 		// if not specified, throttle if debug mode is off
 		if (($throttle === null && !$this->isDebugModeEnabled()) || $throttle) {
 			$response->throttle($throttleMetadata);
