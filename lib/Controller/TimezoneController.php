@@ -21,22 +21,19 @@ class TimezoneController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private IConfig $config,
-		private ISession $session,
-		private ?string $userId,
+		private readonly IConfig $config,
+		private readonly ISession $session,
+		private readonly ?string $userId,
 	) {
 		parent::__construct($appName, $request);
 	}
 
 	/**
-	 * @param string $timezone
-	 * @param int $timezoneOffset
-	 * @return JSONResponse
 	 * @throws \OCP\PreConditionNotMetException
 	 */
 	#[NoAdminRequired]
 	#[UseSession]
-	public function setTimezone(string $timezone, int $timezoneOffset) {
+	public function setTimezone(string $timezone, int $timezoneOffset): JSONResponse {
 		$this->config->setUserValue($this->userId, 'core', 'timezone', $timezone);
 		$this->session->set('timezone', $timezoneOffset);
 
