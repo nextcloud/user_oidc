@@ -178,7 +178,7 @@ class DiscoveryService {
 	 * @return array The modified JWKS
 	 * @throws \RuntimeException if no matching key is found or algorithm is unsupported
 	 */
-	private function fixJwksAlg(array $jwks, string $jwt): array {
+	public function fixJwksAlg(array $jwks, string $jwt): array {
 		$jwtParts = explode('.', $jwt, 3);
 		$header = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
 		$kid = $header['kid'] ?? null;

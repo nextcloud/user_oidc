@@ -9,13 +9,25 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\Helper\HttpClientHelper;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCP\IAppConfig;
+use OCP\ICache;
+use OCP\ICacheFactory;
+use Psr\Log\LoggerInterface;
 
 class ID4MeService {
 
+	private ICache $cache;
+
 	public function __construct(
 		private IAppConfig $appConfig,
+		private DiscoveryService $discoveryService,
+		private LoggerInterface $logger,
+		private HttpClientHelper $clientService,
+		ICacheFactory $cacheFactory,
 	) {
+		$this->cache = $cacheFactory->createDistributed('user_oidc');
 	}
 
 	public function setID4ME(bool $enabled): void {
@@ -24,5 +36,25 @@ class ID4MeService {
 
 	public function getID4ME(): bool {
 		return $this->appConfig->getValueString(Application::APP_ID, 'id4me_enabled', '0', lazy: true) === '1';
+	}
+
+	public function obtainJWK(string $jwkUri, string $tokenToDecode, bool $useCache = true): array {
+		$cacheKey = 'jwks-' . $jwkUri;
+		$cachedJwks = $this->cache->get($cacheKey);
+		if ($cachedJwks !== null && $useCache) {
+			$rawJwks = json_decode($cachedJwks, true, flags: JSON_THROW_ON_ERROR);
+			$this->logger->debug('[ID4ME-obtainJWK] jwks cache content', ['jwks_cache' => $rawJwks]);
+		} else {
+			$responseBody = (string)$this->clientService->get($jwkUri);
+			$rawJwks = json_decode($responseBody, true, flags: JSON_THROW_ON_ERROR);
+			$this->logger->debug('[ID4ME-obtainJWK] getting fresh jwks', ['jwks' => $rawJwks]);
+			$this->cache->set($cacheKey, $responseBody, DiscoveryService::INVALIDATE_JWKS_CACHE_AFTER_SECONDS);
+		}
+
+		$fixedJwks = $this->discoveryService->fixJwksAlg($rawJwks, $tokenToDecode);
+		$this->logger->debug('[ID4ME-obtainJWK] fixed jwks', ['fixed_jwks' => $fixedJwks]);
+		$jwks = JWK::parseKeySet($fixedJwks, 'RS256');
+		$this->logger->debug('Parsed the jwks');
+		return $jwks;
 	}
 }
