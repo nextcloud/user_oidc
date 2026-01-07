@@ -33,6 +33,7 @@ use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -292,7 +293,24 @@ class Id4meController extends BaseOidcController {
 		$plainHeaders = json_decode(base64_decode($header), true);
 		$plainPayload = json_decode(base64_decode($payload), true);
 
-		/** TODO: VALIATE SIGNATURE! */
+		// validate the JWT signature
+		$idTokenRaw = $data['id_token'];
+		$jwkUri = $openIdConfig->getJwksUri();
+		JWT::$leeway = 60;
+		try {
+			$jwks = $this->id4MeService->obtainJWK($jwkUri, $data['id_token'], true);
+			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		} catch (\Exception|\Throwable $e) {
+			$this->logger->debug('Failed to decode the JWT token, retrying with fresh JWK');
+			try {
+				$jwks = $this->id4MeService->obtainJWK($jwkUri, $idTokenRaw, false);
+				$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+			} catch (\Exception|\Throwable $e) {
+				$this->logger->debug('Failed to decode the JWT token with fresh JWK');
+				$message = $this->l10n->t('Failed to authenticate');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'token signature check failed']);
+			}
+		}
 
 		// TODO: validate expiration
 
