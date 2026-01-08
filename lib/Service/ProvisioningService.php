@@ -446,7 +446,13 @@ class ProvisioningService {
 		if (filter_var($avatarAttribute, FILTER_VALIDATE_URL)) {
 			$client = $this->clientService->newClient();
 			try {
-				$avatarContent = $client->get($avatarAttribute)->getBody();
+				$response = $client->get($avatarAttribute);
+				$contentType = $response->getHeader('Content-Type')[0] ?? '';
+				if (!in_array($contentType, ['image/jpeg', 'image/png', 'image/gif'], true)) {
+					$this->logger->warning('Avatar response is not an image', ['content_type' => $contentType]);
+					return;
+				}
+				$avatarContent = $response->getBody();
 				if (is_resource($avatarContent)) {
 					$avatarContent = stream_get_contents($avatarContent);
 				}
