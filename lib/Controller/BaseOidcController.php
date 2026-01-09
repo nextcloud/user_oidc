@@ -33,8 +33,9 @@ class BaseOidcController extends Controller {
 		return $this->config->getSystemValueBool('debug', false);
 	}
 
-	protected function buildErrorTemplateResponse(string $message, int $statusCode, array $throttleMetadata = [],
-		?bool $throttle = null): TemplateResponse {
+	protected function buildErrorTemplateResponse(
+		string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null
+	): TemplateResponse {
 		$params = [
 			'message' => $message,
 			'title' => $this->l->t('Error'),
