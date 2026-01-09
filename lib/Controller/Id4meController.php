@@ -54,21 +54,21 @@ class Id4meController extends BaseOidcController {
 
 	public function __construct(
 		IRequest $request,
-		private ISecureRandom $random,
-		private ISession $session,
+		private readonly ISecureRandom $random,
+		private readonly ISession $session,
 		IConfig $config,
-		private IL10N $l10n,
-		private ITimeFactory $timeFactory,
-		private IClientService $clientService,
-		private IURLGenerator $urlGenerator,
-		private UserMapper $userMapper,
-		private IUserSession $userSession,
-		private IUserManager $userManager,
+		private readonly IL10N $l10n,
+		private readonly ITimeFactory $timeFactory,
+		private readonly IClientService $clientService,
+		private readonly IURLGenerator $urlGenerator,
+		private readonly UserMapper $userMapper,
+		private readonly IUserSession $userSession,
+		private readonly IUserManager $userManager,
 		HttpClientHelper $clientHelper,
-		private Id4MeMapper $id4MeMapper,
-		private ID4MeService $id4MeService,
-		private LoggerInterface $logger,
-		private ICrypto $crypto,
+		private readonly Id4MeMapper $id4MeMapper,
+		private readonly ID4MeService $id4MeService,
+		private readonly LoggerInterface $logger,
+		private readonly ICrypto $crypto,
 	) {
 		parent::__construct($request, $config, $l10n);
 
@@ -96,7 +96,6 @@ class Id4meController extends BaseOidcController {
 	}
 
 	/**
-	 * @param string $domain
 	 * @return RedirectResponse|TemplateResponse
 	 */
 	#[PublicPage]
@@ -165,9 +164,6 @@ class Id4meController extends BaseOidcController {
 	}
 
 	/**
-	 * @param string $state
-	 * @param string $code
-	 * @param string $scope
 	 * @return JSONResponse|RedirectResponse|TemplateResponse
 	 * @throws \Exception
 	 */
@@ -249,7 +245,7 @@ class Id4meController extends BaseOidcController {
 		$plainHeaders = json_decode(base64_decode($header), true);
 		$plainPayload = json_decode(base64_decode($payload), true);
 
-		/** TODO: VALIATE SIGNATURE! */
+		/** TODO: VALIDATE SIGNATURE! */
 
 		// Check expiration
 		if ($plainPayload['exp'] < $this->timeFactory->getTime()) {

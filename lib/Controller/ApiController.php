@@ -23,21 +23,13 @@ class ApiController extends Controller {
 
 	public function __construct(
 		IRequest $request,
-		private IRootFolder $root,
-		private UserMapper $userMapper,
-		private IUserManager $userManager,
+		private readonly IRootFolder $root,
+		private readonly UserMapper $userMapper,
+		private readonly IUserManager $userManager,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
 
-	/**
-	 * @param int $providerId
-	 * @param string $userId
-	 * @param string|null $displayName
-	 * @param string|null $email
-	 * @param string|null $quota
-	 * @return DataResponse
-	 */
 	#[NoCSRFRequired]
 	public function createUser(int $providerId, string $userId, ?string $displayName = null,
 		?string $email = null, ?string $quota = null): DataResponse {
@@ -59,21 +51,18 @@ class ApiController extends Controller {
 			$user->setQuota($quota);
 		}
 
-		$userFolder = $this->root->getUserFolder($user->getUID());
+		$userId = $user->getUID();
+		$userFolder = $this->root->getUserFolder($userId);
 		try {
 			// copy skeleton
-			\OC_Util::copySkeleton($user->getUID(), $userFolder);
+			\OC_Util::copySkeleton($userId, $userFolder);
 		} catch (NotPermittedException $ex) {
 			// read only uses
 		}
 
-		return new DataResponse(['user_id' => $user->getUID()]);
+		return new DataResponse(['user_id' => $userId]);
 	}
 
-	/**
-	 * @param string $userId
-	 * @return DataResponse
-	 */
 	#[NoCSRFRequired]
 	public function deleteUser(string $userId): DataResponse {
 		$user = $this->userManager->get($userId);
