@@ -16,14 +16,14 @@ jobs:
 
     strategy:
       matrix:
-        php-versions: ['8.0', '8.1', '8.2', '8.3', '8.4']
+        php-versions: [ '8.2', '8.3', '8.4', '8.5' ]
 
     name: php${{ matrix.php-versions }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up php ${{ matrix.php-versions }}
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2.36.0
         with:
           php-version: ${{ matrix.php-versions }}
           coverage: none
@@ -36,24 +36,21 @@ jobs:
 
     strategy:
       matrix:
-        php-versions: ['8.0']
+        php-versions: ['8.2']
 
     name: cs php${{ matrix.php-versions }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up php
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2.36.0
       with:
         php-version: ${{ matrix.php-versions }}
         coverage: none
 
     - name: Install dependencies
-      # remove psalm because it requires php >= 8.2 and we want to test with 8.0
-      run: |
-        composer uninstall --dev psalm/phar phpunit/phpunit
-        composer i
+      run: composer i
 
     - name: Run coding standards check
       run: composer run cs:check || ( echo 'Please run `composer run cs:fix` to format your code' && exit 1 )
@@ -63,12 +60,12 @@ jobs:
 
     name: eslint node
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Set up npm8
         run: npm i -g npm@8
@@ -84,12 +81,12 @@ jobs:
 
     name: stylelint node
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Set up npm8
         run: npm i -g npm@8
