@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 5.1.0 – 2026-01-12
+
+### Fixed
+
+- Fix translatable strings issues @julien-nc [#1075](https://github.com/nextcloud/user_oidc/pull/1075)
+- Validate signature of id4me login tokens @julien-nc [#1290](https://github.com/nextcloud/user_oidc/pull/1290)
+
 ## 5.0.3 – 2024-06-21
 
 ### Added
