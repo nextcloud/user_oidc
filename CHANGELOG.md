@@ -8,6 +8,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.3.0 – 2026-01-12
+
+### Changed
+
+- Add UI warning explaining the consequence of disabling unique user IDs @julien-nc [#1284](https://github.com/nextcloud/user_oidc/pull/1284)
+
+### Fixed
+
+- Make db entity attribute names camel case, use OCP\DB\Types constants @julien-nc [#1278](https://github.com/nextcloud/user_oidc/pull/1278)
+- Implement locking for token refresh @solracsf [#1277](https://github.com/nextcloud/user_oidc/pull/1277)
+- Validate signature of id4me login tokens @julien-nc [#1285](https://github.com/nextcloud/user_oidc/pull/1285)
+- More checks when getting an avatar from a URL @julien-nc [#1286](https://github.com/nextcloud/user_oidc/pull/1286)
+
 ## 8.2.2 – 2025-12-17
 
 ### Fixed
