@@ -31,6 +31,7 @@ use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -44,6 +45,7 @@ use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
+use Psr\Log\LoggerInterface;
 
 class Id4meController extends Controller {
 	private const STATE = 'oidc.state';
@@ -83,6 +85,9 @@ class Id4meController extends Controller {
 	/** @var IL10N */
 	private $l10n;
 
+	/** @var LoggerInterface */
+	private $logger;
+
 
 	public function __construct(
 		IRequest $request,
@@ -96,7 +101,8 @@ class Id4meController extends Controller {
 		HttpClientHelper $clientHelper,
 		Id4MeMapper $id4MeMapper,
 		ID4MeService $id4MeService,
-		IL10N $l10n
+		IL10N $l10n,
+		LoggerInterface $logger
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -111,6 +117,7 @@ class Id4meController extends Controller {
 		$this->id4MeMapper = $id4MeMapper;
 		$this->id4MeService = $id4MeService;
 		$this->l10n = $l10n;
+		$this->logger = $logger;
 	}
 
 	private function build403TemplateResponse(): Http\TemplateResponse {
