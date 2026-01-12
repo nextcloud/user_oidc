@@ -148,7 +148,7 @@ class DiscoveryService {
 	 * @return array
 	 * @throws \Exception
 	 */
-	private function fixJwksAlg(array $jwks, string $jwt): array {
+	public function fixJwksAlg(array $jwks, string $jwt): array {
 		$jwtParts = explode('.', $jwt);
 		$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
 		if (!isset($jwtHeader['kid'])) {
