@@ -76,11 +76,11 @@ class ID4MeService {
 		$cacheKey = 'jwks-' . $jwkUri;
 		$cachedJwks = $this->cache->get($cacheKey);
 		if ($cachedJwks !== null && $useCache) {
-			$rawJwks = json_decode($cachedJwks, true, flags: JSON_THROW_ON_ERROR);
+			$rawJwks = json_decode($cachedJwks, true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[ID4ME-obtainJWK] jwks cache content', ['jwks_cache' => $rawJwks]);
 		} else {
 			$responseBody = (string)$this->client->get($jwkUri)->getBody();
-			$rawJwks = json_decode($responseBody, true, flags: JSON_THROW_ON_ERROR);
+			$rawJwks = json_decode($responseBody, true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[ID4ME-obtainJWK] getting fresh jwks', ['jwks' => $rawJwks]);
 			$this->cache->set($cacheKey, $responseBody, DiscoveryService::INVALIDATE_JWKS_CACHE_AFTER_SECONDS);
 		}
