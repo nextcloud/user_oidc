@@ -1,4 +1,5 @@
 <?php
+
 /*
  * @copyright Copyright (c) 2021 Julius Härtl <jus@bitgrid.net>
  *
@@ -30,11 +31,12 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\IConfig;
 use OCP\IUserManager;
+use Test\TestCase;
 
 /**
  * @group DB
  */
-class Test extends \Test\TestCase {
+class Test extends TestCase {
 	private $oidcIdp = 'http://127.0.0.1:8999';
 	private $baseUrl = 'http://localhost:8080';
 
@@ -130,7 +132,7 @@ class Test extends \Test\TestCase {
 		$form = $result->item(0);
 		$url = $form->getAttribute('action');
 		libxml_clear_errors();
-		return $this->client->post($url, ['form_params' => ['username' => $username, 'password' => $password, "credentialId" => '']]);
+		return $this->client->post($url, ['form_params' => ['username' => $username, 'password' => $password, 'credentialId' => '']]);
 	}
 
 	private function getUserHtmlData($response) {

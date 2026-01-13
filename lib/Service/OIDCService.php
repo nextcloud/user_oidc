@@ -1,4 +1,5 @@
 <?php
+
 /*
  * @copyright Copyright (c) 2021 Julius Härtl <jus@bitgrid.net>
  *
@@ -37,6 +38,9 @@ class OIDCService {
 
 	/** @var IClientService */
 	private $clientService;
+
+	/** @var DiscoveryService */
+	private $discoveryService;
 
 	public function __construct(DiscoveryService $discoveryService, LoggerInterface $logger, IClientService $clientService) {
 		$this->discoveryService = $discoveryService;

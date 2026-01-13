@@ -49,9 +49,9 @@ class AdminSettings implements ISettings {
 	private $initialStateService;
 
 	public function __construct(ProviderService $providerService,
-								ID4MeService $ID4MEService,
-								IURLGenerator $urlGenerator,
-								IInitialStateService $initialStateService) {
+		ID4MeService $ID4MEService,
+		IURLGenerator $urlGenerator,
+		IInitialStateService $initialStateService) {
 		$this->providerService = $providerService;
 		$this->Id4MeService = $ID4MEService;
 		$this->urlGenerator = $urlGenerator;

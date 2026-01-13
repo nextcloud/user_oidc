@@ -25,11 +25,14 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Db;
 
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\QBMapper;
+
 use OCP\IDBConnection;
 
-use OCP\AppFramework\Db\DoesNotExistException;
-
+/**
+ * @template-extends QBMapper<Provider>
+ */
 class ProviderMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
 		parent::__construct($db, 'user_oidc_providers', Provider::class);
@@ -96,9 +99,9 @@ class ProviderMapper extends QBMapper {
 	 * @throws \OCP\AppFramework\Db\DoesNotExistException
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
-	public function createOrUpdateProvider(string $identifier, string $clientid = null,
-									string $clientsecret = null, string $discoveryuri = null,
-									string $scope = 'openid email profile') {
+	public function createOrUpdateProvider(string $identifier, ?string $clientid = null,
+		?string $clientsecret = null, ?string $discoveryuri = null,
+		string $scope = 'openid email profile') {
 		try {
 			$provider = $this->findProviderByIdentifier($identifier);
 		} catch (DoesNotExistException $eNotExist) {
@@ -108,7 +111,7 @@ class ProviderMapper extends QBMapper {
 		if ($provider === null) {
 			$provider = new Provider();
 			if (($clientid === null) || ($clientsecret === null) || ($discoveryuri === null)) {
-				throw new DoesNotExistException("Provider must be created. All provider parameters required.");
+				throw new DoesNotExistException('Provider must be created. All provider parameters required.');
 			}
 			$provider->setIdentifier($identifier);
 			$provider->setClientId($clientid);

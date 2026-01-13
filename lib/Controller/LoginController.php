@@ -27,14 +27,14 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
+use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Event\AttributeMappedEvent;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
-use OCA\UserOIDC\AppInfo\Application;
-use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -49,7 +49,6 @@ use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
-use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 
 class LoginController extends Controller {
@@ -73,7 +72,7 @@ class LoginController extends Controller {
 	/** @var UserMapper */
 	private $userMapper;
 
-	/** @var IUserSession */
+	/** @var \OC\User\Session */
 	private $userSession;
 
 	/** @var IUserManager */
@@ -111,12 +110,12 @@ class LoginController extends Controller {
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
-		IUserSession $userSession,
+		\OC\User\Session $userSession,
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
 		IEventDispatcher $eventDispatcher,
 		IConfig $config,
-		ILogger $logger
+		ILogger $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -141,7 +140,7 @@ class LoginController extends Controller {
 	 * @NoCSRFRequired
 	 * @UseSession
 	 */
-	public function login(int $providerId, string $redirectUrl = null) {
+	public function login(int $providerId, ?string $redirectUrl = null) {
 		if ($this->userSession->isLoggedIn()) {
 			return new RedirectResponse($redirectUrl);
 		}
@@ -208,10 +207,10 @@ class LoginController extends Controller {
 		];
 		// pass discovery query parameters also on to the authentication
 		$discoveryUrl = parse_url($provider->getDiscoveryEndpoint());
-		if (isset($discoveryUrl["query"])) {
-			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl["query"]);
+		if (isset($discoveryUrl['query'])) {
+			$this->logger->debug('Add custom discovery query: ' . $discoveryUrl['query']);
 			$discoveryQuery = [];
-			parse_str($discoveryUrl["query"], $discoveryQuery);
+			parse_str($discoveryUrl['query'], $discoveryQuery);
 			$data += $discoveryQuery;
 		}
 
@@ -417,7 +416,6 @@ class LoginController extends Controller {
 	 * @UseSession
 	 *
 	 * @return Http\RedirectResponse
-	 * @throws Error
 	 */
 	public function singleLogoutService() {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);

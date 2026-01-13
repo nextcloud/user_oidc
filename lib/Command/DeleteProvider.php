@@ -24,11 +24,11 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Command;
 
 use Exception;
-use OCP\AppFramework\Db\DoesNotExistException;
-use \Symfony\Component\Console\Command\Command;
-
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
+
+use OCP\AppFramework\Db\DoesNotExistException;
+use Symfony\Component\Console\Command\Command;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

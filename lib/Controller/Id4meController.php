@@ -31,6 +31,7 @@ use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -42,8 +43,12 @@ use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
-use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
+use Psr\Log\LoggerInterface;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+use Id4me\RP\Model\OpenIdConfig;
+use Id4me\RP\Service;
 
 class Id4meController extends Controller {
 	private const STATE = 'oidc.state';
@@ -65,7 +70,7 @@ class Id4meController extends Controller {
 	/** @var UserMapper */
 	private $userMapper;
 
-	/** @var IUserSession */
+	/** @var \OC\User\Session */
 	private $userSession;
 
 	/** @var IUserManager */
@@ -83,6 +88,9 @@ class Id4meController extends Controller {
 	/** @var IL10N */
 	private $l10n;
 
+	/** @var LoggerInterface */
+	private $logger;
+
 
 	public function __construct(
 		IRequest $request,
@@ -91,12 +99,13 @@ class Id4meController extends Controller {
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
-		IUserSession $userSession,
+		\OC\User\Session $userSession,
 		IUserManager $userManager,
 		HttpClientHelper $clientHelper,
 		Id4MeMapper $id4MeMapper,
 		ID4MeService $id4MeService,
-		IL10N $l10n
+		IL10N $l10n,
+		LoggerInterface $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
@@ -111,6 +120,7 @@ class Id4meController extends Controller {
 		$this->id4MeMapper = $id4MeMapper;
 		$this->id4MeService = $id4MeService;
 		$this->l10n = $l10n;
+		$this->logger = $logger;
 	}
 
 	private function build403TemplateResponse(): Http\TemplateResponse {
@@ -241,7 +251,24 @@ class Id4meController extends Controller {
 		$plainHeaders = json_decode(base64_decode($header), true);
 		$plainPayload = json_decode(base64_decode($payload), true);
 
-		/** TODO: VALIATE SIGNATURE! */
+		// validate the JWT signature
+		$idTokenRaw = $data['id_token'];
+		$jwkUri = $openIdConfig->getJwksUri();
+		JWT::$leeway = 60;
+		try {
+			$jwks = $this->id4MeService->obtainJWK($jwkUri, $data['id_token'], true);
+			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+		} catch (\Exception|\Throwable $e) {
+			$this->logger->debug('Failed to decode the JWT token, retrying with fresh JWK');
+			try {
+				$jwks = $this->id4MeService->obtainJWK($jwkUri, $idTokenRaw, false);
+				$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+			} catch (\Exception|\Throwable $e) {
+				$this->logger->debug('Failed to decode the JWT token with fresh JWK');
+				$message = $this->l10n->t('Failed to authenticate');
+				return $this->build403TemplateResponse();
+			}
+		}
 
 		// TODO: validate expiration
 

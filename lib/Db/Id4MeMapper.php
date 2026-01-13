@@ -28,6 +28,9 @@ namespace OCA\UserOIDC\Db;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
+/**
+ * @template-extends QBMapper<Id4Me>
+ */
 class Id4MeMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
 		parent::__construct($db, 'user_oidc_id4me', Id4Me::class);

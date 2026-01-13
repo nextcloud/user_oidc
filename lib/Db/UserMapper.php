@@ -25,16 +25,19 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Db;
 
+use OC\Cache\CappedMemoryCache;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
-use OC\Cache\CappedMemoryCache;
 
+/**
+ * @template-extends QBMapper<User>
+ */
 class UserMapper extends QBMapper {
 	/** @var ProviderService */
 	private $providerService;
-	/** CappedMemoryCache */
+	/** @var CappedMemoryCache */
 	private $userCache;
 
 	public function __construct(IDBConnection $db, ProviderService $providerService) {
@@ -67,6 +70,7 @@ class UserMapper extends QBMapper {
 	public function find(string $search, $limit = null, $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
+		/** @psalm-suppress ImplicitToStringCast */
 		$qb->select('*')
 			->from($this->getTableName())
 			->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
@@ -81,6 +85,7 @@ class UserMapper extends QBMapper {
 	public function findDisplayNames(string $search, $limit = null, $offset = null): array {
 		$qb = $this->db->getQueryBuilder();
 
+		/** @psalm-suppress ImplicitToStringCast */
 		$qb->select('*')
 			->from($this->getTableName())
 			->where($qb->expr()->iLike('user_id', $qb->createPositionalParameter('%' . $this->db->escapeLikeParameter($search) . '%')))
