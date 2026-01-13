@@ -31,7 +31,7 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\IConfig;
 use OCP\IUserManager;
-use Test\TestCase;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group DB
