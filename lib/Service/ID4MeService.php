@@ -50,7 +50,7 @@ class ID4MeService {
 		IConfig $config,
 		IClientService $clientService,
 		ICacheFactory $cacheFactory,
-		LoggerInterface $logger
+		LoggerInterface $logger,
 	) {
 		$this->config = $config;
 		$this->cache = $cacheFactory->createDistributed('user_oidc');

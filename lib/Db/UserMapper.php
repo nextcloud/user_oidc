@@ -25,11 +25,11 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Db;
 
+use OC\Cache\CappedMemoryCache;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
-use OC\Cache\CappedMemoryCache;
 
 /**
  * @template-extends QBMapper<User>

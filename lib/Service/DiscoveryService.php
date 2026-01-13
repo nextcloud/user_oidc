@@ -1,4 +1,5 @@
 <?php
+
 /*
  * @copyright Copyright (c) 2021 Julius Härtl <jus@bitgrid.net>
  *
@@ -73,7 +74,7 @@ class DiscoveryService {
 
 	public function obtainJWK(Provider $provider): array {
 		$lastJwksRefresh = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
-		if ($lastJwksRefresh !== '' && (int) $lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
+		if ($lastJwksRefresh !== '' && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
 			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
 			$rawJwks = json_decode($rawJwks, true);
 			$jwks = JWK::parseKeySet($rawJwks);

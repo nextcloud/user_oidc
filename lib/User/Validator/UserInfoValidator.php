@@ -1,4 +1,5 @@
 <?php
+
 /*
  * @copyright Copyright (c) 2021 Julius Härtl <jus@bitgrid.net>
  *
@@ -27,8 +28,8 @@ namespace OCA\UserOIDC\User\Validator;
 
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Service\DiscoveryService;
-use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\OIDCService;
+use OCA\UserOIDC\Service\ProviderService;
 use Psr\Log\LoggerInterface;
 
 class UserInfoValidator implements IBearerTokenValidator {

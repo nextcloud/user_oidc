@@ -105,7 +105,7 @@ class Id4meController extends Controller {
 		Id4MeMapper $id4MeMapper,
 		ID4MeService $id4MeService,
 		IL10N $l10n,
-		LoggerInterface $logger
+		LoggerInterface $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 
