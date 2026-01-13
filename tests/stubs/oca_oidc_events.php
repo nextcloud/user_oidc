@@ -10,9 +10,7 @@ namespace OCA\OIDCIdentityProvider\Event {
 	use OCP\EventDispatcher\Event;
 
 	class TokenValidationRequestEvent extends Event {
-		public function __construct(
-			private string $accessToken,
-		) {
+		public function __construct(private string $accessToken) {
 		}
 
 		public function getUserId(): ?string {
