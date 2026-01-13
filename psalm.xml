@@ -75,7 +75,6 @@
 		<file name="tests/stubs/oc_app.php" />
 		<file name="tests/stubs/oc_user.php" />
 		<file name="tests/stubs/oca_files_events.php" />
-		<file name="tests/stubs/oca_oidc_events.php" />
 		<file name="tests/stubs/ocp_imapperexception.php" />
 		<file name="tests/stubs/ocp_token_invalidated_event.php" />
 	</stubs>

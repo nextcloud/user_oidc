@@ -30,11 +30,12 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\IConfig;
 use OCP\IUserManager;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group DB
  */
-class Test extends \Test\TestCase {
+class Test extends TestCase {
 	private $oidcIdp = 'http://127.0.0.1:8999';
 	private $baseUrl = 'http://localhost:8080';
 
