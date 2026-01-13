@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cac05b88ab1f0a0a0b90881e8d87e0e9",
+    "content-hash": "1889210c95f117da3f99c0e4656b6de5",
     "packages": [
         {
             "name": "bamarni/composer-bin-plugin",
@@ -954,6 +954,45 @@
             "time": "2021-11-10T08:44:10+00:00"
         },
         {
+            "name": "nextcloud/ocp",
+            "version": "dev-stable20",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nextcloud-deps/ocp.git",
+                "reference": "ee973539f8ee3dfa83dc9126390b7155fd5ffe55"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/ee973539f8ee3dfa83dc9126390b7155fd5ffe55",
+                "reference": "ee973539f8ee3dfa83dc9126390b7155fd5ffe55",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "20.0.0-dev"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "AGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Christoph Wurst",
+                    "email": "christoph@winzerhof-wurst.at"
+                }
+            ],
+            "description": "Composer package containing Nextcloud's public API (classes, interfaces)",
+            "support": {
+                "source": "https://github.com/nextcloud-deps/ocp/tree/stable20"
+            },
+            "time": "2021-11-11T14:03:28+00:00"
+        },
+        {
             "name": "nikic/php-parser",
             "version": "v4.19.4",
             "source": {
@@ -1601,6 +1640,41 @@
                 }
             ],
             "time": "2024-12-05T13:48:26+00:00"
+        },
+        {
+            "name": "psalm/phar",
+            "version": "6.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psalm/phar.git",
+                "reference": "859187f245d76b38d1b320bb9f976fb48bfe5213"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psalm/phar/zipball/859187f245d76b38d1b320bb9f976fb48bfe5213",
+                "reference": "859187f245d76b38d1b320bb9f976fb48bfe5213",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1 || ^8.0"
+            },
+            "conflict": {
+                "vimeo/psalm": "*"
+            },
+            "bin": [
+                "psalm.phar"
+            ],
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Composer-based Psalm Phar",
+            "support": {
+                "issues": "https://github.com/psalm/phar/issues",
+                "source": "https://github.com/psalm/phar/tree/6.0.0"
+            },
+            "time": "2025-01-26T12:07:59+00:00"
         },
         {
             "name": "psr/cache",
@@ -4136,11 +4210,13 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "nextcloud/ocp": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
-    "platform-dev": [],
+    "platform": {},
+    "platform-dev": {},
     "platform-overrides": {
         "php": "7.3"
     },

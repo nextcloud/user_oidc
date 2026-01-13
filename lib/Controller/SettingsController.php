@@ -120,7 +120,7 @@ class SettingsController extends Controller {
 	}
 
 	public function getID4ME(): JSONResponse {
-		return new JSONResponse($this->id4meService->getID4ME());
+		return new JSONResponse(['value' => $this->id4meService->getID4ME()]);
 	}
 
 	public function setID4ME(bool $enabled): JSONResponse {

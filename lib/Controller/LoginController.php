@@ -49,7 +49,6 @@ use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
-use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 
 class LoginController extends Controller {
@@ -73,7 +72,7 @@ class LoginController extends Controller {
 	/** @var UserMapper */
 	private $userMapper;
 
-	/** @var IUserSession */
+	/** @var \OC\User\Session */
 	private $userSession;
 
 	/** @var IUserManager */
@@ -111,7 +110,7 @@ class LoginController extends Controller {
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
-		IUserSession $userSession,
+		\OC\User\Session $userSession,
 		IUserManager $userManager,
 		ITimeFactory $timeFactory,
 		IEventDispatcher $eventDispatcher,
@@ -417,7 +416,6 @@ class LoginController extends Controller {
 	 * @UseSession
 	 *
 	 * @return Http\RedirectResponse
-	 * @throws Error
 	 */
 	public function singleLogoutService() {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);

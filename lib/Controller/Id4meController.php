@@ -43,9 +43,12 @@ use OCP\IRequest;
 use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
-use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+use Id4me\RP\Model\OpenIdConfig;
+use Id4me\RP\Service;
 
 class Id4meController extends Controller {
 	private const STATE = 'oidc.state';
@@ -67,7 +70,7 @@ class Id4meController extends Controller {
 	/** @var UserMapper */
 	private $userMapper;
 
-	/** @var IUserSession */
+	/** @var \OC\User\Session */
 	private $userSession;
 
 	/** @var IUserManager */
@@ -96,7 +99,7 @@ class Id4meController extends Controller {
 		IClientService $clientService,
 		IURLGenerator $urlGenerator,
 		UserMapper $userMapper,
-		IUserSession $userSession,
+		\OC\User\Session $userSession,
 		IUserManager $userManager,
 		HttpClientHelper $clientHelper,
 		Id4MeMapper $id4MeMapper,
@@ -263,7 +266,7 @@ class Id4meController extends Controller {
 			} catch (\Exception|\Throwable $e) {
 				$this->logger->debug('Failed to decode the JWT token with fresh JWK');
 				$message = $this->l10n->t('Failed to authenticate');
-				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'token signature check failed']);
+				return $this->build403TemplateResponse();
 			}
 		}
 

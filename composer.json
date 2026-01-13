@@ -16,6 +16,9 @@
     "cs:fix": "php-cs-fixer fix",
     "cs:check": "php-cs-fixer fix --dry-run --diff",
     "lint": "find . -name \\*.php -not -path './vendor/*' -exec php -l \"{}\" \\;",
+    "psalm": "psalm.phar --no-cache",
+    "psalm:update-baseline": "psalm.phar --threads=1 --update-baseline",
+    "psalm:update-baseline:force": "psalm.phar --threads=1 --update-baseline --set-baseline=tests/psalm-baseline.xml",
     "test:unit": "phpunit -c tests/phpunit.xml",
     "post-install-cmd": [
       "@composer bin all install --ansi",
@@ -36,7 +39,9 @@
   "require-dev": {
     "nextcloud/coding-standard": "^1.0.0",
     "symfony/event-dispatcher": "^4",
-    "phpunit/phpunit": "^9.6"
+    "phpunit/phpunit": "^9.6",
+    "psalm/phar": "6.0",
+    "nextcloud/ocp": "dev-stable20"
   },
   "extra": {
     "mozart": {

@@ -58,7 +58,7 @@ class AttributeMappedEvent extends Event {
 	}
 
 	/**
-	 * @return array the array of claim values associated with the event
+	 * @return object the array of claim values associated with the event
 	 */
 	public function getClaims(): object {
 		return $this->claims;
@@ -69,7 +69,7 @@ class AttributeMappedEvent extends Event {
 	}
 
 	/**
-	 * @return value for the logged in user attribute
+	 * @return ?string for the logged in user attribute
 	 */
 	public function getValue(): ?string {
 		return $this->value;

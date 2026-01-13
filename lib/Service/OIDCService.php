@@ -38,6 +38,9 @@ class OIDCService {
 	/** @var IClientService */
 	private $clientService;
 
+	/** @var DiscoveryService */
+	private $discoveryService;
+
 	public function __construct(DiscoveryService $discoveryService, LoggerInterface $logger, IClientService $clientService) {
 		$this->discoveryService = $discoveryService;
 		$this->logger = $logger;

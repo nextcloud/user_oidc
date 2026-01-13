@@ -30,6 +30,9 @@ use OCP\IDBConnection;
 
 use OCP\AppFramework\Db\DoesNotExistException;
 
+/**
+ * @template-extends QBMapper<Provider>
+ */
 class ProviderMapper extends QBMapper {
 	public function __construct(IDBConnection $db) {
 		parent::__construct($db, 'user_oidc_providers', Provider::class);

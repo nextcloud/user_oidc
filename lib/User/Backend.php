@@ -36,7 +36,6 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Authentication\IApacheBackend;
-use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -125,7 +124,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			$user = $this->userMapper->getUser($uid);
 			$this->userMapper->delete($user);
 			return true;
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			$this->logger->error('Failed to delete user', [ 'exception' => $e ]);
 			return false;
 		}

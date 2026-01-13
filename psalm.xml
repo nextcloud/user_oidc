@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<psalm
+	errorBaseline="tests/psalm-baseline.xml"
+	errorLevel="4"
+	findUnusedBaselineEntry="true"
+	findUnusedCode="false"
+	resolveFromConfigFile="true"
+	ensureOverrideAttribute="false"
+	phpVersion="7.4"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="https://getpsalm.org/schema/config"
+	xsi:schemaLocation="https://getpsalm.org/schema/config vendor-bin/psalm/vendor/vimeo/psalm/config.xsd"
+>
+	<projectFiles>
+		<directory name="lib" />
+		<ignoreFiles>
+			<directory name="vendor" />
+			<directory name="lib/Vendor" />
+		</ignoreFiles>
+	</projectFiles>
+	<extraFiles>
+		<directory name="vendor" />
+		<directory name="lib/Vendor" />
+	</extraFiles>
+	<issueHandlers>
+		<LessSpecificReturnStatement errorLevel="error"/>
+		<LessSpecificReturnType errorLevel="error"/>
+		<LessSpecificImplementedReturnType errorLevel="error"/>
+		<MoreSpecificReturnType errorLevel="error"/>
+		<UndefinedClass>
+			<errorLevel type="suppress">
+				<referencedClass name="OC" />
+				<referencedClass name="Symfony\Component\Console\Input\InputOption" />
+				<referencedClass name="Symfony\Component\Console\Input\InputArgument" />
+				<referencedClass name="Symfony\Component\Console\Input\InputInterface" />
+				<referencedClass name="Symfony\Component\Console\Output\OutputInterface" />
+				<referencedClass name="Doctrine\DBAL\Types\Type" />
+				<referencedClass name="OCA\Files\Event\LoadAdditionalScriptsEvent" />
+				<referencedClass name="GuzzleHttp\Exception\ClientException" />
+				<referencedClass name="GuzzleHttp\Exception\ServerException" />
+				<referencedClass name="Symfony\Component\Console\Helper\Table" />
+				<referencedClass name="Symfony\Component\Console\Question\ConfirmationQuestion" />
+				<referencedClass name="OC\Accounts\AccountManager" />
+				<referencedClass name="OCA\OIDCIdentityProvider\AppInfo\Application" />
+				<referencedClass name="OC\Cache\CappedMemoryCache" />
+			</errorLevel>
+		</UndefinedClass>
+		<UndefinedDocblockClass>
+			<errorLevel type="suppress">
+				<referencedClass name="Doctrine\DBAL\Schema\Table" />
+				<referencedClass name="OC\User\NoUserException" />
+				<referencedClass name="OC\Cache\CappedMemoryCache" />
+				<referencedClass name="OCA\Circles\Exceptions\RequestBuilderException" />
+				<referencedClass name="OCA\Circles\Exceptions\InitiatorNotFoundException" />
+				<referencedClass name="Doctrine\DBAL\Schema\Schema" />
+				<referencedClass name="Doctrine\DBAL\Types\Type" />
+				<referencedClass name="Doctrine\DBAL\Driver\Statement" />
+				<referencedClass name="OCA\User_LDAP\User_Proxy" />
+				<referencedClass name="OCA\User_LDAP\User\DeletedUsersIndex" />
+				<referencedClass name="Doctrine\DBAL\Schema\SchemaException" />
+			</errorLevel>
+		</UndefinedDocblockClass>
+	</issueHandlers>
+	<stubs>
+		<file name="tests/stubs/oc_util.php" />
+		<file name="tests/stubs/oc_core_command_base.php" />
+		<file name="tests/stubs/oc_hooks_emitter.php" />
+		<file name="tests/stubs/oc_core_command_base.php" />
+		<file name="tests/stubs/oc_authentication_token_provider.php" />
+		<file name="tests/stubs/oc_user_session.php" />
+		<file name="tests/stubs/oc_app.php" />
+		<file name="tests/stubs/oc_user.php" />
+		<file name="tests/stubs/oca_files_events.php" />
+		<file name="tests/stubs/oca_oidc_events.php" />
+		<file name="tests/stubs/ocp_imapperexception.php" />
+		<file name="tests/stubs/ocp_token_invalidated_event.php" />
+	</stubs>
+</psalm>
