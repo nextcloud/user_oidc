@@ -1,9 +1,12 @@
+# SPDX-FileCopyrightText: 2021-2024 Nextcloud GmbH and Nextcloud contributors
+# SPDX-License-Identifier: MIT
 name: Integration tests
 
 on:
   pull_request:
   push:
     branches:
+      - main
       - master
       - stable*
 
@@ -25,7 +28,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:14
         ports:
           - 4445:5432/tcp
         env:
@@ -34,7 +37,7 @@ jobs:
           POSTGRES_DB: nextcloud
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 2s --health-retries 5
       mysql:
-        image: mariadb:10.5
+        image: mariadb:10.6
         ports:
           - 4444:3306/tcp
         env:
@@ -43,20 +46,14 @@ jobs:
 
     steps:
       - name: Checkout server
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: nextcloud/server
           ref: ${{ matrix.server-versions }}
-
-      - name: Checkout submodules
-        shell: bash
-        run: |
-          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
-          git submodule sync --recursive
-          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+          submodules: recursive
 
       - name: Checkout app
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           path: apps/${{ env.APP_NAME }}
 
@@ -67,11 +64,11 @@ jobs:
         working-directory: apps/${{ env.APP_NAME }}/tests/
 
       - name: Set up php ${{ matrix.php-versions }}
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2.36.0
         with:
           php-version: ${{ matrix.php-versions }}
           tools: phpunit
-          extensions: zip, gd, mbstring, iconv, fileinfo, intl, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql,
+          extensions: zip, gd, mbstring, iconv, fileinfo, intl, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql
           coverage: none
 
       - name: Set up PHPUnit
@@ -87,11 +84,12 @@ jobs:
           fi
           mkdir data
           ./occ maintenance:install --verbose --database=${{ matrix.databases }} --database-name=nextcloud --database-host=127.0.0.1 --database-port=$DB_PORT --database-user=root --database-pass=rootpassword --admin-user admin --admin-pass admin
-          cat config/config.php
           ./occ user:list
           ./occ app:enable --force ${{ env.APP_NAME }}
           ./occ config:system:set allow_local_remote_servers --value true --type bool
-          ./occ user_oidc:provider nextcloudci -c nextcloud -s ff75b7c7-20f9-460b-b27c-16bd5d9b4cd0 -d http:/127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
+          ./occ config:system:set debug --value true --type bool
+          cat config/config.php
+          ./occ user_oidc:provider nextcloudci -c nextcloud -s ff75b7c7-20f9-460b-b27c-16bd5d9b4cd0 -d http://127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
           php -S localhost:8080 &
           curl -v http://127.0.0.1:8999/auth/realms/nextcloudci/.well-known/openid-configuration
 
