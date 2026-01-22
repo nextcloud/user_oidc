@@ -447,7 +447,16 @@ class ProvisioningService {
 			$client = $this->clientService->newClient();
 			try {
 				$response = $client->get($avatarAttribute);
-				$contentType = $response->getHeader('Content-Type')[0] ?? '';
+				$ct = $response->getHeader('Content-Type') ?? '';
+	
+				if (is_array($ct)) {
+					$contentType = $ct[0] ?? '';
+				} else {
+					$contentType = (string)$ct;
+				}
+	
+				$contentType = strtolower(trim(explode(';', $contentType)[0]));
+
 				if (!in_array($contentType, ['image/jpeg', 'image/png', 'image/gif'], true)) {
 					$this->logger->warning('Avatar response is not an image', ['content_type' => $contentType]);
 					return;
