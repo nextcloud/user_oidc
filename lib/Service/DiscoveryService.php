@@ -50,7 +50,7 @@ class DiscoveryService {
 	}
 
 	public function obtainDiscovery(Provider $provider): array {
-		$cacheKey = 'discovery-' . $provider->getDiscoveryEndpoint();
+		$cacheKey = 'discovery-2-' . $provider->getDiscoveryEndpoint();
 		$cachedDiscovery = $this->cache->get($cacheKey);
 		if ($cachedDiscovery === null) {
 			$url = $provider->getDiscoveryEndpoint();
