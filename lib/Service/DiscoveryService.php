@@ -56,12 +56,14 @@ class DiscoveryService {
 			$url = $provider->getDiscoveryEndpoint();
 			$this->logger->debug('Obtaining discovery endpoint: ' . $url);
 
-			$cachedDiscovery = $this->clientService->get($url);
-
-			$this->cache->set($cacheKey, $cachedDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
+			$freshDiscovery = $this->clientService->get($url);
+			$parsedDiscovery = json_decode($freshDiscovery, true, 512, JSON_THROW_ON_ERROR);
+			$this->cache->set($cacheKey, $freshDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
+		} else {
+			$parsedDiscovery = json_decode($cachedDiscovery, true, 512, JSON_THROW_ON_ERROR);
 		}
 
-		return json_decode($cachedDiscovery, true, 512, JSON_THROW_ON_ERROR);
+		return $parsedDiscovery;
 	}
 
 	/**
