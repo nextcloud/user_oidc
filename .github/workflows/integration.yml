@@ -32,7 +32,7 @@ jobs:
               server-versions: stable32
             - php-versions: 8.3
               databases: mysql
-              server-versions: master
+              server-versions: stable33
             - php-versions: 8.4
               databases: mysql
               server-versions: master
