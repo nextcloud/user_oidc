@@ -447,14 +447,16 @@ class ProvisioningService {
 			$client = $this->clientService->newClient();
 			try {
 				$response = $client->get($avatarAttribute);
-				$ct = $response->getHeader('Content-Type') ?? '';
-	
+				$ct = $response->getHeader('Content-Type');
+
+				/** @psalm-suppress TypeDoesNotContainType */
 				if (is_array($ct)) {
 					$contentType = $ct[0] ?? '';
 				} else {
+					/** @psalm-suppress RedundantCast */
 					$contentType = (string)$ct;
 				}
-	
+
 				$contentType = strtolower(trim(explode(';', $contentType)[0]));
 
 				if (!in_array($contentType, ['image/jpeg', 'image/png', 'image/gif'], true)) {
