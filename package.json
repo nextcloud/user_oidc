@@ -1,7 +1,7 @@
 {
 	"name": "user_oidc",
 	"description": "OIDC connect user backend for Nextcloud",
-	"version": "7.6.0-dev.0",
+	"version": "8.4.0-dev.0",
 	"author": "Roeland Jago Douma <roeland@famdouma.nl>",
 	"repository": {
 		"url": "https://github.com/nextcloud/user_oidc",
