@@ -62,7 +62,7 @@
     "Client secret" : "客戶端密碼",
     "Leave empty to keep existing" : "留空以保留現有值",
     "Warning, if the protocol of the URLs in the discovery content is HTTP, the ID token will be delivered through an insecure connection." : "警告：如果發現內容中的 URL 使用 HTTP，ID 權杖將通過不安全的連接傳送。",
-    "Custom end session endpoint" : "自定義結束會話端點",
+    "Custom end session endpoint" : "自訂結束會話端點",
     "Post logout URI" : "登出後的 URI",
     "Scope" : "範圍",
     "Extra claims" : "額外聲明",
