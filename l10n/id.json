@@ -10,6 +10,7 @@
     "Submit" : "Kirim",
     "Client secret" : "Rahasia klien",
     "Scope" : "Skop",
+    "Attribute mapping" : "Pemetaan atribut",
     "Back to %s" : "Kembali ke %s",
     "Domain" : "Domain"
 },"pluralForm" :"nplurals=1; plural=0;"

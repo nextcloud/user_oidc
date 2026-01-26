@@ -12,6 +12,7 @@ OC.L10N.register(
     "Submit" : "Kirim",
     "Client secret" : "Rahasia klien",
     "Scope" : "Skop",
+    "Attribute mapping" : "Pemetaan atribut",
     "Back to %s" : "Kembali ke %s",
     "Domain" : "Domain"
 },
