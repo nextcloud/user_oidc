@@ -50,18 +50,20 @@ class DiscoveryService {
 	}
 
 	public function obtainDiscovery(Provider $provider): array {
-		$cacheKey = 'discovery-' . $provider->getDiscoveryEndpoint();
+		$cacheKey = 'discovery-2-' . $provider->getDiscoveryEndpoint();
 		$cachedDiscovery = $this->cache->get($cacheKey);
 		if ($cachedDiscovery === null) {
 			$url = $provider->getDiscoveryEndpoint();
 			$this->logger->debug('Obtaining discovery endpoint: ' . $url);
 
-			$cachedDiscovery = $this->clientService->get($url);
-
-			$this->cache->set($cacheKey, $cachedDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
+			$freshDiscovery = $this->clientService->get($url);
+			$parsedDiscovery = json_decode($freshDiscovery, true, 512, JSON_THROW_ON_ERROR);
+			$this->cache->set($cacheKey, $freshDiscovery, self::INVALIDATE_DISCOVERY_CACHE_AFTER_SECONDS);
+		} else {
+			$parsedDiscovery = json_decode($cachedDiscovery, true, 512, JSON_THROW_ON_ERROR);
 		}
 
-		return json_decode($cachedDiscovery, true, 512, JSON_THROW_ON_ERROR);
+		return $parsedDiscovery;
 	}
 
 	/**
@@ -178,7 +180,7 @@ class DiscoveryService {
 	 * @return array The modified JWKS
 	 * @throws \RuntimeException if no matching key is found or algorithm is unsupported
 	 */
-	private function fixJwksAlg(array $jwks, string $jwt): array {
+	public function fixJwksAlg(array $jwks, string $jwt): array {
 		$jwtParts = explode('.', $jwt, 3);
 		$header = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
 		$kid = $header['kid'] ?? null;

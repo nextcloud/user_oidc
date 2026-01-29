@@ -6,10 +6,13 @@ OC.L10N.register(
     "Client ID" : "ID Klien",
     "Update" : "Perbarui",
     "Remove" : "Hapus",
+    "Confirm deletion" : "Konfirmasi penghapusan",
     "Cancel" : "Batal",
     "Delete" : "Hapus",
+    "Submit" : "Kirim",
     "Client secret" : "Rahasia klien",
     "Scope" : "Skop",
+    "Attribute mapping" : "Pemetaan atribut",
     "Back to %s" : "Kembali ke %s",
     "Domain" : "Domain"
 },
