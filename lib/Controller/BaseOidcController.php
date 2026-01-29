@@ -20,15 +20,12 @@ class BaseOidcController extends Controller {
 
 	public function __construct(
 		IRequest $request,
-		private readonly IConfig $config,
-		private readonly IL10N $l,
+		private IConfig $config,
+		private IL10N $l,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
 
-	/**
-	 * @return bool
-	 */
 	protected function isDebugModeEnabled(): bool {
 		return $this->config->getSystemValueBool('debug', false);
 	}

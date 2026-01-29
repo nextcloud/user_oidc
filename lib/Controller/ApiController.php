@@ -23,9 +23,9 @@ class ApiController extends Controller {
 
 	public function __construct(
 		IRequest $request,
-		private readonly IRootFolder $root,
-		private readonly UserMapper $userMapper,
-		private readonly IUserManager $userManager,
+		private IRootFolder $root,
+		private UserMapper $userMapper,
+		private IUserManager $userManager,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -66,7 +66,7 @@ class ApiController extends Controller {
 	#[NoCSRFRequired]
 	public function deleteUser(string $userId): DataResponse {
 		$user = $this->userManager->get($userId);
-		if (is_null($user) || $user->getBackendClassName() !== Application::APP_ID) {
+		if ($user === null || $user->getBackendClassName() !== Application::APP_ID) {
 			return new DataResponse(['message' => 'User not found'], Http::STATUS_NOT_FOUND);
 		}
 
