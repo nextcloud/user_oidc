@@ -15,16 +15,7 @@ use OCP\DB\Types;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
-/**
- * Auto-generated migration step: Please modify to your needs!
- */
 class Version070500Date20250515141105 extends SimpleMigrationStep {
-	/**
-	 * @param IOutput $output
-	 * @param Closure $schemaClosure
-	 * @param array $options
-	 * @return null|ISchemaWrapper
-	 */
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();

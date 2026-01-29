@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -26,7 +27,7 @@ class ListProviders extends Base {
 		parent::__construct();
 	}
 
-	protected function configure() {
+	protected function configure(): void {
 		$this
 			->setName('user_oidc:providers')
 			->setDescription('List all providers and print their configuration')
@@ -35,7 +36,7 @@ class ListProviders extends Base {
 		parent::configure();
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$outputFormat = $input->getOption('output') ?? 'json_pretty';
 		$sensitive = $input->getOption('sensitive');
 
@@ -44,6 +45,7 @@ class ListProviders extends Base {
 		$providersWithSettings = array_map(function ($provider) use ($sensitive) {
 			$providerSettings = $this->providerService->getSettings($provider->getId());
 			$serializedProvider = $provider->jsonSerialize();
+
 			if ($sensitive) {
 				$serializedProvider['clientId'] = '********';
 				$serializedProvider['clientSecret'] = '********';
@@ -51,35 +53,31 @@ class ListProviders extends Base {
 					$discoveryDomainName = parse_url($serializedProvider['discoveryEndpoint'], PHP_URL_HOST);
 					$serializedProvider['discoveryEndpoint'] = str_replace($discoveryDomainName, '********', $serializedProvider['discoveryEndpoint']);
 				} catch (\Exception|\Throwable) {
+					// Failed to parse URL, keep original endpoint
 				}
 			} else {
 				$serializedProvider['clientSecret'] = $this->crypto->decrypt($provider->getClientSecret());
 			}
+
 			return array_merge($serializedProvider, ['settings' => $providerSettings]);
 		}, $providers);
 
-		if ($outputFormat === 'json') {
+		$jsonFlags = match ($outputFormat) {
+			'json' => JSON_THROW_ON_ERROR,
+			'json_pretty' => JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT,
+			default => null,
+		};
+
+		if ($jsonFlags !== null) {
 			foreach ($providersWithSettings as $provider) {
-				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
+				$output->writeln(json_encode($provider, $jsonFlags));
 			}
 			return 0;
 		}
 
-		if ($outputFormat === 'json_pretty') {
-			foreach ($providersWithSettings as $provider) {
-				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
-			}
-			return 0;
-		}
+		$output->writeln('<comment>Only "' . self::OUTPUT_FORMAT_JSON . '" and "' . self::OUTPUT_FORMAT_JSON_PRETTY . '" output formats are supported.</comment>');
+		$output->writeln('<comment>Use "--output=' . self::OUTPUT_FORMAT_JSON . '" or "--output=' . self::OUTPUT_FORMAT_JSON_PRETTY . '" (default format is "' . self::OUTPUT_FORMAT_JSON_PRETTY . '")</comment>');
 
-		$output->writeln(
-			'<comment>Only "' . self::OUTPUT_FORMAT_JSON . '" and "' . self::OUTPUT_FORMAT_JSON_PRETTY . '" output formats are supported.</comment>',
-		);
-
-		$output->writeln(
-			'<comment>Use "--output=' . self::OUTPUT_FORMAT_JSON . '" or "--output=' . self::OUTPUT_FORMAT_JSON_PRETTY . '" '
-				. '(default format is "' . self::OUTPUT_FORMAT_JSON_PRETTY . '")</comment>',
-		);
 		return 0;
 	}
 }

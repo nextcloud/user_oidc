@@ -30,18 +30,20 @@ class Version00001Date20200322114947 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->createTable('user_oidc');
-		$table->addColumn('id', 'integer', [
-			'autoincrement' => true,
-			'notnull' => true,
-			'length' => 4,
-		]);
-		$table->addColumn('user_id', 'string', [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$table->setPrimaryKey(['id']);
-		$table->addUniqueIndex(['user_id'], 'user_oidc_uid');
+		if (!$schema->hasTable('user_oidc')) {
+			$table = $schema->createTable('user_oidc');
+			$table->addColumn('id', 'integer', [
+				'autoincrement' => true,
+				'notnull' => true,
+				'length' => 4,
+			]);
+			$table->addColumn('user_id', 'string', [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$table->setPrimaryKey(['id']);
+			$table->addUniqueIndex(['user_id'], 'user_oidc_uid');
+		}
 
 		return $schema;
 	}

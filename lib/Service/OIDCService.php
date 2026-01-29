@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
@@ -38,7 +38,7 @@ class OIDCService {
 			],
 		];
 		try {
-			return json_decode($this->clientService->get($url, [], $options), true);
+			return json_decode($this->clientService->get($url, [], $options), true, JSON_THROW_ON_ERROR);
 		} catch (Throwable $e) {
 			return [];
 		}
@@ -51,6 +51,7 @@ class OIDCService {
 			$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
 			return [];
 		}
+
 		$url = $this->discoveryService->obtainDiscovery($provider)['introspection_endpoint'] ?? null;
 		if ($url === null) {
 			return [];
@@ -66,8 +67,7 @@ class OIDCService {
 					'Authorization' => base64_encode($provider->getClientId() . ':' . $providerClientSecret),
 				]
 			);
-
-			return json_decode($body, true);
+			return json_decode($body, true, JSON_THROW_ON_ERROR);
 		} catch (Throwable $e) {
 			return [];
 		}

@@ -29,12 +29,14 @@ class Version00005Date20200428123958 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->getTable('user_oidc');
-		$table->addColumn('display_name', 'string', [
-			'length' => 255,
-			'default' => '',
-			'notnull' => false,
-		]);
+		if ($schema->hasTable('user_oidc')) {
+			$table = $schema->getTable('user_oidc');
+			$table->addColumn('display_name', 'string', [
+				'length' => 255,
+				'default' => '',
+				'notnull' => false,
+			]);
+		}
 
 		return $schema;
 	}

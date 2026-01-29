@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -14,7 +15,6 @@ use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\Exception;
 use OCP\DB\QueryBuilder\IQueryBuilder;
-
 use OCP\IDBConnection;
 use OCP\Security\ICrypto;
 
@@ -30,8 +30,6 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
-	 * @param int $id
-	 * @return Session
 	 * @throws DoesNotExistException
 	 * @throws Exception
 	 * @throws MultipleObjectsReturnedException
@@ -51,8 +49,6 @@ class SessionMapper extends QBMapper {
 	/**
 	 * Find sessions by sub and iss
 	 *
-	 * @param string $sub
-	 * @param string $iss
 	 * @return Session[]
 	 * @throws Exception
 	 */
@@ -74,10 +70,6 @@ class SessionMapper extends QBMapper {
 	/**
 	 * Find session by sid and optionally sub and iss
 	 *
-	 * @param string $sid
-	 * @param string|null $sub
-	 * @param string|null $iss
-	 * @return Session
 	 * @throws DoesNotExistException
 	 * @throws Exception
 	 * @throws MultipleObjectsReturnedException
@@ -105,9 +97,6 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
-	 * @param int $authTokenId
-	 * @param string $userId
-	 * @return Session
 	 * @throws DoesNotExistException
 	 * @throws Exception
 	 * @throws MultipleObjectsReturnedException
@@ -128,8 +117,6 @@ class SessionMapper extends QBMapper {
 	}
 
 	/**
-	 * @param string $ncSessionId
-	 * @return int
 	 * @throws Exception
 	 */
 	public function deleteFromNcSessionId(string $ncSessionId): int {
@@ -139,11 +126,11 @@ class SessionMapper extends QBMapper {
 			->where(
 				$qb->expr()->eq('nc_session_id', $qb->createNamedParameter($ncSessionId, IQueryBuilder::PARAM_STR))
 			);
+
 		return $qb->executeStatement();
 	}
 
 	/**
-	 * @param int $minCreationTimestamp
 	 * @throws Exception
 	 */
 	public function cleanupSessions(int $minCreationTimestamp): void {
@@ -153,6 +140,7 @@ class SessionMapper extends QBMapper {
 			->where(
 				$qb->expr()->lt('created_at', $qb->createNamedParameter($minCreationTimestamp, IQueryBuilder::PARAM_INT))
 			);
+
 		$qb->executeStatement();
 	}
 
@@ -165,21 +153,18 @@ class SessionMapper extends QBMapper {
 	 *
 	 * In short: If there are multiple Nextcloud logins using the same IdP session, we only store the last one
 	 *
-	 * @param string $sid
-	 * @param string $sub
-	 * @param string $iss
-	 * @param int $authtokenId
-	 * @param string $ncSessionId
-	 * @param string $idToken
-	 * @param string $userId
-	 * @param int $providerId
-	 * @param bool $idpSessionClosed
-	 * @return Session|null
 	 * @throws Exception
 	 */
 	public function createOrUpdateSession(
-		string $sid, string $sub, string $iss, int $authtokenId, string $ncSessionId,
-		string $idToken, string $userId, int $providerId, bool $idpSessionClosed = false,
+		string $sid,
+		string $sub,
+		string $iss,
+		int $authtokenId,
+		string $ncSessionId,
+		string $idToken,
+		string $userId,
+		int $providerId,
+		bool $idpSessionClosed = false,
 	): ?Session {
 		$createdAt = (new DateTime())->getTimestamp();
 
@@ -195,6 +180,7 @@ class SessionMapper extends QBMapper {
 			$existingSession->setUserId($userId);
 			$existingSession->setProviderId($providerId);
 			$existingSession->setIdpSessionClosed($idpSessionClosed ? 1 : 0);
+
 			return $this->update($existingSession);
 		} catch (MultipleObjectsReturnedException $e) {
 			// this can't happen
@@ -213,6 +199,7 @@ class SessionMapper extends QBMapper {
 		$session->setUserId($userId);
 		$session->setProviderId($providerId);
 		$session->setIdpSessionClosed($idpSessionClosed ? 1 : 0);
+
 		return $this->insert($session);
 	}
 }

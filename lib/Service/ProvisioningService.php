@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -57,6 +59,7 @@ class ProvisioningService {
 			return true;
 		} catch (DoesNotExistException|MultipleObjectsReturnedException) {
 		}
+
 		return false;
 	}
 
@@ -115,10 +118,6 @@ class ProvisioningService {
 	}
 
 	/**
-	 * @param string $tokenUserId
-	 * @param int $providerId
-	 * @param object $idTokenPayload
-	 * @param IUser|null $existingLocalUser
 	 * @return array{user: ?IUser, userData: array}
 	 * @throws Exception
 	 * @throws PropertyDoesNotExistException
@@ -244,6 +243,7 @@ class ProvisioningService {
 		} else {
 			$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_DISPLAYNAME, $idTokenPayload);
 		}
+
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug('Displayname mapping event dispatched');
 		if ($event->hasValue() && $event->getValue() !== null && $event->getValue() !== '') {
@@ -436,11 +436,6 @@ class ProvisioningService {
 		];
 	}
 
-	/**
-	 * @param string $userId
-	 * @param string $avatarAttribute
-	 * @return void
-	 */
 	private function setUserAvatar(string $userId, string $avatarAttribute): void {
 		$avatarContent = null;
 		if (filter_var($avatarAttribute, FILTER_VALIDATE_URL)) {
@@ -456,13 +451,13 @@ class ProvisioningService {
 					/** @psalm-suppress RedundantCast */
 					$contentType = (string)$ct;
 				}
-
 				$contentType = strtolower(trim(explode(';', $contentType)[0]));
 
 				if (!in_array($contentType, ['image/jpeg', 'image/png', 'image/gif'], true)) {
 					$this->logger->warning('Avatar response is not an image', ['content_type' => $contentType]);
 					return;
 				}
+
 				$avatarContent = $response->getBody();
 				if (is_resource($avatarContent)) {
 					$avatarContent = stream_get_contents($avatarContent);
@@ -527,7 +522,10 @@ class ProvisioningService {
 		}
 	}
 
-	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload) {
+	/**
+	 * @return object[]|null
+	 */
+	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload): ?array {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $this->getClaimValues($idTokenPayload, $groupsAttribute, $providerId);
 
@@ -577,7 +575,6 @@ class ProvisioningService {
 				}
 
 				$group->gid = $this->idService->getId($providerId, $group->gid);
-
 				$syncGroups[] = $group;
 			}
 
@@ -591,7 +588,6 @@ class ProvisioningService {
 		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
 		$syncGroups = $this->getSyncGroupsOfToken($providerId, $idTokenPayload);
-
 		if ($syncGroups === null) {
 			return null;
 		}

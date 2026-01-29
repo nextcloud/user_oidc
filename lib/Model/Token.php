@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -58,6 +59,7 @@ class Token implements JsonSerializable {
 			return 0;
 		}
 		$refreshExpiresAt = $this->createdAt + $this->refreshExpiresIn;
+
 		return $refreshExpiresAt - time();
 	}
 
@@ -82,6 +84,7 @@ class Token implements JsonSerializable {
 		if ($this->refreshExpiresIn === null) {
 			return false;
 		}
+
 		return time() > ($this->createdAt + $this->refreshExpiresIn);
 	}
 
@@ -90,10 +93,11 @@ class Token implements JsonSerializable {
 		if ($this->refreshExpiresIn === null) {
 			return false;
 		}
+
 		return time() > ($this->createdAt + (int)($this->refreshExpiresIn / 2));
 	}
 
-	public function getCreatedAt() {
+	public function getCreatedAt(): int {
 		return $this->createdAt;
 	}
 

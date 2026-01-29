@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -13,7 +14,6 @@ use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\Exception;
-
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
@@ -26,8 +26,6 @@ class ProviderMapper extends QBMapper {
 	}
 
 	/**
-	 * @param int $id
-	 * @return Provider
 	 * @throws \OCP\AppFramework\Db\DoesNotExistException
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
@@ -46,8 +44,7 @@ class ProviderMapper extends QBMapper {
 	/**
 	 * Find provider by provider identifier, the admin-given name for
 	 * the provider configuration.
-	 * @param string $identifier
-	 * @return Provider
+	 *
 	 * @throws \OCP\AppFramework\Db\DoesNotExistException
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
@@ -66,7 +63,7 @@ class ProviderMapper extends QBMapper {
 	/**
 	 * @return Provider[]
 	 */
-	public function getProviders() {
+	public function getProviders(): array {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
@@ -78,21 +75,19 @@ class ProviderMapper extends QBMapper {
 	/**
 	 * Create or update provider settings
 	 *
-	 * @param string $identifier
-	 * @param string|null $clientid
-	 * @param string|null $clientsecret
-	 * @param string|null $discoveryuri
-	 * @param string $scope
-	 * @param string|null $endsessionendpointuri
-	 * @param string|null $postLogoutUri
-	 * @return Provider|Entity
 	 * @throws DoesNotExistException
 	 * @throws Exception
 	 * @throws MultipleObjectsReturnedException
 	 */
-	public function createOrUpdateProvider(string $identifier, ?string $clientid = null,
-		?string $clientsecret = null, ?string $discoveryuri = null, string $scope = 'openid email profile',
-		?string $endsessionendpointuri = null, ?string $postLogoutUri = null) {
+	public function createOrUpdateProvider(
+		string $identifier,
+		?string $clientid = null,
+		?string $clientsecret = null,
+		?string $discoveryuri = null,
+		string $scope = 'openid email profile',
+		?string $endsessionendpointuri = null,
+		?string $postLogoutUri = null,
+	): Provider|Entity {
 		try {
 			$provider = $this->findProviderByIdentifier($identifier);
 		} catch (DoesNotExistException $eNotExist) {
@@ -101,7 +96,7 @@ class ProviderMapper extends QBMapper {
 
 		if ($provider === null) {
 			$provider = new Provider();
-			if (($clientid === null) || ($clientsecret === null) || ($discoveryuri === null)) {
+			if ($clientid === null || $clientsecret === null || $discoveryuri === null) {
 				throw new DoesNotExistException('Provider must be created. All provider parameters required.');
 			}
 			$provider->setIdentifier($identifier);
@@ -111,6 +106,7 @@ class ProviderMapper extends QBMapper {
 			$provider->setEndSessionEndpoint($endsessionendpointuri);
 			$provider->setPostLogoutUri($postLogoutUri);
 			$provider->setScope($scope);
+
 			return $this->insert($provider);
 		} else {
 			if ($clientid !== null) {
@@ -129,6 +125,7 @@ class ProviderMapper extends QBMapper {
 				$provider->setPostLogoutUri($postLogoutUri ?: null);
 			}
 			$provider->setScope($scope);
+
 			return $this->update($provider);
 		}
 	}

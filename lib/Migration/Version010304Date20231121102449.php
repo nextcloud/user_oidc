@@ -18,24 +18,13 @@ use OCP\Security\ICrypto;
 
 class Version010304Date20231121102449 extends SimpleMigrationStep {
 
-	/**
-	 * @var IDBConnection
-	 */
-	private $connection;
-	/**
-	 * @var ICrypto
-	 */
-	private $crypto;
-
 	public function __construct(
-		IDBConnection $connection,
-		ICrypto $crypto,
+		private IDBConnection $connection,
+		private ICrypto $crypto,
 	) {
-		$this->connection = $connection;
-		$this->crypto = $crypto;
 	}
 
-	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options) {
+	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
@@ -58,6 +47,7 @@ class Version010304Date20231121102449 extends SimpleMigrationStep {
 		if ($schemaChanged) {
 			return $schema;
 		}
+
 		return null;
 	}
 }

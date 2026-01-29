@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -13,8 +14,8 @@ use Exception;
 class TokenExchangeFailedException extends Exception {
 
 	public function __construct(
-		$message = '',
-		$code = 0,
+		string $message = '',
+		int $code = 0,
 		$previous = null,
 		private ?string $error = null,
 		private ?string $errorDescription = null,

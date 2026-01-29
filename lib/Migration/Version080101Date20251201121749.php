@@ -25,18 +25,14 @@ class Version080101Date20251201121749 extends SimpleMigrationStep {
 	) {
 	}
 
-	/**
-	 * @param IOutput $output
-	 * @param Closure $schemaClosure The `\Closure` returns a `ISchemaWrapper`
-	 * @param array $options
-	 */
-	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {
+	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
 		// make admin settings lazy
 		$keys = [
 			'store_login_token',
 			'id4me_enabled',
 			'allow_multiple_user_backends',
 		];
+
 		foreach ($keys as $key) {
 			try {
 				if ($this->appConfig->hasKey(Application::APP_ID, $key)) {
@@ -49,6 +45,7 @@ class Version080101Date20251201121749 extends SimpleMigrationStep {
 
 		// make all provider settings lazy
 		$providers = $this->providerMapper->getProviders();
+
 		// equivalent of $this->providerService->getSupportedSettings()
 		$supportedSettingKeys = [
 			ProviderService::SETTING_MAPPING_DISPLAYNAME,
@@ -87,8 +84,10 @@ class Version080101Date20251201121749 extends SimpleMigrationStep {
 			ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 			ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
 		];
+
 		$supportedSettingKeys[] = ProviderService::SETTING_JWKS_CACHE;
 		$supportedSettingKeys[] = ProviderService::SETTING_JWKS_CACHE_TIMESTAMP;
+
 		foreach ($supportedSettingKeys as $key) {
 			foreach ($providers as $provider) {
 				// equivalent of $this->providerService->getSettingsKey($provider->getId(), $key)

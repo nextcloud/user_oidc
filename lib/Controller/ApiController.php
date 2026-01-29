@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -59,15 +60,16 @@ class ApiController extends Controller {
 			$user->setQuota($quota);
 		}
 
-		$userFolder = $this->root->getUserFolder($user->getUID());
+		$uid = $user->getUID();
+		$userFolder = $this->root->getUserFolder($uid);
 		try {
 			// copy skeleton
-			\OC_Util::copySkeleton($user->getUID(), $userFolder);
+			\OC_Util::copySkeleton($uid, $userFolder);
 		} catch (NotPermittedException $ex) {
 			// read only uses
 		}
 
-		return new DataResponse(['user_id' => $user->getUID()]);
+		return new DataResponse(['user_id' => $uid]);
 	}
 
 	/**
@@ -77,7 +79,7 @@ class ApiController extends Controller {
 	#[NoCSRFRequired]
 	public function deleteUser(string $userId): DataResponse {
 		$user = $this->userManager->get($userId);
-		if (is_null($user) || $user->getBackendClassName() !== Application::APP_ID) {
+		if ($user === null || $user->getBackendClassName() !== Application::APP_ID) {
 			return new DataResponse(['message' => 'User not found'], Http::STATUS_NOT_FOUND);
 		}
 

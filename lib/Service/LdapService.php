@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
@@ -27,8 +27,6 @@ class LdapService {
 	}
 
 	/**
-	 * @param IUser $user
-	 * @return bool
 	 * @throws \Psr\Container\ContainerExceptionInterface
 	 * @throws \Psr\Container\NotFoundExceptionInterface
 	 */
@@ -66,8 +64,6 @@ class LdapService {
 	/**
 	 * This triggers User_LDAP::getLDAPUserByLoginName which does a LDAP query with the login filter
 	 * so the user ID we got from the OIDC IdP should work as a login in LDAP (the login filter should use a matching attribute)
-	 * @param string $userId
-	 * @return void
 	 */
 	public function syncUser(string $userId): void {
 		try {

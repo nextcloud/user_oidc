@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -20,13 +22,7 @@ class LocalIdService {
 	public function getId(int $providerId, string $id, bool $id4me = false): string {
 		if ($this->providerService->getSetting($providerId, ProviderService::SETTING_UNIQUE_UID, '1') === '1' || $id4me) {
 			$newId = strval($providerId) . '_';
-
-			if ($id4me) {
-				$newId .= '1_';
-			} else {
-				$newId .= '0_';
-			}
-
+			$newId .= $id4me ? '1_' : '0_';
 			$newId .= $id;
 			$newId = hash('sha256', $newId);
 		} elseif ($this->providerService->getSetting($providerId, ProviderService::SETTING_PROVIDER_BASED_ID, '0') === '1') {

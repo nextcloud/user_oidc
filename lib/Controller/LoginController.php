@@ -1,13 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 /** @noinspection AdditionOperationOnArraysInspection */
-
-declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
@@ -100,30 +100,20 @@ class LoginController extends BaseOidcController {
 		parent::__construct($request, $config, $l10n);
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function isSecure(): bool {
 		// no restriction in debug mode
 		return $this->isDebugModeEnabled() || $this->request->getServerProtocol() === 'https';
 	}
 
-	/**
-	 * @param bool|null $throttle
-	 * @return TemplateResponse
-	 */
 	private function buildProtocolErrorResponse(?bool $throttle = null): TemplateResponse {
 		$params = [
 			'message' => $this->l10n->t('You must access Nextcloud with HTTPS to use OpenID Connect.'),
 		];
 		$throttleMetadata = ['reason' => 'insecure connection'];
+
 		return $this->buildFailureTemplateResponse($params, Http::STATUS_NOT_FOUND, $throttleMetadata, $throttle);
 	}
 
-	/**
-	 * @param string|null $redirectUrl
-	 * @return RedirectResponse
-	 */
 	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse {
 		if ($redirectUrl === null) {
 			return new RedirectResponse($this->urlGenerator->getBaseUrl());
@@ -140,16 +130,11 @@ class LoginController extends BaseOidcController {
 		return new RedirectResponse($filtered);
 	}
 
-	/**
-	 * @param int $providerId
-	 * @param string|null $redirectUrl
-	 * @return DataDisplayResponse|RedirectResponse|TemplateResponse
-	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcLogin')]
-	public function login(int $providerId, ?string $redirectUrl = null) {
+	public function login(int $providerId, ?string $redirectUrl = null): DataDisplayResponse|RedirectResponse|TemplateResponse {
 		if ($this->userSession->isLoggedIn()) {
 			return $this->getRedirectResponse($redirectUrl);
 		}
@@ -310,12 +295,6 @@ class LoginController extends BaseOidcController {
 	}
 
 	/**
-	 * @param string $state
-	 * @param string $code
-	 * @param string $scope
-	 * @param string $error
-	 * @param string $error_description
-	 * @return JSONResponse|RedirectResponse|TemplateResponse
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
 	 * @throws SessionNotAvailableException
@@ -325,7 +304,13 @@ class LoginController extends BaseOidcController {
 	#[NoCSRFRequired]
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcCode')]
-	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
+	public function code(
+		string $state = '',
+		string $code = '',
+		string $scope = '',
+		string $error = '',
+		string $error_description = '',
+	): JSONResponse|RedirectResponse|TemplateResponse {
 		if (!$this->isSecure()) {
 			return $this->buildProtocolErrorResponse();
 		}
@@ -459,6 +444,7 @@ class LoginController extends BaseOidcController {
 		$idTokenRaw = $data['id_token'];
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
+
 		try {
 			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
 		} catch (UnexpectedValueException $e) {
@@ -661,7 +647,6 @@ class LoginController extends BaseOidcController {
 	/**
 	 * Endpoint called by NC to logout in the IdP before killing the current session
 	 *
-	 * @return RedirectResponse|TemplateResponse
 	 * @throws Exception
 	 * @throws SessionNotAvailableException
 	 * @throws \JsonException
@@ -671,7 +656,7 @@ class LoginController extends BaseOidcController {
 	#[NoCSRFRequired]
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcSingleLogout')]
-	public function singleLogoutService() {
+	public function singleLogoutService(): RedirectResponse|TemplateResponse {
 		// TODO throttle in all failing cases
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$targetUrl = $this->urlGenerator->getAbsoluteURL('/');
@@ -739,6 +724,7 @@ class LoginController extends BaseOidcController {
 
 		// make sure we clear the session to avoid messing with Backend::isSessionActive
 		$this->session->clear();
+
 		return new RedirectResponse($targetUrl);
 	}
 
@@ -748,9 +734,6 @@ class LoginController extends BaseOidcController {
 	 * which leads to the auth token that we can invalidate
 	 * Implemented according to https://openid.net/specs/openid-connect-backchannel-1_0.html
 	 *
-	 * @param string $providerIdentifier
-	 * @param string $logout_token
-	 * @return JSONResponse
 	 * @throws Exception
 	 * @throws \JsonException
 	 */
@@ -889,11 +872,6 @@ class LoginController extends BaseOidcController {
 	/**
 	 * Generate an error response according to the OIDC standard
 	 * Log the error
-	 *
-	 * @param string $error
-	 * @param string $description
-	 * @param array $throttleMetadata
-	 * @return JSONResponse
 	 */
 	private function getBackchannelLogoutErrorResponse(
 		string $error,
@@ -901,6 +879,7 @@ class LoginController extends BaseOidcController {
 		array $throttleMetadata = [],
 	): JSONResponse {
 		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
+
 		return new JSONResponse(
 			[
 				'error' => $error,
@@ -917,6 +896,7 @@ class LoginController extends BaseOidcController {
 		$s = explode('=', $s)[0]; // Remove any trailing '='s
 		$s = str_replace('+', '-', $s); // 62nd char of encoding
 		$s = str_replace('/', '_', $s); // 63rd char of encoding
+
 		return $s;
 	}
 }

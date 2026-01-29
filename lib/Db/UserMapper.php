@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -33,8 +34,6 @@ class UserMapper extends QBMapper {
 	}
 
 	/**
-	 * @param string $uid
-	 * @return User
 	 * @throws \OCP\AppFramework\Db\DoesNotExistException
 	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
 	 */
@@ -54,6 +53,7 @@ class UserMapper extends QBMapper {
 		/** @var User $user */
 		$user = $this->findEntity($qb);
 		$this->userCache->set($uid, $user);
+
 		return $user;
 	}
 
@@ -154,7 +154,6 @@ class UserMapper extends QBMapper {
 
 	public function getOrCreate(int $providerId, string $sub, bool $id4me = false): User {
 		$userId = $this->idService->getId($providerId, $sub, $id4me);
-
 		if (strlen($userId) > 64) {
 			$userId = hash('sha256', $userId);
 		}
@@ -167,6 +166,7 @@ class UserMapper extends QBMapper {
 
 		$user = new User();
 		$user->setUserId($userId);
+
 		return $this->insert($user);
 	}
 }

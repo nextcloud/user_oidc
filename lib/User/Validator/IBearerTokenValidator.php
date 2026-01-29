@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
 
 namespace OCA\UserOIDC\User\Validator;
 
@@ -16,8 +16,6 @@ interface IBearerTokenValidator {
 	/**
 	 * Validate the passed token and return the matched user id if found
 	 *
-	 * @param Provider $provider
-	 * @param string $bearerToken
 	 * @return string|null user id or null if the token was not valid
 	 */
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string;

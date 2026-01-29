@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
 
 namespace OCA\UserOIDC\User\Validator;
 
@@ -27,8 +27,10 @@ class UserInfoValidator implements IBearerTokenValidator {
 		$userInfo = $this->userInfoService->userinfo($provider, $bearerToken);
 		$providerId = $provider->getId();
 		$uidAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT);
+
 		// find the user ID
 		$uid = $this->provisioningService->getClaimValue($userInfo, $uidAttribute, $providerId);
+
 		return $uid ?: null;
 	}
 

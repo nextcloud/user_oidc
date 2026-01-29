@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -35,26 +36,16 @@ use OCP\DB\Types;
  */
 class Session extends Entity implements \JsonSerializable {
 
-	/** @var string */
-	protected $sid;
-	/** @var string */
-	protected $sub;
-	/** @var string */
-	protected $iss;
-	/** @var int */
-	protected $authtokenId;
-	/** @var string */
-	protected $ncSessionId;
-	/** @var int */
-	protected $createdAt;
-	/** @var ?string */
-	protected $idToken;
-	/** @var ?string */
-	protected $userId;
-	/** @var int */
-	protected $providerId;
-	/** @var int */
-	protected $idpSessionClosed;
+	protected string $sid;
+	protected string $sub;
+	protected string $iss;
+	protected int $authtokenId;
+	protected string $ncSessionId;
+	protected int $createdAt;
+	protected ?string $idToken;
+	protected ?string $userId;
+	protected int $providerId;
+	protected int $idpSessionClosed;
 
 	public function __construct() {
 		$this->addType('sid', Types::STRING);

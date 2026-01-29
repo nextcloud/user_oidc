@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -171,7 +172,7 @@ class UpsertProvider extends Base {
 		parent::__construct();
 	}
 
-	protected function configure() {
+	protected function configure(): void {
 		$this
 			->setName('user_oidc:provider')
 			->setDescription('Create, show or update a OpenId connect provider config given the identifier of a provider')
@@ -188,10 +189,14 @@ class UpsertProvider extends Base {
 		parent::configure();
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$outputFormat = $input->getOption('output') ?? 'table';
-
 		$identifier = $input->getArgument('identifier');
+
+		if ($identifier === null) {
+			return $this->listProviders($input, $output);
+		}
+
 		$clientid = $input->getOption('clientid');
 		$clientsecret = $input->getOption('clientsecret');
 		if ($clientsecret !== null) {
@@ -202,108 +207,137 @@ class UpsertProvider extends Base {
 		$postLogoutUri = $input->getOption('postlogouturi');
 		$scope = $input->getOption('scope');
 
-		if ($identifier === null) {
-			return $this->listProviders($input, $output);
-		}
-
-		// check if any option for updating is provided
+		// Check if any option for updating is provided
 		$updateOptions = array_filter($input->getOptions(), static function ($value, $option) {
 			return in_array($option, [
 				'identifier', 'clientid', 'clientsecret', 'discoveryuri', 'endsessionendpointuri', 'postlogouturi', 'scope',
 				...array_keys(self::EXTRA_OPTIONS),
-			]) && $value !== null;
+			], true) && $value !== null;
 		}, ARRAY_FILTER_USE_BOTH);
 
 		if (count($updateOptions) === 0) {
-			try {
-				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
-			} catch (DoesNotExistException $e) {
-				$output->writeln('Provider not found');
-				return -1;
-			}
-			$provider = $this->providerService->getProviderWithSettings($provider->getId());
-			if ($outputFormat === 'json') {
-				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR));
-				return 0;
-			}
+			return $this->displayProvider($identifier, $outputFormat, $output);
+		}
 
-			if ($outputFormat === 'json_pretty') {
-				$output->writeln(json_encode($provider, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
-				return 0;
-			}
+		return $this->updateOrCreateProvider($input, $output, $identifier, $clientid, $clientsecret, $discoveryuri, $scope, $endsessionendpointuri, $postLogoutUri);
+	}
 
-			$provider['settings'] = json_encode($provider['settings']);
-			$table = new Table($output);
-			$table->setHeaders(['ID', 'Identifier', 'Client ID', 'Discovery endpoint', 'End session endpoint', 'Advanced settings']);
-			$table->addRow($provider);
-			$table->render();
+	private function displayProvider(string $identifier, string $outputFormat, OutputInterface $output): int {
+		try {
+			$provider = $this->providerMapper->findProviderByIdentifier($identifier);
+		} catch (DoesNotExistException) {
+			$output->writeln('<error>Provider not found</error>');
+			return 1;
+		}
+
+		$provider = $this->providerService->getProviderWithSettings($provider->getId());
+
+		$jsonFlags = match ($outputFormat) {
+			'json' => JSON_THROW_ON_ERROR,
+			'json_pretty' => JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT,
+			default => null,
+		};
+
+		if ($jsonFlags !== null) {
+			$output->writeln(json_encode($provider, $jsonFlags));
 			return 0;
 		}
 
+		$provider['settings'] = json_encode($provider['settings']);
+		$table = new Table($output);
+		$table->setHeaders(['ID', 'Identifier', 'Client ID', 'Discovery endpoint', 'End session endpoint', 'Advanced settings']);
+		$table->addRow($provider);
+		$table->render();
+
+		return 0;
+	}
+
+	private function updateOrCreateProvider(
+		InputInterface $input,
+		OutputInterface $output,
+		string $identifier,
+		?string $clientid,
+		?string $clientsecret,
+		?string $discoveryuri,
+		?string $scope,
+		?string $endsessionendpointuri,
+		?string $postLogoutUri,
+	): int {
 		$provider = $this->providerService->getProviderByIdentifier($identifier);
+
 		if ($provider !== null) {
-			// existing provider, keep values that are not set, the scope has to be set anyway
-			$scope = $scope ?? $provider->getScope();
+			// Existing provider, keep values that are not set, the scope has to be set anyway
+			$scope ??= $provider->getScope();
 		} else {
-			// new provider default scope value
-			$scope = $scope ?? 'openid email profile';
+			// New provider default scope value
+			$scope ??= 'openid email profile';
 		}
+
 		try {
 			$provider = $this->providerMapper->createOrUpdateProvider(
 				$identifier, $clientid, $clientsecret, $discoveryuri, $scope, $endsessionendpointuri, $postLogoutUri
 			);
-			// invalidate JWKS cache (even if it was just created)
+
+			// Invalidate JWKS cache (even if it was just created)
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, '');
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');
 		} catch (DoesNotExistException|MultipleObjectsReturnedException $e) {
 			$output->writeln('<error>' . $e->getMessage() . '</error>');
-			return -1;
+			return 1;
 		}
+
 		foreach (self::EXTRA_OPTIONS as $name => $option) {
-			if (($value = $input->getOption($name)) !== null) {
-				if (array_key_exists($option['setting_key'], ProviderService::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
-					$value = (string)$value === '0' ? '0' : '1';
-				} else {
-					$value = (string)$value;
-				}
-				$this->providerService->setSetting($provider->getId(), $option['setting_key'], $value);
+			$value = $input->getOption($name);
+			if ($value === null) {
+				continue;
 			}
+
+			if (array_key_exists($option['setting_key'], ProviderService::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
+				$value = (string)$value === '0' ? '0' : '1';
+			} else {
+				$value = (string)$value;
+			}
+
+			$this->providerService->setSetting($provider->getId(), $option['setting_key'], $value);
 		}
+
 		return 0;
 	}
 
-	private function listProviders(InputInterface $input, OutputInterface $output) {
+	private function listProviders(InputInterface $input, OutputInterface $output): int {
 		$outputFormat = $input->getOption('output') ?? 'table';
 		$providers = $this->providerMapper->getProviders();
 
-		if ($outputFormat === 'json') {
-			$output->writeln(json_encode($providers, JSON_THROW_ON_ERROR));
-			return 0;
-		}
-
-		if ($outputFormat === 'json_pretty') {
-			$output->writeln(json_encode($providers, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
-			return 0;
-		}
-
 		if (count($providers) === 0) {
-			$output->writeln('No providers configured');
+			$output->writeln('<comment>No providers configured</comment>');
+			return 0;
+		}
+
+		$jsonFlags = match ($outputFormat) {
+			'json' => JSON_THROW_ON_ERROR,
+			'json_pretty' => JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT,
+			default => null,
+		};
+
+		if ($jsonFlags !== null) {
+			$output->writeln(json_encode($providers, $jsonFlags));
 			return 0;
 		}
 
 		$table = new Table($output);
 		$table->setHeaders(['ID', 'Identifier', 'Discovery endpoint', 'End session endpoint', 'Client ID']);
-		$providers = array_map(function ($provider) {
-			return [
+		$table->setRows(array_map(
+			fn ($provider) => [
 				$provider->getId(),
 				$provider->getIdentifier(),
 				$provider->getDiscoveryEndpoint(),
 				$provider->getEndSessionEndpoint(),
 				$provider->getClientId()
-			];
-		}, $providers);
-		$table->setRows($providers);
+			],
+			$providers
+		));
 		$table->render();
+
 		return 0;
 	}
 }

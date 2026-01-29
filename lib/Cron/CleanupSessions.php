@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -22,22 +24,19 @@ class CleanupSessions extends TimedJob {
 		private SessionMapper $sessionMapper,
 	) {
 		parent::__construct($time);
-		// daily
+		// run daily
 		$this->setInterval(24 * 60 * 60);
 		if (method_exists($this, 'setTimeSensitivity')) {
 			$this->setTimeSensitivity(IJob::TIME_INSENSITIVE);
 		}
 	}
 
-	/**
-	 * @param $argument
-	 * @return void
-	 */
 	protected function run($argument): void {
 		$nowTimestamp = (new DateTime())->getTimestamp();
 		$configSessionLifetime = $this->config->getSystemValueInt('session_lifetime', 60 * 60 * 24);
 		$configCookieLifetime = $this->config->getSystemValueInt('remember_login_cookie_lifetime', 60 * 60 * 24 * 15);
 		$since = $nowTimestamp - max($configSessionLifetime, $configCookieLifetime);
+
 		$this->sessionMapper->cleanupSessions($since);
 	}
 }

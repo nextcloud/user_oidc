@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -24,13 +25,12 @@ class HttpClientHelper implements HttpClient {
 
 	public function get($url, array $headers = [], array $options = []) {
 		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
-
 		$client = $this->clientService->newClient();
 
 		$debugModeEnabled = $this->config->getSystemValueBool('debug', false);
-		if ($debugModeEnabled
-			|| (isset($oidcConfig['httpclient.allowselfsigned'])
-				&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true))) {
+		$allowSelfSigned = !in_array($oidcConfig['httpclient.allowselfsigned'] ?? false, [false, 'false', 0, '0'], true);
+
+		if ($debugModeEnabled || $allowSelfSigned) {
 			$options['verify'] = false;
 		}
 
@@ -46,8 +46,8 @@ class HttpClientHelper implements HttpClient {
 			'body' => $body,
 		];
 
-		if (isset($oidcConfig['httpclient.allowselfsigned'])
-			&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
+		$allowSelfSigned = !in_array($oidcConfig['httpclient.allowselfsigned'] ?? false, [false, 'false', 0, '0'], true);
+		if ($allowSelfSigned) {
 			$options['verify'] = false;
 		}
 

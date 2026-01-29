@@ -18,25 +18,13 @@ use OCP\Migration\SimpleMigrationStep;
 use OCP\Security\ICrypto;
 
 class Version010303Date20230602125945 extends SimpleMigrationStep {
-
-	/**
-	 * @var IDBConnection
-	 */
-	private $connection;
-	/**
-	 * @var ICrypto
-	 */
-	private $crypto;
-
 	public function __construct(
-		IDBConnection $connection,
-		ICrypto $crypto,
+		private IDBConnection $connection,
+		private ICrypto $crypto,
 	) {
-		$this->connection = $connection;
-		$this->crypto = $crypto;
 	}
 
-	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options) {
+	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
@@ -54,7 +42,7 @@ class Version010303Date20230602125945 extends SimpleMigrationStep {
 		return null;
 	}
 
-	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options) {
+	public function postSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
 		// update secrets in user_oidc_providers and user_oidc_id4me
 		foreach (['user_oidc_providers', 'user_oidc_id4me'] as $tableName) {
 			$qbUpdate = $this->connection->getQueryBuilder();
@@ -68,6 +56,7 @@ class Version010303Date20230602125945 extends SimpleMigrationStep {
 			$qbSelect->select('id', 'client_secret')
 				->from($tableName);
 			$req = $qbSelect->executeQuery();
+
 			while ($row = $req->fetch()) {
 				$id = $row['id'];
 				$secret = $row['client_secret'];
@@ -76,6 +65,7 @@ class Version010303Date20230602125945 extends SimpleMigrationStep {
 				$qbUpdate->setParameter('updateId', $id, IQueryBuilder::PARAM_INT);
 				$qbUpdate->executeStatement();
 			}
+
 			$req->closeCursor();
 		}
 	}

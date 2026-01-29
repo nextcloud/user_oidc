@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -90,6 +91,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		) {
 			return [];
 		}
+
 		return array_map(function ($user) {
 			return $user->getUserId();
 		}, $this->userMapper->find($search, $limit, $offset));
@@ -99,6 +101,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		if (!is_string($uid)) {
 			return false;
 		}
+
 		return $this->userMapper->userExists($uid);
 	}
 
@@ -122,6 +125,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		) {
 			return [];
 		}
+
 		return $this->userMapper->findDisplayNames($search, $limit, $offset);
 	}
 
@@ -157,9 +161,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		return $headerToken !== '' || $this->session->get(LoginController::PROVIDERID) !== null;
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
 	public function getLogoutUrl(): string {
 		return $this->urlGenerator->linkToRouteAbsolute(
 			'user_oidc.login.singleLogoutService',
@@ -216,7 +217,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 	/**
 	 * Return the id of the current user
-	 * @return string
 	 * @since 6.0.0
 	 */
 	public function getCurrentUserId(): string {
@@ -357,14 +357,13 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		}
 
 		$this->logger->debug('Could not find unique token validation');
+
 		return '';
 	}
 
 	/**
 	 * Inspired by lib/private/User/Session.php::prepareUserLogin()
 	 *
-	 * @param string $userId
-	 * @return bool
 	 * @throws NotFoundException
 	 */
 	private function checkFirstLogin(string $userId): bool {
@@ -392,24 +391,22 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			// $this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
 		}
 		$user->updateLastLoginTimestamp();
+
 		return $firstLogin;
 	}
 
 	/**
 	 * Triggers user provisioning based on the provided strategy
-	 *
-	 * @param string $provisioningStrategyClass
-	 * @param Provider $provider
-	 * @param string $tokenUserId
-	 * @param string $headerToken
-	 * @param IUser|null $existingUser
-	 * @return IUser|null
 	 */
 	private function provisionUser(
-		string $provisioningStrategyClass, Provider $provider, string $tokenUserId, string $headerToken,
+		string $provisioningStrategyClass,
+		Provider $provider,
+		string $tokenUserId,
+		string $headerToken,
 		?IUser $existingUser,
 	): ?IUser {
 		$provisioningStrategy = \OC::$server->get($provisioningStrategyClass);
+
 		return $provisioningStrategy->provisionUser($provider, $tokenUserId, $headerToken, $existingUser);
 	}
 }

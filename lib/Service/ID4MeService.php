@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -38,6 +39,9 @@ class ID4MeService {
 		return $this->appConfig->getValueString(Application::APP_ID, 'id4me_enabled', '0', lazy: true) === '1';
 	}
 
+	/**
+	 * @throws \JsonException
+	 */
 	public function obtainJWK(string $jwkUri, string $tokenToDecode, bool $useCache = true): array {
 		$cacheKey = 'jwks-' . $jwkUri;
 		$cachedJwks = $this->cache->get($cacheKey);
@@ -55,6 +59,7 @@ class ID4MeService {
 		$this->logger->debug('[ID4ME-obtainJWK] fixed jwks', ['fixed_jwks' => $fixedJwks]);
 		$jwks = JWK::parseKeySet($fixedJwks, 'RS256');
 		$this->logger->debug('Parsed the jwks');
+
 		return $jwks;
 	}
 }

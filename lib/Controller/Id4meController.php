@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -79,7 +80,7 @@ class Id4meController extends BaseOidcController {
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[UseSession]
-	public function showLogin() {
+	public function showLogin(): Http\TemplateResponse {
 		if (!$this->id4MeService->getID4ME()) {
 			$message = $this->l10n->t('ID4Me is disabled');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
@@ -90,20 +91,15 @@ class Id4meController extends BaseOidcController {
 
 		$csp = new Http\ContentSecurityPolicy();
 		$csp->addAllowedFormActionDomain('*');
-
 		$response->setContentSecurityPolicy($csp);
 
 		return $response;
 	}
 
-	/**
-	 * @param string $domain
-	 * @return RedirectResponse|TemplateResponse
-	 */
 	#[PublicPage]
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcId4MeLogin')]
-	public function login(string $domain) {
+	public function login(string $domain): RedirectResponse|TemplateResponse {
 		if (!$this->id4MeService->getID4ME()) {
 			$message = $this->l10n->t('ID4Me is disabled');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
@@ -150,6 +146,7 @@ class Id4meController extends BaseOidcController {
 		];
 
 		$url = $openIdConfig->getAuthorizationEndpoint() . '?' . http_build_query($data);
+
 		return new RedirectResponse($url);
 	}
 
@@ -166,17 +163,13 @@ class Id4meController extends BaseOidcController {
 	}
 
 	/**
-	 * @param string $state
-	 * @param string $code
-	 * @param string $scope
-	 * @return JSONResponse|RedirectResponse|TemplateResponse
 	 * @throws \Exception
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcId4MeCode')]
-	public function code(string $state = '', string $code = '', string $scope = '') {
+	public function code(string $state = '', string $code = '', string $scope = ''): JSONResponse|RedirectResponse|TemplateResponse {
 		if (!$this->id4MeService->getID4ME()) {
 			$message = $this->l10n->t('ID4Me is disabled');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);

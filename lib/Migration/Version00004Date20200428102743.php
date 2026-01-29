@@ -30,29 +30,31 @@ class Version00004Date20200428102743 extends SimpleMigrationStep {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
-		$table = $schema->createTable('user_oidc_providers');
-		$table->addColumn('id', 'integer', [
-			'autoincrement' => true,
-			'notnull' => true,
-			'length' => 4,
-		]);
-		$table->addColumn('identifier', 'string', [
-			'notnull' => true,
-			'length' => 128,
-		]);
-		$table->addColumn('client_id', 'string', [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$table->addColumn('client_secret', 'string', [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$table->addColumn('discovery_endpoint', 'string', [
-			'notnull' => false,
-			'length' => 255,
-		]);
-		$table->setPrimaryKey(['id']);
+		if (!$schema->hasTable('user_oidc_providers')) {
+			$table = $schema->createTable('user_oidc_providers');
+			$table->addColumn('id', 'integer', [
+				'autoincrement' => true,
+				'notnull' => true,
+				'length' => 4,
+			]);
+			$table->addColumn('identifier', 'string', [
+				'notnull' => true,
+				'length' => 128,
+			]);
+			$table->addColumn('client_id', 'string', [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$table->addColumn('client_secret', 'string', [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$table->addColumn('discovery_endpoint', 'string', [
+				'notnull' => false,
+				'length' => 255,
+			]);
+			$table->setPrimaryKey(['id']);
+		}
 
 		return $schema;
 	}

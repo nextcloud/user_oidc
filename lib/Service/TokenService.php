@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -20,6 +21,7 @@ use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\Authentication\Exceptions\ExpiredTokenException;
 use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Exceptions\WipeTokenException;
@@ -74,6 +76,7 @@ class TokenService {
 		$token = new Token($tokenData);
 		$this->session->set(self::SESSION_TOKEN_KEY, json_encode($token, JSON_THROW_ON_ERROR));
 		$this->logger->debug('[TokenService] Store token in the session', ['session_id' => $this->session->getId()]);
+
 		return $token;
 	}
 
@@ -81,7 +84,6 @@ class TokenService {
 	 * Get the token stored in the session
 	 * If it has expired: try to refresh it
 	 *
-	 * @param bool $refreshIfExpired
 	 * @return Token|null Return a token only if it is valid or has been successfully refreshed
 	 * @throws \JsonException
 	 */
@@ -108,13 +110,13 @@ class TokenService {
 		}
 
 		$this->logger->debug('[TokenService] getToken: return a token that has not been refreshed');
+
 		return $token;
 	}
 
 	/**
 	 * Check to make sure the login token is still valid
 	 *
-	 * @return void
 	 * @throws \JsonException
 	 * @throws PreConditionNotMetException
 	 */
@@ -175,21 +177,23 @@ class TokenService {
 		$this->logger->debug('[TokenService] checkLoginToken: all good');
 	}
 
-	public function reauthenticate(int $providerId) {
+	public function reauthenticate(int $providerId): RedirectResponse {
+		$this->logger->debug('[TokenService] Starting reauthentication', ['providerId' => $providerId]);
+
 		// Logout the user and redirect to the oidc login flow to gather a fresh token
 		$this->userSession->logout();
+
 		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.login', [
 			'providerId' => $providerId,
 			'redirectUrl' => $this->request->getRequestUri(),
 		]);
-		header('Location: ' . $redirectUrl);
-		$this->logger->debug('[TokenService] reauthenticate', ['redirectUrl' => $redirectUrl]);
-		exit();
+
+		$this->logger->debug('[TokenService] Redirecting for reauthentication', ['redirectUrl' => $redirectUrl]);
+
+		return new RedirectResponse($redirectUrl);
 	}
 
 	/**
-	 * @param Token $token
-	 * @return Token
 	 * @throws \JsonException
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
@@ -276,19 +280,21 @@ class TokenService {
 		}
 	}
 
+	/**
+	 * @throws \JsonException
+	 */
 	public function decodeIdToken(Token $token): array {
 		$provider = $this->providerMapper->getProvider($token->getProviderId());
 		$jwks = $this->discoveryService->obtainJWK($provider, $token->getIdToken());
 		JWT::$leeway = 60;
 		$idTokenObject = JWT::decode($token->getIdToken(), $jwks);
-		return json_decode(json_encode($idTokenObject), true);
+
+		return json_decode(json_encode($idTokenObject), true, JSON_THROW_ON_ERROR);
 	}
 
 	/**
 	 * Exchange the login token for another audience (client ID)
 	 *
-	 * @param string $targetAudience
-	 * @return Token
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
 	 * @throws TokenExchangeFailedException
@@ -390,7 +396,7 @@ class TokenService {
 					$e,
 				);
 			}
-		} catch (\Exception|\Throwable $e) {
+		} catch (\Throwable $e) {
 			$this->logger->error('[TokenService] Failed to exchange token ', ['exception' => $e]);
 			throw new TokenExchangeFailedException('Failed to exchange token, error in the exchange request', 0, $e);
 		}
@@ -398,12 +404,13 @@ class TokenService {
 
 	/**
 	 * Try to get a token from the Oidc provider app for a user and a specific audience (client ID)
-	 *
-	 * @param string $userId
-	 * @param string $targetAudience
-	 * @return Token|null
 	 */
-	public function getTokenFromOidcProviderApp(string $userId, string $targetAudience, array $extraScopes = [], string $resource = ''): ?Token {
+	public function getTokenFromOidcProviderApp(
+		string $userId,
+		string $targetAudience,
+		array $extraScopes = [],
+		string $resource = '',
+	): ?Token {
 		if (!class_exists(\OCA\OIDCIdentityProvider\AppInfo\Application::class)) {
 			$this->logger->warning('[TokenService] Failed to get token from Oidc provider app, oidc app is not installed');
 			return null;

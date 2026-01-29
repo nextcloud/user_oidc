@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
 
 namespace OCA\UserOIDC\User\Validator;
 
@@ -33,7 +33,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {
 		/** @var ProviderService $providerService */
-		$providerService = \OC::$server->get(ProviderService::class);
+		$providerService = \OCP\Server::get(ProviderService::class);
 		$providerId = $provider->getId();
 		$uidAttribute = $providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT);
 
@@ -77,6 +77,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 
 		// find the user ID
 		$uid = $this->provisioningService->getClaimValue($payload, $uidAttribute, $providerId);
+
 		return $uid ?: null;
 	}
 

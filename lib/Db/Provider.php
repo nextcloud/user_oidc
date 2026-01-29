@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -27,24 +28,14 @@ use OCP\AppFramework\Db\Entity;
  */
 class Provider extends Entity implements \JsonSerializable {
 
-	/** @var string */
-	protected $identifier;
-	/** @var string */
-	protected $clientId;
-	/** @var string */
-	protected $clientSecret;
-	/** @var ?string */
-	protected $discoveryEndpoint;
-	/** @var ?string */
-	protected $endSessionEndpoint;
-	/** @var string */
-	protected $postLogoutUri;
-	/** @var string */
-	protected $scope;
+	protected string $identifier = '';
+	protected string $clientId = '';
+	protected string $clientSecret = '';
+	protected ?string $discoveryEndpoint = null;
+	protected ?string $endSessionEndpoint = null;
+	protected ?string $postLogoutUri = null;
+	protected string $scope = '';
 
-	/**
-	 * @return string
-	 */
 	public function getScope(): string {
 		return $this->scope ?: ' ';
 	}

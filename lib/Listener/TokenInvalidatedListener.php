@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -124,6 +126,7 @@ class TokenInvalidatedListener implements IEventListener {
 		} catch (\Exception $e) {
 			$this->logger->debug('[TokenInvalidatedListener] Failed to request the end_session_endpoint', ['exception' => $e]);
 		}
+
 		// we know this oidc session is not useful anymore, we can delete it
 		$this->sessionMapper->delete($oidcSession);
 	}

@@ -22,28 +22,19 @@ class Section implements IIconSection {
 	) {
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getID() {
+	public function getID(): string {
 		return Application::APP_ID;
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getName() {
+	public function getName(): string {
 		return $this->l->t('OpenID Connect');
 	}
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function getPriority() {
+	public function getPriority(): int {
 		return 75;
 	}
 
-	public function getIcon() {
+	public function getIcon(): string {
 		return $this->urlGenerator->imagePath(Application::APP_ID, 'app-dark.svg');
 	}
 }

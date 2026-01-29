@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
-
 
 namespace OCA\UserOIDC\Event;
 
@@ -45,7 +44,7 @@ class AttributeMappedEvent extends Event {
 		return $this->claims;
 	}
 
-	public function hasValue() : bool {
+	public function hasValue(): bool {
 		return ($this->value != null);
 	}
 

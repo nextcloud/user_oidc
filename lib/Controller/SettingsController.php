@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -40,7 +41,7 @@ class SettingsController extends Controller {
 		parent::__construct(Application::APP_ID, $request);
 	}
 
-	public function isDiscoveryEndpointValid($url) {
+	public function isDiscoveryEndpointValid(string $url): array {
 		$result = [
 			'isReachable' => false,
 			'missingFields' => [],
@@ -53,20 +54,27 @@ class SettingsController extends Controller {
 			$body = $response->getBody();
 
 			// Check if the request was successful
-			if ($httpCode === Http::STATUS_OK && !empty($body)) {
-				$result['isReachable'] = true;
-				$data = json_decode($body, true);
+			if ($httpCode !== Http::STATUS_OK || empty($body)) {
+				return $result;
+			}
 
-				// Check for required fields as defined in: https://openid.net/specs/openid-connect-discovery-1_0.html
-				$requiredFields = [
-					'issuer', 'authorization_endpoint', 'token_endpoint', 'jwks_uri',
-					'response_types_supported', 'subject_types_supported', 'id_token_signing_alg_values_supported',
-				];
+			$result['isReachable'] = true;
+			$data = json_decode($body, true, JSON_THROW_ON_ERROR);
 
-				foreach ($requiredFields as $field) {
-					if (!isset($data[$field])) {
-						$result['missingFields'][] = $field;
-					}
+			// Check for required fields as defined in: https://openid.net/specs/openid-connect-discovery-1_0.html
+			$requiredFields = [
+				'issuer',
+				'authorization_endpoint',
+				'token_endpoint',
+				'jwks_uri',
+				'response_types_supported',
+				'subject_types_supported',
+				'id_token_signing_alg_values_supported',
+			];
+
+			foreach ($requiredFields as $field) {
+				if (!isset($data[$field])) {
+					$result['missingFields'][] = $field;
 				}
 			}
 		} catch (Exception $e) {
@@ -77,9 +85,16 @@ class SettingsController extends Controller {
 	}
 
 	#[PasswordConfirmationRequired]
-	public function createProvider(string $identifier, string $clientId, string $clientSecret, string $discoveryEndpoint,
-		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null,
-		?string $postLogoutUri = null): JSONResponse {
+	public function createProvider(
+		string $identifier,
+		string $clientId,
+		string $clientSecret,
+		string $discoveryEndpoint,
+		array $settings = [],
+		string $scope = 'openid email profile',
+		?string $endSessionEndpoint = null,
+		?string $postLogoutUri = null,
+	): JSONResponse {
 		if ($this->providerService->getProviderByIdentifier($identifier) !== null) {
 			return new JSONResponse(['message' => 'Provider with the given identifier already exists'], Http::STATUS_CONFLICT);
 		}
@@ -110,22 +125,39 @@ class SettingsController extends Controller {
 	}
 
 	#[PasswordConfirmationRequired]
-	public function updateProvider(int $providerId, string $identifier, string $clientId, string $discoveryEndpoint, ?string $clientSecret = null,
-		array $settings = [], string $scope = 'openid email profile', ?string $endSessionEndpoint = null,
-		?string $postLogoutUri = null): JSONResponse {
+	public function updateProvider(
+		int $providerId,
+		string $identifier,
+		string $clientId,
+		string $discoveryEndpoint,
+		?string $clientSecret = null,
+		array $settings = [],
+		string $scope = 'openid email profile',
+		?string $endSessionEndpoint = null,
+		?string $postLogoutUri = null,
+	): JSONResponse {
 		$provider = $this->providerMapper->getProvider($providerId);
 
 		if ($this->providerService->getProviderByIdentifier($identifier) === null) {
-			return new JSONResponse(['message' => 'Provider with the given identifier does not exist'], Http::STATUS_NOT_FOUND);
+			return new JSONResponse(
+				['message' => 'Provider with the given identifier does not exist'],
+				Http::STATUS_NOT_FOUND
+			);
 		}
 
 		$result = $this->isDiscoveryEndpointValid($discoveryEndpoint);
 		if (!$result['isReachable']) {
 			$message = 'The discovery endpoint is not reachable.';
-			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
+			return new JSONResponse(
+				['message' => $message],
+				Http::STATUS_BAD_REQUEST
+			);
 		} elseif (!empty($result['missingFields'])) {
 			$message = 'Invalid discovery endpoint. Missing fields: ' . implode(', ', $result['missingFields']);
-			return new JSONResponse(['message' => $message], Http::STATUS_BAD_REQUEST);
+			return new JSONResponse(
+				['message' => $message],
+				Http::STATUS_BAD_REQUEST
+			);
 		}
 
 		$provider->setIdentifier($identifier);
@@ -141,6 +173,7 @@ class SettingsController extends Controller {
 		$provider = $this->providerMapper->update($provider);
 
 		$providerSettings = $this->providerService->setSettings($providerId, $settings);
+
 		// invalidate JWKS cache
 		$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE, '');
 		$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');

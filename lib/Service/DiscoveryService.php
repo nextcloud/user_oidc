@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
@@ -49,6 +49,9 @@ class DiscoveryService {
 		$this->cache = $cacheFactory->createDistributed('user_oidc');
 	}
 
+	/**
+	 * @throws \JsonException
+	 */
 	public function obtainDiscovery(Provider $provider): array {
 		$cacheKey = 'discovery-2-' . $provider->getDiscoveryEndpoint();
 		$cachedDiscovery = $this->cache->get($cacheKey);
@@ -67,41 +70,36 @@ class DiscoveryService {
 	}
 
 	/**
-	 * @param Provider $provider
 	 * @param string $tokenToDecode This is used to potentially fix the missing alg in
-	 * @param bool $useCache
-	 * @return array
 	 * @throws \JsonException
 	 */
 	public function obtainJWK(Provider $provider, string $tokenToDecode, bool $useCache = true): array {
-		$lastJwksRefresh = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
+		$providerId = $provider->getId();
+		$lastJwksRefresh = $this->providerService->getSetting($providerId, ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
 		if ($lastJwksRefresh !== '' && $useCache && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
-			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
-			$rawJwks = json_decode($rawJwks, true);
+			$rawJwks = $this->providerService->getSetting($providerId, ProviderService::SETTING_JWKS_CACHE);
+			$rawJwks = json_decode($rawJwks, true, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[obtainJWK] jwks cache content', ['jwks_cache' => $rawJwks]);
 		} else {
 			$discovery = $this->obtainDiscovery($provider);
 			$responseBody = $this->clientService->get($discovery['jwks_uri']);
-			$rawJwks = json_decode($responseBody, true);
+			$rawJwks = json_decode($responseBody, true, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[obtainJWK] getting fresh jwks', ['jwks' => $rawJwks]);
 			// cache jwks
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, $responseBody);
+			$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE, $responseBody);
 			$this->logger->debug('[obtainJWK] setting cache', ['jwks_cache' => $responseBody]);
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, strval(time()));
+			$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, strval(time()));
 		}
 
 		$fixedJwks = $this->fixJwksAlg($rawJwks, $tokenToDecode);
 		$this->logger->debug('[obtainJWK] fixed jwks', ['fixed_jwks' => $fixedJwks]);
 		$jwks = JWK::parseKeySet($fixedJwks, 'RS256');
+
 		$this->logger->debug('Parsed the jwks');
+
 		return $jwks;
 	}
 
-	/**
-	 * @param string $authorizationEndpoint
-	 * @param array $extraGetParameters
-	 * @return string
-	 */
 	public function buildAuthorizationUrl(string $authorizationEndpoint, array $extraGetParameters = []): string {
 		$parsedUrl = parse_url($authorizationEndpoint);
 
@@ -175,14 +173,12 @@ class DiscoveryService {
 	/**
 	 * Inspired by https://github.com/snake/moodle/compare/880462a1685...MDL-77077-master
 	 *
-	 * @param array $jwks The JSON Web Key Set
-	 * @param string $jwt The JWT token
-	 * @return array The modified JWKS
+	 * @throws \JsonException
 	 * @throws \RuntimeException if no matching key is found or algorithm is unsupported
 	 */
 	public function fixJwksAlg(array $jwks, string $jwt): array {
 		$jwtParts = explode('.', $jwt, 3);
-		$header = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
+		$header = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true, JSON_THROW_ON_ERROR);
 		$kid = $header['kid'] ?? null;
 		$alg = $header['alg'] ?? null;
 

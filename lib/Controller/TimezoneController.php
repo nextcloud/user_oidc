@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -29,14 +30,11 @@ class TimezoneController extends Controller {
 	}
 
 	/**
-	 * @param string $timezone
-	 * @param int $timezoneOffset
-	 * @return JSONResponse
 	 * @throws \OCP\PreConditionNotMetException
 	 */
 	#[NoAdminRequired]
 	#[UseSession]
-	public function setTimezone(string $timezone, int $timezoneOffset) {
+	public function setTimezone(string $timezone, int $timezoneOffset): JSONResponse {
 		$this->config->setUserValue($this->userId, 'core', 'timezone', $timezone);
 		$this->session->set('timezone', $timezoneOffset);
 

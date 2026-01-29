@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2018 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -30,7 +31,7 @@ class DeleteProvider extends Base {
 		parent::__construct();
 	}
 
-	protected function configure() {
+	protected function configure(): void {
 		$this
 			->setName('user_oidc:provider:delete')
 			->setDescription('Delete an OpenId connect provider')
@@ -39,26 +40,35 @@ class DeleteProvider extends Base {
 		parent::configure();
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		try {
 			$identifier = $input->getArgument('identifier');
+
 			try {
 				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
 			} catch (DoesNotExistException $e) {
 				$output->writeln('Provider not found.');
 				return -1;
 			}
+
 			$helper = $this->getHelper('question');
-			$question = new ConfirmationQuestion('Are you sure you want to delete OpenID Provider "' . $provider->getIdentifier() . '"? It may invalidate all associated user accounts [y/N] ', false);
-			if ($input->getOption('force') || $helper->ask($input, $output, $question)) {
-				$this->providerMapper->delete($provider);
-				$this->providerService->deleteSettings($provider->getId());
-				$output->writeln('"' . $provider->getIdentifier() . '" has been deleted.');
+			$question = new ConfirmationQuestion(
+				'Are you sure you want to delete OpenID Provider "' . $provider->getIdentifier() . '"? It may invalidate all associated user accounts [y/N] ',
+				false
+			);
+
+			if (!$input->getOption('force') && !$helper->ask($input, $output, $question)) {
+				return 0;
 			}
+
+			$this->providerMapper->delete($provider);
+			$this->providerService->deleteSettings($provider->getId());
+			$output->writeln('<info>"' . $provider->getIdentifier() . '" has been deleted.</info>');
+
+			return 0;
 		} catch (Exception $e) {
-			$output->writeln($e->getMessage());
+			$output->writeln('<error>' . $e->getMessage() . '</error>');
 			return -1;
 		}
-		return 0;
 	}
 }

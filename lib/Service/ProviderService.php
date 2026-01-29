@@ -1,12 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2021 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-
-declare(strict_types=1);
-
 
 namespace OCA\UserOIDC\Service;
 
@@ -101,6 +100,7 @@ class ProviderService {
 			$value = $this->getSetting($providerId, $setting);
 			$result[$setting] = $this->convertToJSON($setting, $value);
 		}
+
 		return $result;
 	}
 
@@ -113,6 +113,7 @@ class ProviderService {
 			$this->setSetting($providerId, $setting, $this->convertFromJSON($setting, $value));
 			$storedSettings[$setting] = $value;
 		}
+
 		return $storedSettings;
 	}
 
@@ -133,6 +134,7 @@ class ProviderService {
 		if ($value === '') {
 			return $default;
 		}
+
 		return $value;
 	}
 
@@ -184,6 +186,7 @@ class ProviderService {
 		if (array_key_exists($key, self::BOOLEAN_SETTINGS_DEFAULT_VALUES)) {
 			return $value ? '1' : '0';
 		}
+
 		return (string)$value;
 	}
 
@@ -194,6 +197,7 @@ class ProviderService {
 			}
 			return $value === '1';
 		}
+
 		return (string)$value;
 	}
 }
