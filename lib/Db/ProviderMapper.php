@@ -121,8 +121,10 @@ class ProviderMapper extends QBMapper {
 			if ($endsessionendpointuri !== null) {
 				$provider->setEndSessionEndpoint($endsessionendpointuri ?: null);
 			}
-			if ($postLogoutUri !== null) {
-				$provider->setPostLogoutUri($postLogoutUri ?: null);
+			if ($postLogoutUri !== null && $postLogoutUri !== '') {
+				$provider->setPostLogoutUri($postLogoutUri);
+			} else {
+				$provider->setPostLogoutUri(null);
 			}
 			$provider->setScope($scope);
 
