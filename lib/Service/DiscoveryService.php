@@ -124,13 +124,13 @@ class DiscoveryService {
 	 * @param string $alg The algorithm intended to be used with this key (e.g., 'RS256', 'ES256').
 	 *
 	 * @throws \RuntimeException If the key is missing required fields, has an unsupported type,
-	 *							 or does not meet the minimum security requirements.
+	 *                           or does not meet the minimum security requirements.
 	 */
 	private function validateKeyStrength(array $key, string $alg): void {
 		$kty = $key['kty'] ?? throw new \RuntimeException('Key missing kty');
 
 		match ($kty) {
-			'RSA' => (function() use ($key) {
+			'RSA' => (function () use ($key) {
 				$modulus = JWT::urlsafeB64Decode($key['n'] ?? throw new \RuntimeException('RSA key missing modulus (n)'));
 				$modulusBits = strlen($modulus) * 8;
 
@@ -139,7 +139,7 @@ class DiscoveryService {
 				}
 			})(),
 
-			'EC' => (function() use ($key) {
+			'EC' => (function () use ($key) {
 				$curve = $key['crv'] ?? throw new \RuntimeException('EC key missing crv');
 
 				if (!in_array($curve, ['P-256', 'P-384', 'P-521'], true)) {
@@ -147,7 +147,7 @@ class DiscoveryService {
 				}
 			})(),
 
-			'OKP' => (function() use ($key) {
+			'OKP' => (function () use ($key) {
 				$curve = $key['crv'] ?? throw new \RuntimeException('OKP key missing crv');
 
 				if ($curve !== 'Ed25519') {
@@ -170,7 +170,7 @@ class DiscoveryService {
 
 		$expectedKty = self::SUPPORTED_JWK_ALGS[$alg] ?? null;
 		if ($expectedKty === null) {
-			throw new \RuntimeException('Unsupported JWT alg: ' .  ($alg ?? 'unknown'));
+			throw new \RuntimeException('Unsupported JWT alg: ' . ($alg ?? 'unknown'));
 		}
 
 		$keys = $jwks['keys'] ?? null;
@@ -225,7 +225,7 @@ class DiscoveryService {
 
 		if ($matchingIndex === null) {
 			throw new \RuntimeException(
-				"No matching key found in JWKS (alg=" . ($alg ?? 'unknown') . ", kid=" . ($kid ?? 'none') . ')'
+				'No matching key found in JWKS (alg=' . ($alg ?? 'unknown') . ', kid=' . ($kid ?? 'none') . ')'
 			);
 		}
 
