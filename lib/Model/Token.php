@@ -11,29 +11,24 @@ namespace OCA\UserOIDC\Model;
 
 use JsonSerializable;
 
-readonly class Token implements JsonSerializable {
+class Token implements JsonSerializable {
 
-	public function __construct(
-		private ?string $idToken,
-		private string $accessToken,
-		private int $expiresIn,
-		private ?int $refreshExpiresIn,
-		private ?string $refreshToken,
-		private int $createdAt,
-		private ?int $providerId,
-	) {
-	}
+	private readonly ?string $idToken;
+	private readonly string $accessToken;
+	private readonly int $expiresIn;
+	private readonly ?int $refreshExpiresIn;
+	private readonly ?string $refreshToken;
+	private readonly int $createdAt;
+	private readonly ?int $providerId;
 
-	public static function fromArray(array $tokenData): self {
-		return new self(
-			idToken: $tokenData['id_token'] ?? null,
-			accessToken: $tokenData['access_token'],
-			expiresIn: $tokenData['expires_in'],
-			refreshExpiresIn: $tokenData['refresh_expires_in'] ?? null,
-			refreshToken: $tokenData['refresh_token'] ?? null,
-			createdAt: $tokenData['created_at'] ?? time(),
-			providerId: $tokenData['provider_id'] ?? null,
-		);
+	public function __construct(array $tokenData) {
+		$this->idToken = $tokenData['id_token'] ?? null;
+		$this->accessToken = $tokenData['access_token'];
+		$this->expiresIn = $tokenData['expires_in'];
+		$this->refreshExpiresIn = $tokenData['refresh_expires_in'] ?? null;
+		$this->refreshToken = $tokenData['refresh_token'] ?? null;
+		$this->createdAt = $tokenData['created_at'] ?? time();
+		$this->providerId = $tokenData['provider_id'] ?? null;
 	}
 
 	public function getAccessToken(): string {
