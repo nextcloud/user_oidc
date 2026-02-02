@@ -178,6 +178,8 @@ class UpsertProvider extends Base {
 			->addArgument('identifier', InputArgument::OPTIONAL, 'Administrative identifier name of the provider in the setup')
 			->addOption('clientid', 'c', InputOption::VALUE_REQUIRED, 'OpenID client identifier')
 			->addOption('clientsecret', 's', InputOption::VALUE_REQUIRED, 'OpenID client secret')
+			->addOption('clientsecret-file', null, InputOption::VALUE_REQUIRED, 'File that contains the OpenID client secret')
+			->addOption('clientsecret-env', null, InputOption::VALUE_REQUIRED, 'Environment variable that contains the OpenID client secret')
 			->addOption('discoveryuri', 'd', InputOption::VALUE_REQUIRED, 'OpenID discovery endpoint uri')
 			->addOption('endsessionendpointuri', 'e', InputOption::VALUE_REQUIRED, 'OpenID end session endpoint uri')
 			->addOption('postlogouturi', 'p', InputOption::VALUE_REQUIRED, 'Post logout URI')
@@ -192,10 +194,11 @@ class UpsertProvider extends Base {
 		$outputFormat = $input->getOption('output') ?? 'table';
 
 		$identifier = $input->getArgument('identifier');
-		$clientid = $input->getOption('clientid');
-		$clientsecret = $input->getOption('clientsecret');
-		if ($clientsecret !== null) {
-			$clientsecret = $this->crypto->encrypt($clientsecret);
+		$clientId = $input->getOption('clientid');
+		try {
+			$clientSecret = $this->getClientSecretInput($input, $output);
+		} catch (\Exception $e) {
+			return 1;
 		}
 		$discoveryuri = $input->getOption('discoveryuri');
 		$endsessionendpointuri = $input->getOption('endsessionendpointuri');
@@ -218,7 +221,7 @@ class UpsertProvider extends Base {
 			try {
 				$provider = $this->providerMapper->findProviderByIdentifier($identifier);
 			} catch (DoesNotExistException $e) {
-				$output->writeln('Provider not found');
+				$output->writeln('<error>Provider not found</error>');
 				return -1;
 			}
 			$provider = $this->providerService->getProviderWithSettings($provider->getId());
@@ -250,7 +253,7 @@ class UpsertProvider extends Base {
 		}
 		try {
 			$provider = $this->providerMapper->createOrUpdateProvider(
-				$identifier, $clientid, $clientsecret, $discoveryuri, $scope, $endsessionendpointuri, $postLogoutUri
+				$identifier, $clientId, $clientSecret, $discoveryuri, $scope, $endsessionendpointuri, $postLogoutUri
 			);
 			// invalidate JWKS cache (even if it was just created)
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, '');
@@ -287,7 +290,7 @@ class UpsertProvider extends Base {
 		}
 
 		if (count($providers) === 0) {
-			$output->writeln('No providers configured');
+			$output->writeln('<error>No providers configured</error>');
 			return 0;
 		}
 
@@ -305,5 +308,46 @@ class UpsertProvider extends Base {
 		$table->setRows($providers);
 		$table->render();
 		return 0;
+	}
+
+	private function getClientSecretInput(InputInterface $input, OutputInterface $output): ?string {
+		$clientSecret = $input->getOption('clientsecret');
+		$clientSecretFile = $input->getOption('clientsecret-file');
+		$clientSecretEnv = $input->getOption('clientsecret-env');
+		if (
+			($clientSecret !== null && $clientSecretFile !== null)
+			|| ($clientSecret !== null && $clientSecretEnv !== null)
+			|| ($clientSecretFile !== null && $clientSecretEnv !== null)
+		) {
+			$output->writeln('<comment>Only one of "--clientsecret", "--clientsecret-file" or "--clientsecret-env" can be used.</comment>');
+			throw new \Exception();
+		}
+		if ($clientSecret !== null) {
+			$clientSecret = $this->crypto->encrypt($clientSecret);
+		}
+		if ($clientSecretFile) {
+			$clientSecret = file_get_contents($clientSecretFile);
+			if (is_string($clientSecret) && $clientSecret !== '') {
+				$clientSecret = trim($clientSecret);
+				$clientSecret = $this->crypto->encrypt($clientSecret);
+				$output->writeln('<info>Client secret loaded from file "' . $clientSecretFile . '"</info>');
+			} else {
+				$output->writeln('<error>Client secret file "' . $clientSecretFile . '" could not be read or is empty</error>');
+				throw new \Exception();
+			}
+		}
+		if ($clientSecretEnv) {
+			$clientSecret = getenv($clientSecretEnv);
+			if (is_string($clientSecret) && $clientSecret !== '') {
+				$clientSecret = trim($clientSecret);
+				$clientSecret = $this->crypto->encrypt($clientSecret);
+				$output->writeln('<info>Client secret loaded from environment variable "' . $clientSecretEnv . '"</info>');
+			} else {
+				$output->writeln('<error>Client secret environment variable "' . $clientSecretFile . '" could not be read or is empty</error>');
+				throw new \Exception();
+			}
+		}
+
+		return $clientSecret;
 	}
 }
