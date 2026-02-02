@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -9,11 +10,9 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Db;
 
 use OCP\AppFramework\Db\DoesNotExistException;
-use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\Exception;
-
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
@@ -26,19 +25,15 @@ class ProviderMapper extends QBMapper {
 	}
 
 	/**
-	 * @param int $id
-	 * @return Provider
-	 * @throws \OCP\AppFramework\Db\DoesNotExistException
-	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
 	 */
 	public function getProvider(int $id): Provider {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
 			->from($this->getTableName())
-			->where(
-				$qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT))
-			);
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 
 		return $this->findEntity($qb);
 	}
@@ -46,19 +41,16 @@ class ProviderMapper extends QBMapper {
 	/**
 	 * Find provider by provider identifier, the admin-given name for
 	 * the provider configuration.
-	 * @param string $identifier
-	 * @return Provider
-	 * @throws \OCP\AppFramework\Db\DoesNotExistException
-	 * @throws \OCP\AppFramework\Db\MultipleObjectsReturnedException
+	 *
+	 * @throws DoesNotExistException
+	 * @throws MultipleObjectsReturnedException
 	 */
 	public function findProviderByIdentifier(string $identifier): Provider {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
 			->from($this->getTableName())
-			->where(
-				$qb->expr()->eq('identifier', $qb->createNamedParameter($identifier, IQueryBuilder::PARAM_STR))
-			);
+			->where($qb->expr()->eq('identifier', $qb->createNamedParameter($identifier, IQueryBuilder::PARAM_STR)));
 
 		return $this->findEntity($qb);
 	}
@@ -66,7 +58,7 @@ class ProviderMapper extends QBMapper {
 	/**
 	 * @return Provider[]
 	 */
-	public function getProviders() {
+	public function getProviders(): array {
 		$qb = $this->db->getQueryBuilder();
 
 		$qb->select('*')
@@ -78,58 +70,57 @@ class ProviderMapper extends QBMapper {
 	/**
 	 * Create or update provider settings
 	 *
-	 * @param string $identifier
-	 * @param string|null $clientid
-	 * @param string|null $clientsecret
-	 * @param string|null $discoveryuri
-	 * @param string $scope
-	 * @param string|null $endsessionendpointuri
-	 * @param string|null $postLogoutUri
-	 * @return Provider|Entity
 	 * @throws DoesNotExistException
 	 * @throws Exception
 	 * @throws MultipleObjectsReturnedException
 	 */
-	public function createOrUpdateProvider(string $identifier, ?string $clientid = null,
-		?string $clientsecret = null, ?string $discoveryuri = null, string $scope = 'openid email profile',
-		?string $endsessionendpointuri = null, ?string $postLogoutUri = null) {
+	public function createOrUpdateProvider(
+		string $identifier,
+		?string $clientId = null,
+		?string $clientSecret = null,
+		?string $discoveryUri = null,
+		string $scope = 'openid email profile',
+		?string $endSessionEndpointUri = null,
+		?string $postLogoutUri = null,
+	): Provider {
 		try {
 			$provider = $this->findProviderByIdentifier($identifier);
-		} catch (DoesNotExistException $eNotExist) {
-			$provider = null;
-		}
 
-		if ($provider === null) {
-			$provider = new Provider();
-			if (($clientid === null) || ($clientsecret === null) || ($discoveryuri === null)) {
-				throw new DoesNotExistException('Provider must be created. All provider parameters required.');
+			// Update existing provider
+			if ($clientId !== null) {
+				$provider->setClientId($clientId);
 			}
-			$provider->setIdentifier($identifier);
-			$provider->setClientId($clientid);
-			$provider->setClientSecret($clientsecret);
-			$provider->setDiscoveryEndpoint($discoveryuri);
-			$provider->setEndSessionEndpoint($endsessionendpointuri);
-			$provider->setPostLogoutUri($postLogoutUri);
-			$provider->setScope($scope);
-			return $this->insert($provider);
-		} else {
-			if ($clientid !== null) {
-				$provider->setClientId($clientid);
+			if ($clientSecret !== null) {
+				$provider->setClientSecret($clientSecret);
 			}
-			if ($clientsecret !== null) {
-				$provider->setClientSecret($clientsecret);
+			if ($discoveryUri !== null) {
+				$provider->setDiscoveryEndpoint($discoveryUri);
 			}
-			if ($discoveryuri !== null) {
-				$provider->setDiscoveryEndpoint($discoveryuri);
-			}
-			if ($endsessionendpointuri !== null) {
-				$provider->setEndSessionEndpoint($endsessionendpointuri ?: null);
+			if ($endSessionEndpointUri !== null) {
+				$provider->setEndSessionEndpoint($endSessionEndpointUri);
 			}
 			if ($postLogoutUri !== null) {
-				$provider->setPostLogoutUri($postLogoutUri ?: null);
+				$provider->setPostLogoutUri($postLogoutUri);
 			}
 			$provider->setScope($scope);
+
 			return $this->update($provider);
+		} catch (DoesNotExistException $e) {
+			// Create new provider
+			if ($clientId === null || $clientSecret === null || $discoveryUri === null) {
+				throw new DoesNotExistException('Provider must be created. All provider parameters required.');
+			}
+
+			$provider = new Provider();
+			$provider->setIdentifier($identifier);
+			$provider->setClientId($clientId);
+			$provider->setClientSecret($clientSecret);
+			$provider->setDiscoveryEndpoint($discoveryUri);
+			$provider->setEndSessionEndpoint($endSessionEndpointUri);
+			$provider->setPostLogoutUri($postLogoutUri);
+			$provider->setScope($scope);
+
+			return $this->insert($provider);
 		}
 	}
 }
