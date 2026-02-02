@@ -39,10 +39,10 @@ class DiscoveryService {
 	private ICache $cache;
 
 	public function __construct(
-		private readonly LoggerInterface $logger,
-		private readonly HttpClientHelper $clientService,
-		private readonly ProviderService $providerService,
-		private readonly IConfig $config,
+		private LoggerInterface $logger,
+		private HttpClientHelper $clientService,
+		private ProviderService $providerService,
+		private IConfig $config,
 		ICacheFactory $cacheFactory,
 	) {
 		$this->cache = $cacheFactory->createDistributed('user_oidc');
