@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2020 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -23,34 +24,41 @@ class HttpClientHelper implements HttpClient {
 	}
 
 	public function get($url, array $headers = [], array $options = []) {
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
-
-		$client = $this->clientService->newClient();
-
-		$debugModeEnabled = $this->config->getSystemValueBool('debug', false);
-		if ($debugModeEnabled
-			|| (isset($oidcConfig['httpclient.allowselfsigned'])
-				&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true))) {
+		if ($this->shouldDisableSSLVerification()) {
 			$options['verify'] = false;
 		}
 
-		return $client->get($url, $options)->getBody();
+		return $this->clientService->newClient()->get($url, $options)->getBody();
 	}
 
 	public function post($url, $body, array $headers = []) {
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
-		$client = $this->clientService->newClient();
-
 		$options = [
 			'headers' => $headers,
 			'body' => $body,
 		];
 
-		if (isset($oidcConfig['httpclient.allowselfsigned'])
-			&& !in_array($oidcConfig['httpclient.allowselfsigned'], [false, 'false', 0, '0'], true)) {
+		if ($this->shouldDisableSSLVerification()) {
 			$options['verify'] = false;
 		}
 
-		return $client->post($url, $options)->getBody();
+		return $this->clientService->newClient()->post($url, $options)->getBody();
+	}
+
+	private function shouldDisableSSLVerification(): bool {
+		if ($this->config->getSystemValueBool('debug', false)) {
+			return true;
+		}
+
+		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
+		if (!isset($oidcConfig['httpclient.allowselfsigned'])) {
+			return false;
+		}
+
+		$allowSelfSigned = $oidcConfig['httpclient.allowselfsigned'];
+
+		return !($allowSelfSigned === false
+			|| $allowSelfSigned === 'false'
+			|| $allowSelfSigned === 0
+			|| $allowSelfSigned === '0');
 	}
 }
