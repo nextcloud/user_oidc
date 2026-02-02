@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -10,24 +11,29 @@ namespace OCA\UserOIDC\Model;
 
 use JsonSerializable;
 
-class Token implements JsonSerializable {
+readonly class Token implements JsonSerializable {
 
-	private ?string $idToken;
-	private string $accessToken;
-	private int $expiresIn;
-	private ?int $refreshExpiresIn;
-	private ?string $refreshToken;
-	private int $createdAt;
-	private ?int $providerId;
+	public function __construct(
+		private ?string $idToken,
+		private string $accessToken,
+		private int $expiresIn,
+		private ?int $refreshExpiresIn,
+		private ?string $refreshToken,
+		private int $createdAt,
+		private ?int $providerId,
+	) {
+	}
 
-	public function __construct(array $tokenData) {
-		$this->idToken = $tokenData['id_token'] ?? null;
-		$this->accessToken = $tokenData['access_token'];
-		$this->expiresIn = $tokenData['expires_in'];
-		$this->refreshExpiresIn = $tokenData['refresh_expires_in'] ?? null;
-		$this->refreshToken = $tokenData['refresh_token'] ?? null;
-		$this->createdAt = $tokenData['created_at'] ?? time();
-		$this->providerId = $tokenData['provider_id'] ?? null;
+	public static function fromArray(array $tokenData): self {
+		return new self(
+			idToken: $tokenData['id_token'] ?? null,
+			accessToken: $tokenData['access_token'],
+			expiresIn: $tokenData['expires_in'],
+			refreshExpiresIn: $tokenData['refresh_expires_in'] ?? null,
+			refreshToken: $tokenData['refresh_token'] ?? null,
+			createdAt: $tokenData['created_at'] ?? time(),
+			providerId: $tokenData['provider_id'] ?? null,
+		);
 	}
 
 	public function getAccessToken(): string {
@@ -43,8 +49,7 @@ class Token implements JsonSerializable {
 	}
 
 	public function getExpiresInFromNow(): int {
-		$expiresAt = $this->createdAt + $this->expiresIn;
-		return $expiresAt - time();
+		return ($this->createdAt + $this->expiresIn) - time();
 	}
 
 	public function getRefreshExpiresIn(): ?int {
@@ -53,12 +58,10 @@ class Token implements JsonSerializable {
 
 	public function getRefreshExpiresInFromNow(): int {
 		// if there is no refresh_expires_in, we assume the refresh token never expires
-		// so we don't need getRefreshExpiresInFromNow
 		if ($this->refreshExpiresIn === null) {
 			return 0;
 		}
-		$refreshExpiresAt = $this->createdAt + $this->refreshExpiresIn;
-		return $refreshExpiresAt - time();
+		return ($this->createdAt + $this->refreshExpiresIn) - time();
 	}
 
 	public function getRefreshToken(): ?string {
@@ -93,7 +96,7 @@ class Token implements JsonSerializable {
 		return time() > ($this->createdAt + (int)($this->refreshExpiresIn / 2));
 	}
 
-	public function getCreatedAt() {
+	public function getCreatedAt(): int {
 		return $this->createdAt;
 	}
 
