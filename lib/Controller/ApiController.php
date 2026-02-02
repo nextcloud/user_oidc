@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /**
  * SPDX-FileCopyrightText: 2022 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -30,54 +31,49 @@ class ApiController extends Controller {
 		parent::__construct(Application::APP_ID, $request);
 	}
 
-	/**
-	 * @param int $providerId
-	 * @param string $userId
-	 * @param string|null $displayName
-	 * @param string|null $email
-	 * @param string|null $quota
-	 * @return DataResponse
-	 */
 	#[NoCSRFRequired]
-	public function createUser(int $providerId, string $userId, ?string $displayName = null,
-		?string $email = null, ?string $quota = null): DataResponse {
+	public function createUser(
+		int $providerId,
+		string $userId,
+		?string $displayName = null,
+		?string $email = null,
+		?string $quota = null,
+	): DataResponse {
 		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
 		$user = $this->userManager->get($backendUser->getUserId());
 
-		if ($displayName) {
-			if ($displayName !== $backendUser->getDisplayName()) {
-				$backendUser->setDisplayName($displayName);
-				$this->userMapper->update($backendUser);
-			}
+		// Update display name if provided and different
+		if ($displayName !== null && $displayName !== $backendUser->getDisplayName()) {
+			$backendUser->setDisplayName($displayName);
+			$this->userMapper->update($backendUser);
 		}
 
-		if ($email) {
+		// Update email if provided
+		if ($email !== null) {
 			$user->setSystemEMailAddress($email);
 		}
 
-		if ($quota) {
+		// Update quota if provided
+		if ($quota !== null) {
 			$user->setQuota($quota);
 		}
 
+		// Copy skeleton files to user folder
 		$userFolder = $this->root->getUserFolder($user->getUID());
 		try {
-			// copy skeleton
 			\OC_Util::copySkeleton($user->getUID(), $userFolder);
-		} catch (NotPermittedException $ex) {
-			// read only uses
+		} catch (NotPermittedException $e) {
+			// Silently ignore for read-only users
 		}
 
 		return new DataResponse(['user_id' => $user->getUID()]);
 	}
 
-	/**
-	 * @param string $userId
-	 * @return DataResponse
-	 */
 	#[NoCSRFRequired]
 	public function deleteUser(string $userId): DataResponse {
 		$user = $this->userManager->get($userId);
-		if (is_null($user) || $user->getBackendClassName() !== Application::APP_ID) {
+
+		if ($user === null || $user->getBackendClassName() !== Application::APP_ID) {
 			return new DataResponse(['message' => 'User not found'], Http::STATUS_NOT_FOUND);
 		}
 
