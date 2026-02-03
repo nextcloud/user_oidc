@@ -90,6 +90,28 @@ The OpenID Connect backend will ensure that user ids are unique even when multip
 id to ensure that a user cannot identify for the same Nextcloud account through different providers.
 Therefore, a hash of the provider id and the user id is used. This behaviour can be turned off in the provider options.
 
+### Parsing user IDs from claims
+
+If your ID tokens do not contain the user ID directly in an attribute/claim,
+you can configure user_oidc to apply a regular expression to extract the user ID from the claim.
+
+```php
+'user_oidc' => [
+  'user_id_regexp' => '/u=([^,]+)/'
+]
+```
+
+This regular expression may or may not contain parenthesis. If it does, only the selected block will be extracted.
+Examples:
+
+* `'/[a-zA-Z]+/'`
+  * `'123-abc-123'` will give `'abc'`
+  * `'123-abc-345-def'` will give `'abc'`
+* `'/u=([^,]+)/'`
+  * `'u=123'` will give `'123'`
+  * `'anything,u=123,anything'` will give `'123'`
+  * `'anything,u=123,anything,u=345'` will give `'123'`
+
 ## Commandline settings
 The app could also be configured by commandline.
 
@@ -202,6 +224,22 @@ parameter to the login URL.
 sudo -u www-data php var/www/nextcloud/occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
 ```
 
+### Private key JWT authentication
+
+This app supports private key JWT authentication.
+See the `private_key_jwt` authentication method in https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication
+This can be enabled for each provider individually in their settings
+(in Nextcloud's admin settings or with the `occ user_oidc:provider` command`).
+
+If you enable that for a provider, you must configure the client accordingly on the IdP side.
+In the IdP client settings, you should be able to make it accept a signed JWT and set the JWKS URL.
+
+The JWKS URL you should set in your IdP's client settings is `https://<your-nextcloud-url>/index.php/apps/user_oidc/jwks`.
+The exact URL is displayed in the user_oidc admin settings.
+
+In Keycloak, you can set the JWKS URL in the "Keys" tab of the client settings. Then you can choose "Signed Jwt"
+as the "Client Authenticator" in the "Credentials" tab.
+
 ### PKCE
 
 This app supports PKCE (Proof Key for Code Exchange).
@@ -214,6 +252,15 @@ You can also manually disable it in `config.php`:
     'use_pkce' => false,
 ],
 ```
+
+You can also force the use of PKCE with:
+``` php
+'user_oidc' => [
+    'use_pkce' => 'force',
+],
+```
+This will make user_oidc use PKCE even if the `code_challenge_methods_supported` value of the provider's discovery endpoint
+is not defined or does not contain `S256`.
 
 ### Single logout
 

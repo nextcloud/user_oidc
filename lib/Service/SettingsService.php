@@ -13,12 +13,14 @@ namespace OCA\UserOIDC\Service;
 use OCA\UserOIDC\AppInfo\Application;
 use OCP\Exceptions\AppConfigTypeConflictException;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
 class SettingsService {
 
 	public function __construct(
 		private IAppConfig $appConfig,
+		private IConfig $config,
 		private LoggerInterface $logger,
 	) {
 	}
@@ -40,5 +42,22 @@ class SettingsService {
 			$this->appConfig->deleteKey(Application::APP_ID, 'allow_multiple_user_backends');
 			$this->appConfig->setValueString(Application::APP_ID, 'allow_multiple_user_backends', $value ? '1' : '0', lazy: true);
 		}
+	}
+
+	public function parseUserId(string $userId): string {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		if (isset($oidcSystemConfig['user_id_regexp']) && is_string($oidcSystemConfig['user_id_regexp']) && $oidcSystemConfig['user_id_regexp'] !== '') {
+			// check that the regexp is valid
+			if (preg_match('/^\/.+\/[a-z]*$/', $oidcSystemConfig['user_id_regexp'], $matches) === 1) {
+				$this->logger->warning(
+					'Incorrect "user_id_regexp", it should start and end with a "/" and have optional trailing modifiers',
+					['regexp' => $oidcSystemConfig['user_id_regexp']],
+				);
+			}
+			if (preg_match($oidcSystemConfig['user_id_regexp'], $userId, $matches) === 1) {
+				return $matches[1] ?? $matches[0];
+			}
+		}
+		return $userId;
 	}
 }
