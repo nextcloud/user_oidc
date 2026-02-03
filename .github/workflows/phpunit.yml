@@ -13,7 +13,6 @@ on:
 env:
   APP_NAME: user_oidc
 
-
 jobs:
   integration:
     runs-on: ubuntu-latest
@@ -21,25 +20,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-versions: ['8.2', '8.3']
+        php-versions: ['8.2', '8.3', '8.4']
         databases: ['mysql']
         server-versions: ['stable31', 'stable32', 'stable33', 'master']
-        include:
-          - php-versions: 8.4
-            databases: mysql
+        exclude:
+          # Reduce matrix - test pgsql only on master and latest stable
+          - databases: pgsql
             server-versions: stable31
-          - php-versions: 8.4
-            databases: mysql
+          - databases: pgsql
             server-versions: stable32
-          - php-versions: 8.4
-            databases: mysql
-            server-versions: stable33
+        include:
+          # PHP 8.5 with mysql on latest versions
           - php-versions: 8.5
             databases: mysql
             server-versions: stable33
-          - php-versions: 8.4
-            databases: mysql
-            server-versions: master
           - php-versions: 8.5
             databases: mysql
             server-versions: master
@@ -48,7 +42,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:14
+        image: postgres:16
         ports:
           - 4445:5432/tcp
         env:
@@ -57,12 +51,12 @@ jobs:
           POSTGRES_DB: nextcloud
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 2s --health-retries 5
       mysql:
-        image: mariadb:10.6
+        image: mariadb:11.4
         ports:
           - 4444:3306/tcp
         env:
           MYSQL_ROOT_PASSWORD: rootpassword
-        options: --health-cmd="mysqladmin ping" --health-interval 5s --health-timeout 2s --health-retries 5
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval 5s --health-timeout 2s --health-retries 5
 
     steps:
       - name: Checkout server
@@ -81,13 +75,21 @@ jobs:
         uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # v2.36.0
         with:
           php-version: ${{ matrix.php-versions }}
-          tools: phpunit
           extensions: zip, gd, mbstring, iconv, fileinfo, intl, sqlite, pdo_sqlite, mysql, pdo_mysql, pgsql, pdo_pgsql
           coverage: none
+          ini-values: memory_limit=512M
 
-      - name: Set up PHPUnit
+      - name: Cache composer dependencies
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ~/.cache/composer
+          key: php-${{ matrix.php-versions }}-composer-${{ hashFiles('apps/${{ env.APP_NAME }}/composer.lock') }}
+          restore-keys: |
+            php-${{ matrix.php-versions }}-composer-
+
+      - name: Install composer dependencies
         working-directory: apps/${{ env.APP_NAME }}
-        run: composer i
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
 
       - name: Set up Nextcloud
         run: |
