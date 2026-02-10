@@ -31,7 +31,9 @@
   "require": {
     "id4me/id4me-rp": "^1.2",
     "firebase/php-jwt": "^7",
-    "bamarni/composer-bin-plugin": "^1.4"
+    "bamarni/composer-bin-plugin": "^1.4",
+    "web-token/jwt-library": "^4.1",
+    "spomky-labs/aes-key-wrap": "^7.0"
   },
   "require-dev": {
     "nextcloud/coding-standard": "^1.0.0",
