@@ -33,7 +33,7 @@ class LdapService {
 	 * @throws \Psr\Container\NotFoundExceptionInterface
 	 */
 	public function isLdapDeletedUser(IUser $user): bool {
-		if ($this->isLDAPEnabled()) {
+		if (!$this->isLDAPEnabled()) {
 			return false;
 		}
 
