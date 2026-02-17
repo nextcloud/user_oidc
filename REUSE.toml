@@ -18,7 +18,7 @@ SPDX-FileCopyrightText = "2020 Nextcloud GmbH and Nextcloud contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
-path = ["tests/integration/config/realm-export.json", "vendor-bin/mozart/composer.json", "vendor-bin/mozart/composer.lock"]
+path = ["tests/integration/config/realm-export.json", "vendor-bin/mozart/composer.json", "vendor-bin/mozart/composer.lock", "vendor-bin/psalm/composer.json", "vendor-bin/psalm/composer.lock"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2021 Nextcloud GmbH and Nextcloud contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
