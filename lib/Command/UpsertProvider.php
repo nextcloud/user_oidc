@@ -195,9 +195,13 @@ class UpsertProvider extends Base {
 
 		$identifier = $input->getArgument('identifier');
 		$clientId = $input->getOption('clientid');
+		$clientSecret = $input->getOption('clientsecret');
+		$clientSecretFile = $input->getOption('clientsecret-file');
+		$clientSecretEnv = $input->getOption('clientsecret-env');
 		try {
-			$clientSecret = $this->getClientSecretInput($input, $output);
+			$clientSecret = $this->getClientSecretInput($clientSecret, $clientSecretFile, $clientSecretEnv, $output);
 		} catch (\Exception $e) {
+			$output->writeln($e->getMessage());
 			return 1;
 		}
 		$discoveryuri = $input->getOption('discoveryuri');
@@ -310,44 +314,39 @@ class UpsertProvider extends Base {
 		return 0;
 	}
 
-	private function getClientSecretInput(InputInterface $input, OutputInterface $output): ?string {
-		$clientSecret = $input->getOption('clientsecret');
-		$clientSecretFile = $input->getOption('clientsecret-file');
-		$clientSecretEnv = $input->getOption('clientsecret-env');
+	private function getClientSecretInput(
+		?string $clientSecret, ?string $clientSecretFile, ?string $clientSecretEnv, OutputInterface $output,
+	): ?string {
 		if (
 			($clientSecret !== null && $clientSecretFile !== null)
 			|| ($clientSecret !== null && $clientSecretEnv !== null)
 			|| ($clientSecretFile !== null && $clientSecretEnv !== null)
 		) {
-			$output->writeln('<comment>Only one of "--clientsecret", "--clientsecret-file" or "--clientsecret-env" can be used.</comment>');
-			throw new \Exception();
+			throw new \Exception('<comment>Only one of "--clientsecret", "--clientsecret-file" or "--clientsecret-env" can be used.</comment>');
 		}
 		if ($clientSecret !== null) {
-			$clientSecret = $this->crypto->encrypt($clientSecret);
+			return $this->crypto->encrypt($clientSecret);
 		}
-		if ($clientSecretFile) {
+		if ($clientSecretFile !== null) {
 			$clientSecret = file_get_contents($clientSecretFile);
 			if (is_string($clientSecret) && $clientSecret !== '') {
-				$clientSecret = trim($clientSecret);
-				$clientSecret = $this->crypto->encrypt($clientSecret);
 				$output->writeln('<info>Client secret loaded from file "' . $clientSecretFile . '"</info>');
+				$clientSecret = trim($clientSecret);
+				return $this->crypto->encrypt($clientSecret);
 			} else {
-				$output->writeln('<error>Client secret file "' . $clientSecretFile . '" could not be read or is empty</error>');
-				throw new \Exception();
+				throw new \Exception('<error>Client secret file "' . $clientSecretFile . '" could not be read or is empty</error>');
 			}
 		}
-		if ($clientSecretEnv) {
+		if ($clientSecretEnv !== null) {
 			$clientSecret = getenv($clientSecretEnv);
 			if (is_string($clientSecret) && $clientSecret !== '') {
-				$clientSecret = trim($clientSecret);
-				$clientSecret = $this->crypto->encrypt($clientSecret);
 				$output->writeln('<info>Client secret loaded from environment variable "' . $clientSecretEnv . '"</info>');
+				$clientSecret = trim($clientSecret);
+				return $this->crypto->encrypt($clientSecret);
 			} else {
-				$output->writeln('<error>Client secret environment variable "' . $clientSecretFile . '" could not be read or is empty</error>');
-				throw new \Exception();
+				throw new \Exception('<error>Client secret environment variable "' . $clientSecretEnv . '" could not be read or is empty</error>');
 			}
 		}
-
-		return $clientSecret;
+		return null;
 	}
 }
