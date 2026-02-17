@@ -8,6 +8,7 @@
 namespace OCA\UserOIDC\Service;
 
 use InvalidArgumentException;
+use Locale;
 use OC\Accounts\AccountManager;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
@@ -311,6 +312,9 @@ class ProvisioningService {
 		$this->logger->debug('Locale mapping event dispatched');
 		if ($event->hasValue()) {
 			$locale = $event->getValue();
+			// according to the RFC, the locale we get is in BCP47 format (for example, en-US or fr-CA)
+			// see https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+			$locale = Locale::canonicalize($locale);
 			$locales = $this->l10nFactory->findAvailableLocales();
 			$localeCodes = array_map(static function ($l) {
 				return $l['code'];
