@@ -46,9 +46,17 @@
         "classmap_directory": "/lib/autoload/",
         "classmap_prefix": "NEXTCLOUD_USER_OIDC_",
         "packages": [
-            "firebase/php-jwt"
+            "firebase/php-jwt",
+            "id4me/id4me-rp"
         ],
-        "delete_vendor_directories": true
+        "delete_vendor_directories": true,
+		"override_autoload": {
+			"id4me/id4me-rp": {
+				"psr-4": {
+					"Id4me\\RP\\": "src/"
+				}
+			}
+		}
     },
 	"bamarni-bin": {
 		"bin-links": true,

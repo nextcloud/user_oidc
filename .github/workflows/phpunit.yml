@@ -89,7 +89,7 @@ jobs:
 
       - name: Install composer dependencies
         working-directory: apps/${{ env.APP_NAME }}
-        run: composer install --no-progress --prefer-dist --optimize-autoloader
+        run: composer install
 
       - name: Set up Nextcloud
         run: |
