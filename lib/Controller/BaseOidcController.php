@@ -53,13 +53,20 @@ class BaseOidcController extends Controller {
 	 * @param int $statusCode
 	 * @param array $throttleMetadata
 	 * @param bool|null $throttle
+	 * @param string|null $errorDescription
 	 * @return TemplateResponse
 	 */
-	protected function build403TemplateResponse(string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null): TemplateResponse {
+	protected function build403TemplateResponse(
+		string $message, int $statusCode, array $throttleMetadata = [], ?bool $throttle = null,
+		?string $errorDescription = null,
+	): TemplateResponse {
 		$params = [
 			'message' => $message,
 			'title' => $this->l->t('Access forbidden'),
 		];
+		if ($errorDescription) {
+			$params['error_description'] = $errorDescription;
+		}
 		return $this->buildFailureTemplateResponse($params, $statusCode, $throttleMetadata, $throttle);
 	}
 
