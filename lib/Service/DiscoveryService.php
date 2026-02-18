@@ -196,16 +196,18 @@ class DiscoveryService {
 			throw new \RuntimeException('Invalid JWKS: missing "keys" array');
 		}
 
+		// Filter out keys with incompatible key types to prevent
+		// Firebase JWT from failing on unsupported curves (e.g. P-521, Ed448).
+		// See https://github.com/firebase/php-jwt/issues/561
+		$jwks['keys'] = array_values(array_filter($jwks['keys'], function ($key) use ($expectedKty) {
+			return ($key['kty'] ?? null) === $expectedKty;
+		}));
+		$keys = $jwks['keys'];
+
 		$matchingIndex = null;
 
 		foreach ($keys as $index => $key) {
-			$keyKty = $key['kty'] ?? null;
 			$keyUse = $key['use'] ?? null;
-
-			// Skip keys with incompatible type
-			if ($keyKty !== $expectedKty) {
-				continue;
-			}
 
 			// Skip keys not intended for signature
 			if ($keyUse !== null && $keyUse !== 'sig') {
