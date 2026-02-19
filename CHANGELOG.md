@@ -8,6 +8,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.4.0 – 2026-02-19
+
+### Added
+
+- feat(upsert): new options to read client secret from env var or file @julien-nc [#1324](https://github.com/nextcloud/user_oidc/pull/1324)
+- Add documentation for the different types of group claims @s3n-w6i [#1339](https://github.com/nextcloud/user_oidc/pull/1339)
+
+### Changed
+
+- Refactoring @solracsf [#1319](https://github.com/nextcloud/user_oidc/pull/1319) [#1320](https://github.com/nextcloud/user_oidc/pull/1320) [#1321](https://github.com/nextcloud/user_oidc/pull/1321) [#1322](https://github.com/nextcloud/user_oidc/pull/1322)
+
+### Fixed
+
+- Handle string Content-Type headers during avatar provisioning @mod242 [#1302](https://github.com/nextcloud/user_oidc/pull/1302)
+- fix(discovery): do not cache the discovery response if it can't be decoded @julien-nc [#1304](https://github.com/nextcloud/user_oidc/pull/1304)
+- fix(jwks): filter unsupported key types to prevent Firebase JWT crash @strobelpierre [#1333](https://github.com/nextcloud/user_oidc/pull/1333)
+- canonicalize locale string @alejo7797 [#1336](https://github.com/nextcloud/user_oidc/pull/1336)
+- fix(id4me): use mozart to move id4me/id4me-rp in lib/Vendor and adjust its namespace so it is not imported by other files in Nextcloud @julien-nc [#1337](https://github.com/nextcloud/user_oidc/pull/1337)
+- fix(ldap-service): in LdapService::isLdapDeletedUser, make an early return to false if the user_ldap app is NOT enabled @julien-nc [#1340](https://github.com/nextcloud/user_oidc/pull/1340)
+
 ## 8.3.0 – 2026-01-12
 
 ### Changed
