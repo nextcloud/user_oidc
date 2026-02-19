@@ -8,8 +8,6 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Controller;
 
-use Id4me\RP\Exception\InvalidAuthorityIssuerException;
-use Id4me\RP\Exception\OpenIdDnsRecordNotFoundException;
 use OC\User\Session as OC_UserSession;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Id4Me;
@@ -18,6 +16,11 @@ use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
+use OCA\UserOIDC\Vendor\Id4me\RP\Exception\InvalidAuthorityIssuerException;
+use OCA\UserOIDC\Vendor\Id4me\RP\Exception\InvalidOpenIdDomainException;
+use OCA\UserOIDC\Vendor\Id4me\RP\Exception\OpenIdDnsRecordNotFoundException;
+use OCA\UserOIDC\Vendor\Id4me\RP\Model\OpenIdConfig;
+use OCA\UserOIDC\Vendor\Id4me\RP\Service;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Http;
@@ -40,10 +43,6 @@ use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 
-require_once __DIR__ . '/../../vendor/autoload.php';
-use Id4me\RP\Exception\InvalidOpenIdDomainException;
-use Id4me\RP\Model\OpenIdConfig;
-use Id4me\RP\Service;
 use OCP\Util;
 use Psr\Log\LoggerInterface;
 
