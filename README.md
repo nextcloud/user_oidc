@@ -409,6 +409,12 @@ sudo -u www-data php /var/www/nextcloud/occ user_oidc:provider demoprovider \
                 --group-provisioning=1 --group-whitelist-regex='/<regex>/' --group-restrict-login-to-whitelist=1
 ```
 
+The following formats are supported for the groups claim:
+
+* String list of group names: `"groups": "group1,group2,group3"`
+* Array of group name strings: `"groups": ["group1", "group2", "group3"]`
+* Object with name and id: `"groups": [{ "gid": "id1", "displayName": "group1" }, ...]`
+
 ### Disable audience and azp checks
 
 The `audience` and `azp` token claims will be checked when validating a login ID token.
