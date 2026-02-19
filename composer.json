@@ -37,7 +37,7 @@
     "nextcloud/coding-standard": "^1.0.0",
     "symfony/event-dispatcher": "^4",
     "nextcloud/ocp": "dev-stable29",
-    "phpunit/phpunit": "^10"
+    "phpunit/phpunit": "^13"
   },
   "extra": {
     "mozart": {
