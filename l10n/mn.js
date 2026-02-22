@@ -4,8 +4,15 @@ OC.L10N.register(
     "Error" : "Алдаа",
     "Access forbidden" : "Хандах эрхгүй",
     "Client ID" : "Хэрэглэгчийн ID",
+    "Update" : "Шинэчлэх",
+    "Remove" : "Хасах",
+    "Confirm deletion" : "Устгахыг баталгаажуулах",
     "Cancel" : "Цуцлах",
     "Delete" : "Устгах",
-    "Submit" : "мэдэгдэх"
+    "Submit" : "мэдэгдэх",
+    "Client secret" : "Клиентийн нууц",
+    "Scope" : "Хамрах хүрээ",
+    "Back to %s" : "%s руу буцах",
+    "Domain" : "Домэйн"
 },
 "nplurals=2; plural=(n != 1);");

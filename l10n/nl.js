@@ -72,6 +72,7 @@ OC.L10N.register(
     "Groups mapping" : "Groepen-toewijzing",
     "Extra attributes mapping" : "Extra kenmerken-toewijzing",
     "Display name mapping" : "Weergavenaam-toewijzing",
+    "Pronouns mapping" : "Toewijzing van zelfstandige voornaamwoorden",
     "Gender mapping" : "Gender-toewijzing",
     "Email mapping" : "E-mailtoewijzing",
     "Phone mapping" : "Telefoontoewijzing",
