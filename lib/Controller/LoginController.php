@@ -214,8 +214,13 @@ class LoginController extends BaseOidcController {
 			// ['essential' => true] means it's mandatory but it won't trigger an error if it's not there
 			// null means we want it
 			'id_token' => new \stdClass(),
-			'userinfo' => new \stdClass(),
 		];
+		// Some providers (e.g. Google) reject the claims parameter when it contains a 'userinfo' key.
+		// Userinfo claims are enabled by default; set 'send_userinfo_claims' => false in config.php to disable them.
+		$sendUserinfoClaims = filter_var($oidcSystemConfig['send_userinfo_claims'] ?? true, FILTER_VALIDATE_BOOLEAN);
+		if ($sendUserinfoClaims) {
+			$claims['userinfo'] = new \stdClass();
+		}
 
 		$resolveNestedClaims = $this->providerService->getSetting($providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0') === '1';
 		// by default: default claims are ENABLED
@@ -229,7 +234,9 @@ class LoginController extends BaseOidcController {
 			$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 			foreach ([$emailAttribute, $displaynameAttribute, $quotaAttribute, $groupsAttribute] as $claim) {
 				$claims['id_token']->{$claim} = null;
-				$claims['userinfo']->{$claim} = null;
+				if ($sendUserinfoClaims) {
+					$claims['userinfo']->{$claim} = null;
+				}
 			}
 		} else {
 			// No default claim, we only set the claims if an attribute is mapped
@@ -253,7 +260,9 @@ class LoginController extends BaseOidcController {
 			foreach ($rawClaims as $claim) {
 				if ($claim !== '') {
 					$claims['id_token']->{$claim} = null;
-					$claims['userinfo']->{$claim} = null;
+					if ($sendUserinfoClaims) {
+						$claims['userinfo']->{$claim} = null;
+					}
 				}
 			}
 		}
@@ -264,7 +273,9 @@ class LoginController extends BaseOidcController {
 				$uidAttributeToRequest = trim(explode('|', $uidAttribute)[0]);
 			}
 			$claims['id_token']->{$uidAttributeToRequest} = ['essential' => true];
-			$claims['userinfo']->{$uidAttributeToRequest} = ['essential' => true];
+			if ($sendUserinfoClaims) {
+				$claims['userinfo']->{$uidAttributeToRequest} = ['essential' => true];
+			}
 		}
 
 		$extraClaimsString = $this->providerService->getSetting($providerId, ProviderService::SETTING_EXTRA_CLAIMS, '');
@@ -272,7 +283,9 @@ class LoginController extends BaseOidcController {
 			$extraClaims = explode(' ', $extraClaimsString);
 			foreach ($extraClaims as $extraClaim) {
 				$claims['id_token']->{$extraClaim} = null;
-				$claims['userinfo']->{$extraClaim} = null;
+				if ($sendUserinfoClaims) {
+					$claims['userinfo']->{$extraClaim} = null;
+				}
 			}
 		}
 
