@@ -437,6 +437,16 @@ This app can stop matching users (when a user search is performed in Nextcloud) 
 ],
 ```
 
+### Allow login over unencrypted HTTP
+
+***Warning***: This is dangerous. Login credentials may be transmitted without encryption.
+
+By default, the app only allows login when the connection uses HTTPS. In some scenarios, you may need to disable this check - for example, when your Nextcloud instance is served as a [Tor onion service](https://en.wikipedia.org/wiki/Tor_(network)#Onion_services), where traffic is already encrypted by the Tor protocol.
+
+```
+sudo -u www-data php /var/www/nextcloud/occ config:app:set --value=1 --type=boolean user_oidc allow_insecure_http
+```
+
 ### Optional: Enable support for nested and fallback claim mappings
 
 By default, claim mapping in this app uses **flat attribute keys** like `email`, `name`, `custom.nickname`, etc.
