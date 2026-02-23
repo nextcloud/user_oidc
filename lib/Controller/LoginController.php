@@ -105,7 +105,9 @@ class LoginController extends BaseOidcController {
 	 */
 	private function isSecure(): bool {
 		// no restriction in debug mode
-		return $this->isDebugModeEnabled() || $this->request->getServerProtocol() === 'https';
+		return $this->isDebugModeEnabled()
+			|| $this->appConfig->getValueBool(Application::APP_ID, 'allow_insecure_http', false, lazy: true)
+			|| $this->request->getServerProtocol() === 'https';
 	}
 
 	/**
