@@ -186,6 +186,22 @@ This will use the content of the userinfo endpoint response just like if it had 
 This will only work on login and not when validating a bearer token
 because provisioning when validating a bearer access token is not supported yet.
 
+### Optional userinfo claim
+
+By default, user_oidc requests the `userinfo` claim during OIDC authorization.
+However, some providers (e.g. Google) reject the claims parameter when it contains a `userinfo` key.
+
+You can disable sending the `userinfo` claim by setting this value in `config.php`:
+
+``` php
+'user_oidc' => [
+    'send_userinfo_claims' => false,
+],
+```
+
+When `send_userinfo_claims` is disabled, user_oidc will not include the `userinfo` claim in authorization requests,
+which may improve compatibility with providers.
+
 ### ID4me option
 ID4me is an application setting switch which is configurable as normal Nextcloud app setting:
 ```
