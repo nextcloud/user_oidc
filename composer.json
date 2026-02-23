@@ -35,7 +35,7 @@
   },
   "require-dev": {
     "nextcloud/coding-standard": "^1.0.0",
-    "symfony/event-dispatcher": "^4",
+    "symfony/event-dispatcher": "^7",
     "nextcloud/ocp": "dev-stable29",
     "phpunit/phpunit": "^10"
   },
