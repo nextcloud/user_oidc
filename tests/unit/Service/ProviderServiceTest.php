@@ -266,7 +266,7 @@ class ProviderServiceTest extends TestCase {
 	public function testSetSetting() {
 		$this->appConfig->expects(self::once())
 			->method('setValueString')
-			->with(Application::APP_ID, 'provider-1-key', 'value', true);
+			->with(Application::APP_ID, 'provider-1-key', 'value');
 
 		$this->providerService->setSetting(1, 'key', 'value');
 	}
@@ -282,7 +282,7 @@ class ProviderServiceTest extends TestCase {
 	public function testGetSetting($providerId, $key, $stored, $expected, $default = '') {
 		$this->appConfig->expects(self::once())
 			->method('getValueString')
-			->with(Application::APP_ID, 'provider-' . $providerId . '-' . $key, '', true)
+			->with(Application::APP_ID, 'provider-' . $providerId . '-' . $key, '')
 			->willReturn($stored);
 
 		Assert::assertEquals($expected, $this->providerService->getSetting($providerId, $key, $default));
@@ -321,19 +321,24 @@ class ProviderServiceTest extends TestCase {
 	}
 
 	protected static function invokePrivate($object, $methodName, array $parameters = []) {
-		$reflection = is_string($object)
-			? new \ReflectionClass($object)
-			: new \ReflectionObject($object);
+		if (is_string($object)) {
+			$className = $object;
+		} else {
+			$className = get_class($object);
+		}
+		$reflection = new \ReflectionClass($className);
 
 		if ($reflection->hasMethod($methodName)) {
 			$method = $reflection->getMethod($methodName);
+
 			$method->setAccessible(true);
 
-			return $method->invokeArgs(is_string($object) ? null : $object, $parameters);
+			return $method->invokeArgs($object, $parameters);
 		}
 
 		if ($reflection->hasProperty($methodName)) {
 			$property = $reflection->getProperty($methodName);
+
 			$property->setAccessible(true);
 
 			if (!empty($parameters)) {
