@@ -313,7 +313,7 @@ class ProviderServiceTest extends TestCase {
 		];
 	}
 	/** @dataProvider dataConvertJson */
-	public function testConvertJson($key, $value, $stored, $expected) {
+	public function static testConvertJson($key, $value, $stored, $expected) {
 		$raw = self::invokePrivate($this->providerService, 'convertFromJSON', [$key, $value]);
 		Assert::assertEquals($stored, $raw);
 		$actual = self::invokePrivate($this->providerService, 'convertToJSON', [$key, $raw]);
