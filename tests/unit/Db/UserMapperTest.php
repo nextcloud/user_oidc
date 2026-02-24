@@ -67,7 +67,7 @@ class UserMapperTest extends TestCase {
 	}
 
 	/** @dataProvider dataCreate */
-	public function testCreate(int $providerId, string $sub, string $generatedId, bool $id4me, string $expected): void {
+	public static function testCreate(int $providerId, string $sub, string $generatedId, bool $id4me, string $expected): void {
 		$this->idService->expects(self::once())->method('getId')->with($providerId, $sub, $id4me)->willReturn($generatedId);
 
 		$this->userMapper->expects(self::once())

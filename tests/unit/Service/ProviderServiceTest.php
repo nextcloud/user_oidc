@@ -279,7 +279,7 @@ class ProviderServiceTest extends TestCase {
 	}
 
 	/** @dataProvider dataGetSetting */
-	public function testGetSetting($providerId, $key, $stored, $expected, $default = '') {
+	public static function testGetSetting($providerId, $key, $stored, $expected, $default = '') {
 		$this->appConfig->expects(self::once())
 			->method('getValueString')
 			->with(Application::APP_ID, 'provider-' . $providerId . '-' . $key, '')
@@ -313,7 +313,7 @@ class ProviderServiceTest extends TestCase {
 		];
 	}
 	/** @dataProvider dataConvertJson */
-	public function static testConvertJson($key, $value, $stored, $expected) {
+	public static function testConvertJson($key, $value, $stored, $expected) {
 		$raw = self::invokePrivate($this->providerService, 'convertFromJSON', [$key, $value]);
 		Assert::assertEquals($stored, $raw);
 		$actual = self::invokePrivate($this->providerService, 'convertToJSON', [$key, $raw]);

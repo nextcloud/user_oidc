@@ -46,7 +46,7 @@ class IdServiceTest extends TestCase {
 	}
 
 	/** @dataProvider dataGetId */
-	public function testGetId(int $providerId, string $providerName, string $id, bool $id4me, bool $uniqueId, bool $providerBasedId, string $expected): void {
+	public static function testGetId(int $providerId, string $providerName, string $id, bool $id4me, bool $uniqueId, bool $providerBasedId, string $expected): void {
 		$provider = new Provider();
 		$provider->setIdentifier($providerName);
 
