@@ -354,7 +354,7 @@ class ProvisioningServiceTest extends TestCase {
 	}
 
 	/** @dataProvider dataProvisionUserGroups */
-	public function testProvisionUserGroups(string $gid, string $displayName, object $payload, string $group_whitelist, bool $expect_delete_local_group): void {
+	public static function testProvisionUserGroups(string $gid, string $displayName, object $payload, string $group_whitelist, bool $expect_delete_local_group): void {
 		$user = $this->createMock(IUser::class);
 		$group = $this->createMock(IGroup::class);
 		$local_group = $this->createMock(IGroup::class);
