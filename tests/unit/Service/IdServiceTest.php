@@ -32,7 +32,7 @@ class IdServiceTest extends TestCase {
 		$this->idService = new LocalIdService($this->providerService, $this->providerMapper);
 	}
 
-	public function dataGetId() {
+	public static function dataGetId() {
 		return [
 			[1, 'provider1', 'id1', false, false, false, 'id1'],
 			[2, 'provider2', 'id2', true, false, false, 'a86d8ab935af1778a321e615db5116e850c85a7a3070049ccd824b8989ccb4d5'],
