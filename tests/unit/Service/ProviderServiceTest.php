@@ -321,24 +321,19 @@ class ProviderServiceTest extends TestCase {
 	}
 
 	protected static function invokePrivate($object, $methodName, array $parameters = []) {
-		if (is_string($object)) {
-			$className = $object;
-		} else {
-			$className = get_class($object);
-		}
-		$reflection = new \ReflectionClass($className);
+		$reflection = is_string($object)
+			? new \ReflectionClass($object)
+			: new \ReflectionObject($object);
 
 		if ($reflection->hasMethod($methodName)) {
 			$method = $reflection->getMethod($methodName);
-
 			$method->setAccessible(true);
 
-			return $method->invokeArgs($object, $parameters);
+			return $method->invokeArgs(is_string($object) ? null : $object, $parameters);
 		}
 
 		if ($reflection->hasProperty($methodName)) {
 			$property = $reflection->getProperty($methodName);
-
 			$property->setAccessible(true);
 
 			if (!empty($parameters)) {
