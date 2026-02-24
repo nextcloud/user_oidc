@@ -293,7 +293,7 @@ class ProvisioningServiceTest extends TestCase {
 		);
 	}
 
-	public function dataProvisionUserGroups() {
+	public static function dataProvisionUserGroups() {
 		return [
 			[
 				'1',
