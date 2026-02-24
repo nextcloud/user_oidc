@@ -271,7 +271,7 @@ class ProviderServiceTest extends TestCase {
 		$this->providerService->setSetting(1, 'key', 'value');
 	}
 
-	public static function dataGetSetting() {
+	public function dataGetSetting() {
 		return [
 			[1, 'option', '', 'ABC', 'ABC'],
 			[1, 'option', 'ABCD', 'ABCD', ''],
@@ -288,7 +288,7 @@ class ProviderServiceTest extends TestCase {
 		Assert::assertEquals($expected, $this->providerService->getSetting($providerId, $key, $default));
 	}
 
-	public static function dataConvertJson() {
+	public function dataConvertJson() {
 		return [
 			// Setting unique id is a boolean
 			[ProviderService::SETTING_UNIQUE_UID, true, '1', true],
