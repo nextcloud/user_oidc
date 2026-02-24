@@ -44,7 +44,7 @@ class UserMapperTest extends TestCase {
 	}
 
 
-	public static function dataCreate(): array {
+	public function dataCreate(): array {
 		return [
 			// unique uid
 			[1, 'user@example.com', '2f891889123bd20b298fced19fc270faf0013523c5949ac629fbb8a0ac7d5d29', false, '2f891889123bd20b298fced19fc270faf0013523c5949ac629fbb8a0ac7d5d29'],
