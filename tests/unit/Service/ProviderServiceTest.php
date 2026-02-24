@@ -266,7 +266,7 @@ class ProviderServiceTest extends TestCase {
 	public function testSetSetting() {
 		$this->appConfig->expects(self::once())
 			->method('setValueString')
-			->with(Application::APP_ID, 'provider-1-key', 'value');
+			->with(Application::APP_ID, 'provider-1-key', 'value', true);
 
 		$this->providerService->setSetting(1, 'key', 'value');
 	}
@@ -282,7 +282,7 @@ class ProviderServiceTest extends TestCase {
 	public function testGetSetting($providerId, $key, $stored, $expected, $default = '') {
 		$this->appConfig->expects(self::once())
 			->method('getValueString')
-			->with(Application::APP_ID, 'provider-' . $providerId . '-' . $key, '')
+			->with(Application::APP_ID, 'provider-' . $providerId . '-' . $key, '', true)
 			->willReturn($stored);
 
 		Assert::assertEquals($expected, $this->providerService->getSetting($providerId, $key, $default));
