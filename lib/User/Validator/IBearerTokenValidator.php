@@ -23,6 +23,16 @@ interface IBearerTokenValidator {
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string;
 
 	/**
+	 * Get the user attributes from the token
+	 * This is needed to check if the user is part of a whitelisted group when validating a bearer token
+	 *
+	 * @param Provider $provider
+	 * @param string $bearerToken
+	 * @return object
+	 */
+	public function getUserAttributes(Provider $provider, string $bearerToken): object;
+
+	/**
 	 * Selects the provisioning strategy for this validation method.
 	 * This is used, when auto_provision and bearerProvisioning are activated.
 	 *

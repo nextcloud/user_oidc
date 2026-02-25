@@ -32,6 +32,10 @@ class UserInfoValidator implements IBearerTokenValidator {
 		return $uid ?: null;
 	}
 
+	public function getUserAttributes(Provider $provider, string $bearerToken): object {
+		return (object)$this->userInfoService->userinfo($provider, $bearerToken);
+	}
+
 	public function getProvisioningStrategy(): string {
 		// TODO implement provisioning over user info endpoint
 		return '';
