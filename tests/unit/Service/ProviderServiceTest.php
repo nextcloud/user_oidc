@@ -288,7 +288,7 @@ class ProviderServiceTest extends TestCase {
 		Assert::assertEquals($expected, $this->providerService->getSetting($providerId, $key, $default));
 	}
 
-	public function dataConvertJson() {
+	public static function dataConvertJson() {
 		return [
 			// Setting unique id is a boolean
 			[ProviderService::SETTING_UNIQUE_UID, true, '1', true],
@@ -313,7 +313,7 @@ class ProviderServiceTest extends TestCase {
 		];
 	}
 	/** @dataProvider dataConvertJson */
-	public static function testConvertJson($key, $value, $stored, $expected) {
+	public function testConvertJson($key, $value, $stored, $expected) {
 		$raw = self::invokePrivate($this->providerService, 'convertFromJSON', [$key, $value]);
 		Assert::assertEquals($stored, $raw);
 		$actual = self::invokePrivate($this->providerService, 'convertToJSON', [$key, $raw]);
