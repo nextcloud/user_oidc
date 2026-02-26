@@ -158,7 +158,7 @@ class ProvisioningServiceTest extends TestCase {
 			->method('get')
 			->willReturn($user);
 
-		$backendUser->expects(self::once())
+		$user->expects(self::once())
 			->method('setDisplayName')
 			->with($name);
 		$user->expects(self::once())
@@ -233,7 +233,7 @@ class ProvisioningServiceTest extends TestCase {
 			->method('get')
 			->willReturn($user);
 
-		$backendUser->expects(self::once())
+		$user->expects(self::once())
 			->method('setDisplayName')
 			->with($name);
 		$user->expects(self::once())

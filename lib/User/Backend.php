@@ -38,9 +38,10 @@ use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
+use OCP\User\Backend\ISetDisplayNameBackend;
 use Psr\Log\LoggerInterface;
 
-class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend {
+class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, ISetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend {
 	private $tokenValidators = [
 		SelfEncodedValidator::class,
 		UserInfoValidator::class,
@@ -100,6 +101,17 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			return false;
 		}
 		return $this->userMapper->userExists($uid);
+	}
+
+	public function setDisplayName(string $uid, string $displayName): bool {
+		try {
+			$user = $this->userMapper->getUser($uid);
+			$user->setDisplayName($displayName);
+			$this->userMapper->update($user);
+			return true;
+		} catch (DoesNotExistException $e) {
+			return false;
+		}
 	}
 
 	public function getDisplayName($uid): string {
