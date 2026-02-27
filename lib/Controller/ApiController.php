@@ -14,12 +14,14 @@ use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IRequest;
 use OCP\IUserManager;
 
+#[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
 class ApiController extends Controller {
 
 	public function __construct(

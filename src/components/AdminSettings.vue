@@ -141,7 +141,7 @@ import NcFormBox from '@nextcloud/vue/components/NcFormBox'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
+import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
 import { confirmPassword } from '@nextcloud/password-confirmation'
 
@@ -230,7 +230,7 @@ export default {
 			this.loadingId4Me = true
 			try {
 				await confirmPassword()
-				const url = generateUrl('/apps/user_oidc/provider/id4me')
+				const url = generateOcsUrl('/apps/user_oidc/api/v1/provider/id4me')
 
 				await axios.post(url, {
 					enabled: newValue,
@@ -248,7 +248,7 @@ export default {
 			this.loadingStoreLoginToken = true
 			try {
 				await confirmPassword()
-				const url = generateUrl('/apps/user_oidc/admin-config')
+				const url = generateOcsUrl('/apps/user_oidc/api/v1/admin-config')
 
 				await axios.post(url, {
 					values: {
@@ -272,7 +272,7 @@ export default {
 			await confirmPassword()
 			logger.info('Update oidc provider', { data: provider })
 
-			const url = generateUrl(`/apps/user_oidc/provider/${provider.id}`)
+			const url = generateOcsUrl('/apps/user_oidc/api/v1/provider/{providerId}', { providerId: provider.id })
 			try {
 				await axios.put(url, provider)
 				this.editProvider = null
@@ -280,7 +280,7 @@ export default {
 				this.providers[index] = provider
 			} catch (error) {
 				logger.error('Could not update the provider: ' + error.message, { error })
-				showError(t('user_oidc', 'Could not update the provider:') + ' ' + (error.response?.data?.message ?? error.message))
+				showError(t('user_oidc', 'Could not update the provider:') + ' ' + (error.response?.data?.ocs?.data?.message ?? error.message))
 			}
 		},
 		onProviderDeleteClick(provider) {
@@ -295,7 +295,7 @@ export default {
 			await confirmPassword()
 			logger.info('Remove oidc provider', { provider })
 
-			const url = generateUrl(`/apps/user_oidc/provider/${provider.id}`)
+			const url = generateOcsUrl('/apps/user_oidc/api/v1/provider/{providerId}', { providerId: provider.id })
 			try {
 				await axios.delete(url)
 
@@ -310,11 +310,11 @@ export default {
 			await confirmPassword()
 			logger.info('Add new oidc provider', { data: this.newProvider })
 
-			const url = generateUrl('/apps/user_oidc/provider')
+			const url = generateOcsUrl('/apps/user_oidc/api/v1/provider')
 			try {
 				const response = await axios.post(url, this.newProvider)
 
-				this.providers.push(response.data)
+				this.providers.push(response.data.ocs.data)
 
 				this.newProvider.identifier = ''
 				this.newProvider.clientId = ''
@@ -325,7 +325,7 @@ export default {
 				this.showNewProvider = false
 			} catch (error) {
 				logger.error('Could not register a provider: ' + error.message, { error })
-				showError(t('user_oidc', 'Could not register provider:') + ' ' + (error.response?.data?.message ?? error.message))
+				showError(t('user_oidc', 'Could not register provider:') + ' ' + (error.response?.data?.ocs?.data?.message ?? error.message))
 			}
 		},
 		getBackchannelUrl(provider) {

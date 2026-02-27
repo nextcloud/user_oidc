@@ -11,6 +11,7 @@ namespace OCA\UserOIDC\Controller;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCSController;
 use OCP\Files\IRootFolder;
@@ -18,6 +19,7 @@ use OCP\Files\NotPermittedException;
 use OCP\IRequest;
 use OCP\IUserManager;
 
+#[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
 class OcsApiController extends OCSController {
 
 	public function __construct(

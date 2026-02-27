@@ -36,6 +36,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\Attribute\UseSession;
 use OCP\AppFramework\Http\DataDisplayResponse;
@@ -63,6 +64,7 @@ use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
 
+#[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
 class LoginController extends BaseOidcController {
 	private const STATE = 'oidc.state';
 	private const NONCE = 'oidc.nonce';

@@ -140,6 +140,9 @@ class ProviderService {
 		return 'provider-' . strval($providerId) . '-' . $key;
 	}
 
+	/**
+	 * @return list<string>
+	 */
 	public function getSupportedSettings(): array {
 		return [
 			self::SETTING_MAPPING_DISPLAYNAME,
