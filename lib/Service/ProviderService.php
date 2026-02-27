@@ -13,9 +13,14 @@ namespace OCA\UserOIDC\Service;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\ResponseDefinitions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
 
+/**
+ * @psalm-import-type UserOIDCProvider from ResponseDefinitions
+ * @psalm-import-type UserOIDCProviderSettings from ResponseDefinitions
+ */
 class ProviderService {
 	public const SETTING_CHECK_BEARER = 'checkBearer';
 	public const SETTING_SEND_ID_TOKEN_HINT = 'sendIdTokenHint';
@@ -73,12 +78,15 @@ class ProviderService {
 	) {
 	}
 
+	/**
+	 * @return list<UserOIDCProvider>
+	 */
 	public function getProvidersWithSettings(): array {
 		$providers = $this->providerMapper->getProviders();
-		return array_map(function ($provider) {
+		return array_values(array_map(function ($provider) {
 			$providerSettings = $this->getSettings($provider->getId());
 			return array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]);
-		}, $providers);
+		}, $providers));
 	}
 
 	public function getProviderByIdentifier(string $identifier): ?Provider {
@@ -95,12 +103,16 @@ class ProviderService {
 		return array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]);
 	}
 
+	/**
+	 * @return UserOIDCProviderSettings
+	 */
 	public function getSettings(int $providerId): array {
 		$result = [];
 		foreach ($this->getSupportedSettings() as $setting) {
 			$value = $this->getSetting($providerId, $setting);
 			$result[$setting] = $this->convertToJSON($setting, $value);
 		}
+		/** @var UserOIDCProviderSettings $result */
 		return $result;
 	}
 

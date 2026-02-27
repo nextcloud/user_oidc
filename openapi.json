@@ -43,6 +43,196 @@
                         "type": "string"
                     }
                 }
+            },
+            "Provider": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "identifier",
+                    "clientId",
+                    "discoveryEndpoint",
+                    "endSessionEndpoint",
+                    "postLogoutUri",
+                    "scope",
+                    "settings"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "identifier": {
+                        "type": "string"
+                    },
+                    "clientId": {
+                        "type": "string"
+                    },
+                    "discoveryEndpoint": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "endSessionEndpoint": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "postLogoutUri": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "scope": {
+                        "type": "string"
+                    },
+                    "settings": {
+                        "$ref": "#/components/schemas/ProviderSettings"
+                    }
+                }
+            },
+            "ProviderSettings": {
+                "type": "object",
+                "required": [
+                    "mappingDisplayName",
+                    "mappingEmail",
+                    "mappingQuota",
+                    "mappingUid",
+                    "mappingGroups",
+                    "mappingLanguage",
+                    "mappingLocale",
+                    "mappingAddress",
+                    "mappingStreetaddress",
+                    "mappingPostalcode",
+                    "mappingLocality",
+                    "mappingRegion",
+                    "mappingCountry",
+                    "mappingWebsite",
+                    "mappingAvatar",
+                    "mappingTwitter",
+                    "mappingFediverse",
+                    "mappingOrganisation",
+                    "mappingRole",
+                    "mappingHeadline",
+                    "mappingBiography",
+                    "mappingPhonenumber",
+                    "mappingGender",
+                    "mappingPronouns",
+                    "mappingBirthdate",
+                    "uniqueUid",
+                    "checkBearer",
+                    "sendIdTokenHint",
+                    "bearerProvisioning",
+                    "extraClaims",
+                    "providerBasedId",
+                    "groupProvisioning",
+                    "groupWhitelistRegex",
+                    "restrictLoginToGroups",
+                    "nestedAndFallbackClaims"
+                ],
+                "properties": {
+                    "mappingDisplayName": {
+                        "type": "string"
+                    },
+                    "mappingEmail": {
+                        "type": "string"
+                    },
+                    "mappingQuota": {
+                        "type": "string"
+                    },
+                    "mappingUid": {
+                        "type": "string"
+                    },
+                    "mappingGroups": {
+                        "type": "string"
+                    },
+                    "mappingLanguage": {
+                        "type": "string"
+                    },
+                    "mappingLocale": {
+                        "type": "string"
+                    },
+                    "mappingAddress": {
+                        "type": "string"
+                    },
+                    "mappingStreetaddress": {
+                        "type": "string"
+                    },
+                    "mappingPostalcode": {
+                        "type": "string"
+                    },
+                    "mappingLocality": {
+                        "type": "string"
+                    },
+                    "mappingRegion": {
+                        "type": "string"
+                    },
+                    "mappingCountry": {
+                        "type": "string"
+                    },
+                    "mappingWebsite": {
+                        "type": "string"
+                    },
+                    "mappingAvatar": {
+                        "type": "string"
+                    },
+                    "mappingTwitter": {
+                        "type": "string"
+                    },
+                    "mappingFediverse": {
+                        "type": "string"
+                    },
+                    "mappingOrganisation": {
+                        "type": "string"
+                    },
+                    "mappingRole": {
+                        "type": "string"
+                    },
+                    "mappingHeadline": {
+                        "type": "string"
+                    },
+                    "mappingBiography": {
+                        "type": "string"
+                    },
+                    "mappingPhonenumber": {
+                        "type": "string"
+                    },
+                    "mappingGender": {
+                        "type": "string"
+                    },
+                    "mappingPronouns": {
+                        "type": "string"
+                    },
+                    "mappingBirthdate": {
+                        "type": "string"
+                    },
+                    "uniqueUid": {
+                        "type": "boolean"
+                    },
+                    "checkBearer": {
+                        "type": "boolean"
+                    },
+                    "sendIdTokenHint": {
+                        "type": "boolean"
+                    },
+                    "bearerProvisioning": {
+                        "type": "boolean"
+                    },
+                    "extraClaims": {
+                        "type": "string"
+                    },
+                    "providerBasedId": {
+                        "type": "boolean"
+                    },
+                    "groupProvisioning": {
+                        "type": "boolean"
+                    },
+                    "groupWhitelistRegex": {
+                        "type": "string"
+                    },
+                    "restrictLoginToGroups": {
+                        "type": "boolean"
+                    },
+                    "nestedAndFallbackClaims": {
+                        "type": "boolean"
+                    }
+                }
             }
         }
     },
@@ -109,9 +299,9 @@
                                                     "$ref": "#/components/schemas/OCSMeta"
                                                 },
                                                 "data": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "object"
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Provider"
                                                     }
                                                 }
                                             }
@@ -299,7 +489,7 @@
                                                     "$ref": "#/components/schemas/OCSMeta"
                                                 },
                                                 "data": {
-                                                    "type": "object"
+                                                    "$ref": "#/components/schemas/Provider"
                                                 }
                                             }
                                         }
@@ -575,7 +765,7 @@
                                                     "$ref": "#/components/schemas/OCSMeta"
                                                 },
                                                 "data": {
-                                                    "type": "object"
+                                                    "$ref": "#/components/schemas/Provider"
                                                 }
                                             }
                                         }

@@ -12,6 +12,7 @@ use Exception;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\ResponseDefinitions;
 use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -27,6 +28,9 @@ use OCP\IRequest;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @psalm-import-type UserOIDCProvider from ResponseDefinitions
+ */
 class SettingsController extends OCSController {
 
 	public function __construct(
@@ -89,7 +93,7 @@ class SettingsController extends OCSController {
 	 * @param string $scope The scope to request
 	 * @param string|null $endSessionEndpoint Optional end session endpoint URL
 	 * @param string|null $postLogoutUri Optional post-logout redirect URI
-	 * @return DataResponse<Http::STATUS_OK, array{}, array{}>|DataResponse<Http::STATUS_CONFLICT, array{message: string}, array{}>|DataResponse<Http::STATUS_BAD_REQUEST, array{message: string}, array{}>
+	 * @return DataResponse<Http::STATUS_OK, UserOIDCProvider, array{}>|DataResponse<Http::STATUS_CONFLICT, array{message: string}, array{}>|DataResponse<Http::STATUS_BAD_REQUEST, array{message: string}, array{}>
 	 *
 	 * 200: The provider was successfully created
 	 * 400: The discovery endpoint is not reachable or is invalid
@@ -141,7 +145,7 @@ class SettingsController extends OCSController {
 	 * @param string $scope The scope to request
 	 * @param string|null $endSessionEndpoint Optional end session endpoint URL
 	 * @param string|null $postLogoutUri Optional post-logout redirect URI
-	 * @return DataResponse<Http::STATUS_OK, array{}, array{}>|DataResponse<Http::STATUS_NOT_FOUND, array{message: string}, array{}>|DataResponse<Http::STATUS_BAD_REQUEST, array{message: string}, array{}>
+	 * @return DataResponse<Http::STATUS_OK, UserOIDCProvider, array{}>|DataResponse<Http::STATUS_NOT_FOUND, array{message: string}, array{}>|DataResponse<Http::STATUS_BAD_REQUEST, array{message: string}, array{}>
 	 *
 	 * 200: The provider was successfully updated
 	 * 400: The discovery endpoint is not reachable or is invalid
@@ -228,7 +232,7 @@ class SettingsController extends OCSController {
 	/**
 	 * Get all registered providers with their settings
 	 *
-	 * @return DataResponse<Http::STATUS_OK, array<string, mixed>, array{}>
+	 * @return DataResponse<Http::STATUS_OK, list<UserOIDCProvider>, array{}>
 	 *
 	 * 200: The list of providers with their settings
 	 */
