@@ -1054,7 +1054,7 @@
                 }
             }
         },
-        "/ocs/v2.php/apps/user_oidc/api/{apiVersion}/provider/settings": {
+        "/ocs/v2.php/apps/user_oidc/api/{apiVersion}/supported-settings": {
             "get": {
                 "operationId": "settings-get-supported-settings",
                 "summary": "Get the list of supported provider settings",
