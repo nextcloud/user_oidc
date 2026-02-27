@@ -228,7 +228,7 @@ class SettingsController extends OCSController {
 	/**
 	 * Get all registered providers with their settings
 	 *
-	 * @return DataResponse<Http::STATUS_OK, array<array-key, mixed>, array{}>
+	 * @return DataResponse<Http::STATUS_OK, array<string, mixed>, array{}>
 	 *
 	 * 200: The list of providers with their settings
 	 */
