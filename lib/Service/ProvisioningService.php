@@ -531,7 +531,7 @@ class ProvisioningService {
 		}
 	}
 
-	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload) {
+	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload): ?array {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $this->getClaimValues($idTokenPayload, $groupsAttribute, $providerId);
 

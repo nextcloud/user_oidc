@@ -80,6 +80,13 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 		return $uid ?: null;
 	}
 
+	public function getUserAttributes(Provider $provider, string $bearerToken): object {
+		// try to decode the bearer token
+		JWT::$leeway = 60;
+		$jwks = $this->discoveryService->obtainJWK($provider, $bearerToken);
+		return JWT::decode($bearerToken, $jwks);
+	}
+
 	public function getProvisioningStrategy(): string {
 		return SelfEncodedTokenProvisioning::class;
 	}
