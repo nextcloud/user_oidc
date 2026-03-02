@@ -10,12 +10,14 @@ namespace OCA\UserOIDC\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\Attribute\UseSession;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
 
+#[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
 class TimezoneController extends Controller {
 
 	public function __construct(

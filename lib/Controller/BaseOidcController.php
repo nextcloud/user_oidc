@@ -11,11 +11,13 @@ namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\AppInfo\Application;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 
+#[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
 class BaseOidcController extends Controller {
 
 	public function __construct(

@@ -39,6 +39,7 @@ use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend {
 	private $tokenValidators = [
@@ -280,7 +281,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 				// find user id through different token validation methods
 				foreach ($this->tokenValidators as $validatorClass) {
 					$validator = \OC::$server->get($validatorClass);
-					$tokenUserId = $validator->isValidBearerToken($provider, $headerToken);
+					try {
+						$tokenUserId = $validator->isValidBearerToken($provider, $headerToken);
+					} catch (Throwable|Exception $e) {
+						$this->logger->debug('Failed to validate the bearer token', ['exception' => $e]);
+						$tokenUserId = null;
+					}
 					if ($tokenUserId) {
 						$this->logger->debug(
 							'Token validated with ' . $validatorClass . ' by provider: ' . $provider->getId()

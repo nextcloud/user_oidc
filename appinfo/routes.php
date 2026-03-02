@@ -24,15 +24,17 @@ return [
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],
 		['name' => 'id4me#code', 'url' => '/id4me/code', 'verb' => 'GET'],
 
-		['name' => 'Settings#createProvider', 'url' => '/provider', 'verb' => 'POST'],
-		['name' => 'Settings#updateProvider', 'url' => '/provider/{providerId}', 'verb' => 'PUT'],
-		['name' => 'Settings#deleteProvider', 'url' => '/provider/{providerId}', 'verb' => 'DELETE'],
-		['name' => 'Settings#setID4ME', 'url' => '/provider/id4me', 'verb' => 'POST'],
-		['name' => 'Settings#setAdminConfig', 'url' => '/admin-config', 'verb' => 'POST'],
-
 		['name' => 'Timezone#setTimezone', 'url' => '/config/timezone', 'verb' => 'POST'],
 	],
 	'ocs' => [
+		['name' => 'Settings#getProviders', 'url' => '/api/{apiVersion}/provider', 'verb' => 'GET', 'requirements' => $requirements],
+		['name' => 'Settings#createProvider', 'url' => '/api/{apiVersion}/provider', 'verb' => 'POST', 'requirements' => $requirements],
+		['name' => 'Settings#updateProvider', 'url' => '/api/{apiVersion}/provider/{providerId}', 'verb' => 'PUT', 'requirements' => $requirements],
+		['name' => 'Settings#deleteProvider', 'url' => '/api/{apiVersion}/provider/{providerId}', 'verb' => 'DELETE', 'requirements' => $requirements],
+		['name' => 'Settings#setID4ME', 'url' => '/api/{apiVersion}/provider/id4me', 'verb' => 'POST', 'requirements' => $requirements],
+		['name' => 'Settings#getSupportedSettings', 'url' => '/api/{apiVersion}/supported-settings', 'verb' => 'GET', 'requirements' => $requirements],
+		['name' => 'Settings#setAdminConfig', 'url' => '/api/{apiVersion}/admin-config', 'verb' => 'POST', 'requirements' => $requirements],
+
 		['name' => 'ocsApi#createUser', 'url' => '/api/{apiVersion}/user', 'verb' => 'POST', 'requirements' => $requirements],
 		['name' => 'ocsApi#deleteUser', 'url' => '/api/{apiVersion}/user/{userId}', 'verb' => 'DELETE', 'requirements' => $requirements],
 	],

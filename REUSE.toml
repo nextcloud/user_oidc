@@ -34,3 +34,9 @@ path = ["img/app-dark.svg"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2017 OpenID Foundation"
 SPDX-License-Identifier = "LicenseRef-OIDFTrademarks"
+
+[[annotations]]
+path = ["openapi.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Nextcloud GmbH and Nextcloud contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"

@@ -49,6 +49,9 @@ class Provider extends Entity implements \JsonSerializable {
 		return $this->scope ?: ' ';
 	}
 
+	/**
+	 * @return array{id: int, identifier: string, clientId: string, discoveryEndpoint: ?string, endSessionEndpoint: ?string, postLogoutUri: ?string, scope: string}
+	 */
 	#[\ReturnTypeWillChange]
 	public function jsonSerialize() {
 		return [
