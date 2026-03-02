@@ -8,6 +8,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.5.0 – 2026-03-02
+
+### Added
+
+- Add appconfig setting to allow login over unencrypted HTTP @mejo- [#1347](https://github.com/nextcloud/user_oidc/pull/1347)
+- Add group whitelist check when authenticating with bearer token @julien-nc [#1359](https://github.com/nextcloud/user_oidc/pull/1359)
+
+### Changed
+
+- More debug logs when enriching the id token with the userinfo endpoint @julien-nc [#1346](https://github.com/nextcloud/user_oidc/pull/1346)
+- Allow disabling the userinfo claim @carlottostromstedt [#1348](https://github.com/nextcloud/user_oidc/pull/1348)
+- Make the settings controller an OCS one @julien-nc [#1356](https://github.com/nextcloud/user_oidc/pull/1356)
+
 ## 8.4.0 – 2026-02-19
 
 ### Added
