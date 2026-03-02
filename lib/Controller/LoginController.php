@@ -60,6 +60,7 @@ use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
 use OCP\User\Events\BeforeUserLoggedInEvent;
+use OCP\User\Events\UserCreatedEvent;
 use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
 use UnexpectedValueException;
@@ -595,6 +596,10 @@ class LoginController extends BaseOidcController {
 			// use potential user from other backend, create it in our backend if it does not exist
 			$provisioningResult = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $existingUser);
 			$user = $provisioningResult['user'];
+			if ($existingUser === null) {
+				// we know we just created a user
+				$this->eventDispatcher->dispatchTyped(new UserCreatedEvent($user, ''));
+			}
 			$this->session->set('user_oidc.oidcUserData', $provisioningResult['userData']);
 		} else {
 			// when auto provision is disabled, we assume the user has been created by another user backend (or manually)
