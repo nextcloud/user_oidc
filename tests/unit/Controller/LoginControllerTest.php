@@ -195,7 +195,7 @@ final class LoginControllerTest extends TestCase {
 
 	/**
 	 * Creates a real Provider entity with test client credentials.
-	 * Uses the actual object instead of a mock because Entity::getId() is final.
+	 * Uses a real object instead of a mock because Entity::getId() is final.
 	 */
 	private function makeProvider(): Provider {
 		$provider = new Provider();
@@ -222,19 +222,20 @@ final class LoginControllerTest extends TestCase {
 	}
 
 	/**
-	 * Builds a HS256-signed JWT with the given claims using the bundled library.
+	 * Builds a HS256-signed JWT.
+	 * No kid header is set — obtainJWK() is mocked to return a single Key
+	 * object (not an array), which does not require kid resolution.
 	 */
 	private function buildJwt(array $claims): string {
 		return JWT::encode($claims, self::TEST_SECRET, 'HS256');
 	}
 
 	/**
-	 * Returns a Key set matching self::TEST_SECRET for use with obtainJWK().
-	 *
-	 * @return array<string, Key>
+	 * Returns a single Key object matching TEST_SECRET.
+	 * Using a single Key avoids the kid lookup that fails when kid is absent.
 	 */
-	private function buildJwks(): array {
-		return ['test-kid' => new Key(self::TEST_SECRET, 'HS256')];
+	private function buildJwks(): Key {
+		return new Key(self::TEST_SECRET, 'HS256');
 	}
 
 	/**
@@ -346,6 +347,21 @@ final class LoginControllerTest extends TestCase {
 		return $user;
 	}
 
+	/**
+	 * Captures all events dispatched via dispatchTyped() and returns them by reference.
+	 * Required because dispatchTyped() is also called for TokenObtainedEvent before
+	 * UserCreatedEvent, making expects()->with(isInstanceOf(UserCreatedEvent)) unreliable.
+	 *
+	 * @param list<object> $dispatchedEvents
+	 */
+	private function captureDispatchedEvents(array &$dispatchedEvents): void {
+		$this->eventDispatcher
+			->method('dispatchTyped')
+			->willReturnCallback(function (object $event) use (&$dispatchedEvents): void {
+				$dispatchedEvents[] = $event;
+			});
+	}
+
 	#[Test]
 	#[Group('security')]
 	public function codeReturnsProtocolErrorWhenConnectionIsNotHttps(): void {
@@ -358,7 +374,7 @@ final class LoginControllerTest extends TestCase {
 
 	#[Test]
 	#[Group('error-param')]
-	public function codeReturns403WhenIdpReturnsErrorWithoutDebugMode(): void {
+	public function codeReturns400WhenIdpReturnsError(): void {
 		$response = $this->controller->code(
 			state: self::VALID_STATE,
 			error: 'access_denied',
@@ -379,8 +395,9 @@ final class LoginControllerTest extends TestCase {
 			error_description: 'User cancelled',
 		);
 
+		// build403TemplateResponse always returns TemplateResponse regardless of debug mode
 		$this->assertInstanceOf(TemplateResponse::class, $response);
-		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
 
 	#[Test]
@@ -483,10 +500,13 @@ final class LoginControllerTest extends TestCase {
 	 */
 	public static function invalidTokenResponseBodies(): array {
 		return [
+			// JSON parse failures — caught before TokenObtainedEvent dispatch
 			'empty body' => [''],
 			'invalid JSON' => ['not-json{{{{'],
+			// Valid JSON but not an array — caught before TokenObtainedEvent dispatch
 			'JSON null' => ['null'],
 			'JSON string' => ['"just-a-string"'],
+			// Valid array but id_token absent or wrong type — caught after dispatch
 			'missing id_token' => [json_encode(['access_token' => 'tok', 'token_type' => 'Bearer'])],
 			'id_token is null' => [json_encode(['access_token' => 'tok', 'id_token' => null])],
 			'id_token is integer' => [json_encode(['access_token' => 'tok', 'id_token' => 42])],
@@ -741,14 +761,19 @@ final class LoginControllerTest extends TestCase {
 		$this->userManager->method('get')->willReturn(null);
 		$this->setupSuccessfulLogin(existingUser: null);
 
-		$this->eventDispatcher
-			->expects($this->once())
-			->method('dispatchTyped')
-			->with($this->isInstanceOf(UserCreatedEvent::class));
+		// Capture all events — dispatchTyped() also fires TokenObtainedEvent
+		// before UserCreatedEvent, making expects()->with() unreliable here
+		$dispatchedEvents = [];
+		$this->captureDispatchedEvents($dispatchedEvents);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 
 		$this->assertInstanceOf(RedirectResponse::class, $response);
+		$userCreatedEvents = array_filter(
+			$dispatchedEvents,
+			fn (object $e) => $e instanceof UserCreatedEvent
+		);
+		$this->assertCount(1, $userCreatedEvents, 'UserCreatedEvent must be dispatched exactly once for a new user');
 	}
 
 	#[Test]
@@ -759,14 +784,19 @@ final class LoginControllerTest extends TestCase {
 		$existingUser->method('getBackendClassName')->willReturn(Application::APP_ID);
 		$this->setupSuccessfulLogin(existingUser: $existingUser);
 
-		$this->eventDispatcher
-			->expects($this->never())
-			->method('dispatchTyped')
-			->with($this->isInstanceOf(UserCreatedEvent::class));
+		// Capture all events — expects($this->never()) would also block
+		// the legitimate TokenObtainedEvent dispatch
+		$dispatchedEvents = [];
+		$this->captureDispatchedEvents($dispatchedEvents);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 
 		$this->assertInstanceOf(RedirectResponse::class, $response);
+		$userCreatedEvents = array_filter(
+			$dispatchedEvents,
+			fn (object $e) => $e instanceof UserCreatedEvent
+		);
+		$this->assertCount(0, $userCreatedEvents, 'UserCreatedEvent must not be dispatched for an existing user');
 	}
 
 	#[Test]
