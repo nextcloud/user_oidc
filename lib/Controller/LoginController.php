@@ -478,7 +478,7 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
-		if (!isset($data['id_token']) || !is_string($data['id_token'])) {
+		if (!isset($data['id_token'])) {
 			$this->logger->error('Missing id_token in IdP token response', ['data' => $data]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
