@@ -135,13 +135,15 @@ final class LoginControllerTest extends TestCase {
 
 		$this->config
 			->method('getSystemValue')
-			->willReturnCallback(
-				fn (string $key, mixed $default = null) => match ($key) {
-					'debug' => $this->debugMode,
-					'user_oidc' => $this->oidcSystemConfig,
-					default => $default,
+			->willReturnCallback(function (string $key, mixed $default = null) {
+				if ($key === 'debug') {
+					return $this->debugMode;
 				}
-			);
+				if ($key === 'user_oidc') {
+					return $this->oidcSystemConfig;
+				}
+				return $default;
+			});
 
 		$this->providerService
 			->method('getSetting')
@@ -161,6 +163,8 @@ final class LoginControllerTest extends TestCase {
 		$this->userManager
 			->method('get')
 			->willReturnCallback(fn () => $this->existingUserMock);
+
+		$this->ldapService->method('isLdapDeletedUser')->willReturn(false);
 
 		$this->controller = new LoginController(
 			$this->request,
@@ -526,8 +530,8 @@ final class LoginControllerTest extends TestCase {
 	#[Group('jwt')]
 	public function codeSkipsAzpValidationWhenDisabledInConfig(): void {
 		$this->setupUpToProvisioning(
-			claimOverrides: ['azp' => 'wrong-client-id'],
-			oidcConfig: ['login_validation_azp_check' => false],
+			['azp' => 'wrong-client-id'],
+			['login_validation_azp_check' => false]
 		);
 		$this->setupSuccessfulLogin();
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
@@ -545,7 +549,7 @@ final class LoginControllerTest extends TestCase {
 	#[Test]
 	#[Group('jwt')]
 	public function codeAcceptsTokenWithNoNonceClaim(): void {
-		$this->setupUpToProvisioning(claimOverrides: ['nonce' => null]);
+		$this->setupUpToProvisioning(['nonce' => null]);
 		$this->setupSuccessfulLogin();
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 		$this->assertInstanceOf(RedirectResponse::class, $response);
@@ -586,20 +590,29 @@ final class LoginControllerTest extends TestCase {
 	#[Test]
 	#[Group('provisioning')]
 	public function codeReturns403WhenAccountCreationIsDisabledForNewUser(): void {
-		$this->setupUpToProvisioning(oidcConfig: ['disable_account_creation' => true]);
+		// Enforce pure configuration without named parameters ambiguities
+		$this->setupUpToProvisioning([], ['disable_account_creation' => true, 'auto_provision' => true]);
+
+		// Force existingUser to be strictly null
 		$this->existingUserMock = null;
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+
+		$this->assertSame(
+			Http::STATUS_FORBIDDEN,
+			$response->getStatus(),
+			'Expected 403 Forbidden because account creation is disabled for an unknown user.'
+		);
 	}
 
 	#[Test]
 	#[Group('provisioning')]
 	public function codeAllowsLoginWhenAccountCreationIsDisabledButUserAlreadyExists(): void {
-		$this->setupUpToProvisioning(oidcConfig: ['disable_account_creation' => true]);
+		$this->setupUpToProvisioning([], ['disable_account_creation' => true]);
+
 		$existingUser = $this->createMock(IUser::class);
 		$existingUser->method('getBackendClassName')->willReturn(Application::APP_ID);
-		$this->setupSuccessfulLogin(existingUser: $existingUser);
+		$this->setupSuccessfulLogin($existingUser);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 		$this->assertInstanceOf(RedirectResponse::class, $response);
@@ -608,7 +621,8 @@ final class LoginControllerTest extends TestCase {
 	#[Test]
 	#[Group('provisioning')]
 	public function codeReturns400WhenUserExistsInAnotherBackendWithoutSoftProvision(): void {
-		$this->setupUpToProvisioning(oidcConfig: ['soft_auto_provision' => false]);
+		$this->setupUpToProvisioning([], ['soft_auto_provision' => false]);
+
 		$existingUser = $this->createMock(IUser::class);
 		$existingUser->method('getBackendClassName')->willReturn('OCA\User_LDAP\User_LDAP');
 		$this->existingUserMock = $existingUser;
@@ -635,7 +649,7 @@ final class LoginControllerTest extends TestCase {
 	#[Test]
 	#[Group('provisioning')]
 	public function codeReturns400WhenAutoProvisionIsDisabledAndUserDoesNotExist(): void {
-		$this->setupUpToProvisioning(oidcConfig: ['auto_provision' => false]);
+		$this->setupUpToProvisioning([], ['auto_provision' => false]);
 		$this->existingUserMock = null;
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
@@ -645,7 +659,8 @@ final class LoginControllerTest extends TestCase {
 	#[Test]
 	#[Group('provisioning')]
 	public function codeAllowsLoginWhenAutoProvisionIsDisabledAndUserExists(): void {
-		$this->setupUpToProvisioning(oidcConfig: ['auto_provision' => false]);
+		$this->setupUpToProvisioning([], ['auto_provision' => false]);
+
 		$existingUser = $this->createMock(IUser::class);
 		$existingUser->method('getUID')->willReturn(self::VALID_USER_ID);
 		$existingUser->method('canChangeAvatar')->willReturn(false);
@@ -665,7 +680,7 @@ final class LoginControllerTest extends TestCase {
 	public function codeDispatchesUserCreatedEventWhenNewUserIsProvisioned(): void {
 		$this->setupUpToProvisioning();
 		$this->existingUserMock = null;
-		$this->setupSuccessfulLogin(existingUser: null);
+		$this->setupSuccessfulLogin(null);
 
 		$dispatchedEvents = [];
 		$this->captureDispatchedEvents($dispatchedEvents);
@@ -684,9 +699,10 @@ final class LoginControllerTest extends TestCase {
 	#[Group('login')]
 	public function codeDoesNotDispatchUserCreatedEventWhenUserAlreadyExisted(): void {
 		$this->setupUpToProvisioning();
+
 		$existingUser = $this->createMock(IUser::class);
 		$existingUser->method('getBackendClassName')->willReturn(Application::APP_ID);
-		$this->setupSuccessfulLogin(existingUser: $existingUser);
+		$this->setupSuccessfulLogin($existingUser);
 
 		$dispatchedEvents = [];
 		$this->captureDispatchedEvents($dispatchedEvents);
