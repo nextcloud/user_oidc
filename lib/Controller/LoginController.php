@@ -135,7 +135,7 @@ class LoginController extends BaseOidcController {
 		}
 
 		// Remove protocol and domain name
-		$filtered = preg_replace('/^https?:\/\/[^\/]+/', '', $redirectUrl);
+		$filtered = preg_replace('/^https?:\/\/[^\/]+/', '', $redirectUrl) ?? '';
 
 		// Additional check: ensure the result starts with a single /
 		if (!preg_match('/^\/[^\/]/', $filtered)) {
@@ -292,8 +292,6 @@ class LoginController extends BaseOidcController {
 			}
 		}
 
-		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
-
 		$data += [
 			'client_id' => $provider->getClientId(),
 			'response_type' => 'code',
@@ -304,8 +302,8 @@ class LoginController extends BaseOidcController {
 			'nonce' => $nonce,
 		];
 
-		if (isset($oidcConfig['prompt']) && is_string($oidcConfig['prompt'])) {
-			$data['prompt'] = $oidcConfig['prompt'];
+		if (isset($oidcSystemConfig['prompt']) && is_string($oidcSystemConfig['prompt'])) {
+			$data['prompt'] = $oidcSystemConfig['prompt'];
 		}
 
 		if ($isPkceEnabled) {
@@ -469,7 +467,23 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
-		$data = json_decode($body, true);
+		try {
+			$data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+		} catch (\JsonException $e) {
+			$this->logger->error('Invalid JSON response from IdP token endpoint', [
+				'exception' => $e,
+				'body' => $body,
+			]);
+			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
+		}
+
+		if (!isset($data['id_token'])) {
+			$this->logger->error('Missing id_token in IdP token response', ['data' => $data]);
+			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
+		}
+
 		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
@@ -502,14 +516,14 @@ class LoginController extends BaseOidcController {
 
 		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
 
-		if ($idTokenPayload->exp < $this->timeFactory->getTime()) {
+		if (!isset($idTokenPayload->exp) || $idTokenPayload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
 			$message = $this->l10n->t('The received token is expired.');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'token expired']);
 		}
 
 		// Verify issuer
-		if ($idTokenPayload->iss !== $discovery['issuer']) {
+		if (!isset($idTokenPayload->iss) || $idTokenPayload->iss !== $discovery['issuer']) {
 			$this->logger->debug('This token is issued by the wrong issuer');
 			$message = $this->l10n->t('The issuer does not match the one from the discovery endpoint');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_issuer' => $idTokenPayload->iss]);
@@ -596,7 +610,7 @@ class LoginController extends BaseOidcController {
 			// use potential user from other backend, create it in our backend if it does not exist
 			$provisioningResult = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $existingUser);
 			$user = $provisioningResult['user'];
-			if ($existingUser === null) {
+			if ($existingUser === null && $user !== null) {
 				// we know we just created a user
 				$this->eventDispatcher->dispatchTyped(new UserCreatedEvent($user, ''));
 			}
@@ -617,13 +631,14 @@ class LoginController extends BaseOidcController {
 
 		$this->userSession->setUser($user);
 		if ($this->userSession instanceof OC_UserSession) {
+			$userId = $user->getUID();
 			// TODO server should/could be refactored so we don't need to manually create the user session and dispatch the login-related events
 			// Warning! If GSS is used, it reacts to the BeforeUserLoggedInEvent and handles the redirection itself
 			// So nothing after dispatching this event will be executed
-			$this->eventDispatcher->dispatchTyped(new BeforeUserLoggedInEvent($user->getUID(), null, \OCP\Server::get(Backend::class)));
+			$this->eventDispatcher->dispatchTyped(new BeforeUserLoggedInEvent($userId, null, \OCP\Server::get(Backend::class)));
 
-			$this->userSession->completeLogin($user, ['loginName' => $user->getUID(), 'password' => '']);
-			$this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
+			$this->userSession->completeLogin($user, ['loginName' => $userId, 'password' => '']);
+			$this->userSession->createSessionToken($this->request, $userId, $userId);
 			$this->userSession->createRememberMeToken($user);
 
 			// prevent password confirmation
@@ -635,7 +650,7 @@ class LoginController extends BaseOidcController {
 				$this->authTokenProvider->updateToken($token);
 			}
 
-			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $user->getUID(), null, false));
+			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $userId, null, false));
 		}
 
 		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0', lazy: true) === '1';
@@ -704,6 +719,7 @@ class LoginController extends BaseOidcController {
 		if (!isset($oidcSystemConfig['single_logout']) || $oidcSystemConfig['single_logout']) {
 			$isFromGS = ($this->config->getSystemValueBool('gs.enabled', false)
 				&& $this->config->getSystemValueString('gss.mode', '') === 'master');
+			$providerId = null;
 			if ($isFromGS) {
 				// Request is from master GlobalScale: we get the provider ID from the JWT token provided by the slave
 				$jwt = $this->request->getParam('jwt', '');
@@ -801,7 +817,10 @@ class LoginController extends BaseOidcController {
 		$this->logger->debug('Parsed the logout JWT payload: ' . json_encode($logoutTokenPayload, JSON_THROW_ON_ERROR));
 
 		// check the audience
-		if (!(($logoutTokenPayload->aud === $provider->getClientId() || in_array($provider->getClientId(), $logoutTokenPayload->aud, true)))) {
+		$aud = $logoutTokenPayload->aud;
+		$clientId = $provider->getClientId();
+		$audMatches = (is_string($aud) && $aud === $clientId) || (is_array($aud) && in_array($clientId, $aud, true));
+		if (!$audMatches) {
 			return $this->getBackchannelLogoutErrorResponse(
 				'invalid audience',
 				'The audience of the logout token does not match the provider',
