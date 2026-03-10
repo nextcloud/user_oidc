@@ -65,16 +65,13 @@ final class LoginControllerTest extends TestCase {
 	private const VALID_NONCE = 'TESTNONCE1234567890123456789012';
 	private const VALID_USER_ID = 'john.doe';
 
+	// Mutable state for mock callbacks
 	private array $oidcSystemConfig = [];
 	private bool $debugMode = false;
 	private array $providerSettings = [];
-
 	private ?string $provisionedUserId = self::VALID_USER_ID;
-
-	private array $provisionedUserData = [
-		'user' => null,
-		'userData' => [],
-	];
+	private array $provisionedUserData = ['user' => null, 'userData' => []];
+	private ?IUser $existingUserMock = null;
 
 	private MockObject&IRequest $request;
 	private MockObject&ProviderMapper $providerMapper;
@@ -160,6 +157,10 @@ final class LoginControllerTest extends TestCase {
 		$this->provisioningService
 			->method('provisionUser')
 			->willReturnCallback(fn () => $this->provisionedUserData);
+
+		$this->userManager
+			->method('get')
+			->willReturnCallback(fn () => $this->existingUserMock);
 
 		$this->controller = new LoginController(
 			$this->request,
@@ -314,7 +315,7 @@ final class LoginControllerTest extends TestCase {
 		$user->method('getUID')->willReturn(self::VALID_USER_ID);
 		$user->method('canChangeAvatar')->willReturn(false);
 
-		$this->userManager->method('get')->willReturn($existingUser);
+		$this->existingUserMock = $existingUser;
 
 		$this->provisionedUserData = [
 			'user' => $user,
@@ -472,10 +473,7 @@ final class LoginControllerTest extends TestCase {
 	#[Test]
 	#[Group('jwt')]
 	public function codeReturns403WhenTokenIsExpired(): void {
-		// Valid for Firebase\JWT\JWT::decode so it doesn't throw Exception
 		$this->setupUpToJwtValidation(['exp' => time() + 3600]);
-
-		// Mock our internal timeFactory so the controller thinks it's already expired
 		$this->timeFactory->method('getTime')->willReturn(time() + 7200);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
@@ -589,7 +587,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns403WhenAccountCreationIsDisabledForNewUser(): void {
 		$this->setupUpToProvisioning(oidcConfig: ['disable_account_creation' => true]);
-		$this->userManager->method('get')->willReturn(null);
+		$this->existingUserMock = null;
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
@@ -613,7 +611,7 @@ final class LoginControllerTest extends TestCase {
 		$this->setupUpToProvisioning(oidcConfig: ['soft_auto_provision' => false]);
 		$existingUser = $this->createMock(IUser::class);
 		$existingUser->method('getBackendClassName')->willReturn('OCA\User_LDAP\User_LDAP');
-		$this->userManager->method('get')->willReturn($existingUser);
+		$this->existingUserMock = $existingUser;
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
@@ -623,7 +621,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns400WhenProvisionUserReturnsNull(): void {
 		$this->setupUpToProvisioning();
-		$this->userManager->method('get')->willReturn(null);
+		$this->existingUserMock = null;
 
 		$this->provisionedUserData = [
 			'user' => null,
@@ -638,7 +636,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns400WhenAutoProvisionIsDisabledAndUserDoesNotExist(): void {
 		$this->setupUpToProvisioning(oidcConfig: ['auto_provision' => false]);
-		$this->userManager->method('get')->willReturn(null);
+		$this->existingUserMock = null;
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
@@ -651,7 +649,9 @@ final class LoginControllerTest extends TestCase {
 		$existingUser = $this->createMock(IUser::class);
 		$existingUser->method('getUID')->willReturn(self::VALID_USER_ID);
 		$existingUser->method('canChangeAvatar')->willReturn(false);
-		$this->userManager->method('get')->willReturn($existingUser);
+
+		$this->existingUserMock = $existingUser;
+
 		$this->authTokenProvider
 			->method('getToken')
 			->willThrowException(new InvalidTokenException('not found'));
@@ -664,7 +664,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('login')]
 	public function codeDispatchesUserCreatedEventWhenNewUserIsProvisioned(): void {
 		$this->setupUpToProvisioning();
-		$this->userManager->method('get')->willReturn(null);
+		$this->existingUserMock = null;
 		$this->setupSuccessfulLogin(existingUser: null);
 
 		$dispatchedEvents = [];
