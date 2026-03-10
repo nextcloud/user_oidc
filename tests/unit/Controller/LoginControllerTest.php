@@ -590,14 +590,19 @@ final class LoginControllerTest extends TestCase {
 	#[Test]
 	#[Group('provisioning')]
 	public function codeReturns403WhenAccountCreationIsDisabledForNewUser(): void {
-		// Enforce pure configuration without named parameters ambiguities
-		$this->setupUpToProvisioning([], ['disable_account_creation' => true, 'auto_provision' => true]);
+		$this->setupUpToProvisioning([], [
+			'disable_account_creation' => true,
+			'auto_provision' => true
+		]);
 
-		// Force existingUser to be strictly null
+		$this->setSystemConfig([
+			'disable_account_creation' => true,
+			'auto_provision' => true
+		]);
+
 		$this->existingUserMock = null;
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(
 			Http::STATUS_FORBIDDEN,
 			$response->getStatus(),
