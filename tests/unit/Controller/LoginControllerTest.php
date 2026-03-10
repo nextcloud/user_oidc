@@ -65,6 +65,10 @@ final class LoginControllerTest extends TestCase {
 	private const VALID_NONCE = 'TESTNONCE1234567890123456789012';
 	private const VALID_USER_ID = 'john.doe';
 
+	private array $oidcSystemConfig = [];
+	private bool $debugMode = false;
+	private array $providerSettings = [];
+
 	private MockObject&IRequest $request;
 	private MockObject&ProviderMapper $providerMapper;
 	private MockObject&ProviderService $providerService;
@@ -121,11 +125,26 @@ final class LoginControllerTest extends TestCase {
 		$this->oidcService = $this->createMock(OIDCService::class);
 
 		$this->l10n->method('t')->willReturnArgument(0);
-
 		$this->request->method('getServerProtocol')->willReturn('https');
 		$this->appConfig->method('getValueBool')->willReturn(false);
 		$this->appConfig->method('getValueString')->willReturn('0');
-		$this->setSystemConfig([]);
+
+		$this->config
+			->method('getSystemValue')
+			->willReturnCallback(
+				fn (string $key, mixed $default = null) => match ($key) {
+					'debug' => $this->debugMode,
+					'user_oidc' => $this->oidcSystemConfig,
+					default => $default,
+				}
+			);
+
+		$this->providerService
+			->method('getSetting')
+			->willReturnCallback(
+				fn (int $id, string $setting, string $default = '') =>
+					$this->providerSettings[$setting] ?? $default
+			);
 
 		$this->controller = new LoginController(
 			$this->request,
@@ -155,16 +174,13 @@ final class LoginControllerTest extends TestCase {
 		);
 	}
 
+	/**
+	 * Mutates the properties read by the already-configured mock callbacks.
+	 * Never calls ->method() a second time.
+	 */
 	private function setSystemConfig(array $oidcConfig, bool $debug = false): void {
-		$this->config
-			->method('getSystemValue')
-			->willReturnCallback(
-				fn (string $key, mixed $default = null) => match ($key) {
-					'debug' => $debug,
-					'user_oidc' => $oidcConfig,
-					default => $default,
-				}
-			);
+		$this->oidcSystemConfig = $oidcConfig;
+		$this->debugMode = $debug;
 	}
 
 	private function setupSession(array $overrides = []): void {
@@ -202,35 +218,22 @@ final class LoginControllerTest extends TestCase {
 			->willReturn('https://nc.example.com/callback');
 	}
 
-	/**
-	 * Builds a JWT manually so that the kid header is guaranteed to be present.
-	 * The vendored firebase/php-jwt does not reliably set kid via JWT::encode()
-	 * parameters, so we construct the three segments ourselves with a standard
-	 * HMAC-SHA256 signature that any compliant JWT decoder will accept.
-	 */
 	private function buildJwt(array $claims): string {
 		$header = ['typ' => 'JWT', 'alg' => 'HS256', 'kid' => self::TEST_KID];
 
-		$headerEncoded = $this->base64UrlEncode((string)json_encode($header, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-		$payloadEncoded = $this->base64UrlEncode((string)json_encode($claims, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$h = $this->base64UrlEncode((string)json_encode($header, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$p = $this->base64UrlEncode((string)json_encode($claims, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
-		$signingInput = $headerEncoded . '.' . $payloadEncoded;
-		$signature = hash_hmac('sha256', $signingInput, self::TEST_SECRET, true);
+		$sig = hash_hmac('sha256', "$h.$p", self::TEST_SECRET, true);
 
-		return $signingInput . '.' . $this->base64UrlEncode($signature);
+		return "$h.$p." . $this->base64UrlEncode($sig);
 	}
 
 	private static function base64UrlEncode(string $input): string {
 		return rtrim(strtr(base64_encode($input), '+/', '-_'), '=');
 	}
 
-	/**
-	 * Returns a Key array indexed by TEST_KID.
-	 * Must return array to match DiscoveryService::obtainJWK() return type declaration.
-	 * The JWT built by buildJwt() includes kid=TEST_KID so the lookup will succeed.
-	 *
-	 * @return array<string, Key>
-	 */
+	/** @return array<string, Key> */
 	private function buildJwks(): array {
 		return [self::TEST_KID => new Key(self::TEST_SECRET, 'HS256')];
 	}
@@ -272,18 +275,19 @@ final class LoginControllerTest extends TestCase {
 		return $jwt;
 	}
 
+	/**
+	 * Sets up everything up to provisioning.
+	 * Provider settings are written to $this->providerSettings (read by the
+	 * single mock callback configured in setUp()).
+	 */
 	private function setupUpToProvisioning(array $claimOverrides = [], array $oidcConfig = []): void {
 		$this->setupUpToJwtValidation($claimOverrides);
 		$this->setSystemConfig($oidcConfig);
 
-		$this->providerService->method('getSetting')
-			->willReturnCallback(
-				fn (int $id, string $setting, string $default = '') => match ($setting) {
-					'mapping_uid' => 'sub',
-					'restrict_login_to_groups' => '0',
-					default => $default,
-				}
-			);
+		$this->providerSettings = [
+			'mapping_uid' => 'sub',
+			'restrict_login_to_groups' => '0',
+		];
 
 		$this->provisioningService->method('getClaimValue')
 			->willReturn(self::VALID_USER_ID);
@@ -292,15 +296,15 @@ final class LoginControllerTest extends TestCase {
 	}
 
 	private function makeClientException(?string $body = null): ClientException {
-		$guzzleRequest = new GuzzleRequest('POST', 'https://idp.example.com/token');
-		$guzzleResponse = new GuzzleResponse(400, [], $body ?? '');
-		return new ClientException('Client error', $guzzleRequest, $guzzleResponse);
+		$req = new GuzzleRequest('POST', 'https://idp.example.com/token');
+		$res = new GuzzleResponse(400, [], $body ?? '');
+		return new ClientException('Client error', $req, $res);
 	}
 
 	private function makeServerException(): ServerException {
-		$guzzleRequest = new GuzzleRequest('POST', 'https://idp.example.com/token');
-		$guzzleResponse = new GuzzleResponse(500, [], 'Internal Server Error');
-		return new ServerException('Server error', $guzzleRequest, $guzzleResponse);
+		$req = new GuzzleRequest('POST', 'https://idp.example.com/token');
+		$res = new GuzzleResponse(500, [], 'Internal Server Error');
+		return new ServerException('Server error', $req, $res);
 	}
 
 	private function setupSuccessfulLogin(?MockObject $existingUser = null): MockObject&IUser {
@@ -322,13 +326,7 @@ final class LoginControllerTest extends TestCase {
 		return $user;
 	}
 
-	/**
-	 * Captures all dispatchTyped() calls into $dispatchedEvents by reference.
-	 * Avoids using expects()->with(isInstanceOf(X)) which would also block
-	 * legitimate TokenObtainedEvent dispatches that happen earlier in the flow.
-	 *
-	 * @param list<object> $dispatchedEvents
-	 */
+	/** @param list<object> $dispatchedEvents */
 	private function captureDispatchedEvents(array &$dispatchedEvents): void {
 		$this->eventDispatcher
 			->method('dispatchTyped')
@@ -605,14 +603,8 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns403WhenUserIsNotInWhitelistedGroup(): void {
 		$this->setupUpToProvisioning();
-		$this->providerService->method('getSetting')
-			->willReturnCallback(
-				fn (int $id, string $setting, string $default = '') => match ($setting) {
-					'mapping_uid' => 'sub',
-					'restrict_login_to_groups' => '1',
-					default => $default,
-				}
-			);
+		// Mutate the property — the already-configured callback will see it
+		$this->providerSettings['restrict_login_to_groups'] = '1';
 		$this->provisioningService->method('getSyncGroupsOfToken')->willReturn([]);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
@@ -624,14 +616,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeAllowsLoginWhenUserBelongsToWhitelistedGroup(): void {
 		$this->setupUpToProvisioning();
-		$this->providerService->method('getSetting')
-			->willReturnCallback(
-				fn (int $id, string $setting, string $default = '') => match ($setting) {
-					'mapping_uid' => 'sub',
-					'restrict_login_to_groups' => '1',
-					default => $default,
-				}
-			);
+		$this->providerSettings['restrict_login_to_groups'] = '1';
 		$this->provisioningService->method('getSyncGroupsOfToken')->willReturn(['admins']);
 		$this->setupSuccessfulLogin();
 
@@ -669,7 +654,7 @@ final class LoginControllerTest extends TestCase {
 	public function codeReturns400WhenUserExistsInAnotherBackendWithoutSoftProvision(): void {
 		$this->setupUpToProvisioning(oidcConfig: ['soft_auto_provision' => false]);
 		$existingUser = $this->createMock(IUser::class);
-		$existingUser->method('getBackendClassName')->willReturn('OCA\\User_LDAP\\User_LDAP');
+		$existingUser->method('getBackendClassName')->willReturn('OCA\User_LDAP\User_LDAP');
 		$this->userManager->method('get')->willReturn($existingUser);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
@@ -778,15 +763,12 @@ final class LoginControllerTest extends TestCase {
 	public function codeRedirectsToBaseUrlWhenSessionRedirectUrlIsAbsoluteExternal(): void {
 		$this->setupSession(['oidc.redirect' => 'https://evil.example.com/steal']);
 		$this->setupUpToJwtValidation();
+		// setSystemConfig() now just mutates the property — safe to call anytime
 		$this->setSystemConfig([]);
-		$this->providerService->method('getSetting')
-			->willReturnCallback(
-				fn (int $id, string $setting, string $default = '') => match ($setting) {
-					'mapping_uid' => 'sub',
-					'restrict_login_to_groups' => '0',
-					default => $default,
-				}
-			);
+		$this->providerSettings = [
+			'mapping_uid' => 'sub',
+			'restrict_login_to_groups' => '0',
+		];
 		$this->provisioningService->method('getClaimValue')->willReturn(self::VALID_USER_ID);
 		$this->ldapService->method('isLDAPEnabled')->willReturn(false);
 		$this->setupSuccessfulLogin();
