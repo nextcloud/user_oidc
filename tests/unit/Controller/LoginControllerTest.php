@@ -152,11 +152,11 @@ final class LoginControllerTest extends TestCase {
 
 		$this->provisioningService
 			->method('getClaimValue')
-			->willReturnCallback(fn() => $this->provisionedUserId);
+			->willReturnCallback(fn () => $this->provisionedUserId);
 
 		$this->provisioningService
 			->method('provisionUser')
-			->willReturnCallback(fn() => $this->provisionedUserData);
+			->willReturnCallback(fn () => $this->provisionedUserData);
 
 		$this->controller = new LoginController(
 			$this->request,
