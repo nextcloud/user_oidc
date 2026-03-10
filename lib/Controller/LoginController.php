@@ -478,7 +478,7 @@ class LoginController extends BaseOidcController {
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
-		if (!isset($data['id_token'])) {
+		if (!isset($data['id_token']) || !is_string($data['id_token'])) {
 			$this->logger->error('Missing id_token in IdP token response', ['data' => $data]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
@@ -601,12 +601,19 @@ class LoginController extends BaseOidcController {
 		}
 
 		if ($autoProvisionAllowed) {
+			$disableAccountCreation = $oidcSystemConfig['disable_account_creation'] ?? false;
+			if ($disableAccountCreation && $existingUser === null) {
+				$message = $this->l10n->t('Account creation is disabled');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'Account creation is disabled']);
+			}
+
 			if (!$softAutoProvisionAllowed && $existingUser !== null && $existingUser->getBackendClassName() !== Application::APP_ID) {
 				// if soft auto-provisioning is disabled,
 				// we refuse login for a user that already exists in another backend
 				$message = $this->l10n->t('User conflict');
 				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict'], false);
 			}
+
 			// use potential user from other backend, create it in our backend if it does not exist
 			$provisioningResult = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $existingUser);
 			$user = $provisioningResult['user'];
