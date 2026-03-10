@@ -69,6 +69,10 @@ final class LoginControllerTest extends TestCase {
 	private bool $debugMode = false;
 	private array $providerSettings = [];
 
+	// Mutable return values for the provisioning service mock
+	private ?string $provisionedUserId = self::VALID_USER_ID;
+	private ?array $provisionedUserData = null;
+
 	private MockObject&IRequest $request;
 	private MockObject&ProviderMapper $providerMapper;
 	private MockObject&ProviderService $providerService;
@@ -142,9 +146,17 @@ final class LoginControllerTest extends TestCase {
 		$this->providerService
 			->method('getSetting')
 			->willReturnCallback(
-				fn (int $id, string $setting, string $default = '') =>
-					$this->providerSettings[$setting] ?? $default
+				fn (int $id, string $setting, string $default = '')
+					=> $this->providerSettings[$setting] ?? $default
 			);
+
+		$this->provisioningService
+			->method('getClaimValue')
+			->willReturnCallback(fn() => $this->provisionedUserId);
+
+		$this->provisioningService
+			->method('provisionUser')
+			->willReturnCallback(fn() => $this->provisionedUserData);
 
 		$this->controller = new LoginController(
 			$this->request,
@@ -289,8 +301,8 @@ final class LoginControllerTest extends TestCase {
 			'restrict_login_to_groups' => '0',
 		];
 
-		$this->provisioningService->method('getClaimValue')
-			->willReturn(self::VALID_USER_ID);
+		// getClaimValue has already been mapped via callback in setUp().
+		// It will return $this->provisionedUserId which is self::VALID_USER_ID by default.
 
 		$this->ldapService->method('isLDAPEnabled')->willReturn(false);
 	}
@@ -314,10 +326,11 @@ final class LoginControllerTest extends TestCase {
 
 		$this->userManager->method('get')->willReturn($existingUser);
 
-		$this->provisioningService->method('provisionUser')->willReturn([
+		// Mutable property for the callback
+		$this->provisionedUserData = [
 			'user' => $user,
 			'userData' => [],
-		]);
+		];
 
 		$this->authTokenProvider
 			->method('getToken')
@@ -592,7 +605,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns400WhenUserIdClaimIsMissingFromToken(): void {
 		$this->setupUpToProvisioning();
-		$this->provisioningService->method('getClaimValue')->willReturn(null);
+		$this->provisionedUserId = null; // mutate the callback return
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 
@@ -603,7 +616,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns403WhenUserIsNotInWhitelistedGroup(): void {
 		$this->setupUpToProvisioning();
-		// Mutate the property — the already-configured callback will see it
+
 		$this->providerSettings['restrict_login_to_groups'] = '1';
 		$this->provisioningService->method('getSyncGroupsOfToken')->willReturn([]);
 
@@ -667,10 +680,11 @@ final class LoginControllerTest extends TestCase {
 	public function codeReturns400WhenProvisionUserReturnsNull(): void {
 		$this->setupUpToProvisioning();
 		$this->userManager->method('get')->willReturn(null);
-		$this->provisioningService->method('provisionUser')->willReturn([
+
+		$this->provisionedUserData = [
 			'user' => null,
 			'userData' => [],
-		]);
+		];
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
 
@@ -769,7 +783,7 @@ final class LoginControllerTest extends TestCase {
 			'mapping_uid' => 'sub',
 			'restrict_login_to_groups' => '0',
 		];
-		$this->provisioningService->method('getClaimValue')->willReturn(self::VALID_USER_ID);
+		// Because we're not calling setupUpToProvisioning here, the getClaimValue property should already return VALID_USER_ID as initialized
 		$this->ldapService->method('isLDAPEnabled')->willReturn(false);
 		$this->setupSuccessfulLogin();
 		$this->urlGenerator->method('getBaseUrl')->willReturn('https://nc.example.com');
