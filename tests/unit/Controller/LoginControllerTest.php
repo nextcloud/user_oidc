@@ -27,7 +27,6 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\Service\TokenService;
-use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCA\UserOIDC\Vendor\Firebase\JWT\Key;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -58,8 +57,8 @@ use Psr\Log\LoggerInterface;
 #[CoversClass(LoginController::class)]
 final class LoginControllerTest extends TestCase {
 
-	/** Minimum 32-byte secret required by HS256 */
 	private const TEST_SECRET = 'phpunit-hs256-test-secret-32bytes!';
+	private const TEST_KID = 'test-kid';
 	private const VALID_STATE = 'VALIDSTATE1234567890123456789012';
 	private const VALID_CLIENT_ID = 'test-client-id';
 	private const VALID_ISSUER = 'https://idp.example.com';
@@ -121,10 +120,8 @@ final class LoginControllerTest extends TestCase {
 		$this->tokenService = $this->createMock(TokenService::class);
 		$this->oidcService = $this->createMock(OIDCService::class);
 
-		// Return translation keys as-is for assertion readability
 		$this->l10n->method('t')->willReturnArgument(0);
 
-		// Default safe values
 		$this->request->method('getServerProtocol')->willReturn('https');
 		$this->appConfig->method('getValueBool')->willReturn(false);
 		$this->appConfig->method('getValueString')->willReturn('0');
@@ -158,10 +155,6 @@ final class LoginControllerTest extends TestCase {
 		);
 	}
 
-	/**
-	 * Reconfigures config->getSystemValue() with the given user_oidc options.
-	 * Keeps debug=false and forwards unknown keys to their $default.
-	 */
 	private function setSystemConfig(array $oidcConfig, bool $debug = false): void {
 		$this->config
 			->method('getSystemValue')
@@ -174,10 +167,6 @@ final class LoginControllerTest extends TestCase {
 			);
 	}
 
-	/**
-	 * Configures the session mock with a state/provider/nonce for code() entry.
-	 * Optional redirect URL defaults to a valid internal path.
-	 */
 	private function setupSession(array $overrides = []): void {
 		$data = array_merge([
 			'oidc.state' => self::VALID_STATE,
@@ -193,10 +182,6 @@ final class LoginControllerTest extends TestCase {
 		$this->session->method('getId')->willReturn('nc-session-id');
 	}
 
-	/**
-	 * Creates a real Provider entity with test client credentials.
-	 * Uses a real object instead of a mock because Entity::getId() is final.
-	 */
 	private function makeProvider(): Provider {
 		$provider = new Provider();
 		$provider->setId(1);
@@ -205,10 +190,6 @@ final class LoginControllerTest extends TestCase {
 		return $provider;
 	}
 
-	/**
-	 * Sets up all prerequisites shared by tests that reach the token endpoint:
-	 * session, provider, crypto, discovery, URL generator.
-	 */
 	private function setupUpToTokenEndpoint(): void {
 		$this->setupSession();
 		$this->providerMapper->method('getProvider')->willReturn($this->makeProvider());
@@ -222,26 +203,38 @@ final class LoginControllerTest extends TestCase {
 	}
 
 	/**
-	 * Builds a HS256-signed JWT.
-	 * No kid header is set — obtainJWK() is mocked to return a single Key
-	 * object (not an array), which does not require kid resolution.
+	 * Builds a JWT manually so that the kid header is guaranteed to be present.
+	 * The vendored firebase/php-jwt does not reliably set kid via JWT::encode()
+	 * parameters, so we construct the three segments ourselves with a standard
+	 * HMAC-SHA256 signature that any compliant JWT decoder will accept.
 	 */
 	private function buildJwt(array $claims): string {
-		return JWT::encode($claims, self::TEST_SECRET, 'HS256');
+		$header = ['typ' => 'JWT', 'alg' => 'HS256', 'kid' => self::TEST_KID];
+
+		$headerEncoded = $this->base64UrlEncode((string)json_encode($header, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$payloadEncoded = $this->base64UrlEncode((string)json_encode($claims, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+		$signingInput = $headerEncoded . '.' . $payloadEncoded;
+		$signature = hash_hmac('sha256', $signingInput, self::TEST_SECRET, true);
+
+		return $signingInput . '.' . $this->base64UrlEncode($signature);
+	}
+
+	private static function base64UrlEncode(string $input): string {
+		return rtrim(strtr(base64_encode($input), '+/', '-_'), '=');
 	}
 
 	/**
-	 * Returns a single Key object matching TEST_SECRET.
-	 * Using a single Key avoids the kid lookup that fails when kid is absent.
+	 * Returns a Key array indexed by TEST_KID.
+	 * Must return array to match DiscoveryService::obtainJWK() return type declaration.
+	 * The JWT built by buildJwt() includes kid=TEST_KID so the lookup will succeed.
+	 *
+	 * @return array<string, Key>
 	 */
-	private function buildJwks(): Key {
-		return new Key(self::TEST_SECRET, 'HS256');
+	private function buildJwks(): array {
+		return [self::TEST_KID => new Key(self::TEST_SECRET, 'HS256')];
 	}
 
-	/**
-	 * Returns a complete, valid JWT claim set.
-	 * Individual claims can be overridden or removed (set to null to unset).
-	 */
 	private function validClaims(array $overrides = []): array {
 		$base = [
 			'iss' => self::VALID_ISSUER,
@@ -263,10 +256,6 @@ final class LoginControllerTest extends TestCase {
 		return $base;
 	}
 
-	/**
-	 * Sets up all prerequisites needed to reach JWT validation:
-	 * token endpoint returns a valid response, JWKs are configured.
-	 */
 	private function setupUpToJwtValidation(array $claimOverrides = []): string {
 		$this->setupUpToTokenEndpoint();
 
@@ -283,10 +272,6 @@ final class LoginControllerTest extends TestCase {
 		return $jwt;
 	}
 
-	/**
-	 * Sets up all prerequisites needed to reach user provisioning logic.
-	 * Configures provider service settings and claim extraction.
-	 */
 	private function setupUpToProvisioning(array $claimOverrides = [], array $oidcConfig = []): void {
 		$this->setupUpToJwtValidation($claimOverrides);
 		$this->setSystemConfig($oidcConfig);
@@ -306,27 +291,18 @@ final class LoginControllerTest extends TestCase {
 		$this->ldapService->method('isLDAPEnabled')->willReturn(false);
 	}
 
-	/**
-	 * Builds a Guzzle ClientException with an optional JSON body.
-	 */
 	private function makeClientException(?string $body = null): ClientException {
 		$guzzleRequest = new GuzzleRequest('POST', 'https://idp.example.com/token');
 		$guzzleResponse = new GuzzleResponse(400, [], $body ?? '');
 		return new ClientException('Client error', $guzzleRequest, $guzzleResponse);
 	}
 
-	/**
-	 * Builds a Guzzle ServerException.
-	 */
 	private function makeServerException(): ServerException {
 		$guzzleRequest = new GuzzleRequest('POST', 'https://idp.example.com/token');
 		$guzzleResponse = new GuzzleResponse(500, [], 'Internal Server Error');
 		return new ServerException('Server error', $guzzleRequest, $guzzleResponse);
 	}
 
-	/**
-	 * Configures a full successful provisioning flow and returns the mocked IUser.
-	 */
 	private function setupSuccessfulLogin(?MockObject $existingUser = null): MockObject&IUser {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn(self::VALID_USER_ID);
@@ -339,7 +315,6 @@ final class LoginControllerTest extends TestCase {
 			'userData' => [],
 		]);
 
-		// Backchannel logout token not found — graceful skip
 		$this->authTokenProvider
 			->method('getToken')
 			->willThrowException(new InvalidTokenException('not found'));
@@ -348,9 +323,9 @@ final class LoginControllerTest extends TestCase {
 	}
 
 	/**
-	 * Captures all events dispatched via dispatchTyped() and returns them by reference.
-	 * Required because dispatchTyped() is also called for TokenObtainedEvent before
-	 * UserCreatedEvent, making expects()->with(isInstanceOf(UserCreatedEvent)) unreliable.
+	 * Captures all dispatchTyped() calls into $dispatchedEvents by reference.
+	 * Avoids using expects()->with(isInstanceOf(X)) which would also block
+	 * legitimate TokenObtainedEvent dispatches that happen earlier in the flow.
 	 *
 	 * @param list<object> $dispatchedEvents
 	 */
@@ -395,7 +370,6 @@ final class LoginControllerTest extends TestCase {
 			error_description: 'User cancelled',
 		);
 
-		// build403TemplateResponse always returns TemplateResponse regardless of debug mode
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
@@ -495,18 +469,13 @@ final class LoginControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
-	/**
-	 * @return array<string, array{string}>
-	 */
+	/** @return array<string, array{string}> */
 	public static function invalidTokenResponseBodies(): array {
 		return [
-			// JSON parse failures — caught before TokenObtainedEvent dispatch
 			'empty body' => [''],
 			'invalid JSON' => ['not-json{{{{'],
-			// Valid JSON but not an array — caught before TokenObtainedEvent dispatch
 			'JSON null' => ['null'],
 			'JSON string' => ['"just-a-string"'],
-			// Valid array but id_token absent or wrong type — caught after dispatch
 			'missing id_token' => [json_encode(['access_token' => 'tok', 'token_type' => 'Bearer'])],
 			'id_token is null' => [json_encode(['access_token' => 'tok', 'id_token' => null])],
 			'id_token is integer' => [json_encode(['access_token' => 'tok', 'id_token' => 42])],
@@ -545,9 +514,7 @@ final class LoginControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
-	/**
-	 * @return array<string, array{string|string[]}>
-	 */
+	/** @return array<string, array{string|string[]}> */
 	public static function invalidAudiences(): array {
 		return [
 			'wrong audience as string' => ['wrong-client-id'],
@@ -665,8 +632,7 @@ final class LoginControllerTest extends TestCase {
 					default => $default,
 				}
 			);
-		$this->provisioningService->method('getSyncGroupsOfToken')
-			->willReturn(['admins']);
+		$this->provisioningService->method('getSyncGroupsOfToken')->willReturn(['admins']);
 		$this->setupSuccessfulLogin();
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
@@ -761,8 +727,6 @@ final class LoginControllerTest extends TestCase {
 		$this->userManager->method('get')->willReturn(null);
 		$this->setupSuccessfulLogin(existingUser: null);
 
-		// Capture all events — dispatchTyped() also fires TokenObtainedEvent
-		// before UserCreatedEvent, making expects()->with() unreliable here
 		$dispatchedEvents = [];
 		$this->captureDispatchedEvents($dispatchedEvents);
 
@@ -784,8 +748,6 @@ final class LoginControllerTest extends TestCase {
 		$existingUser->method('getBackendClassName')->willReturn(Application::APP_ID);
 		$this->setupSuccessfulLogin(existingUser: $existingUser);
 
-		// Capture all events — expects($this->never()) would also block
-		// the legitimate TokenObtainedEvent dispatch
 		$dispatchedEvents = [];
 		$this->captureDispatchedEvents($dispatchedEvents);
 
