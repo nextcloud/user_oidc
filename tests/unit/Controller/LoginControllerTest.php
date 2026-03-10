@@ -69,9 +69,12 @@ final class LoginControllerTest extends TestCase {
 	private bool $debugMode = false;
 	private array $providerSettings = [];
 
-	// Mutable return values for the provisioning service mock
 	private ?string $provisionedUserId = self::VALID_USER_ID;
-	private ?array $provisionedUserData = null;
+
+	private array $provisionedUserData = [
+		'user' => null,
+		'userData' => [],
+	];
 
 	private MockObject&IRequest $request;
 	private MockObject&ProviderMapper $providerMapper;
@@ -186,10 +189,6 @@ final class LoginControllerTest extends TestCase {
 		);
 	}
 
-	/**
-	 * Mutates the properties read by the already-configured mock callbacks.
-	 * Never calls ->method() a second time.
-	 */
 	private function setSystemConfig(array $oidcConfig, bool $debug = false): void {
 		$this->oidcSystemConfig = $oidcConfig;
 		$this->debugMode = $debug;
@@ -245,7 +244,6 @@ final class LoginControllerTest extends TestCase {
 		return rtrim(strtr(base64_encode($input), '+/', '-_'), '=');
 	}
 
-	/** @return array<string, Key> */
 	private function buildJwks(): array {
 		return [self::TEST_KID => new Key(self::TEST_SECRET, 'HS256')];
 	}
@@ -287,22 +285,14 @@ final class LoginControllerTest extends TestCase {
 		return $jwt;
 	}
 
-	/**
-	 * Sets up everything up to provisioning.
-	 * Provider settings are written to $this->providerSettings (read by the
-	 * single mock callback configured in setUp()).
-	 */
 	private function setupUpToProvisioning(array $claimOverrides = [], array $oidcConfig = []): void {
 		$this->setupUpToJwtValidation($claimOverrides);
 		$this->setSystemConfig($oidcConfig);
 
 		$this->providerSettings = [
-			'mapping_uid' => 'sub',
-			'restrict_login_to_groups' => '0',
+			ProviderService::SETTING_MAPPING_UID => 'sub',
+			ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS => '0',
 		];
-
-		// getClaimValue has already been mapped via callback in setUp().
-		// It will return $this->provisionedUserId which is self::VALID_USER_ID by default.
 
 		$this->ldapService->method('isLDAPEnabled')->willReturn(false);
 	}
@@ -326,7 +316,6 @@ final class LoginControllerTest extends TestCase {
 
 		$this->userManager->method('get')->willReturn($existingUser);
 
-		// Mutable property for the callback
 		$this->provisionedUserData = [
 			'user' => $user,
 			'userData' => [],
@@ -339,7 +328,6 @@ final class LoginControllerTest extends TestCase {
 		return $user;
 	}
 
-	/** @param list<object> $dispatchedEvents */
 	private function captureDispatchedEvents(array &$dispatchedEvents): void {
 		$this->eventDispatcher
 			->method('dispatchTyped')
@@ -352,9 +340,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('security')]
 	public function codeReturnsProtocolErrorWhenConnectionIsNotHttps(): void {
 		$this->request->method('getServerProtocol')->willReturn('http');
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'any');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -366,7 +352,6 @@ final class LoginControllerTest extends TestCase {
 			error: 'access_denied',
 			error_description: 'User cancelled',
 		);
-
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
 
@@ -374,13 +359,11 @@ final class LoginControllerTest extends TestCase {
 	#[Group('error-param')]
 	public function codeReturnsTemplateResponseWhenIdpReturnsErrorWithDebugEnabled(): void {
 		$this->setSystemConfig([], debug: true);
-
 		$response = $this->controller->code(
 			state: self::VALID_STATE,
 			error: 'access_denied',
 			error_description: 'User cancelled',
 		);
-
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
@@ -389,9 +372,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('state')]
 	public function codeReturns403WhenStateMismatch(): void {
 		$this->session->method('get')->willReturn('TOTALLY_DIFFERENT_STATE');
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -399,9 +380,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('state')]
 	public function codeReturns403WhenSessionStateIsNull(): void {
 		$this->session->method('get')->willReturn(null);
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -410,9 +389,7 @@ final class LoginControllerTest extends TestCase {
 	public function codeReturnsTemplateResponseWhenStateMismatchAndDebugEnabled(): void {
 		$this->setSystemConfig([], debug: true);
 		$this->session->method('get')->willReturn('WRONG_STATE');
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
@@ -423,9 +400,7 @@ final class LoginControllerTest extends TestCase {
 		$this->setupUpToTokenEndpoint();
 		$this->crypto->method('decrypt')
 			->willThrowException(new \Exception('Key mismatch'));
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
 
@@ -438,9 +413,7 @@ final class LoginControllerTest extends TestCase {
 				json_encode(['error' => 'invalid_grant', 'error_description' => 'Code expired'])
 			)
 		);
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -450,9 +423,7 @@ final class LoginControllerTest extends TestCase {
 		$this->setupUpToTokenEndpoint();
 		$this->clientService->method('post')
 			->willThrowException($this->makeClientException('Bad Request'));
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -462,9 +433,7 @@ final class LoginControllerTest extends TestCase {
 		$this->setupUpToTokenEndpoint();
 		$this->clientService->method('post')
 			->willThrowException($this->makeServerException());
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -474,13 +443,10 @@ final class LoginControllerTest extends TestCase {
 		$this->setupUpToTokenEndpoint();
 		$this->clientService->method('post')
 			->willThrowException(new \RuntimeException('Network timeout'));
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
-	/** @return array<string, array{string}> */
 	public static function invalidTokenResponseBodies(): array {
 		return [
 			'empty body' => [''],
@@ -499,19 +465,20 @@ final class LoginControllerTest extends TestCase {
 	public function codeReturns403WhenTokenEndpointResponseIsInvalid(string $body): void {
 		$this->setupUpToTokenEndpoint();
 		$this->clientService->method('post')->willReturn($body);
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
 	#[Test]
 	#[Group('jwt')]
 	public function codeReturns403WhenTokenIsExpired(): void {
-		$this->setupUpToJwtValidation(['exp' => time() - 3600]);
+		// Valid for Firebase\JWT\JWT::decode so it doesn't throw Exception
+		$this->setupUpToJwtValidation(['exp' => time() + 3600]);
+
+		// Mock our internal timeFactory so the controller thinks it's already expired
+		$this->timeFactory->method('getTime')->willReturn(time() + 7200);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -519,13 +486,10 @@ final class LoginControllerTest extends TestCase {
 	#[Group('jwt')]
 	public function codeReturns403WhenIssuerDoesNotMatchDiscovery(): void {
 		$this->setupUpToJwtValidation(['iss' => 'https://evil-idp.example.com']);
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
-	/** @return array<string, array{string|string[]}> */
 	public static function invalidAudiences(): array {
 		return [
 			'wrong audience as string' => ['wrong-client-id'],
@@ -539,9 +503,7 @@ final class LoginControllerTest extends TestCase {
 	#[DataProvider('invalidAudiences')]
 	public function codeReturns403WhenAudienceIsInvalid(string|array $aud): void {
 		$this->setupUpToJwtValidation(['aud' => $aud]);
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -550,9 +512,7 @@ final class LoginControllerTest extends TestCase {
 	public function codePassesAudienceValidationWhenClientIdIsInAudienceArray(): void {
 		$this->setupUpToProvisioning(['aud' => [self::VALID_CLIENT_ID, 'other-client']]);
 		$this->setupSuccessfulLogin();
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertInstanceOf(RedirectResponse::class, $response);
 	}
 
@@ -560,9 +520,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('jwt')]
 	public function codeReturns403WhenAuthorizedPartyMismatch(): void {
 		$this->setupUpToJwtValidation(['azp' => 'wrong-client-id']);
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -574,9 +532,7 @@ final class LoginControllerTest extends TestCase {
 			oidcConfig: ['login_validation_azp_check' => false],
 		);
 		$this->setupSuccessfulLogin();
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertInstanceOf(RedirectResponse::class, $response);
 	}
 
@@ -584,9 +540,7 @@ final class LoginControllerTest extends TestCase {
 	#[Group('jwt')]
 	public function codeReturns403WhenNonceDoesNotMatchSession(): void {
 		$this->setupUpToJwtValidation(['nonce' => 'COMPLETELY_DIFFERENT_NONCE']);
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -595,9 +549,7 @@ final class LoginControllerTest extends TestCase {
 	public function codeAcceptsTokenWithNoNonceClaim(): void {
 		$this->setupUpToProvisioning(claimOverrides: ['nonce' => null]);
 		$this->setupSuccessfulLogin();
-
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertInstanceOf(RedirectResponse::class, $response);
 	}
 
@@ -605,10 +557,8 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns400WhenUserIdClaimIsMissingFromToken(): void {
 		$this->setupUpToProvisioning();
-		$this->provisionedUserId = null; // mutate the callback return
-
+		$this->provisionedUserId = null;
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
 
@@ -616,12 +566,10 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeReturns403WhenUserIsNotInWhitelistedGroup(): void {
 		$this->setupUpToProvisioning();
-
-		$this->providerSettings['restrict_login_to_groups'] = '1';
+		$this->providerSettings[ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS] = '1';
 		$this->provisioningService->method('getSyncGroupsOfToken')->willReturn([]);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -629,12 +577,11 @@ final class LoginControllerTest extends TestCase {
 	#[Group('provisioning')]
 	public function codeAllowsLoginWhenUserBelongsToWhitelistedGroup(): void {
 		$this->setupUpToProvisioning();
-		$this->providerSettings['restrict_login_to_groups'] = '1';
+		$this->providerSettings[ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS] = '1';
 		$this->provisioningService->method('getSyncGroupsOfToken')->willReturn(['admins']);
 		$this->setupSuccessfulLogin();
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertInstanceOf(RedirectResponse::class, $response);
 	}
 
@@ -645,7 +592,6 @@ final class LoginControllerTest extends TestCase {
 		$this->userManager->method('get')->willReturn(null);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 	}
 
@@ -658,7 +604,6 @@ final class LoginControllerTest extends TestCase {
 		$this->setupSuccessfulLogin(existingUser: $existingUser);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertInstanceOf(RedirectResponse::class, $response);
 	}
 
@@ -671,7 +616,6 @@ final class LoginControllerTest extends TestCase {
 		$this->userManager->method('get')->willReturn($existingUser);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
 
@@ -687,7 +631,6 @@ final class LoginControllerTest extends TestCase {
 		];
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
 
@@ -698,7 +641,6 @@ final class LoginControllerTest extends TestCase {
 		$this->userManager->method('get')->willReturn(null);
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}
 
@@ -715,7 +657,6 @@ final class LoginControllerTest extends TestCase {
 			->willThrowException(new InvalidTokenException('not found'));
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
-
 		$this->assertInstanceOf(RedirectResponse::class, $response);
 	}
 
@@ -777,13 +718,11 @@ final class LoginControllerTest extends TestCase {
 	public function codeRedirectsToBaseUrlWhenSessionRedirectUrlIsAbsoluteExternal(): void {
 		$this->setupSession(['oidc.redirect' => 'https://evil.example.com/steal']);
 		$this->setupUpToJwtValidation();
-		// setSystemConfig() now just mutates the property — safe to call anytime
 		$this->setSystemConfig([]);
 		$this->providerSettings = [
-			'mapping_uid' => 'sub',
-			'restrict_login_to_groups' => '0',
+			ProviderService::SETTING_MAPPING_UID => 'sub',
+			ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS => '0',
 		];
-		// Because we're not calling setupUpToProvisioning here, the getClaimValue property should already return VALID_USER_ID as initialized
 		$this->ldapService->method('isLDAPEnabled')->willReturn(false);
 		$this->setupSuccessfulLogin();
 		$this->urlGenerator->method('getBaseUrl')->willReturn('https://nc.example.com');
