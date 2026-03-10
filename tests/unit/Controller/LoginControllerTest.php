@@ -595,11 +595,6 @@ final class LoginControllerTest extends TestCase {
 			'auto_provision' => true
 		]);
 
-		$this->setSystemConfig([
-			'disable_account_creation' => true,
-			'auto_provision' => true
-		]);
-
 		$this->existingUserMock = null;
 
 		$response = $this->controller->code(state: self::VALID_STATE, code: 'code');
