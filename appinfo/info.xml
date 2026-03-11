@@ -23,6 +23,7 @@
 	<bugs>https://github.com/nextcloud/user_oidc/issues</bugs>
 	<repository>https://github.com/nextcloud/user_oidc</repository>
 	<dependencies>
+		<php min-version="8.2"/>
 		<nextcloud min-version="29" max-version="34"/>
 	</dependencies>
 	<settings>
