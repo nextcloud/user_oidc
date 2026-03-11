@@ -42,7 +42,6 @@ class LdapService {
 		}
 
 		try {
-			/** @var \OCA\User_LDAP\User\DeletedUsersIndex */
 			$dui = Server::get(\OCA\User_LDAP\User\DeletedUsersIndex::class);
 		} catch (ContainerExceptionInterface $e) {
 			$this->logger->debug('\OCA\User_LDAP\User\DeletedUsersIndex class not found');
@@ -70,7 +69,6 @@ class LdapService {
 	 */
 	public function syncUser(string $userId): void {
 		try {
-			/** @var \OCA\User_LDAP\User_Proxy */
 			$ldapUserProxy = Server::get(\OCA\User_LDAP\User_Proxy::class);
 			$ldapUserProxy->loginName2UserName($userId);
 		} catch (ContainerExceptionInterface $e) {
