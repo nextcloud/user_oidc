@@ -17,6 +17,7 @@ use OCA\UserOIDC\User\Provisioning\SelfEncodedTokenProvisioning;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -33,7 +34,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 
 	public function isValidBearerToken(Provider $provider, string $bearerToken): ?string {
 		/** @var ProviderService $providerService */
-		$providerService = \OC::$server->get(ProviderService::class);
+		$providerService = Server::get(ProviderService::class);
 		$providerId = $provider->getId();
 		$uidAttribute = $providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT);
 
