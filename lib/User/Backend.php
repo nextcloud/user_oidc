@@ -34,6 +34,7 @@ use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\Server;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
@@ -163,12 +164,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * {@inheritdoc}
 	 */
 	public function getLogoutUrl(): string {
-		return $this->urlGenerator->linkToRouteAbsolute(
-			'user_oidc.login.singleLogoutService',
-			[
-				'requesttoken' => \OC::$server->getCsrfTokenManager()->getToken()->getEncryptedValue(),
-			]
-		);
+		return $this->urlGenerator->linkToRouteAbsolute('user_oidc.login.singleLogoutService');
 	}
 
 	/**
@@ -282,7 +278,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 				// find user id through different token validation methods
 				foreach ($this->tokenValidators as $validatorClass) {
 					/** @var IBearerTokenValidator $validator */
-					$validator = \OC::$server->get($validatorClass);
+					$validator = Server::get($validatorClass);
 					try {
 						$tokenUserId = $validator->isValidBearerToken($provider, $headerToken);
 					} catch (Throwable|Exception $e) {
@@ -428,7 +424,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		string $provisioningStrategyClass, Provider $provider, string $tokenUserId, string $headerToken,
 		?IUser $existingUser,
 	): ?IUser {
-		$provisioningStrategy = \OC::$server->get($provisioningStrategyClass);
+		$provisioningStrategy = Server::get($provisioningStrategyClass);
 		return $provisioningStrategy->provisionUser($provider, $tokenUserId, $headerToken, $existingUser);
 	}
 }
