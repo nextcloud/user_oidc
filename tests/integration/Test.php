@@ -42,7 +42,7 @@ class Test extends \Test\TestCase {
 		}
 
 		$this->newClient();
-		$this->providerService = \OC::$server->get(ProviderService::class);
+		$this->providerService = Server::get(ProviderService::class);
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '1');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
 	}
@@ -56,7 +56,7 @@ class Test extends \Test\TestCase {
 
 	private function cleanupUser(string $userId): void {
 		/** @var IUserManager $userManager */
-		$userManager = \OC::$server->get(IUserManager::class);
+		$userManager = Server::get(IUserManager::class);
 		if ($userManager->userExists($userId)) {
 			$user = $userManager->get($userId);
 			$user->delete();
@@ -137,7 +137,7 @@ class Test extends \Test\TestCase {
 	public function testDisabledAutoProvision() {
 		sleep(5);
 		/** @var IUserManager $userManager */
-		$userManager = \OC::$server->get(IUserManager::class);
+		$userManager = Server::get(IUserManager::class);
 		if (!$userManager->userExists('keycloak1')) {
 			$localUser = $userManager->createUser('keycloak1', 'passwordKeycloak1Local');
 		} else {
@@ -148,7 +148,7 @@ class Test extends \Test\TestCase {
 		$localUser->setDisplayName('Local name');
 
 		/** @var IConfig $config */
-		$config = \OC::$server->get(IConfig::class);
+		$config = Server::get(IConfig::class);
 		$config->setSystemValue('user_oidc', [ 'auto_provision' => false ]);
 
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '0');
@@ -182,7 +182,7 @@ class Test extends \Test\TestCase {
 	public function testUnreachable() {
 		$provider = $this->providerService->getProviderByIdentifier('nextcloudci');
 		/** @var ProviderMapper $mapper */
-		$mapper = \OC::$server->get(ProviderMapper::class);
+		$mapper = Server::get(ProviderMapper::class);
 
 		$previousDiscovery = $provider->getDiscoveryEndpoint();
 
