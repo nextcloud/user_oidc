@@ -12,8 +12,10 @@ use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\RedirectMiddleware;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
+use OCP\App\IAppManager;
 use OCP\IConfig;
 use OCP\IUserManager;
+use OCP\Server;
 
 /**
  * @group DB
@@ -28,7 +30,8 @@ class Test extends \Test\TestCase {
 	public function setUp(): void {
 		parent::setUp();
 
-		\OC::$server->getAppManager()->enableApp('user_oidc');
+		$appManager = Server::get(IAppManager::class);
+		$appManager->enableApp('user_oidc');
 
 		if (getenv('IDP_URL')) {
 			$this->oidcIdp = getenv('IDP_URL');
