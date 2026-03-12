@@ -729,8 +729,14 @@ class LoginController extends BaseOidcController {
 					$decoded = (array)JWT::decode($jwt, new Key($key, 'HS256'));
 
 					$providerId = $decoded['oidcProviderId'] ?? null;
+				} catch (\DomainException $e) {
+					$this->logger->error(
+						'Failed to decode GSS JWT: ' . $e->getMessage()
+						. '. If the key is too short, gss.jwt.key must be at least 32 characters for HS256 (per RFC 7518).',
+						['exception' => $e]
+					);
 				} catch (\Exception $e) {
-					$this->logger->debug('Failed to get the logout provider ID in the request from GSS', ['exception' => $e]);
+					$this->logger->error('Failed to decode GSS JWT in single logout', ['exception' => $e]);
 				}
 			} else {
 				$providerId = $this->session->get(self::PROVIDERID);
