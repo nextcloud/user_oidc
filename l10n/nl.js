@@ -87,7 +87,7 @@ OC.L10N.register(
     "Website mapping" : "Website-toewijzing",
     "Avatar mapping" : "Avatar-toewijzing",
     "Biography mapping" : "Biografie-toewijzing",
-    "X (formerly Twitter) mapping" : "X (v.h. Twitter)-toewijzing",
+    "X (formerly Twitter) mapping" : "X (voorheen Twitter)-toewijzing",
     "Fediverse/Nickname mapping" : "Fediverse/Nickname-toewijzing",
     "Headline mapping" : "Kopregel-toewijzing",
     "Authentication and Access Control Settings" : "Authenticatie- en toegangscontrole-instellingen",
