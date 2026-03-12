@@ -36,6 +36,7 @@ use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
+use OCP\IUserSession;
 use OCP\Server;
 use OCP\ServerVersion;
 use OCP\User\Backend\ABackend;
@@ -344,10 +345,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 
 							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->setSessionUser($userId);
 							return $userId;
 						} elseif ($this->userExists($tokenUserId)) {
 							$this->checkFirstLogin($tokenUserId);
 							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->setSessionUser($tokenUserId);
 							return $tokenUserId;
 						} else {
 							// check if the user exists locally
@@ -369,6 +372,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 							$this->checkFirstLogin($tokenUserId);
 							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->setSessionUser($tokenUserId);
 							return $tokenUserId;
 						}
 					}
@@ -378,6 +382,26 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$this->logger->debug('Could not find unique token validation');
 		return '';
+	}
+
+	/**
+	 * Set the user in IUserSession after bearer token validation.
+	 * Without this, DI-injected $userId is null in OCS controllers
+	 * and CalDAV plugins, causing 500 errors in Deck, Talk, and Tasks.
+	 *
+	 * Note: IUserSession is resolved via Server::get() rather than constructor
+	 * injection to avoid a circular dependency (IUserSession depends on this Backend).
+	 */
+	private function setSessionUser(string $userId): void {
+		try {
+			$user = $this->userManager->get($userId);
+			if ($user !== null) {
+				$userSession = Server::get(IUserSession::class);
+				$userSession->setUser($user);
+			}
+		} catch (Throwable $e) {
+			$this->logger->debug('Failed to set session user after bearer validation: ' . $e->getMessage());
+		}
 	}
 
 	/**
