@@ -293,6 +293,112 @@ class ProvisioningServiceTest extends TestCase {
 		);
 	}
 
+	public static function dataGetClaimValues(): array {
+		return [
+			'flat simple key' => [
+				'email',
+				(object)['email' => 'alice@example.com'],
+				'alice@example.com',
+			],
+			'nested via dot' => [
+				'custom.nickname',
+				(object)['custom' => (object)['nickname' => 'alice']],
+				'alice',
+			],
+			'URL-based flat key' => [
+				'https://idp.example.com/claims/groups',
+				(object)['https://idp.example.com/claims/groups' => ['admin', 'users']],
+				['admin', 'users'],
+			],
+			'URL key with nested navigation' => [
+				'https://idp.example.com/attrs.role',
+				(object)['https://idp.example.com/attrs' => (object)['role' => 'admin']],
+				'admin',
+			],
+			'URL key with dotted sub-key' => [
+				'https://idp.example.com/attrs.user.role',
+				(object)['https://idp.example.com/attrs' => (object)['user.role' => 'admin']],
+				'admin',
+			],
+			'deep nesting three levels' => [
+				'a.b.c',
+				(object)['a' => (object)['b' => (object)['c' => 'deep']]],
+				'deep',
+			],
+			'pipe fallback first match' => [
+				'missing | email',
+				(object)['email' => 'bob@example.com'],
+				'bob@example.com',
+			],
+			'pipe fallback second match' => [
+				'primary_email | email',
+				(object)['primary_email' => 'first@example.com', 'email' => 'second@example.com'],
+				'first@example.com',
+			],
+			'non-existent path returns null' => [
+				'does.not.exist',
+				(object)['other' => 'value'],
+				null,
+			],
+			'empty path returns null' => [
+				'',
+				(object)['key' => 'value'],
+				null,
+			],
+			'literal dot key takes precedence over nested' => [
+				'a.b',
+				(object)['a.b' => 'flat', 'a' => (object)['b' => 'nested']],
+				'flat',
+			],
+			'array payload' => [
+				'user.name',
+				['user' => ['name' => 'alice']],
+				'alice',
+			],
+			'URL key as array payload' => [
+				'https://idp.example.com/claims/roles',
+				['https://idp.example.com/claims/roles' => ['editor']],
+				['editor'],
+			],
+		];
+	}
+
+	/**
+	 * @dataProvider dataGetClaimValues
+	 */
+	public function testGetClaimValues(string $claimPath, object|array $tokenPayload, mixed $expected): void {
+		$providerId = 1;
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap([
+				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '1'],
+			]));
+
+		$result = $this->provisioningService->getClaimValues($tokenPayload, $claimPath, $providerId);
+		$this->assertEquals($expected, $result);
+	}
+
+	public function testGetClaimValuesWithoutNestedResolution(): void {
+		$providerId = 1;
+
+		$this->providerService
+			->method('getSetting')
+			->will($this->returnValueMap([
+				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+			]));
+
+		// With nested resolution disabled, dot-containing keys should still work as literal keys
+		$payload = (object)['https://idp.example.com/claims/groups' => ['admin']];
+		$result = $this->provisioningService->getClaimValues($payload, 'https://idp.example.com/claims/groups', $providerId);
+		$this->assertEquals(['admin'], $result);
+
+		// But nested navigation should NOT work
+		$payload = (object)['custom' => (object)['nickname' => 'alice']];
+		$result = $this->provisioningService->getClaimValues($payload, 'custom.nickname', $providerId);
+		$this->assertNull($result);
+	}
+
 	public static function dataProvisionUserGroups() {
 		return [
 			[
