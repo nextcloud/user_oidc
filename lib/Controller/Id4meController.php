@@ -44,6 +44,7 @@ use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 
+use OCP\ServerVersion;
 use OCP\Util;
 use Psr\Log\LoggerInterface;
 
@@ -71,6 +72,7 @@ class Id4meController extends BaseOidcController {
 		private ID4MeService $id4MeService,
 		private LoggerInterface $logger,
 		private ICrypto $crypto,
+		private ServerVersion $serverVersion,
 	) {
 		parent::__construct($request, $config, $l10n);
 
@@ -322,6 +324,6 @@ class Id4meController extends BaseOidcController {
 		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
 		$this->session->set('last-password-confirm', strtotime('+4 year', time()));
 
-		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
+		return new RedirectResponse($this->serverVersion->getMajorVersion() >= 32 ? $this->urlGenerator->linkToDefaultPageUrl() : \OC_Util::getDefaultPageUrl());
 	}
 }
