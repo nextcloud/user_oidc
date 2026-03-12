@@ -87,20 +87,10 @@ class ProvisioningService {
 		$alternatives = explode('|', $claimPath);
 
 		foreach ($alternatives as $altPath) {
-			$parts = explode('.', trim($altPath));
-			$value = $tokenPayload;
-
-			foreach ($parts as $part) {
-				if (is_object($value) && property_exists($value, $part)) {
-					$value = $value->{$part};
-				} elseif (is_array($value) && array_key_exists($part, $value)) {
-					$value = $value[$part];
-				} else {
-					continue 2;
-				}
+			$result = $this->resolveNestedClaim($tokenPayload, trim($altPath));
+			if ($result !== null) {
+				return $result;
 			}
-
-			return $value;
 		}
 
 		return null;
@@ -113,6 +103,50 @@ class ProvisioningService {
 	public function getClaimValue(object|array $tokenPayload, string $claimPath, int $providerId): mixed {
 		$value = $this->getClaimValues($tokenPayload, $claimPath, $providerId);
 		return is_string($value) ? $value : null;
+	}
+
+	/**
+	 * Resolves a claim path against a token payload using greedy longest-prefix matching.
+	 *
+	 * Instead of splitting on every dot (which breaks URL-based claim names like
+	 * "https://idp.example.com/claims/groups" or literal dot keys like "user.role"),
+	 * this method first tries the full path as a literal key, then progressively
+	 * shorter dot-delimited prefixes (longest first), recursing into the remainder.
+	 */
+	private function resolveNestedClaim(object|array $data, string $path): mixed {
+		if ($path === '') {
+			return null;
+		}
+
+		// Try full path as literal key
+		if (is_object($data) && property_exists($data, $path)) {
+			return $data->{$path};
+		} elseif (is_array($data) && array_key_exists($path, $data)) {
+			return $data[$path];
+		}
+
+		// Try progressively shorter dot-prefixes (longest first)
+		$lastDot = strlen($path);
+		while (($lastDot = strrpos($path, '.', -(strlen($path) - $lastDot + 1))) !== false) {
+			$prefix = substr($path, 0, $lastDot);
+			$remainder = substr($path, $lastDot + 1);
+
+			$prefixValue = null;
+			if (is_object($data) && property_exists($data, $prefix)) {
+				$prefixValue = $data->{$prefix};
+			} elseif (is_array($data) && array_key_exists($prefix, $data)) {
+				$prefixValue = $data[$prefix];
+			}
+
+			if ($prefixValue !== null && (is_object($prefixValue) || is_array($prefixValue))) {
+				$result = $this->resolveNestedClaim($prefixValue, $remainder);
+				if ($result !== null) {
+					return $result;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/**
