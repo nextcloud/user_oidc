@@ -26,6 +26,8 @@ use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\IRootFolder;
+use OCP\Files\ISetupManager;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\IConfig;
@@ -35,11 +37,13 @@ use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\Server;
+use OCP\ServerVersion;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
+use OCP\User\Events\UserFirstTimeLoggedInEvent;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -63,6 +67,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		private ProvisioningService $provisioningService,
 		private LdapService $ldapService,
 		private IUserManager $userManager,
+		private ServerVersion $serverVersion,
 	) {
 	}
 
@@ -391,9 +396,9 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$firstLogin = $user->getLastLogin() === 0;
 		if ($firstLogin) {
-			\OC_Util::setupFS($userId);
+			$this->serverVersion->getMajorVersion() >= 34 ? Server::get(ISetupManager::class)->setupForUser($user) : \OC_Util::setupFS($userId);
 			// trigger creation of user home and /files folder
-			$userFolder = \OC::$server->getUserFolder($userId);
+			$userFolder = Server::get(IRootFolder::class)->getUserFolder($userId);
 			try {
 				// copy skeleton
 				\OC_Util::copySkeleton($userId, $userFolder);
@@ -403,8 +408,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 			// trigger any other initialization
 			$this->eventDispatcher->dispatch(IUser::class . '::firstLogin', new GenericEvent($user));
-			// TODO add this when user_oidc min NC version is >= 28
-			// $this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
+			$this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
 		}
 		$user->updateLastLoginTimestamp();
 		return $firstLogin;

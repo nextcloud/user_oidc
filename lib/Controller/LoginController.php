@@ -58,6 +58,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
+use OCP\ServerVersion;
 use OCP\Session\Exceptions\SessionNotAvailableException;
 use OCP\User\Events\BeforeUserLoggedInEvent;
 use OCP\User\Events\UserCreatedEvent;
@@ -99,6 +100,7 @@ class LoginController extends BaseOidcController {
 		private ICrypto $crypto,
 		private TokenService $tokenService,
 		private OidcService $oidcService,
+		private ServerVersion $serverVersion,
 	) {
 		parent::__construct($request, $config, $l10n);
 	}
@@ -696,7 +698,7 @@ class LoginController extends BaseOidcController {
 			return $this->getRedirectResponse($redirectUrl);
 		}
 
-		return new RedirectResponse(\OC_Util::getDefaultPageUrl());
+		return new RedirectResponse($this->serverVersion->getMajorVersion() >= 32 ? $this->urlGenerator->linkToDefaultPageUrl() : \OC_Util::getDefaultPageUrl());
 	}
 
 	/**
