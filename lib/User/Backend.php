@@ -389,12 +389,17 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 */
 	private function setSessionUser(string $userId): void {
 		try {
-			$user = $this->userManager->get($userId);
-			if ($user !== null) {
-				$userSession = Server::get(IUserSession::class);
-				$userSession->setUser($user);
+			$userSession = Server::get(IUserSession::class);
+			$currentUser = $userSession->getUser();
+			
+			// Only fetch and set if the session doesn't already have this user
+			if ($currentUser === null || $currentUser->getUID() !== $userId) {
+				$user = $this->userManager->get($userId);
+				if ($user !== null) {
+					$userSession->setUser($user);
+				}
 			}
-		} catch (Throwable $e) {
+		} catch (\Throwable $e) {
 			$this->logger->debug('Failed to set session user after bearer validation: ' . $e->getMessage());
 		}
 	}
