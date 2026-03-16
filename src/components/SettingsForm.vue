@@ -300,7 +300,9 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}', { regex: '/^blue/', substr: 'blue' }) }}
 		</p>
-		<NcCheckboxRadioSwitch :checked.sync="localProvider.settings.azureGroupNames" wrapper-element="div">
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.azureGroupNames"
+			wrapper-element="div">
 			{{ t('user_oidc', 'Fetch group names from Microsoft Graph') }}
 		</NcCheckboxRadioSwitch>
 		<p class="settings-hint">

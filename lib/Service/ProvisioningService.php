@@ -602,7 +602,7 @@ class ProvisioningService {
 				$tenant = explode('/', $tenant);
 				if (count($tenant) === 1) {
 					$this->logger->error('Could not figure out the tenant id. (Is the discovery endpoint formatted properly?) Will not sync groups');
-					return;
+					return null;
 				}
 				$tenant = $tenant[1];
 
@@ -620,18 +620,18 @@ class ProvisioningService {
 					]);
 				} catch (\Exception $e) {
 					$this->logger->error($e->getMessage());
-					return;
+					return null;
 				}
 
 				$res = $response->getBody();
 				if (!is_string($res)) {
 					$this->logger->error('Could not fetch Bearer token for Microsoft Graph. Will not sync groups');
-					return;
+					return null;
 				}
 				$res = json_decode($res, true);
 				if (empty($res)) {
 					$this->logger->error('Could not fetch Bearer token for Microsoft Graph. Will not sync groups');
-					return;
+					return null;
 				}
 				$token = $res['access_token'];
 			}
