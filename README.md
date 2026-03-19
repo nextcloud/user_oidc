@@ -435,10 +435,10 @@ The following formats are supported for the groups claim:
 
 If using EntraID an option to turn on group name lookups via Microsoft Graph. It will loop through all guid a user has and store the names of the groups in Nextcloud.
 
-This can be done in the graphical settings for the provider by toggling "Fetch group names from Microsoft Graph" or with the occ command to create/update providers:
+This can be done in the graphical settings for the provider by with the occ command to create/update providers:
 
 ```
-sudo -u www-data php occ user_oidc:provider demoprovider --entraid=1
+sudo -u www-data php occ user_oidc:provider demoprovider --entraid-group-names=1
 ```
 
 ### Disable audience and azp checks

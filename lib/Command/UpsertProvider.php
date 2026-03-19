@@ -155,7 +155,7 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_GROUPS,
 			'description' => 'Attribute mapping of the groups',
 		],
-		'entraid' => [
+		'entraid-group-names' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_AZURE_GROUP_NAMES,
 			'description' => 'Turn on usage of mapping guid to names with Microsoft Graph. 1 to enable, 0 to disable (default)',
 		],
