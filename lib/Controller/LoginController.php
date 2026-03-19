@@ -481,12 +481,12 @@ class LoginController extends BaseOidcController {
 		}
 
 		if (!isset($data['id_token'])) {
-			$this->logger->error('Missing id_token in IdP token response', ['data' => $data]);
+			$this->logger->error('Missing id_token in IdP token response', ['keys' => array_keys($data)]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
-		$this->logger->debug('Received code response: ' . json_encode($data, JSON_THROW_ON_ERROR));
+		$this->logger->debug('Received code response');
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
 		// TODO: proper error handling
@@ -504,19 +504,19 @@ class LoginController extends BaseOidcController {
 		// default is false
 		if (isset($oidcSystemConfig['enrich_login_id_token_with_userinfo']) && $oidcSystemConfig['enrich_login_id_token_with_userinfo']) {
 			$userInfo = $this->oidcService->userInfo($provider, $data['access_token']);
-			$this->logger->debug('[UserInfoEnrich] Enriching the JWT payload with userinfo values', ['userinfo' => $userInfo]);
+			$this->logger->debug('[UserInfoEnrich] Enriching the JWT payload with userinfo values');
 			foreach ($userInfo as $key => $value) {
 				// give priority to id token values, only use userinfo ones if they are missing in the ID token
 				if (!isset($idTokenPayload->{$key})) {
 					$idTokenPayload->{$key} = $value;
-					$this->logger->debug('[UserInfoEnrich] Using userinfo value: ' . $key . ' => ' . $value);
+					$this->logger->debug('[UserInfoEnrich] Using userinfo key: ' . $key);
 				}
 			}
 		} else {
 			$this->logger->debug('[UserInfoEnrich] The feature is not enabled');
 		}
 
-		$this->logger->debug('Parsed the JWT payload: ' . json_encode($idTokenPayload, JSON_THROW_ON_ERROR));
+		$this->logger->debug('Parsed the JWT payload');
 
 		if (!isset($idTokenPayload->exp) || $idTokenPayload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
