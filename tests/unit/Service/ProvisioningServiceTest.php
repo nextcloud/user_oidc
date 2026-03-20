@@ -28,6 +28,22 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
+class TestProvisioningBackendUser extends User {
+	public function getUserId(): string {
+		return '';
+	}
+
+	public function setUserId(string $userId): void {
+	}
+
+	public function getDisplayName(): string {
+		return '';
+	}
+
+	public function setDisplayName(string $displayName): void {
+	}
+}
+
 class ProvisioningServiceTest extends TestCase {
 	/** @var ProvisioningService | MockObject */
 	private $provisioningService;
@@ -113,8 +129,8 @@ class ProvisioningServiceTest extends TestCase {
 		$userId = 'userId123';
 		$providerId = 312;
 
-		$backendUser = $this->getMockBuilder(User::class)
-			->addMethods(['getUserId', 'setUserId', 'getDisplayName', 'setDisplayName'])
+		$backendUser = $this->getMockBuilder(TestProvisioningBackendUser::class)
+			->onlyMethods(['getUserId', 'setUserId', 'getDisplayName', 'setDisplayName'])
 			->getMock();
 		$backendUser->method('getUserId')
 			->willReturn($userId);
@@ -186,8 +202,8 @@ class ProvisioningServiceTest extends TestCase {
 		$userId = 'userId123';
 		$providerId = 312;
 
-		$backendUser = $this->getMockBuilder(User::class)
-			->addMethods(['getUserId', 'setUserId', 'getDisplayName', 'setDisplayName'])
+		$backendUser = $this->getMockBuilder(TestProvisioningBackendUser::class)
+			->onlyMethods(['getUserId', 'setUserId', 'getDisplayName', 'setDisplayName'])
 			->getMock();
 		$backendUser->method('getUserId')
 			->willReturn($userId);
