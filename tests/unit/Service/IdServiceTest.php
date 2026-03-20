@@ -55,12 +55,12 @@ class IdServiceTest extends TestCase {
 
 		$this->providerService
 			->method('getSetting')
-			->will($this->returnValueMap(
+			->willReturnMap(
 				[
 					[$providerId, ProviderService::SETTING_UNIQUE_UID, '1', $uniqueId ? '1' : '0'],
 					[$providerId, ProviderService::SETTING_PROVIDER_BASED_ID, '0', $providerBasedId ? '1' : '0'],
 				]
-			));
+			);
 
 		$result = $this->idService->getId($providerId, $id, $id4me);
 

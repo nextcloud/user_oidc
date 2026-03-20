@@ -12,8 +12,8 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\IAppConfig;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ProviderServiceTest extends TestCase {

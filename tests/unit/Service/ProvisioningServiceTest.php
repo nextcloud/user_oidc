@@ -121,35 +121,33 @@ class ProvisioningServiceTest extends TestCase {
 
 		$this->providerService
 			->method('getSetting')
-			->will($this->returnValueMap(
-				[
-					[$providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email', 'email'],
-					[$providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name', 'name'],
-					[$providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota', 'quota'],
-					[$providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0', '0'],
-					[$providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language', 'language'],
-					[$providerId, ProviderService::SETTING_MAPPING_LOCALE, 'locale', 'locale'],
-					[$providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address', 'address'],
-					[$providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address', 'street_address'],
-					[$providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code', 'postal_code'],
-					[$providerId, ProviderService::SETTING_MAPPING_LOCALITY, 'locality', 'locality'],
-					[$providerId, ProviderService::SETTING_MAPPING_REGION, 'region', 'region'],
-					[$providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country', 'country'],
-					[$providerId, ProviderService::SETTING_MAPPING_WEBSITE, 'website', 'website'],
-					[$providerId, ProviderService::SETTING_MAPPING_AVATAR, 'avatar', 'avatar'],
-					[$providerId, ProviderService::SETTING_MAPPING_TWITTER, 'twitter', 'twitter'],
-					[$providerId, ProviderService::SETTING_MAPPING_FEDIVERSE, 'fediverse', 'fediverse'],
-					[$providerId, ProviderService::SETTING_MAPPING_ORGANISATION, 'organisation', 'organisation'],
-					[$providerId, ProviderService::SETTING_MAPPING_ROLE, 'role', 'role'],
-					[$providerId, ProviderService::SETTING_MAPPING_HEADLINE, 'headline', 'headline'],
-					[$providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography', 'biography'],
-					[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
-					[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
-					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
-					[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
-					[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
-				]
-			));
+			->willReturnMap([
+				[$providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email', 'email'],
+				[$providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name', 'name'],
+				[$providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota', 'quota'],
+				[$providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0', '0'],
+				[$providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language', 'language'],
+				[$providerId, ProviderService::SETTING_MAPPING_LOCALE, 'locale', 'locale'],
+				[$providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address', 'address'],
+				[$providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address', 'street_address'],
+				[$providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code', 'postal_code'],
+				[$providerId, ProviderService::SETTING_MAPPING_LOCALITY, 'locality', 'locality'],
+				[$providerId, ProviderService::SETTING_MAPPING_REGION, 'region', 'region'],
+				[$providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country', 'country'],
+				[$providerId, ProviderService::SETTING_MAPPING_WEBSITE, 'website', 'website'],
+				[$providerId, ProviderService::SETTING_MAPPING_AVATAR, 'avatar', 'avatar'],
+				[$providerId, ProviderService::SETTING_MAPPING_TWITTER, 'twitter', 'twitter'],
+				[$providerId, ProviderService::SETTING_MAPPING_FEDIVERSE, 'fediverse', 'fediverse'],
+				[$providerId, ProviderService::SETTING_MAPPING_ORGANISATION, 'organisation', 'organisation'],
+				[$providerId, ProviderService::SETTING_MAPPING_ROLE, 'role', 'role'],
+				[$providerId, ProviderService::SETTING_MAPPING_HEADLINE, 'headline', 'headline'],
+				[$providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography', 'biography'],
+				[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
+				[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
+				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
+				[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
+			]);
 
 		$this->userMapper
 			->method('getOrCreate')
@@ -196,35 +194,33 @@ class ProvisioningServiceTest extends TestCase {
 
 		$this->providerService
 			->method('getSetting')
-			->will($this->returnValueMap(
-				[
-					[$providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email', 'email'],
-					[$providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name', 'name'],
-					[$providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota', 'quota'],
-					[$providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0', '0'],
-					[$providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language', 'language'],
-					[$providerId, ProviderService::SETTING_MAPPING_LOCALE, 'locale', 'locale'],
-					[$providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address', 'address'],
-					[$providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address', 'street_address'],
-					[$providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code', 'postal_code'],
-					[$providerId, ProviderService::SETTING_MAPPING_LOCALITY, 'locality', 'locality'],
-					[$providerId, ProviderService::SETTING_MAPPING_REGION, 'region', 'region'],
-					[$providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country', 'country'],
-					[$providerId, ProviderService::SETTING_MAPPING_WEBSITE, 'website', 'website'],
-					[$providerId, ProviderService::SETTING_MAPPING_AVATAR, 'avatar', 'avatar'],
-					[$providerId, ProviderService::SETTING_MAPPING_TWITTER, 'twitter', 'twitter'],
-					[$providerId, ProviderService::SETTING_MAPPING_FEDIVERSE, 'fediverse', 'fediverse'],
-					[$providerId, ProviderService::SETTING_MAPPING_ORGANISATION, 'organisation', 'organisation'],
-					[$providerId, ProviderService::SETTING_MAPPING_ROLE, 'role', 'role'],
-					[$providerId, ProviderService::SETTING_MAPPING_HEADLINE, 'headline', 'headline'],
-					[$providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography', 'biography'],
-					[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
-					[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
-					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
-					[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
-					[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
-				]
-			));
+			->willReturnMap([
+				[$providerId, ProviderService::SETTING_MAPPING_EMAIL, 'email', 'email'],
+				[$providerId, ProviderService::SETTING_MAPPING_DISPLAYNAME, 'name', 'name'],
+				[$providerId, ProviderService::SETTING_MAPPING_QUOTA, 'quota', 'quota'],
+				[$providerId, ProviderService::SETTING_GROUP_PROVISIONING, '0', '0'],
+				[$providerId, ProviderService::SETTING_MAPPING_LANGUAGE, 'language', 'language'],
+				[$providerId, ProviderService::SETTING_MAPPING_LOCALE, 'locale', 'locale'],
+				[$providerId, ProviderService::SETTING_MAPPING_ADDRESS, 'address', 'address'],
+				[$providerId, ProviderService::SETTING_MAPPING_STREETADDRESS, 'street_address', 'street_address'],
+				[$providerId, ProviderService::SETTING_MAPPING_POSTALCODE, 'postal_code', 'postal_code'],
+				[$providerId, ProviderService::SETTING_MAPPING_LOCALITY, 'locality', 'locality'],
+				[$providerId, ProviderService::SETTING_MAPPING_REGION, 'region', 'region'],
+				[$providerId, ProviderService::SETTING_MAPPING_COUNTRY, 'country', 'country'],
+				[$providerId, ProviderService::SETTING_MAPPING_WEBSITE, 'website', 'website'],
+				[$providerId, ProviderService::SETTING_MAPPING_AVATAR, 'avatar', 'avatar'],
+				[$providerId, ProviderService::SETTING_MAPPING_TWITTER, 'twitter', 'twitter'],
+				[$providerId, ProviderService::SETTING_MAPPING_FEDIVERSE, 'fediverse', 'fediverse'],
+				[$providerId, ProviderService::SETTING_MAPPING_ORGANISATION, 'organisation', 'organisation'],
+				[$providerId, ProviderService::SETTING_MAPPING_ROLE, 'role', 'role'],
+				[$providerId, ProviderService::SETTING_MAPPING_HEADLINE, 'headline', 'headline'],
+				[$providerId, ProviderService::SETTING_MAPPING_BIOGRAPHY, 'biography', 'biography'],
+				[$providerId, ProviderService::SETTING_MAPPING_PHONE, 'phone_number', 'phone_number'],
+				[$providerId, ProviderService::SETTING_MAPPING_GENDER, 'gender', 'gender'],
+				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+				[$providerId, ProviderService::SETTING_MAPPING_PRONOUNS, 'pronouns', 'pronouns'],
+				[$providerId, ProviderService::SETTING_MAPPING_BIRTHDATE, 'birthdate', 'birthdate'],
+			]);
 
 		$this->userMapper
 			->method('getOrCreate')
@@ -369,9 +365,9 @@ class ProvisioningServiceTest extends TestCase {
 
 		$this->providerService
 			->method('getSetting')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '1'],
-			]));
+			]);
 
 		$result = $this->provisioningService->getClaimValues($tokenPayload, $claimPath, $providerId);
 		$this->assertEquals($expected, $result);
@@ -382,9 +378,9 @@ class ProvisioningServiceTest extends TestCase {
 
 		$this->providerService
 			->method('getSetting')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
-			]));
+			]);
 
 		// With nested resolution disabled, dot-containing keys should still work as literal keys
 		$payload = (object)['https://idp.example.com/claims/groups' => ['admin']];
@@ -466,13 +462,11 @@ class ProvisioningServiceTest extends TestCase {
 
 		$this->providerService
 			->method('getSetting')
-			->will($this->returnValueMap(
-				[
-					[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', $group_whitelist],
-					[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
-					[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
-				]
-			));
+			->willReturnMap([
+				[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', $group_whitelist],
+				[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
+				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+			]);
 
 		$this->groupManager
 			->method('getUserGroups')
@@ -508,4 +502,5 @@ class ProvisioningServiceTest extends TestCase {
 			$payload
 		);
 	}
+
 }
