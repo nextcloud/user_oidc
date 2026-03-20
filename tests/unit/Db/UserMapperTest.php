@@ -14,6 +14,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -66,7 +67,7 @@ class UserMapperTest extends TestCase {
 		];
 	}
 
-	/** @dataProvider dataCreate */
+	#[DataProvider('dataCreate')]
 	public function testCreate(int $providerId, string $sub, string $generatedId, bool $id4me, string $expected): void {
 		$this->idService->expects(self::once())->method('getId')->with($providerId, $sub, $id4me)->willReturn($generatedId);
 

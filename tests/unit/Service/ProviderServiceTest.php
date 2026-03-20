@@ -12,6 +12,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\IAppConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
@@ -278,7 +279,7 @@ class ProviderServiceTest extends TestCase {
 		];
 	}
 
-	/** @dataProvider dataGetSetting */
+	#[DataProvider('dataGetSetting')]
 	public function testGetSetting($providerId, $key, $stored, $expected, $default = '') {
 		$this->appConfig->expects(self::once())
 			->method('getValueString')
@@ -312,7 +313,7 @@ class ProviderServiceTest extends TestCase {
 			[ProviderService::SETTING_EXTRA_CLAIMS, 'test', 'test', 'test'],
 		];
 	}
-	/** @dataProvider dataConvertJson */
+	#[DataProvider('dataConvertJson')]
 	public function testConvertJson($key, $value, $stored, $expected) {
 		$raw = self::invokePrivate($this->providerService, 'convertFromJSON', [$key, $value]);
 		Assert::assertEquals($stored, $raw);

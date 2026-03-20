@@ -23,6 +23,7 @@ use OCP\ISession;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\L10N\IFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -34,7 +35,7 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var LocalIdService | MockObject */
 	private $idService;
 
-	/** @var ProvisioningService | MockObject */
+	/** @var ProviderService | MockObject */
 	private $providerService;
 
 	/** @var IConfig | MockObject */
@@ -362,9 +363,7 @@ class ProvisioningServiceTest extends TestCase {
 		];
 	}
 
-	/**
-	 * @dataProvider dataGetClaimValues
-	 */
+	#[DataProvider('dataGetClaimValues')]
 	public function testGetClaimValues(string $claimPath, object|array $tokenPayload, mixed $expected): void {
 		$providerId = 1;
 
@@ -458,7 +457,7 @@ class ProvisioningServiceTest extends TestCase {
 		];
 	}
 
-	/** @dataProvider dataProvisionUserGroups */
+	#[DataProvider('dataProvisionUserGroups')]
 	public function testProvisionUserGroups(string $gid, string $displayName, object $payload, string $group_whitelist, bool $expect_delete_local_group): void {
 		$user = $this->createMock(IUser::class);
 		$group = $this->createMock(IGroup::class);
