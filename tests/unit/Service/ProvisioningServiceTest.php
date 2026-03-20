@@ -248,7 +248,6 @@ class ProvisioningServiceTest extends TestCase {
 		$property->method('getName')->willReturn('twitter');
 		$property->method('getScope')->willReturn(IAccountManager::SCOPE_LOCAL);
 		$property->method('getValue')->willReturnCallback(function () use (&$twitterProperty) {
-			echo 'GETTING: ' . $twitterProperty;
 			return $twitterProperty;
 		});
 
