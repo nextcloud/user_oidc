@@ -97,6 +97,7 @@ class ProviderServiceTest extends TestCase {
 					'groupProvisioning' => true,
 					'groupWhitelistRegex' => '1',
 					'restrictLoginToGroups' => true,
+					'azureGroupNames' => true,
 					'nestedAndFallbackClaims' => true,
 				],
 			],
@@ -143,6 +144,7 @@ class ProviderServiceTest extends TestCase {
 					'groupProvisioning' => true,
 					'groupWhitelistRegex' => '1',
 					'restrictLoginToGroups' => true,
+					'azureGroupNames' => true,
 					'nestedAndFallbackClaims' => true,
 				],
 			],
@@ -185,6 +187,7 @@ class ProviderServiceTest extends TestCase {
 			'mappingBirthdate' => 'birthdate',
 			'groupWhitelistRegex' => '',
 			'restrictLoginToGroups' => false,
+			'azureGroupNames' => false,
 			'nestedAndFallbackClaims' => false,
 		];
 		$this->appConfig->expects(self::any())
@@ -224,6 +227,7 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_GROUP_PROVISIONING, '', true, '1'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', true, ''],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '', true, '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AZURE_GROUP_NAMES, '', true, '0'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '', true, '0'],
 			]);
 
