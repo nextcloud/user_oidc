@@ -16,6 +16,8 @@
     "Could not reach the OpenID Connect provider." : "Impossible de joindre le fournisseur OpenID Connect.",
     "The identity provider failed to authenticate the user." : "Le fournisseur d'identité n'a pas réussi à authentifier l'utilisateur.",
     "Failed to decrypt the OIDC provider client secret" : "Échec du déchiffrement du secret du fournisseur OIDC",
+    "Failed to contact the OIDC provider token endpoint" : "Échec de contact du point de terminaison du fournisseur OIDC",
+    "The issuer does not match the one from the discovery endpoint" : "L'émetteur ne correspond pas à celui du point de terminaison de découverte",
     "Failed to provision the user" : "Impossible de provisionner l'utilisateur",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "Vous n'avez pas l'autorisation de vous connecter à cette instance. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter un administrateur.",
     "User conflict" : "Conflit utilisateur",
