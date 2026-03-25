@@ -235,6 +235,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		// get the bearer token from headers
 		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
+		if (!str_starts_with($headerToken, 'bearer ') && !str_starts_with($headerToken, 'Bearer ')) {
+			$this->logger->debug('No Bearer token');
+			return '';
+		}
 		$headerToken = preg_replace('/^bearer\s+/i', '', $headerToken);
 		if ($headerToken === '') {
 			$this->logger->debug('No Bearer token');
