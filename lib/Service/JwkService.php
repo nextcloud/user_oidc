@@ -20,6 +20,8 @@ class JwkService {
 
 	public const PEM_SIG_KEY_SETTINGS_KEY = 'pemSignatureKey';
 	public const PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY = 'pemSignatureKeyCreatedAt';
+	public const PEM_NEXT_SIG_KEY_SETTINGS_KEY = 'pemNextSignatureKey';
+	public const PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY = 'pemNextSignatureKeyCreatedAt';
 	public const PEM_SIG_KEY_EXPIRES_AFTER_SECONDS = 60 * 60;
 	public const PEM_SIG_KEY_ALGORITHM = 'ES384';
 	public const PEM_SIG_KEY_CURVE = 'P-384';
@@ -39,25 +41,16 @@ class JwkService {
 	}
 
 	/**
-	 * Get our stored signature PEM key (or regenerate it if it's expired)
+	 * Get our current signature PEM key after applying rotation if needed.
 	 *
-	 * @param bool $refresh
 	 * @return string
 	 * @throws AppConfigTypeConflictException
 	 */
-	public function getMyPemSignatureKey(bool $refresh = true): string {
-		$pemSignatureKey = $this->appConfig->getAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, lazy: true);
-		$pemSignatureKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+	public function getMyPemSignatureKey(): string {
+		$this->ensureSignatureKeysInitialized();
+		$this->rotateSignatureKeysIfNeeded();
 
-		if ($pemSignatureKey === ''
-			|| $pemSignatureKeyCreatedAt === 0
-			|| ($refresh && (time() > $pemSignatureKeyCreatedAt + self::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS))) {
-			$pemSignatureKey = $this->generatePemPrivateKey();
-			// store the key
-			$this->appConfig->setAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, $pemSignatureKey, lazy: true);
-			$this->appConfig->setAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, time(), lazy: true);
-		}
-		return $pemSignatureKey;
+		return $this->appConfig->getAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, lazy: true);
 	}
 
 	/**
@@ -123,22 +116,34 @@ class JwkService {
 	 * @throws AppConfigTypeConflictException
 	 */
 	public function getJwks(): array {
-		// we don't refresh here to make sure the IdP will get the key that was used to sign the client assertion
-		$myPemSignatureKey = $this->getMyPemSignatureKey(false);
+		$myPemSignatureKey = $this->getMyPemSignatureKey();
+		$pemSignatureKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
 		$sslSignatureKey = openssl_pkey_get_private($myPemSignatureKey);
 		$sslSignatureKeyDetails = openssl_pkey_get_details($sslSignatureKey);
 
+		$myNextPemSignatureKey = $this->appConfig->getAppValueString(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, lazy: true);
+		$nextPemSignatureKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+		$sslNextSignatureKey = openssl_pkey_get_private($myNextPemSignatureKey);
+		$sslNextSignatureKeyDetails = openssl_pkey_get_details($sslNextSignatureKey);
+
 		$myPemEncryptionKey = $this->getMyEncryptionKey(true);
+		$pemEncryptionKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
 		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
 		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
 		return [
-			$this->getJwkFromSslKey($sslSignatureKeyDetails),
-			$this->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true),
+			$this->getJwkFromSslKey($sslSignatureKeyDetails, keyCreatedAt: $pemSignatureKeyCreatedAt),
+			$this->getJwkFromSslKey($sslNextSignatureKeyDetails, keyCreatedAt: $nextPemSignatureKeyCreatedAt),
+			$this->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true, keyCreatedAt: $pemEncryptionKeyCreatedAt),
 		];
 	}
 
-	public function getJwkFromSslKey(array $sslKeyDetails, bool $isEncryptionKey = false, bool $includePrivateKey = false): array {
-		$pemPrivateKeyCreatedAt = $this->appConfig->getAppValueInt(
+	public function getJwkFromSslKey(
+		array $sslKeyDetails,
+		bool $isEncryptionKey = false,
+		bool $includePrivateKey = false,
+		?int $keyCreatedAt = null,
+	): array {
+		$pemPrivateKeyCreatedAt = $keyCreatedAt ?? $this->appConfig->getAppValueInt(
 			$isEncryptionKey ? self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY : self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY,
 			lazy: true,
 		);
@@ -171,7 +176,7 @@ class JwkService {
 	}
 
 	public function generateClientAssertion(Provider $provider, string $discoveryIssuer, ?string $code = null): string {
-		// we refresh (if needed) here to make sure we use a key that will be served to the IdP in a few seconds
+		// make sure we sign with the currently active key, while the next one is already pre-published
 		$myPemPrivateKey = $this->getMyPemSignatureKey();
 		$sslPrivateKey = openssl_pkey_get_private($myPemPrivateKey);
 		$pemSignatureKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
@@ -213,7 +218,7 @@ class JwkService {
 		$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true);
 
 		return [
-			'public_jwk' => $this->getJwkFromSslKey($pubKey),
+			'public_jwk' => $this->getJwkFromSslKey($pubKey, keyCreatedAt: $pemSignatureKeyCreatedAt),
 			'public_pem' => $pubKeyPem,
 			'private_pem' => $myPemPrivateKey,
 			'initial_payload' => $payload,
@@ -222,5 +227,72 @@ class JwkService {
 			'decoded_jwt_payload' => $jwtPayloadArray,
 			'arrays_are_equal' => $payload === $jwtPayloadArray,
 		];
+	}
+
+	private function ensureSignatureKeysInitialized(): void {
+		$currentPem = $this->appConfig->getAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, lazy: true);
+		$currentCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+		$nextPem = $this->appConfig->getAppValueString(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, lazy: true);
+		$nextCreatedAt = $this->appConfig->getAppValueInt(self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+
+		if ($currentPem === '' || $currentCreatedAt === 0) {
+			if ($nextPem !== '' && $nextCreatedAt !== 0) {
+				$this->storeSignatureKey(self::PEM_SIG_KEY_SETTINGS_KEY, self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, $nextPem, $nextCreatedAt);
+				$currentPem = $nextPem;
+				$currentCreatedAt = $nextCreatedAt;
+				$nextPem = '';
+				$nextCreatedAt = 0;
+			} else {
+				$currentCreatedAt = $this->getFreshKeyCreatedAt();
+				$currentPem = $this->generatePemPrivateKey();
+				$this->storeSignatureKey(self::PEM_SIG_KEY_SETTINGS_KEY, self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, $currentPem, $currentCreatedAt);
+			}
+		}
+
+		if ($nextPem === '' || $nextCreatedAt === 0) {
+			$nextCreatedAt = $this->getFreshKeyCreatedAt($currentCreatedAt);
+			$nextPem = $this->generatePemPrivateKey();
+			$this->storeSignatureKey(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, $nextPem, $nextCreatedAt);
+		}
+	}
+
+	private function rotateSignatureKeysIfNeeded(): void {
+		$currentCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+		$nextPem = $this->appConfig->getAppValueString(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, lazy: true);
+		$nextCreatedAt = $this->appConfig->getAppValueInt(self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+
+		if (!$this->shouldRotateSignatureKeys($currentCreatedAt, $nextCreatedAt) || $nextPem === '') {
+			return;
+		}
+
+		$this->storeSignatureKey(self::PEM_SIG_KEY_SETTINGS_KEY, self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, $nextPem, $nextCreatedAt);
+
+		$freshNextCreatedAt = $this->getFreshKeyCreatedAt($nextCreatedAt);
+		$this->storeSignatureKey(
+			self::PEM_NEXT_SIG_KEY_SETTINGS_KEY,
+			self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY,
+			$this->generatePemPrivateKey(),
+			$freshNextCreatedAt,
+		);
+	}
+
+	private function shouldRotateSignatureKeys(int $currentCreatedAt, int $nextCreatedAt): bool {
+		if ($currentCreatedAt === 0 || $nextCreatedAt === 0) {
+			return false;
+		}
+
+		$now = time();
+		return $now > $currentCreatedAt + self::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS
+			&& $now > $nextCreatedAt + self::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS;
+	}
+
+	private function getFreshKeyCreatedAt(int ...$existingCreatedAt): int {
+		$latestExistingCreatedAt = $existingCreatedAt === [] ? 0 : max($existingCreatedAt);
+		return max(time(), $latestExistingCreatedAt + 1);
+	}
+
+	private function storeSignatureKey(string $keySetting, string $createdAtSetting, string $pemKey, int $createdAt): void {
+		$this->appConfig->setAppValueString($keySetting, $pemKey, lazy: true);
+		$this->appConfig->setAppValueInt($createdAtSetting, $createdAt, lazy: true);
 	}
 }
