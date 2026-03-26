@@ -8,6 +8,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.7.0 – 2026-03-26
+
+### Added
+
+- Add Microsoft Graph support and an `occ` option to resolve Entra ID group GUIDs to group names @small1 @julien-nc [#1379](https://github.com/nextcloud/user_oidc/pull/1379)
+
+### Changed
+
+- Hide provider secrets by default in `occ providers` output @julien-nc [#1385](https://github.com/nextcloud/user_oidc/pull/1385)
+- Replace deprecated backend APIs and adjust Psalm coverage for newer Nextcloud methods @CarlSchwan @julien-nc [#1372](https://github.com/nextcloud/user_oidc/pull/1372)
+- Update tests for PHPUnit deprecations and refresh composer dependencies @julien-nc [#1382](https://github.com/nextcloud/user_oidc/pull/1382)
+
+### Fixed
+
+- Avoid validating non-Bearer `Authorization` header values in the user backend @julien-nc [#1386](https://github.com/nextcloud/user_oidc/pull/1386)
+- Stop logging sensitive data during OIDC processing @julien-nc [#1380](https://github.com/nextcloud/user_oidc/pull/1380)
+- Set the user session after successful bearer token validation so injected user IDs stay available @hangerrits @solracsf [#1376](https://github.com/nextcloud/user_oidc/pull/1376)
+- Improve single logout JWT decode error reporting for too-short GSS secrets @nfebe [#1374](https://github.com/nextcloud/user_oidc/pull/1374)
+- Support dotted claim names when resolving nested OIDC claims @strobelpierre [#1375](https://github.com/nextcloud/user_oidc/pull/1375)
+- Stop using removed `OC\Server::getAppManager()` accessors and update related logout tests @julien-nc [#1371](https://github.com/nextcloud/user_oidc/pull/1371)
+
 ## 8.6.1 – 2026-03-10
 
 ### Fixed
@@ -588,4 +609,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Basic implementation of OIDC client
 - Expirimental support for ID4ME
-
