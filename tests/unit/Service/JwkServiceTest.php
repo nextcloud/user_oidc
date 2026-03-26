@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 
+use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Service\JwkService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
@@ -21,10 +22,30 @@ class JwkServiceTest extends TestCase {
 	private $appConfig;
 	/** @var JwkService|MockObject */
 	private $jwkService;
+	private array $appConfigStrings = [];
+	private array $appConfigInts = [];
 
 	public function setUp(): void {
 		parent::setUp();
 		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig->method('getAppValueString')
+			->willReturnCallback(function (string $key, ?string $default = null, bool $lazy = false) {
+				return $this->appConfigStrings[$key] ?? ($default ?? '');
+			});
+		$this->appConfig->method('getAppValueInt')
+			->willReturnCallback(function (string $key, ?int $default = null, bool $lazy = false) {
+				return $this->appConfigInts[$key] ?? ($default ?? 0);
+			});
+		$this->appConfig->method('setAppValueString')
+			->willReturnCallback(function (string $key, string $value, bool $lazy = false) {
+				$this->appConfigStrings[$key] = $value;
+				return true;
+			});
+		$this->appConfig->method('setAppValueInt')
+			->willReturnCallback(function (string $key, int $value, bool $lazy = false) {
+				$this->appConfigInts[$key] = $value;
+				return true;
+			});
 		$this->jwkService = new JwkService($this->appConfig);
 	}
 
@@ -80,5 +101,41 @@ class JwkServiceTest extends TestCase {
 		$this->assertEquals($encJwkId, $encJwk['kid']);
 		$this->assertEquals(JwkService::PEM_ENC_KEY_CURVE, $encJwk['crv']);
 		$this->assertEquals(JwkService::PEM_ENC_KEY_ALGORITHM, $encJwk['alg']);
+	}
+
+	public function testJwksContainsCurrentAndNextSignatureKeys(): void {
+		$jwks = $this->jwkService->getJwks();
+
+		$this->assertCount(3, $jwks);
+		$this->assertSame('sig', $jwks[0]['use']);
+		$this->assertSame('sig', $jwks[1]['use']);
+		$this->assertSame('enc', $jwks[2]['use']);
+		$this->assertNotSame($jwks[0]['kid'], $jwks[1]['kid']);
+	}
+
+	public function testExpiredCurrentSignatureKeyPromotesPrepublishedNextKey(): void {
+		$oldCurrentKey = $this->jwkService->generatePemPrivateKey();
+		$oldNextKey = $this->jwkService->generatePemPrivateKey();
+		$oldCurrentCreatedAt = time() - JwkService::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS - 20;
+		$oldNextCreatedAt = time() - JwkService::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS - 10;
+
+		$this->appConfigStrings[JwkService::PEM_SIG_KEY_SETTINGS_KEY] = $oldCurrentKey;
+		$this->appConfigInts[JwkService::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY] = $oldCurrentCreatedAt;
+		$this->appConfigStrings[JwkService::PEM_NEXT_SIG_KEY_SETTINGS_KEY] = $oldNextKey;
+		$this->appConfigInts[JwkService::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY] = $oldNextCreatedAt;
+
+		$provider = new Provider();
+		$provider->setClientId('client-id');
+
+		$this->jwkService->generateClientAssertion($provider, 'https://issuer.example');
+
+		$this->assertSame($oldNextKey, $this->appConfigStrings[JwkService::PEM_SIG_KEY_SETTINGS_KEY]);
+		$this->assertSame($oldNextCreatedAt, $this->appConfigInts[JwkService::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY]);
+		$this->assertNotSame($oldNextKey, $this->appConfigStrings[JwkService::PEM_NEXT_SIG_KEY_SETTINGS_KEY]);
+		$this->assertGreaterThan($oldNextCreatedAt, $this->appConfigInts[JwkService::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY]);
+
+		$jwks = $this->jwkService->getJwks();
+		$this->assertSame('sig_key_' . $oldNextCreatedAt, $jwks[0]['kid']);
+		$this->assertNotSame($jwks[0]['kid'], $jwks[1]['kid']);
 	}
 }
