@@ -6,6 +6,7 @@ OC.L10N.register(
     "Client ID" : "Kliento ID",
     "Update" : "Atnaujinti",
     "Remove" : "Šalinti",
+    "Confirm deletion" : "Patvirtinti ištrynimą",
     "Cancel" : "Atsisakyti",
     "Delete" : "Ištrinti",
     "Submit" : "Pateikti",
