@@ -394,14 +394,6 @@ class LoginController extends BaseOidcController {
 
 		$providerId = (int)$this->session->get(self::PROVIDERID);
 		$provider = $this->providerMapper->getProvider($providerId);
-		try {
-			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
-		} catch (\Exception $e) {
-			$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
-			$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
-			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
-		}
-
 		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
@@ -443,6 +435,13 @@ class LoginController extends BaseOidcController {
 
 			// private key JWT auth does not work with client_secret_basic, we don't wanna pass the client secret
 			if ($tokenEndpointAuthMethod === 'client_secret_basic' && !$usePrivateKeyJwt) {
+				try {
+					$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
+				} catch (\Exception $e) {
+					$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
+					$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
+					return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+				}
 				$headers = [
 					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
 					'Content-Type' => 'application/x-www-form-urlencoded',
@@ -454,6 +453,13 @@ class LoginController extends BaseOidcController {
 					$requestBody['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
 					$requestBody['client_assertion'] = $this->jwkService->generateClientAssertion($provider, $discovery['issuer'], $code);
 				} else {
+					try {
+						$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
+					} catch (\Exception $e) {
+						$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
+						$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
+						return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+					}
 					$requestBody['client_secret'] = $providerClientSecret;
 				}
 			}
@@ -527,10 +533,8 @@ class LoginController extends BaseOidcController {
 			} elseif (isset($jwtHeader['cty']) && $jwtHeader['cty'] === 'JWT') {
 				// we have a JWE that contains the JWT string (the ID token)
 				$idTokenRaw = $this->jweService->decryptSerializedJwe($idTokenRaw);
-				$this->logger->warning('raw decrypted JWE', ['decrypted_jwe' => $idTokenRaw]);
-				$this->logger->warning('decrypted+decoded JWE', ['decrypted_jwe' => json_decode($idTokenRaw, true)]);
 			} else {
-				$this->logger->warning('Unsupported id_token when using "private key JWT"', ['id_token' => $idTokenRaw]);
+				$this->logger->warning('Unsupported id_token when using "private key JWT"');
 			}
 		}
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
