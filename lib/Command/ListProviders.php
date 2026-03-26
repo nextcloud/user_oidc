@@ -11,7 +11,6 @@ namespace OCA\UserOIDC\Command;
 use OC\Core\Command\Base;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
-use OCP\Security\ICrypto;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -21,7 +20,6 @@ class ListProviders extends Base {
 	public function __construct(
 		private ProviderMapper $providerMapper,
 		private ProviderService $providerService,
-		private ICrypto $crypto,
 	) {
 		parent::__construct();
 	}
@@ -46,15 +44,14 @@ class ListProviders extends Base {
 			$serializedProvider = $provider->jsonSerialize();
 			if ($sensitive) {
 				$serializedProvider['clientId'] = '********';
-				$serializedProvider['clientSecret'] = '********';
 				try {
 					$discoveryDomainName = parse_url($serializedProvider['discoveryEndpoint'], PHP_URL_HOST);
 					$serializedProvider['discoveryEndpoint'] = str_replace($discoveryDomainName, '********', $serializedProvider['discoveryEndpoint']);
 				} catch (\Exception|\Throwable) {
 				}
-			} else {
-				$serializedProvider['clientSecret'] = $this->crypto->decrypt($provider->getClientSecret());
 			}
+			// never show the client secret, it can be changed but not retrieved
+			$serializedProvider['clientSecret'] = '********';
 			return array_merge($serializedProvider, ['settings' => $providerSettings]);
 		}, $providers);
 
