@@ -322,7 +322,7 @@ class Id4meController extends BaseOidcController {
 		}
 
 		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
-		$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+		$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
 
 		return new RedirectResponse($this->serverVersion->getMajorVersion() >= 32 ? $this->urlGenerator->linkToDefaultPageUrl() : \OC_Util::getDefaultPageUrl());
 	}
