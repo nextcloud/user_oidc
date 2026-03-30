@@ -80,12 +80,14 @@ class TokenService {
 	/**
 	 * Get the token stored in the session
 	 * If it has expired: try to refresh it
+	 * If it is expiring and $refreshIfExpiring is true: proactively refresh it to keep the IdP session alive
 	 *
 	 * @param bool $refreshIfExpired
+	 * @param bool $refreshIfExpiring Proactively refresh a still-valid but expiring token (past half its lifetime)
 	 * @return Token|null Return a token only if it is valid or has been successfully refreshed
 	 * @throws \JsonException
 	 */
-	public function getToken(bool $refreshIfExpired = true): ?Token {
+	public function getToken(bool $refreshIfExpired = true, bool $refreshIfExpiring = false): ?Token {
 		$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
 		$this->logger->debug('[TokenService] Get token from the session', ['session_id' => $this->session->getId()]);
 		if (!$sessionData) {
@@ -96,6 +98,11 @@ class TokenService {
 		$token = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR));
 		// token is still valid
 		if (!$token->isExpired()) {
+			// proactively refresh when past half the token lifetime to keep the IdP session alive
+			if ($refreshIfExpiring && $token->isExpiring() && $token->getRefreshToken() !== null && !$token->refreshIsExpired()) {
+				$this->logger->debug('[TokenService] getToken: token is expiring, proactively refreshing to keep IdP session alive, expires in ' . strval($token->getExpiresInFromNow()));
+				return $this->refresh($token);
+			}
 			$this->logger->debug('[TokenService] getToken: token is still valid, it expires in ' . strval($token->getExpiresInFromNow()) . ' and refresh expires in ' . strval($token->getRefreshExpiresInFromNow()));
 			return $token;
 		}
@@ -157,7 +164,7 @@ class TokenService {
 			return;
 		}
 
-		$token = $this->getToken();
+		$token = $this->getToken(refreshIfExpired: true, refreshIfExpiring: true);
 		if ($token === null) {
 			$this->logger->debug('[TokenService] checkLoginToken: token is null');
 			// if we don't have a token but we had one once,
@@ -226,7 +233,7 @@ class TokenService {
 			$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
 			if ($sessionData) {
 				$currentToken = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR));
-				if (!$currentToken->isExpired()) {
+				if (!$currentToken->isExpired() && !$currentToken->isExpiring()) {
 					$this->logger->debug('[TokenService] Token already refreshed by another request');
 					return $currentToken;
 				}
