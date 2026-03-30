@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Model;
 
 use JsonSerializable;
+use OCP\AppFramework\Utility\ITimeFactory;
 
 class Token implements JsonSerializable {
 
@@ -20,13 +21,16 @@ class Token implements JsonSerializable {
 	private int $createdAt;
 	private ?int $providerId;
 
-	public function __construct(array $tokenData) {
+	public function __construct(
+		array $tokenData,
+		private ITimeFactory $timeFactory,
+	) {
 		$this->idToken = $tokenData['id_token'] ?? null;
 		$this->accessToken = $tokenData['access_token'];
 		$this->expiresIn = $tokenData['expires_in'];
 		$this->refreshExpiresIn = $tokenData['refresh_expires_in'] ?? null;
 		$this->refreshToken = $tokenData['refresh_token'] ?? null;
-		$this->createdAt = $tokenData['created_at'] ?? time();
+		$this->createdAt = $tokenData['created_at'] ?? $this->timeFactory->getTime();
 		$this->providerId = $tokenData['provider_id'] ?? null;
 	}
 
@@ -44,7 +48,7 @@ class Token implements JsonSerializable {
 
 	public function getExpiresInFromNow(): int {
 		$expiresAt = $this->createdAt + $this->expiresIn;
-		return $expiresAt - time();
+		return $expiresAt - $this->timeFactory->getTime();
 	}
 
 	public function getRefreshExpiresIn(): ?int {
@@ -58,7 +62,7 @@ class Token implements JsonSerializable {
 			return 0;
 		}
 		$refreshExpiresAt = $this->createdAt + $this->refreshExpiresIn;
-		return $refreshExpiresAt - time();
+		return $refreshExpiresAt - $this->timeFactory->getTime();
 	}
 
 	public function getRefreshToken(): ?string {
@@ -70,11 +74,11 @@ class Token implements JsonSerializable {
 	}
 
 	public function isExpired(): bool {
-		return time() > ($this->createdAt + $this->expiresIn);
+		return $this->timeFactory->getTime() > ($this->createdAt + $this->expiresIn);
 	}
 
 	public function isExpiring(): bool {
-		return time() > ($this->createdAt + (int)($this->expiresIn / 2));
+		return $this->timeFactory->getTime() > ($this->createdAt + (int)($this->expiresIn / 2));
 	}
 
 	public function refreshIsExpired(): bool {
@@ -82,7 +86,7 @@ class Token implements JsonSerializable {
 		if ($this->refreshExpiresIn === null) {
 			return false;
 		}
-		return time() > ($this->createdAt + $this->refreshExpiresIn);
+		return $this->timeFactory->getTime() > ($this->createdAt + $this->refreshExpiresIn);
 	}
 
 	public function refreshIsExpiring(): bool {
@@ -90,7 +94,7 @@ class Token implements JsonSerializable {
 		if ($this->refreshExpiresIn === null) {
 			return false;
 		}
-		return time() > ($this->createdAt + (int)($this->refreshExpiresIn / 2));
+		return $this->timeFactory->getTime() > ($this->createdAt + (int)($this->refreshExpiresIn / 2));
 	}
 
 	public function getCreatedAt() {

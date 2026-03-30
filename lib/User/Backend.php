@@ -22,6 +22,7 @@ use OCA\UserOIDC\User\Validator\IBearerTokenValidator;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\GenericEvent;
@@ -69,6 +70,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		private LdapService $ldapService,
 		private IUserManager $userManager,
 		private ServerVersion $serverVersion,
+		private ITimeFactory $timeFactory,
 	) {
 	}
 
@@ -348,12 +350,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								}
 							}
 
-							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
 							$this->setSessionUser($userId);
 							return $userId;
 						} elseif ($this->userExists($tokenUserId)) {
 							$this->checkFirstLogin($tokenUserId);
-							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
 							$this->setSessionUser($tokenUserId);
 							return $tokenUserId;
 						} else {
@@ -375,7 +377,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								return '';
 							}
 							$this->checkFirstLogin($tokenUserId);
-							$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+							$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
 							$this->setSessionUser($tokenUserId);
 							return $tokenUserId;
 						}

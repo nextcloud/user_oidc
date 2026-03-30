@@ -667,7 +667,7 @@ class LoginController extends BaseOidcController {
 		$this->config->setUserValue($user->getUID(), Application::APP_ID, 'had_token_once', '1');
 
 		// Set last password confirm to the future as we don't have passwords to confirm against with SSO
-		$this->session->set('last-password-confirm', strtotime('+4 year', time()));
+		$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
 
 		// for backchannel logout
 		try {

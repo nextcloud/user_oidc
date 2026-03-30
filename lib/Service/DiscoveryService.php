@@ -13,6 +13,7 @@ use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IConfig;
@@ -44,6 +45,7 @@ class DiscoveryService {
 		private HttpClientHelper $clientService,
 		private ProviderService $providerService,
 		private IConfig $config,
+		private ITimeFactory $timeFactory,
 		ICacheFactory $cacheFactory,
 	) {
 		$this->cache = $cacheFactory->createDistributed('user_oidc');
@@ -75,7 +77,7 @@ class DiscoveryService {
 	 */
 	public function obtainJWK(Provider $provider, string $tokenToDecode, bool $useCache = true): array {
 		$lastJwksRefresh = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP);
-		if ($lastJwksRefresh !== '' && $useCache && (int)$lastJwksRefresh > time() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
+		if ($lastJwksRefresh !== '' && $useCache && (int)$lastJwksRefresh > $this->timeFactory->getTime() - self::INVALIDATE_JWKS_CACHE_AFTER_SECONDS) {
 			$rawJwks = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE);
 			$rawJwks = json_decode($rawJwks, true);
 			$this->logger->debug('[obtainJWK] jwks cache content', ['jwks_cache' => $rawJwks]);
@@ -87,7 +89,7 @@ class DiscoveryService {
 			// cache jwks
 			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE, $responseBody);
 			$this->logger->debug('[obtainJWK] setting cache', ['jwks_cache' => $responseBody]);
-			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, strval(time()));
+			$this->providerService->setSetting($provider->getId(), ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, strval($this->timeFactory->getTime()));
 		}
 
 		$fixedJwks = $this->fixJwksAlg($rawJwks, $tokenToDecode);

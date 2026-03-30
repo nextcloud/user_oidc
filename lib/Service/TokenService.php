@@ -20,6 +20,7 @@ use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\Exceptions\ExpiredTokenException;
 use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Exceptions\WipeTokenException;
@@ -67,11 +68,12 @@ class TokenService {
 		private DiscoveryService $discoveryService,
 		private ProviderMapper $providerMapper,
 		private ILockingProvider $lockingProvider,
+		private ITimeFactory $timeFactory,
 	) {
 	}
 
 	public function storeToken(array $tokenData): Token {
-		$token = new Token($tokenData);
+		$token = new Token($tokenData, $this->timeFactory);
 		$this->session->set(self::SESSION_TOKEN_KEY, json_encode($token, JSON_THROW_ON_ERROR));
 		$this->logger->debug('[TokenService] Store token in the session', ['session_id' => $this->session->getId()]);
 		return $token;
@@ -95,7 +97,7 @@ class TokenService {
 			return null;
 		}
 
-		$token = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR));
+		$token = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR), $this->timeFactory);
 		// token is still valid
 		if (!$token->isExpired()) {
 			// proactively refresh when past half the token lifetime to keep the IdP session alive
@@ -232,7 +234,7 @@ class TokenService {
 			//     the token expiration and the moment it attempted to acquire the lock
 			$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
 			if ($sessionData) {
-				$currentToken = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR));
+				$currentToken = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR), $this->timeFactory);
 				if (!$currentToken->isExpired() && !$currentToken->isExpiring()) {
 					$this->logger->debug('[TokenService] Token already refreshed by another request');
 					return $currentToken;
@@ -375,7 +377,7 @@ class TokenService {
 				$bodyArray,
 				['provider_id' => $loginToken->getProviderId()],
 			);
-			return new Token($tokenData);
+			return new Token($tokenData, $this->timeFactory);
 		} catch (ClientException|ServerException $e) {
 			$response = $e->getResponse();
 			$body = (string)$response->getBody();
@@ -446,6 +448,6 @@ class TokenService {
 			'refresh_expires_in' => method_exists($generationEvent, 'getRefreshExpiresIn')
 				? $generationEvent->getRefreshExpiresIn()
 				: $generationEvent->getExpiresIn(),
-		]);
+		], $this->timeFactory);
 	}
 }

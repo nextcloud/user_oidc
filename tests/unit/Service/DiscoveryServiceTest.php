@@ -11,6 +11,7 @@ declare(strict_types=1);
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\ICacheFactory;
 use OCP\IConfig;
 use PHPUnit\Framework\Assert;
@@ -30,6 +31,8 @@ class DiscoveryServiceTest extends TestCase {
 	private $config;
 	/** @var ICacheFactory|MockObject */
 	private $cacheFactory;
+	/** @var ITimeFactory|MockObject */
+	private $timeFactory;
 	/** @var DiscoveryService */
 	private $discoveryService;
 
@@ -39,8 +42,9 @@ class DiscoveryServiceTest extends TestCase {
 		$this->clientHelper = $this->createMock(HttpClientHelper::class);
 		$this->providerService = $this->createMock(ProviderService::class);
 		$this->config = $this->createMock(IConfig::class);
+		$this->timeFactory = $this->createMock(ITimeFactory::class);
 		$this->cacheFactory = $this->createMock(ICacheFactory::class);
-		$this->discoveryService = new DiscoveryService($this->logger, $this->clientHelper, $this->providerService, $this->config, $this->cacheFactory);
+		$this->discoveryService = new DiscoveryService($this->logger, $this->clientHelper, $this->providerService, $this->config, $this->timeFactory, $this->cacheFactory);
 	}
 
 	/**
