@@ -19,6 +19,9 @@ return [
 
 		['name' => 'api#createUser', 'url' => '/user', 'verb' => 'POST'],
 		['name' => 'api#deleteUser', 'url' => '/user/{userId}', 'verb' => 'DELETE'],
+		['name' => 'api#getJwks', 'url' => '/jwks', 'verb' => 'GET'],
+		['name' => 'api#debugJwk', 'url' => '/debug-jwk', 'verb' => 'GET'],
+		['name' => 'api#debugJwe', 'url' => '/debug-jwe', 'verb' => 'GET'],
 
 		['name' => 'id4me#showLogin', 'url' => '/id4me', 'verb' => 'GET'],
 		['name' => 'id4me#login', 'url' => '/id4me', 'verb' => 'POST'],

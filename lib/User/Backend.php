@@ -18,6 +18,7 @@ use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\User\Validator\IBearerTokenValidator;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
@@ -68,6 +69,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		private ProviderService $providerService,
 		private ProvisioningService $provisioningService,
 		private LdapService $ldapService,
+		private SettingsService $settingsService,
 		private IUserManager $userManager,
 		private ServerVersion $serverVersion,
 		private ITimeFactory $timeFactory,
@@ -315,6 +317,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						}
 						$discovery = $this->discoveryService->obtainDiscovery($provider);
 						$this->eventDispatcher->dispatchTyped(new TokenValidatedEvent(['token' => $headerToken], $provider, $discovery));
+
+						$tokenUserId = $this->settingsService->parseUserId($tokenUserId);
 
 						if ($autoProvisionAllowed) {
 							// look for user in other backends
