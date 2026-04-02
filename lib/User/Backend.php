@@ -40,6 +40,7 @@ use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
+use OCP\User\Events\UserFirstTimeLoggedInEvent;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -403,8 +404,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 			// trigger any other initialization
 			$this->eventDispatcher->dispatch(IUser::class . '::firstLogin', new GenericEvent($user));
-			// TODO add this when user_oidc min NC version is >= 28
-			// $this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
+			$this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
 		}
 		$user->updateLastLoginTimestamp();
 		return $firstLogin;
