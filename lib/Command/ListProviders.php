@@ -24,7 +24,7 @@ class ListProviders extends Base {
 		parent::__construct();
 	}
 
-	protected function configure() {
+	protected function configure(): void {
 		$this
 			->setName('user_oidc:providers')
 			->setDescription('List all providers and print their configuration')
@@ -33,7 +33,7 @@ class ListProviders extends Base {
 		parent::configure();
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$outputFormat = $input->getOption('output') ?? 'json_pretty';
 		$sensitive = $input->getOption('sensitive');
 

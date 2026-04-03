@@ -30,7 +30,7 @@ class DeleteProvider extends Base {
 		parent::__construct();
 	}
 
-	protected function configure() {
+	protected function configure(): void {
 		$this
 			->setName('user_oidc:provider:delete')
 			->setDescription('Delete an OpenId connect provider')
@@ -39,7 +39,7 @@ class DeleteProvider extends Base {
 		parent::configure();
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		try {
 			$identifier = $input->getArgument('identifier');
 			try {
