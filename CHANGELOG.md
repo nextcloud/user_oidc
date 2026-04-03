@@ -8,6 +8,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.8.0 – 2026-04-03
+
+### Added
+
+- Refresh stored login tokens during active user sessions so IdP SSO sessions stay alive while users keep working @solracsf [#1391](https://github.com/nextcloud/user_oidc/pull/1391)
+
+### Changed
+
+- Move time handling to `ITimeFactory` across token, discovery, login, ID4ME, and backend flows to align with newer platform APIs @solracsf [#1392](https://github.com/nextcloud/user_oidc/pull/1392)
+- Add explicit return types to provider management `occ` commands for cleaner command API compatibility @CarlSchwan [#1400](https://github.com/nextcloud/user_oidc/pull/1400)
+- Remove the duplicate legacy API controller and keep the OCS API controller as the single implementation for provisioning endpoints @julien-nc [#1403](https://github.com/nextcloud/user_oidc/pull/1403)
+
 ## 8.7.0 – 2026-03-26
 
 ### Added
