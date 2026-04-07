@@ -39,7 +39,6 @@ use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Server;
-use OCP\ServerVersion;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
@@ -69,7 +68,6 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		private ProvisioningService $provisioningService,
 		private LdapService $ldapService,
 		private IUserManager $userManager,
-		private ServerVersion $serverVersion,
 		private ITimeFactory $timeFactory,
 	) {
 	}
@@ -431,7 +429,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$firstLogin = $user->getLastLogin() === 0;
 		if ($firstLogin) {
-			$this->serverVersion->getMajorVersion() >= 34 ? Server::get(ISetupManager::class)->setupForUser($user) : \OC_Util::setupFS($userId);
+			/** @psalm-suppress UndefinedVariable Replace with ServerVersion once we depends on NC 31 */
+			$OC_Version[0] >= 34 ? Server::get(ISetupManager::class)->setupForUser($user) : \OC_Util::setupFS($userId);
 			// trigger creation of user home and /files folder
 			$userFolder = Server::get(IRootFolder::class)->getUserFolder($userId);
 			try {
