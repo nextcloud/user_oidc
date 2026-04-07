@@ -46,7 +46,6 @@
 				<referencedClass name="Symfony\Component\Console\Question\ConfirmationQuestion" />
 				<referencedClass name="OC\Accounts\AccountManager" />
 				<referencedClass name="OCA\OIDCIdentityProvider\AppInfo\Application" />
-				<referencedClass name="OCP\ServerVersion" />
 				<referencedClass name="OCP\Files\ISetupManager" />
 				<referencedClass name="OCP\User\Events\UserFirstTimeLoggedInEvent" />
 			</errorLevel>
