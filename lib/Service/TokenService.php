@@ -184,7 +184,32 @@ class TokenService {
 		$this->logger->debug('[TokenService] checkLoginToken: all good');
 	}
 
+	/**
+	 * 2 behaviours depending on the reauthenticate_if_token_expired config value
+	 *
+	 * If false, just logout
+	 * If true (default)
+	 *   - if a login flow is in progress, do nothing
+	 *   - if a login flow is not in progress, logout and redirect to the start of the login flow for the same provider
+	 *
+	 * @param int $providerId
+	 * @return void
+	 */
 	public function reauthenticate(int $providerId) {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		// default is to redirect the user to the oidc login flow
+		$reauthenticateIfTokenExpired = !isset($oidcSystemConfig['reauthenticate_if_token_expired'])
+			|| !in_array($oidcSystemConfig['reauthenticate_if_token_expired'], [false, 'false', 0, '0'], true);
+
+		if (!$reauthenticateIfTokenExpired) {
+			$this->userSession->logout();
+			$this->logger->debug('[TokenService] expired token reauthentication disabled, user logged out', [
+				'provider_id' => $providerId,
+				'request_uri' => $this->request->getRequestUri(),
+			]);
+			return;
+		}
+
 		if ($this->session->get('oidc.state') !== null) {
 			$this->logger->debug('[TokenService] reauthenticate skipped: login flow already in progress', [
 				'provider_id' => $providerId,
@@ -193,8 +218,9 @@ class TokenService {
 			return;
 		}
 
-		// Logout the user and redirect to the oidc login flow to gather a fresh token
 		$this->userSession->logout();
+
+		// redirect to the oidc login flow to gather a fresh token
 		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.login', [
 			'providerId' => $providerId,
 			'redirectUrl' => $this->request->getRequestUri(),
