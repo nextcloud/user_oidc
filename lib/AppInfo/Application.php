@@ -22,6 +22,7 @@ use OCA\UserOIDC\Listener\InternalTokenRequestedListener;
 use OCA\UserOIDC\Listener\TimezoneHandlingListener;
 use OCA\UserOIDC\Listener\TokenInvalidatedListener;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\RequestClassificationService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\Service\TokenService;
 use OCA\UserOIDC\User\Backend;
@@ -114,7 +115,10 @@ class Application extends App implements IBootstrap {
 		} catch (Exception $e) {
 			// in case any errors happen when checking for the path do not apply redirect logic as it is only needed for the login
 		}
-		if ($isDefaultLogin && !$settings->getAllowMultipleUserBackEnds()) {
+		if ($isDefaultLogin
+			&& RequestClassificationService::isTopLevelHtmlNavigation($request)
+			&& !$settings->getAllowMultipleUserBackEnds()
+		) {
 			$providers = $this->getCachedProviders($providerMapper);
 			if (count($providers) === 1) {
 				$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
