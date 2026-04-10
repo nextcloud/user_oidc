@@ -185,6 +185,14 @@ class TokenService {
 	}
 
 	public function reauthenticate(int $providerId) {
+		if ($this->session->get('oidc.state') !== null) {
+			$this->logger->debug('[TokenService] reauthenticate skipped: login flow already in progress', [
+				'provider_id' => $providerId,
+				'redirect_url' => $this->request->getRequestUri(),
+			]);
+			return;
+		}
+
 		// Logout the user and redirect to the oidc login flow to gather a fresh token
 		$this->userSession->logout();
 		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.login', [
