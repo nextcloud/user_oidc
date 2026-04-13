@@ -190,6 +190,7 @@ class LoginController extends BaseOidcController {
 
 		$state = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
 		$this->session->set(self::STATE, $state);
+		$this->logger->debug('Storing OIDC state', ['state' => $state]);
 		$this->session->set(self::REDIRECT_AFTER_LOGIN, $redirectUrl);
 
 		$nonce = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
