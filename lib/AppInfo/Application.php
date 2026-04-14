@@ -11,6 +11,7 @@ namespace OCA\UserOIDC\AppInfo;
 use Exception;
 use OC_App;
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
+use OCA\UserOIDC\AlternativeLogin\AlternativeLoginProvider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Event\ExchangedTokenRequestedEvent;
 use OCA\UserOIDC\Event\ExternalTokenRequestedEvent;
@@ -70,6 +71,14 @@ class Application extends App implements IBootstrap {
 		if (class_exists(\OCP\Authentication\Events\TokenInvalidatedEvent::class)) {
 			$context->registerEventListener(\OCP\Authentication\Events\TokenInvalidatedEvent::class, TokenInvalidatedListener::class);
 		}
+
+		if (version_compare($config->getSystemValueString('version', '0.0.0'), '34.0.0', '>=')) {
+			/**
+			 * @psalm-suppress UndefinedInterfaceMethod
+			 * @psalm-suppress MissingDependency
+			 */
+			$context->registerAlternativeLoginProvider(AlternativeLoginProvider::class);
+		}
 	}
 
 	public function boot(IBootContext $context): void {
@@ -83,7 +92,9 @@ class Application extends App implements IBootstrap {
 
 		try {
 			$context->injectFn(\Closure::fromCallable([$this, 'registerRedirect']));
-			$context->injectFn(\Closure::fromCallable([$this, 'registerLogin']));
+			if (version_compare($this->getContainer()->get(IConfig::class)->getSystemValueString('version', '0.0.0'), '34.0.0', '<')) {
+				$context->injectFn(\Closure::fromCallable([$this, 'registerLogin']));
+			}
 		} catch (Throwable $e) {
 		}
 	}
@@ -93,7 +104,6 @@ class Application extends App implements IBootstrap {
 	}
 
 	private function registerRedirect(IRequest $request, IURLGenerator $urlGenerator, SettingsService $settings, ProviderMapper $providerMapper): void {
-		$providers = $this->getCachedProviders($providerMapper);
 		$redirectUrl = $request->getParam('redirect_url');
 		$absoluteRedirectUrl = !empty($redirectUrl) ? $urlGenerator->getAbsoluteURL($redirectUrl) : $redirectUrl;
 
@@ -104,13 +114,16 @@ class Application extends App implements IBootstrap {
 		} catch (Exception $e) {
 			// in case any errors happen when checking for the path do not apply redirect logic as it is only needed for the login
 		}
-		if ($isDefaultLogin && !$settings->getAllowMultipleUserBackEnds() && count($providers) === 1) {
-			$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
-				'providerId' => $providers[0]->getId(),
-				'redirectUrl' => $absoluteRedirectUrl
-			]);
-			header('Location: ' . $targetUrl);
-			exit();
+		if ($isDefaultLogin && !$settings->getAllowMultipleUserBackEnds()) {
+			$providers = $this->getCachedProviders($providerMapper);
+			if (count($providers) === 1) {
+				$targetUrl = $urlGenerator->linkToRoute(self::APP_ID . '.login.login', [
+					'providerId' => $providers[0]->getId(),
+					'redirectUrl' => $absoluteRedirectUrl
+				]);
+				header('Location: ' . $targetUrl);
+				exit();
+			}
 		}
 	}
 
