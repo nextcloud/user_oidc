@@ -26,6 +26,9 @@ class DeletedUsersIndex {
 	public function getUsers(): array {
 		return [];
 	}
+
+	public function isUserMarked(string $uid): bool {
+	}
 }
 
 namespace OCA\User_LDAP;
