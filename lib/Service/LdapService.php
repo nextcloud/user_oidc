@@ -48,6 +48,10 @@ class LdapService {
 			return false;
 		}
 
+		if (!$dui->isUserMarked($user->getUID())) {
+			return false;
+		}
+
 		if (!$dui->hasUsers()) {
 			return false;
 		}
