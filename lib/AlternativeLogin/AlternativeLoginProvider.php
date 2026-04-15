@@ -32,7 +32,7 @@ class AlternativeLoginProvider implements IAlternativeLoginProvider {
 	) {
 	}
 
-	public function getAlternativeLogin(): array {
+	public function getAlternativeLogins(): array {
 		$alternativeLogins = [];
 		$redirectUrl = $this->request->getParam('redirect_url');
 		$absoluteRedirectUrl = !empty($redirectUrl) ? $this->urlGenerator->getAbsoluteURL($redirectUrl) : $redirectUrl;

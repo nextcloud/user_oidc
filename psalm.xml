@@ -48,6 +48,7 @@
 				<referencedClass name="OCA\OIDCIdentityProvider\AppInfo\Application" />
 				<referencedClass name="OCP\Files\ISetupManager" />
 				<referencedClass name="OCP\User\Events\UserFirstTimeLoggedInEvent" />
+				<referencedClass name="OCP\Authentication\IAlternativeLoginProvider" />
 			</errorLevel>
 		</UndefinedClass>
 		<UndefinedDocblockClass>
