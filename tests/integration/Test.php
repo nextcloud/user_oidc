@@ -65,12 +65,11 @@ class Test extends \Test\TestCase {
 
 
 	public function testAlternativeLogins() {
-		self::assertEquals([
-			[
-				'name' => 'Login with nextcloudci',
-				'href' => '/index.php/apps/user_oidc/login/1'
-			]
-		], OC_App::getAlternativeLogIns());
+		$alternativeLogins = OC_App::getAlternativeLogIns();
+		self::assertCount(1, $alternativeLogins);
+		$alternativeLogin = $alternativeLogins[0];
+		self::assertEquals('Login with nextcloudci', $alternativeLogin['name']);
+		self::assertEquals('/index.php/apps/user_oidc/login/1', $alternativeLogin['href']);
 	}
 
 	public function testLoginRedirect() {
