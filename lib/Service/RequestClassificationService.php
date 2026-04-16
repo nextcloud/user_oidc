@@ -17,22 +17,11 @@ class RequestClassificationService {
 			return false;
 		}
 
-		$accept = strtolower($request->getHeader('Accept'));
-		if ($accept !== '' && strpos($accept, 'text/html') === false) {
+		if ($request->getHeader('OCS-apirequest') !== '') {
 			return false;
 		}
 
 		if ($request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-			return false;
-		}
-
-		$secFetchMode = strtolower($request->getHeader('Sec-Fetch-Mode'));
-		if ($secFetchMode !== '' && $secFetchMode !== 'navigate') {
-			return false;
-		}
-
-		$secFetchDest = strtolower($request->getHeader('Sec-Fetch-Dest'));
-		if ($secFetchDest !== '' && $secFetchDest !== 'document') {
 			return false;
 		}
 
