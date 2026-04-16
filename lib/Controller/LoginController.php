@@ -358,6 +358,12 @@ class LoginController extends BaseOidcController {
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcCode')]
 	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
+		if ($this->userSession->isLoggedIn()) {
+			$sessionKeySuffix = '-' . $state;
+			$redirectUrl = $this->session->get(self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix);
+			$this->cleanupSessionState($sessionKeySuffix);
+			return $this->getRedirectResponse(!empty($redirectUrl) ? $redirectUrl : null);
+		}
 		if (!$this->isSecure()) {
 			return $this->buildProtocolErrorResponse();
 		}
