@@ -28,58 +28,28 @@ class RequestClassificationServiceTest extends TestCase {
 
 	public static function topLevelHtmlNavigationProvider(): array {
 		return [
-			'top level navigation with html accept' => [
+			'top level navigation' => [
 				'GET',
-				[
-					'Accept' => 'text/html,application/xhtml+xml',
-					'Sec-Fetch-Mode' => 'navigate',
-					'Sec-Fetch-Dest' => 'document',
-				],
-				true,
-			],
-			'html accept without fetch metadata' => [
-				'GET',
-				[
-					'Accept' => 'text/html',
-				],
+				[],
 				true,
 			],
 			'xhr request' => [
 				'GET',
 				[
-					'Accept' => 'text/html',
 					'X-Requested-With' => 'XMLHttpRequest',
 				],
 				false,
 			],
-			'json request' => [
+			'ocs api request' => [
 				'GET',
 				[
-					'Accept' => 'application/json',
-				],
-				false,
-			],
-			'non navigate fetch mode' => [
-				'GET',
-				[
-					'Accept' => 'text/html',
-					'Sec-Fetch-Mode' => 'cors',
-				],
-				false,
-			],
-			'non document destination' => [
-				'GET',
-				[
-					'Accept' => 'text/html',
-					'Sec-Fetch-Dest' => 'empty',
+					'OCS-apirequest' => 'true',
 				],
 				false,
 			],
 			'non get request' => [
 				'POST',
-				[
-					'Accept' => 'text/html',
-				],
+				[],
 				false,
 			],
 		];
