@@ -382,6 +382,7 @@ class LoginController extends BaseOidcController {
 		$sessionTimestamp = $this->session->get(self::TIMESTAMP . $sessionKeySuffix);
 		if ($currentTimestamp - $sessionTimestamp > self::LOGIN_FLOW_TIMEOUT) {
 			// the state, nonce etc... were stored too long ago, the login flow has expired
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The received state has expired.');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
@@ -393,6 +394,7 @@ class LoginController extends BaseOidcController {
 				'state_exists_in_session' => $this->session->exists(self::STATE . $sessionKeySuffix),
 			]);
 
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The received state does not match the expected value.');
 			if ($this->isDebugModeEnabled()) {
 				$responseData = [
@@ -414,6 +416,7 @@ class LoginController extends BaseOidcController {
 			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
 		} catch (\Exception $e) {
 			$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
@@ -486,10 +489,12 @@ class LoginController extends BaseOidcController {
 				$this->logger->debug('Failed to contact the OIDC provider token endpoint', ['exception' => $e]);
 				$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
 			}
+			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		} catch (\Exception $e) {
 			$this->logger->debug('Failed to contact the OIDC provider token endpoint', ['exception' => $e]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
@@ -501,12 +506,14 @@ class LoginController extends BaseOidcController {
 				'body' => $body,
 			]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
 		if (!isset($data['id_token'])) {
 			$this->logger->error('Missing id_token in IdP token response', ['keys' => array_keys($data)]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
 
@@ -544,6 +551,7 @@ class LoginController extends BaseOidcController {
 
 		if (!isset($idTokenPayload->exp) || $idTokenPayload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The received token is expired.');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'token expired']);
 		}
@@ -551,6 +559,7 @@ class LoginController extends BaseOidcController {
 		// Verify issuer
 		if (!isset($idTokenPayload->iss) || $idTokenPayload->iss !== $discovery['issuer']) {
 			$this->logger->debug('This token is issued by the wrong issuer');
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The issuer does not match the one from the discovery endpoint');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_issuer' => $idTokenPayload->iss]);
 		}
@@ -566,6 +575,7 @@ class LoginController extends BaseOidcController {
 				|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
 			) {
 				$this->logger->debug('This token is not for us');
+				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('The audience does not match ours');
 				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud]);
 			}
@@ -578,6 +588,7 @@ class LoginController extends BaseOidcController {
 			// If the azp claim is present, it should be the client ID
 			if (isset($idTokenPayload->azp) && $idTokenPayload->azp !== $provider->getClientId()) {
 				$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
+				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('The authorized party does not match ours');
 				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_azp' => $idTokenPayload->azp]);
 			}
@@ -585,6 +596,7 @@ class LoginController extends BaseOidcController {
 
 		if (isset($idTokenPayload->nonce) && $idTokenPayload->nonce !== $this->session->get(self::NONCE . $sessionKeySuffix)) {
 			$this->logger->debug('Nonce does not match');
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The nonce does not match');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'invalid nonce']);
 		}
@@ -594,6 +606,7 @@ class LoginController extends BaseOidcController {
 		$userId = $this->provisioningService->getClaimValue($idTokenPayload, $uidAttribute, $providerId);
 
 		if ($userId === null) {
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('Failed to provision the user');
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
@@ -605,6 +618,7 @@ class LoginController extends BaseOidcController {
 
 			if ($syncGroups === null || count($syncGroups) === 0) {
 				$this->logger->debug('Prevented user from login as user is not part of a whitelisted group');
+				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('You do not have permission to log in to this instance. If you think this is an error, please contact an administrator.');
 				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'user not in any whitelisted group']);
 			}
@@ -630,6 +644,7 @@ class LoginController extends BaseOidcController {
 			if (!$softAutoProvisionAllowed && $existingUser !== null && $existingUser->getBackendClassName() !== Application::APP_ID) {
 				// if soft auto-provisioning is disabled,
 				// we refuse login for a user that already exists in another backend
+				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('User conflict');
 				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict'], false);
 			}
@@ -647,6 +662,7 @@ class LoginController extends BaseOidcController {
 		}
 
 		if ($user === null) {
+			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('Failed to provision the user');
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
 		}
@@ -719,6 +735,7 @@ class LoginController extends BaseOidcController {
 		$this->logger->debug('Redirecting user');
 
 		$redirectUrl = $this->session->get(self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix);
+		$this->cleanupSessionState($sessionKeySuffix);
 		if ($redirectUrl) {
 			return $this->getRedirectResponse($redirectUrl);
 		}
@@ -997,5 +1014,17 @@ class LoginController extends BaseOidcController {
 		$s = str_replace('+', '-', $s); // 62nd char of encoding
 		$s = str_replace('/', '_', $s); // 63rd char of encoding
 		return $s;
+	}
+
+	/**
+	 * Clean up session values for a given state suffix
+	 */
+	private function cleanupSessionState(string $sessionKeySuffix): void {
+		$this->session->remove(self::STATE . $sessionKeySuffix);
+		$this->session->remove(self::NONCE . $sessionKeySuffix);
+		$this->session->remove(self::LOGIN_PROVIDERID . $sessionKeySuffix);
+		$this->session->remove(self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix);
+		$this->session->remove(self::CODE_VERIFIER . $sessionKeySuffix);
+		$this->session->remove(self::TIMESTAMP . $sessionKeySuffix);
 	}
 }
