@@ -8,6 +8,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.9.0 – 2026-04-16
+
+### Added
+
+- Use new IAlternativeLoginProvider interface when available for alternative login methods @CarlSchwan @julien-nc [#1413](https://github.com/nextcloud/user_oidc/pull/1413)
+
+### Changed
+
+- Optimize LDAP user deleted check to avoid unnecessary LDAP lookups @CarlSchwan [#1414](https://github.com/nextcloud/user_oidc/pull/1414)
+
+### Fixed
+
+- Remove ServerVersion usage @CarlSchwan [#1407](https://github.com/nextcloud/user_oidc/pull/1407)
+- Trigger UserFirstTimeLoggedInEvent on first login @CarlSchwan [#1401](https://github.com/nextcloud/user_oidc/pull/1401)
+
 ## 8.8.0 – 2026-04-03
 
 ### Added
