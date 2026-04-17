@@ -76,9 +76,13 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		return Application::APP_ID;
 	}
 
+	/**
+	 * Count the number of users managed by this OIDC backend.
+	 *
+	 * @return int the number of provisioned OIDC users
+	 */
 	public function countUsers(): int {
-		$uids = $this->getUsers();
-		return count($uids);
+		return $this->userMapper->countUsers();
 	}
 
 	public function deleteUser($uid): bool {
