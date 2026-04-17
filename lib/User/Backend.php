@@ -86,12 +86,19 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	public function deleteUser($uid): bool {
+		if (!is_string($uid) || $uid === '') {
+			return false;
+		}
+
 		try {
 			$user = $this->userMapper->getUser($uid);
 			$this->userMapper->delete($user);
 			return true;
+		} catch (DoesNotExistException $e) {
+			$this->logger->info('Tried to delete non-existent user', ['uid' => $uid, 'exception' => $e]);
+			return false;
 		} catch (Exception $e) {
-			$this->logger->error('Failed to delete user', [ 'exception' => $e ]);
+			$this->logger->error('Failed to delete user', ['uid' => $uid, 'exception' => $e]);
 			return false;
 		}
 	}
@@ -103,29 +110,23 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		) {
 			return [];
 		}
-		return array_map(function ($user) {
-			return $user->getUserId();
-		}, $this->userMapper->find($search, $limit, $offset));
+		return array_map(static fn ($user) => $user->getUserId(), $this->userMapper->find($search, $limit, $offset));
 	}
 
 	public function userExists($uid): bool {
-		if (!is_string($uid)) {
-			return false;
-		}
-		return $this->userMapper->userExists($uid);
+		return is_string($uid) && $uid !== '' && $this->userMapper->userExists($uid);
 	}
 
 	public function getDisplayName($uid): string {
-		if (!is_string($uid)) {
+		if (!is_string($uid) || $uid === '') {
 			return (string)$uid;
 		}
 		try {
 			$user = $this->userMapper->getUser($uid);
-		} catch (DoesNotExistException $e) {
+			return $user->getDisplayName();
+		} catch (DoesNotExistException) {
 			return $uid;
 		}
-
-		return $user->getDisplayName();
 	}
 
 	public function getDisplayNames($search = '', $limit = null, $offset = null): array {
@@ -135,6 +136,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		) {
 			return [];
 		}
+
 		return $this->userMapper->findDisplayNames($search, $limit, $offset);
 	}
 
