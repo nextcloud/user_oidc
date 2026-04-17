@@ -8,6 +8,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.10.0 – 2026-04-17
+
+### Added
+
+- Add debug log when storing state in PHP session during code flow @julien-nc [#1412](https://github.com/nextcloud/user_oidc/pull/1412)
+
+### Changed
+
+- Optimize user counting @CarlSchwan @solracsf [#1418](https://github.com/nextcloud/user_oidc/pull/1418)
+- Modernize user backend @CarlSchwan @solracsf [#1419](https://github.com/nextcloud/user_oidc/pull/1419)
+- Harden UserBackend::provisionUser and UserBackend::checkFirstLogin @CarlSchwan @solracsf [#1420](https://github.com/nextcloud/user_oidc/pull/1420)
+
+### Fixed
+
+- Only redirect to login flow when request comes from a navigation context, add support for storing multiple states and clean up flow session values on failure @julien-nc [#1410](https://github.com/nextcloud/user_oidc/pull/1410)
+
 ## 8.9.0 – 2026-04-16
 
 ### Added
