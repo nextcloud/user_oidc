@@ -185,6 +185,15 @@ class TokenService {
 	}
 
 	public function reauthenticate(int $providerId) {
+		if (!RequestClassificationService::isTopLevelHtmlNavigation($this->request)) {
+			$this->userSession->logout();
+			$this->logger->debug('[TokenService] reauthenticate skipped: request is not a top-level HTML navigation', [
+				'provider_id' => $providerId,
+				'request_uri' => $this->request->getRequestUri(),
+			]);
+			return;
+		}
+
 		// Logout the user and redirect to the oidc login flow to gather a fresh token
 		$this->userSession->logout();
 		$redirectUrl = $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.login.login', [
