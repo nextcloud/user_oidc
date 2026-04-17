@@ -49,6 +49,9 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend {
+	private const SESSION_USER_DATA = 'user_oidc.oidcUserData';
+
+	/** @var list<class-string<IBearerTokenValidator>> */
 	private $tokenValidators = [
 		SelfEncodedValidator::class,
 		UserInfoValidator::class,
@@ -184,14 +187,23 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * Inspired by user_saml
 	 */
 	public function getUserData(): array {
-		$userData = $this->session->get('user_oidc.oidcUserData');
-		$providerId = (int)$this->session->get(LoginController::PROVIDERID);
-		$userData = $this->formatUserData($providerId, $userData);
+		$userData = $this->session->get(self::SESSION_USER_DATA) ?? [];
+		$rawProviderId = $this->session->get(LoginController::PROVIDERID);
+		if ($rawProviderId === null) {
+			throw new \InvalidArgumentException('No OIDC provider ID in session');
+		}
 
-		// make sure that a valid UID is given
-		if (empty($userData['formatted']['uid'])) {
-			$this->logger->error('No valid uid given, please check your attribute mapping. Got uid: {uid}', ['app' => 'user_oidc', 'uid' => $userData['formatted']['uid']]);
-			throw new \InvalidArgumentException('No valid uid given, please check your attribute mapping. Got uid: ' . $userData['formatted']['uid']);
+		$providerId = (int)$rawProviderId;
+
+		$userData = $this->formatUserData($providerId, is_array($userData) ? $userData : []);
+
+		if (!$this->isAcceptableUserId($userData['formatted']['uid'] ?? null)) {
+			$uid = is_scalar($userData['formatted']['uid'] ?? null) ? (string)$userData['formatted']['uid'] : '';
+			$this->logger->error('No valid uid given, please check your attribute mapping. Got uid: {uid}', [
+				'app' => 'user_oidc',
+				'uid' => $uid,
+			]);
+			throw new \InvalidArgumentException('No valid uid given, please check your attribute mapping. Got uid: ' . $uid);
 		}
 
 		return $userData;
@@ -395,6 +407,15 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	/**
+	 * Returns true only if $userId is a non-empty, non-whitespace-only string.
+	 * Used as a lightweight sanity check on user IDs returned by token validators
+	 * before any database lookup or provisioning takes place.
+	 */
+	private function isAcceptableUserId(mixed $userId): bool {
+		return is_string($userId) && $userId !== '' && trim($userId) !== '';
+	}
+
+	/**
 	 * Set the user in IUserSession after bearer token validation.
 	 * Without this, DI-injected $userId is null in OCS controllers
 	 * and CalDAV plugins, causing 500 errors in Deck, Talk, and Tasks.
@@ -420,55 +441,65 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	/**
-	 * Inspired by lib/private/User/Session.php::prepareUserLogin()
 	 *
-	 * @param string $userId
-	 * @return bool
-	 * @throws NotFoundException
+	 * Performs first-login initialisation (home folder setup, skeleton copy, events)
+	 * if the user has never logged in before, then updates the last-login timestamp.
+	 * Inspired by lib/private/User/Session.php::prepareUserLogin().
 	 */
 	private function checkFirstLogin(string $userId): bool {
 		$user = $this->userManager->get($userId);
-
 		if ($user === null) {
 			return false;
 		}
 
 		$firstLogin = $user->getLastLogin() === 0;
 		if ($firstLogin) {
-			/** @psalm-suppress UndefinedVariable Replace with ServerVersion once we depends on NC 31 */
-			$OC_Version[0] >= 34 ? Server::get(ISetupManager::class)->setupForUser($user) : \OC_Util::setupFS($userId);
-			// trigger creation of user home and /files folder
-			$userFolder = Server::get(IRootFolder::class)->getUserFolder($userId);
-			try {
-				// copy skeleton
-				\OC_Util::copySkeleton($userId, $userFolder);
-			} catch (NotPermittedException $ex) {
-				// read only uses
+			/** @psalm-suppress UndefinedVariable Replace with ServerVersion once we depend on NC 31 */
+			if ($OC_Version[0] >= 34) {
+				Server::get(ISetupManager::class)->setupForUser($user);
+			} else {
+				\OC_Util::setupFS($userId);
 			}
 
-			// trigger any other initialization
+			try {
+				// trigger creation of user home and /files folder
+				$userFolder = Server::get(IRootFolder::class)->getUserFolder($userId);
+				// copy skeleton
+				\OC_Util::copySkeleton($userId, $userFolder);
+			} catch (NotFoundException|NotPermittedException $ex) {
+				$this->logger->warning('Could not set up user folder on first login', ['exception' => $ex]);
+			}
+
 			$this->eventDispatcher->dispatch(IUser::class . '::firstLogin', new GenericEvent($user));
 			$this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
 		}
+
 		$user->updateLastLoginTimestamp();
 		return $firstLogin;
 	}
 
 	/**
 	 * Triggers user provisioning based on the provided strategy
-	 *
-	 * @param string $provisioningStrategyClass
-	 * @param Provider $provider
-	 * @param string $tokenUserId
-	 * @param string $headerToken
-	 * @param IUser|null $existingUser
-	 * @return IUser|null
 	 */
 	private function provisionUser(
-		string $provisioningStrategyClass, Provider $provider, string $tokenUserId, string $headerToken,
+		string $provisioningStrategyClass,
+		Provider $provider,
+		string $tokenUserId,
+		string $headerToken,
 		?IUser $existingUser,
 	): ?IUser {
-		$provisioningStrategy = Server::get($provisioningStrategyClass);
-		return $provisioningStrategy->provisionUser($provider, $tokenUserId, $headerToken, $existingUser);
+		try {
+			$provisioningStrategy = Server::get($provisioningStrategyClass);
+			return $provisioningStrategy->provisionUser($provider, $tokenUserId, $headerToken, $existingUser);
+		} catch (Throwable $e) {
+			$this->logger->error('Failed to provision user via strategy', [
+				'strategy' => $provisioningStrategyClass,
+				'providerId' => $provider->getId(),
+				'providerIdentifier' => $provider->getIdentifier(),
+				'userId' => $tokenUserId,
+				'exception' => $e,
+			]);
+			return null;
+		}
 	}
 }
