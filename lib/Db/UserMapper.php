@@ -169,4 +169,22 @@ class UserMapper extends QBMapper {
 		$user->setUserId($userId);
 		return $this->insert($user);
 	}
+
+	/**
+	 * Count the total number of users provisioned by the OIDC backend.
+	 *
+	 * @return int the number of rows in the user_oidc table
+	 */
+	public function countUsers(): int {
+		$qb = $this->db->getQueryBuilder();
+
+		$qb->selectAlias($qb->func()->count('*'), 'user_count')
+			->from($this->getTableName());
+
+		$result = $qb->executeQuery();
+		$count = $result->fetchOne();
+		$result->closeCursor();
+
+		return (int)$count;
+	}
 }
