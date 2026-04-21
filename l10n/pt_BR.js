@@ -21,6 +21,7 @@ OC.L10N.register(
     "There is no such OpenID Connect provider." : "Esse provedor OpenID Connect não existe.",
     "Could not reach the OpenID Connect provider." : "Não foi possível acessar o provedor OpenID Connect.",
     "The identity provider failed to authenticate the user." : "O provedor de identidade falhou ao autenticar o usuário.",
+    "The received state has expired." : "O estado recebido expirou.",
     "Failed to decrypt the OIDC provider client secret" : "Falha ao descriptografar o segredo do cliente do provedor OIDC",
     "Failed to contact the OIDC provider token endpoint" : "Falha ao entrar em contato com o endpoint de token do provedor OIDC.",
     "The issuer does not match the one from the discovery endpoint" : "O emissor não corresponde ao do endpoint de descoberta",
