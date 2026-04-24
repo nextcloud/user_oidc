@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.10.1 – 2026-04-24
+
+### Fixed
+
+- Use `version_compare` and `IConfig::getSystemValueString` instead of `$OC_Version` @julien-nc [#1425](https://github.com/nextcloud/user_oidc/pull/1425)
+
 ## 8.10.0 – 2026-04-17
 
 ### Added
