@@ -454,8 +454,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$firstLogin = $user->getLastLogin() === 0;
 		if ($firstLogin) {
-			/** @psalm-suppress UndefinedVariable Replace with ServerVersion once we depend on NC 31 */
-			if ($OC_Version[0] >= 34) {
+			/** Replace with ServerVersion once we depend on NC 31 */
+			if (version_compare($this->config->getSystemValueString('version', '0.0.0'), '34.0.0', '>=')) {
 				Server::get(ISetupManager::class)->setupForUser($user);
 			} else {
 				\OC_Util::setupFS($userId);

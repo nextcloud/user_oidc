@@ -746,8 +746,9 @@ class LoginController extends BaseOidcController {
 			return $this->getRedirectResponse($redirectUrl);
 		}
 
-		/** @psalm-suppress UndefinedVariable Replace with ServerVersion once we depends on NC 31 */
-		return new RedirectResponse($OC_Version[0] >= 32 ? $this->urlGenerator->linkToDefaultPageUrl() : \OC_Util::getDefaultPageUrl());
+		/** Replace with ServerVersion once we depends on NC 31 */
+		$is32OrGreater = version_compare($this->config->getSystemValueString('version', '0.0.0'), '32.0.0', '>=');
+		return new RedirectResponse($is32OrGreater ? $this->urlGenerator->linkToDefaultPageUrl() : \OC_Util::getDefaultPageUrl());
 	}
 
 	/**
