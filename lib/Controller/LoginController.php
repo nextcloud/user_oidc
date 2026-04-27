@@ -56,6 +56,7 @@ use OCP\ISession;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\LDAP\Exceptions\MultipleUsersReturnedException;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
@@ -634,14 +635,28 @@ class LoginController extends BaseOidcController {
 		$softAutoProvisionAllowed = (!isset($oidcSystemConfig['soft_auto_provision']) || $oidcSystemConfig['soft_auto_provision']);
 
 		$shouldDoUserLookup = !$autoProvisionAllowed || ($softAutoProvisionAllowed && !$this->provisioningService->hasOidcUserProvisitioned($userId));
+		$existingUser = null;
 		if ($shouldDoUserLookup && $this->ldapService->isLDAPEnabled()) {
-			// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
-			// so new users will be directly available even if they were not synced before this login attempt
-			$this->userManager->search($userId, 1, 0);
-			$this->ldapService->syncUser($userId);
+			$ldapMappingAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_LDAP_MAPPING_ATTRIBUTE);
+			if ($ldapMappingAttribute !== '') {
+				// Find a user in LDAP with a custom attribute equal to the user id given in OIDC
+				try {
+					$existingUser = $this->ldapService->findUserByAttribute($ldapMappingAttribute, $userId);
+				} catch (MultipleUsersReturnedException $e) {
+					$message = $this->l10n->t('The configured LDAP mapping attribute returned more than one users. Please contact an administrator.');
+					return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN);
+				}
+			} else {
+				// in case user is provisioned by user_ldap, userManager->search() triggers an ldap search which syncs the results
+				// so new users will be directly available even if they were not synced before this login attempt
+				$this->userManager->search($userId, 1, 0);
+				$this->ldapService->syncUser($userId);
+			}
 		}
 
-		$existingUser = $this->userManager->get($userId);
+		if ($existingUser === null) {
+			$existingUser = $this->userManager->get($userId);
+		}
 		if ($existingUser !== null && $this->ldapService->isLdapDeletedUser($existingUser)) {
 			$existingUser = null;
 		}
