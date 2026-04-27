@@ -22,6 +22,7 @@ use OCA\UserOIDC\User\Validator\IBearerTokenValidator;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\IApacheBackend;
 use OCP\DB\Exception;
@@ -38,6 +39,7 @@ use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\LDAP\Exceptions\MultipleUsersReturnedException;
 use OCP\Server;
 use OCP\User\Backend\ABackend;
 use OCP\User\Backend\ICountUsersBackend;
@@ -334,13 +336,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 						if ($autoProvisionAllowed) {
 							// look for user in other backends
-							if (!$this->userManager->userExists($tokenUserId)) {
-								$this->userManager->search($tokenUserId);
-								$this->ldapService->syncUser($tokenUserId);
-							}
-							$existingUser = $this->userManager->get($tokenUserId);
-							if ($existingUser !== null && $this->ldapService->isLdapDeletedUser($existingUser)) {
-								$existingUser = null;
+							try {
+								$existingUser = $this->lookupUserInLDAP($provider, $tokenUserId);
+							} catch (MultipleUsersReturnedException $e) {
+								$this->logger->debug('The configured LDAP mapping attribute returned more than one users');
+								return '';
 							}
 
 							$softAutoProvisionAllowed = (!isset($oidcSystemConfig['soft_auto_provision']) || $oidcSystemConfig['soft_auto_provision']);
@@ -378,18 +378,13 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							// check if the user exists locally
 							// if not, this potentially triggers a user_ldap search
 							// to get the user if it has not been synced yet
-							if (!$this->userManager->userExists($tokenUserId)) {
-								$this->userManager->search($tokenUserId);
-								$this->ldapService->syncUser($tokenUserId);
-
-								// return nothing, if the user was not found after the user_ldap search
-								if (!$this->userManager->userExists($tokenUserId)) {
-									return '';
-								}
+							try {
+								$existingUser = $this->lookupUserInLDAP($provider, $tokenUserId);
+							} catch (MultipleUsersReturnedException $e) {
+								$this->logger->debug('The configured LDAP mapping attribute returned more than one users');
+								return '';
 							}
-
-							$user = $this->userManager->get($tokenUserId);
-							if ($user === null || $this->ldapService->isLdapDeletedUser($user)) {
+							if ($existingUser === null) {
 								return '';
 							}
 							$this->checkFirstLogin($tokenUserId);
@@ -404,6 +399,31 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$this->logger->debug('Could not find unique token validation');
 		return '';
+	}
+
+	/**
+	 * @throws MultipleUsersReturnedException
+	 */
+	private function lookupUserInLDAP(Provider $provider, string $tokenUserId): ?IUser {
+		$existingUser = null;
+		if ($this->ldapService->isLDAPEnabled()) {
+			$ldapMappingAttribute = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_LDAP_MAPPING_ATTRIBUTE);
+			if ($ldapMappingAttribute !== '') {
+				// Find a user in LDAP with a custom attribute equal to the user id given in OIDC
+				$existingUser = $this->ldapService->findUserByAttribute($ldapMappingAttribute, $tokenUserId);
+			} else if (!$this->userManager->userExists($tokenUserId)) {
+				$this->userManager->search($tokenUserId);
+				$this->ldapService->syncUser($tokenUserId);
+			}
+
+			if ($existingUser === null) {
+				$existingUser = $this->userManager->get($tokenUserId);
+			}
+			if ($existingUser !== null && $this->ldapService->isLdapDeletedUser($existingUser)) {
+				$existingUser = null;
+			}
+		}
+		return $existingUser;
 	}
 
 	/**
