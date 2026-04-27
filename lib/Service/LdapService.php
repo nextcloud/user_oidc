@@ -10,7 +10,9 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCP\App\IAppManager;
+use OCP\IConfig;
 use OCP\IUser;
+use OCP\LDAP\Exceptions\MultipleUsersReturnedException;
 use OCP\Server;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Log\LoggerInterface;
@@ -78,5 +80,18 @@ class LdapService {
 		} catch (ContainerExceptionInterface $e) {
 			$this->logger->debug('\OCA\User_LDAP\User_Proxy class not found');
 		}
+	}
+
+	/**
+	 * @throws MultipleUsersReturnedException
+	 * @psalm-suppress UndefinedDocblockClass
+	 */
+	public function findUserByAttribute(string $attribute, string $searchTerm): ?string {
+		if (version_compare(Server::get(IConfig::class)->getSystemValueString('version', '0.0.0'), '34.0.0', '>=')) {
+			$ldapUserProxy = Server::get(\OCA\User_LDAP\User_Proxy::class);
+			/** @psalm-suppress UndefinedMethod only in NC 34 or above */
+			return $ldapUserProxy->getUserFromCustomAttribute($attribute, $searchTerm);
+		}
+		return null;
 	}
 }
