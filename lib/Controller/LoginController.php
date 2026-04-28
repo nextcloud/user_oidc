@@ -46,7 +46,6 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Token\IToken;
-use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -846,13 +845,14 @@ class LoginController extends BaseOidcController {
 	 * Endpoint called by the IdP (OP) when end_session_endpoint is called by another client
 	 * The logout token contains the sid for which we know the sessionId
 	 * which leads to the auth token that we can invalidate
+	 * In a RP-initiated logout scenario
+	 * the invalidation step should not be required since it would have been cleared
+	 * in singleLogoutService()
 	 * Implemented according to https://openid.net/specs/openid-connect-backchannel-1_0.html
 	 *
 	 * @param string $providerIdentifier
 	 * @param string $logout_token
 	 * @return JSONResponse
-	 * @throws Exception
-	 * @throws \JsonException
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -929,39 +929,17 @@ class LoginController extends BaseOidcController {
 			$sub = $logoutTokenPayload->sub ?? null;
 			try {
 				$oidcSession = $this->sessionMapper->findSessionBySid($sid, $sub, $iss);
+				$oidcSessionsToKill[] = $oidcSession;
 			} catch (DoesNotExistException $e) {
-				return $this->getBackchannelLogoutErrorResponse(
-					$sub === null ? 'invalid SID or ISS' : 'invalid SID, SUB or ISS',
-					$sub === null ? 'No session was found for this (sid,iss)' : 'No session was found for this (sid,sub,iss)',
-					['session_not_found' => $sid]
-				);
-			} catch (MultipleObjectsReturnedException $e) {
-				return $this->getBackchannelLogoutErrorResponse(
-					$sub === null ? 'invalid SID or ISS' : 'invalid SID, SUB or ISS',
-					$sub === null ? 'Multiple sessions were found with this (sid,iss)' : 'Multiple sessions were found with this (sid,sub,iss)',
-					['multiple_sessions_found' => $sid]
-				);
+				$this->logger->debug("[BackchannelLogout] OIDC session not found (expected for a RP-initiated logout)");
 			}
-			$oidcSessionsToKill[] = $oidcSession;
 		} else {
 			// here we know the sid is not set so the sub is set
 			$sub = $logoutTokenPayload->sub;
 			try {
 				$oidcSessionsToKill = $this->sessionMapper->findSessionsBySubAndIss($sub, $iss);
-			} catch (\OCP\Db\Exception $e) {
-				return $this->getBackchannelLogoutErrorResponse(
-					'error with sub+iss',
-					'Failed to retrieve session with sub+iss',
-					['sub_iss_error' => true]
-				);
-			}
-
-			if (empty($oidcSessionsToKill)) {
-				return $this->getBackchannelLogoutErrorResponse(
-					'nothing found with sub+iss',
-					'No session found with sub+iss',
-					['sub_iss_no_session_found' => true]
-				);
+			} catch (DoesNotExistException $e) {
+				$this->logger->debug("[BackchannelLogout] OIDC session not found (expected for a RP-initiated logout)");
 			}
 		}
 
