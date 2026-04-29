@@ -529,6 +529,13 @@ class ProvisioningService {
 				$this->logger->warning('Failed to decode base64 JPEG avatar for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
 				return;
 			}
+		} else {
+			// fallback if it's not a URL and does not have a base64 data prefix: try to decode it as base64
+			$avatarContent = base64_decode($avatarAttribute);
+			if ($avatarContent === false) {
+				$this->logger->warning('Failed to decode base64 unprefixed avatar for user ' . $userId, ['avatar_attribute' => $avatarAttribute]);
+				return;
+			}
 		}
 
 		if ($avatarContent === null || $avatarContent === '') {
