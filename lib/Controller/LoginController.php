@@ -46,6 +46,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Token\IToken;
+use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -852,6 +853,8 @@ class LoginController extends BaseOidcController {
 	 *
 	 * @param string $providerIdentifier
 	 * @param string $logout_token
+	 * @throws Exception
+	 * @throws \JsonException
 	 * @return JSONResponse
 	 */
 	#[PublicPage]
@@ -928,18 +931,24 @@ class LoginController extends BaseOidcController {
 			$sid = $logoutTokenPayload->sid;
 			$sub = $logoutTokenPayload->sub ?? null;
 			try {
-				$oidcSession = $this->sessionMapper->findSessionBySid($sid, $sub, $iss);
-				$oidcSessionsToKill[] = $oidcSession;
+				$oidcSessionsToKill[] = $this->sessionMapper->findSessionBySid($sid, $sub, $iss);
 			} catch (DoesNotExistException $e) {
-				$this->logger->debug("[BackchannelLogout] OIDC session not found (expected for a RP-initiated logout)");
+				$this->logger->debug('[BackchannelLogout] OIDC session not found with sid+sub+iss (expected for a RP-initiated logout)');
+			} catch (MultipleObjectsReturnedException $e) {
+				$this->logger->warning('[BackchannelLogout] Multiple OIDC sessions retrieved (sid+sub+iss). ' .
+				'This should not happen. Please check that you have created your DB indexes')
 			}
 		} else {
 			// here we know the sid is not set so the sub is set
 			$sub = $logoutTokenPayload->sub;
 			try {
-				$oidcSessionsToKill = $this->sessionMapper->findSessionsBySubAndIss($sub, $iss);
-			} catch (DoesNotExistException $e) {
-				$this->logger->debug("[BackchannelLogout] OIDC session not found (expected for a RP-initiated logout)");
+				$oidcSessionsToKill[] = $this->sessionMapper->findSessionsBySubAndIss($sub, $iss);
+			} catch (\OCP\Db\Exception $e) {
+				$this->logger->debug('[BackchannelLogout] Database failure while trying to retrieve user session (sub+iss)');
+			}
+
+			if (empty($oidcSessionsToKill)) {
+				$this->logger->debug('[BackchannelLogout] OIDC session not found with sub+iss (expected for a RP-initiated logout)');
 			}
 		}
 
