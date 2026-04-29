@@ -930,11 +930,19 @@ class LoginController extends BaseOidcController {
 			try {
 				$oidcSession = $this->sessionMapper->findSessionBySid($sid, $sub, $iss);
 			} catch (DoesNotExistException $e) {
-				return $this->getBackchannelLogoutErrorResponse(
-					$sub === null ? 'invalid SID or ISS' : 'invalid SID, SUB or ISS',
-					$sub === null ? 'No session was found for this (sid,iss)' : 'No session was found for this (sid,sub,iss)',
-					['session_not_found' => $sid]
+				// Per OIDC Backchannel Logout 1.0 §2.6:
+				// "If the identified End-User is already logged out at the
+				// RP when the logout request is received, the logout is
+				// considered to have succeeded." Returning 400 here
+				// causes IdPs (e.g. LemonLDAP, Keycloak) to surface a
+				// confusing error to the user even though the desired
+				// state — the RP session being gone — is already true.
+				// See https://openid.net/specs/openid-connect-backchannel-1_0.html#BCActions
+				$this->logger->debug(
+					'[BackchannelLogout] no RP session for (sid,iss) — treating as already-logged-out per spec',
+					['sid' => $sid, 'sub_present' => $sub !== null]
 				);
+				return new JSONResponse([], Http::STATUS_OK);
 			} catch (MultipleObjectsReturnedException $e) {
 				return $this->getBackchannelLogoutErrorResponse(
 					$sub === null ? 'invalid SID or ISS' : 'invalid SID, SUB or ISS',
@@ -957,11 +965,14 @@ class LoginController extends BaseOidcController {
 			}
 
 			if (empty($oidcSessionsToKill)) {
-				return $this->getBackchannelLogoutErrorResponse(
-					'nothing found with sub+iss',
-					'No session found with sub+iss',
-					['sub_iss_no_session_found' => true]
+				// Per OIDC Backchannel Logout 1.0 §2.6 (already-logged-
+				// out is a success). Same rationale as the (sid,iss)
+				// branch above.
+				$this->logger->debug(
+					'[BackchannelLogout] no RP sessions for (sub,iss) — treating as already-logged-out per spec',
+					['sub' => $sub]
 				);
+				return new JSONResponse([], Http::STATUS_OK);
 			}
 		}
 
