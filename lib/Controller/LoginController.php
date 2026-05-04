@@ -846,6 +846,9 @@ class LoginController extends BaseOidcController {
 	 * Endpoint called by the IdP (OP) when end_session_endpoint is called by another client
 	 * The logout token contains the sid for which we know the sessionId
 	 * which leads to the auth token that we can invalidate
+	 * Note : in a RP-initiated logout scenario
+	 * the invalidation step should not be required since it would have been cleared
+	 * in singleLogoutService()
 	 * Implemented according to https://openid.net/specs/openid-connect-backchannel-1_0.html
 	 *
 	 * @param string $providerIdentifier
@@ -863,7 +866,17 @@ class LoginController extends BaseOidcController {
 			return $this->getBackchannelLogoutErrorResponse(
 				'provider not found',
 				'The provider was not found in Nextcloud',
-				['provider_not_found' => $providerIdentifier]
+				['extra_context' => 'Got provider identifier: ' . $providerIdentifier],
+			);
+		}
+
+		try {
+			$discovery = $this->discoveryService->obtainDiscovery($provider);
+		} catch (\Exception $e) {
+			return $this->getBackchannelLogoutErrorResponse(
+				'could not reach provider endpoint',
+				'URL: ' . $provider->getDiscoveryEndpoint() . 'was not reachable',
+				severity: \Psr\Log\LogLevel::ERROR,
 			);
 		}
 
@@ -874,6 +887,28 @@ class LoginController extends BaseOidcController {
 
 		$this->logger->debug('Parsed the logout JWT payload: ' . json_encode($logoutTokenPayload, JSON_THROW_ON_ERROR));
 
+		// REQUIRED claims check step
+		// https://openid.net/specs/openid-connect-backchannel-1_0.html#LogoutToken
+		// Note : exp claim is deliberately not checked. See #1432
+		$requiredClaims = ['iss', 'aud', 'iat', 'jti', 'events'];
+		$missingClaims = [];
+		$logoutTokenArray = (array)$logoutTokenPayload;
+		foreach ($requiredClaims as $claim) {
+			if (!array_key_exists($claim, $logoutTokenArray)) {
+				$missingClaims[] = $claim;
+			}
+		}
+		if (!empty($missingClaims)) {
+			return $this->getBackchannelLogoutErrorResponse(
+				'missing one or more claims',
+				'missing the following claim(s) : ' . implode(', ', $missingClaims),
+				['extra_context' => 'Probably is an IdP side issue']
+			);
+		}
+
+		// Logout token validation step
+		// https://openid.net/specs/openid-connect-backchannel-1_0.html#Validation
+
 		// check the audience
 		$aud = $logoutTokenPayload->aud;
 		$clientId = $provider->getClientId();
@@ -882,16 +917,23 @@ class LoginController extends BaseOidcController {
 			return $this->getBackchannelLogoutErrorResponse(
 				'invalid audience',
 				'The audience of the logout token does not match the provider',
-				['invalid_audience' => $logoutTokenPayload->aud]
+				[
+					'extra_context' => 'Probably is an IdP side issue',
+					'aud' => $aud,
+					'client_id' => $clientId,
+				]
 			);
 		}
 
 		// check the event attr
-		if (!isset($logoutTokenPayload->events->{'http://schemas.openid.net/event/backchannel-logout'})) {
+		if (!$logoutTokenPayload->events->{'http://schemas.openid.net/event/backchannel-logout'}) {
 			return $this->getBackchannelLogoutErrorResponse(
 				'invalid event',
 				'The backchannel-logout event was not found in the logout token',
-				['invalid_event' => true]
+				[
+					'extra_context' => 'Probably is an IdP side issue',
+					'events' => $logoutTokenPayload->events,
+				]
 			);
 		}
 
@@ -900,24 +942,41 @@ class LoginController extends BaseOidcController {
 			return $this->getBackchannelLogoutErrorResponse(
 				'invalid nonce',
 				'The logout token should not contain a nonce attribute',
-				['nonce_should_not_be_set' => true]
+				['extra_context' => 'Probably is an IdP side issue'],
 			);
 		}
 
-		if (!isset($logoutTokenPayload->iss)) {
+		$iss = $logoutTokenPayload->iss;
+		$discoveryIssuer = $discovery['issuer'] ?? '';
+		if ($iss !== $discoveryIssuer) {
 			return $this->getBackchannelLogoutErrorResponse(
 				'invalid iss',
-				'The logout token should contain an iss attribute',
-				['iss_should_be_set' => true]
+				'The iss of the logout token does not match the issuer',
+				[
+					'extra_context' => 'Probably is an IdP side issue',
+					'iss' => $iss,
+					'issuer' => $discoveryIssuer,
+				],
 			);
 		}
-		$iss = $logoutTokenPayload->iss;
+
+		if (isset($logoutTokenPayload->exp) && $logoutTokenPayload->exp < $this->timeFactory->getTime()) {
+			return  $this->getBackchannelLogoutErrorResponse(
+				'invalid exp',
+				'The logout token is expired',
+				[
+					'extra_context' => 'Probably is an IdP side issue',
+					'exp' => $logoutTokenPayload->exp,
+					'current_time' => $this->timeFactory->getTime(),
+				],
+			);
+		}
 
 		if (!isset($logoutTokenPayload->sid) && !isset($logoutTokenPayload->sub)) {
 			return $this->getBackchannelLogoutErrorResponse(
 				'invalid sid+sub',
 				'The logout token should contain sid or sub or both',
-				['no_sid_no_sub' => true]
+				['extra_context' => 'Probably is an IdP side issue'],
 			);
 		}
 
@@ -929,42 +988,32 @@ class LoginController extends BaseOidcController {
 			$sub = $logoutTokenPayload->sub ?? null;
 			try {
 				$oidcSession = $this->sessionMapper->findSessionBySid($sid, $sub, $iss);
+				$oidcSessionsToKill[] = $oidcSession;
 			} catch (DoesNotExistException $e) {
 				// Already-logged-out is a success per OIDC Backchannel Logout 1.0 §2.6.
 				// https://openid.net/specs/openid-connect-backchannel-1_0.html#BCActions
-				$this->logger->debug(
-					'[BackchannelLogout] no RP session for (sid,iss) — treating as already-logged-out',
-					['sid' => $sid, 'sub_present' => $sub !== null]
-				);
-				return new JSONResponse([], Http::STATUS_OK);
+				$this->logger->debug('[BackchannelLogout] OIDC session not found with sid+sub+iss (expected for a RP-initiated logout)');
 			} catch (MultipleObjectsReturnedException $e) {
-				return $this->getBackchannelLogoutErrorResponse(
-					$sub === null ? 'invalid SID or ISS' : 'invalid SID, SUB or ISS',
-					$sub === null ? 'Multiple sessions were found with this (sid,iss)' : 'Multiple sessions were found with this (sid,sub,iss)',
-					['multiple_sessions_found' => $sid]
+				$this->logger->warning('[BackchannelLogout] Multiple OIDC sessions retrieved (sid+sub+iss). '
+				. 'This should not happen.',
+					['exception' => $e],
 				);
 			}
-			$oidcSessionsToKill[] = $oidcSession;
 		} else {
 			// here we know the sid is not set so the sub is set
 			$sub = $logoutTokenPayload->sub;
 			try {
 				$oidcSessionsToKill = $this->sessionMapper->findSessionsBySubAndIss($sub, $iss);
-			} catch (\OCP\Db\Exception $e) {
-				return $this->getBackchannelLogoutErrorResponse(
-					'error with sub+iss',
-					'Failed to retrieve session with sub+iss',
-					['sub_iss_error' => true]
+			} catch (\OCP\DB\Exception $e) {
+				$this->logger->error(
+					'[BackchannelLogout] Database failure while trying to retrieve user session (sub+iss)',
+					['exception' => $e],
 				);
 			}
 
 			if (empty($oidcSessionsToKill)) {
 				// Already-logged-out is a success per OIDC Backchannel Logout 1.0 §2.6.
-				$this->logger->debug(
-					'[BackchannelLogout] no RP sessions for (sub,iss) — treating as already-logged-out',
-					['sub' => $sub]
-				);
-				return new JSONResponse([], Http::STATUS_OK);
+				$this->logger->debug('[BackchannelLogout] OIDC session not found with sub+iss (expected for a RP-initiated logout)');
 			}
 		}
 
@@ -989,7 +1038,12 @@ class LoginController extends BaseOidcController {
 			$this->sessionMapper->delete($oidcSession);
 		}
 
-		return new JSONResponse([], Http::STATUS_OK);
+		// Tell the Idp not to cache the response
+		// Per RFC : https://openid.net/specs/openid-connect-backchannel-1_0.html#BCResponse
+		$response = new JSONResponse([], Http::STATUS_OK);
+		$response->cacheFor(0);
+
+		return $response;
 	}
 
 	/**
@@ -998,22 +1052,30 @@ class LoginController extends BaseOidcController {
 	 *
 	 * @param string $error
 	 * @param string $description
-	 * @param array $throttleMetadata
+	 * @param array $metadata
+	 * @param string $severity
 	 * @return JSONResponse
 	 */
 	private function getBackchannelLogoutErrorResponse(
 		string $error,
 		string $description,
-		array $throttleMetadata = [],
+		array $metadata = [],
+		string $severity = \Psr\Log\LogLevel::WARNING,
 	): JSONResponse {
-		$this->logger->debug('Backchannel logout error. ' . $error . ' ; ' . $description);
-		return new JSONResponse(
+		$this->logger->log($severity, 'Backchannel logout error. ' . $error . ' ; ' . $description,
+			$metadata);
+
+		$response = new JSONResponse(
 			[
 				'error' => $error,
 				'error_description' => $description,
 			],
 			Http::STATUS_BAD_REQUEST,
 		);
+		// Tell the Idp not to cache the response
+		// Per RFC : https://openid.net/specs/openid-connect-backchannel-1_0.html#BCResponse
+		$response->cacheFor(0);
+		return $response;
 	}
 
 	private function toCodeChallenge(string $data): string {
