@@ -203,6 +203,7 @@ export default {
 					providerBasedId: false,
 					groupProvisioning: false,
 					sendIdTokenHint: true,
+					enrichLoginIdTokenWithUserinfo: false,
 				},
 			},
 			showNewProvider: false,

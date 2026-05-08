@@ -333,6 +333,14 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Should the ID token be included as the id_token_hint GET parameter in the OpenID logout URL? Users are redirected to this URL after logging out of Nextcloud. Enabling this setting exposes the OIDC ID token to the user agent, which may not be necessary depending on the OIDC provider.') }}
 		</p>
+		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.enrichLoginIdTokenWithUserinfo"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Enrich login ID token with userinfo') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Fetch additional information not found in the login ID token from the userinfo endpoint. This setting is overwritten if the global enrich_login_id_token_with_userinfo option is enabled.') }}
+		</p>
 		<div class="provider-edit--footer">
 			<NcButton @click="$emit('cancel-form')">
 				{{ t('user_oidc', 'Cancel') }}
