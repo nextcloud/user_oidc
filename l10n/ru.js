@@ -4,6 +4,8 @@ OC.L10N.register(
     "Error" : "Ошибка",
     "Access forbidden" : "Доступ запрещён",
     "User conflict" : "Конфликт пользователей",
+    "Registered Providers" : "Зарегистрированные провайдеры",
+    "Register new provider" : "Зарегистрировать нового провайдера",
     "Client ID" : "ID клиента",
     "Update" : "Обновление",
     "Remove" : "Исключить",
