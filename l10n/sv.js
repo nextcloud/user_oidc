@@ -3,6 +3,8 @@ OC.L10N.register(
     {
     "Error" : "Fel",
     "Access forbidden" : "Åtkomst förbjuden",
+    "Registered Providers" : "Registrerade leverantörer",
+    "Register new provider" : "Registrera ny leverantör",
     "Client ID" : "Klient-ID",
     "Update" : "Uppdatera",
     "Remove" : "Ta bort",
