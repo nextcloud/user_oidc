@@ -33,6 +33,9 @@ jobs:
             - php-versions: 8.3
               databases: mysql
               server-versions: stable33
+            - php-versions: 8.3
+              databases: mysql
+              server-versions: stable34
             - php-versions: 8.4
               databases: mysql
               server-versions: master
