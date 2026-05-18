@@ -19,6 +19,7 @@
     "There is no such OpenID Connect provider." : "Böyle bir OpenID Connect hizmeti sağlayıcısı bulunamadı.",
     "Could not reach the OpenID Connect provider." : "OpenID Connect hizmeti sağlayıcısına erişilemedi.",
     "The identity provider failed to authenticate the user." : "Kimlik hizmeti sağlayıcı kullanıcının kimliğini doğrulayamadı.",
+    "The received state has expired." : "Alınan durumun geçerlilik süresi dolmuş.",
     "Failed to decrypt the OIDC provider client secret" : "OpenID Connect hizmeti sağlayıcısının parola şifresi çözülemedi",
     "Failed to contact the OIDC provider token endpoint" : "OpenID Connect hizmeti sağlayıcısı kod uç noktası ile iletişim kurulamadı.",
     "The issuer does not match the one from the discovery endpoint" : "Yetki veren, keşif uç noktasındakiyle eşleşmiyor",
