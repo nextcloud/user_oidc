@@ -548,7 +548,9 @@ class LoginController extends BaseOidcController {
 		if ($globalEnrichWithUserinfo || $providerEnrichWithUserinfo) {
 			$userInfo = $this->oidcService->userInfo($provider, $data['access_token']);
 			$this->logger->debug('[UserInfoEnrich] Enriching the JWT payload with userinfo values');
+			$this->logger->debug('[UserInfoEnrich] Full userinfo response: ' . print_r($userInfo, true));
 			foreach ($userInfo as $key => $value) {
+				$this->logger->debug('[UserInfoEnrich] Testing if key value pair is set: ' . $key . ': ' . $value);
 				// give priority to id token values, only use userinfo ones if they are missing in the ID token
 				if (!isset($idTokenPayload->{$key})) {
 					$idTokenPayload->{$key} = $value;
