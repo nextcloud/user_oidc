@@ -967,7 +967,7 @@ class LoginController extends BaseOidcController {
 			);
 		}
 
-		if ($logoutTokenPayload->exp < $this->timeFactory->getTime()) {
+		if (($logoutTokenPayload->exp ?? 0) < $this->timeFactory->getTime()) {
 			return  $this->getBackchannelLogoutErrorResponse(
 				'invalid exp',
 				'The logout token is expired',
