@@ -28,7 +28,6 @@ use OCP\DB\Exception;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
-use OCP\Files\ISetupManager;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\IConfig;
@@ -456,10 +455,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		if ($firstLogin) {
 			/** Replace with ServerVersion once we depend on NC 31 */
 			if (version_compare($this->config->getSystemValueString('version', '0.0.0'), '34.0.0', '>=')) {
-				Server::get(ISetupManager::class)->setupForUser($user);
-			} else {
-				\OC_Util::setupFS($userId);
+				$this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
+				return $firstLogin;
 			}
+
+			\OC_Util::setupFS($userId);
 
 			try {
 				// trigger creation of user home and /files folder
