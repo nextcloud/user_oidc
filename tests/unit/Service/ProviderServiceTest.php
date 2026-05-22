@@ -99,6 +99,7 @@ class ProviderServiceTest extends TestCase {
 					'restrictLoginToGroups' => true,
 					'azureGroupNames' => true,
 					'nestedAndFallbackClaims' => true,
+					'enrichLoginIdTokenWithUserinfo' => false,
 				],
 			],
 			[
@@ -146,6 +147,7 @@ class ProviderServiceTest extends TestCase {
 					'restrictLoginToGroups' => true,
 					'azureGroupNames' => true,
 					'nestedAndFallbackClaims' => true,
+					'enrichLoginIdTokenWithUserinfo' => false,
 				],
 			],
 		], $this->providerService->getProvidersWithSettings());

@@ -124,7 +124,8 @@
                     "groupProvisioning",
                     "groupWhitelistRegex",
                     "restrictLoginToGroups",
-                    "nestedAndFallbackClaims"
+                    "nestedAndFallbackClaims",
+                    "enrichLoginIdTokenWithUserinfo"
                 ],
                 "properties": {
                     "mappingDisplayName": {
@@ -230,6 +231,9 @@
                         "type": "boolean"
                     },
                     "nestedAndFallbackClaims": {
+                        "type": "boolean"
+                    },
+                    "enrichLoginIdTokenWithUserinfo": {
                         "type": "boolean"
                     }
                 }

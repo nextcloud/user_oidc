@@ -46,6 +46,7 @@ namespace OCA\UserOIDC;
  *     groupWhitelistRegex: string,
  *     restrictLoginToGroups: bool,
  *     nestedAndFallbackClaims: bool,
+ *     enrichLoginIdTokenWithUserinfo: bool,
  * }
  *
  * @psalm-type UserOIDCProvider = array{
