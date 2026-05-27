@@ -142,16 +142,19 @@ class LoginController extends BaseOidcController {
 	 * @return RedirectResponse
 	 */
 	private function getRedirectResponse(?string $redirectUrl = null): RedirectResponse {
+		$baseUrl = $this->urlGenerator->getBaseUrl();
+
 		if ($redirectUrl === null) {
-			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+			return new RedirectResponse($baseUrl);
 		}
 
 		// Remove protocol and domain name
 		$filtered = preg_replace('/^https?:\/\/[^\/]+/', '', $redirectUrl) ?? '';
 
-		// Additional check: ensure the result starts with a single /
-		if (!preg_match('/^\/[^\/]/', $filtered)) {
-			return new RedirectResponse($this->urlGenerator->getBaseUrl());
+		// Reject protocol-relative URLs and anything not starting with a single slash followed
+		// by an alphanumeric or one of [_-.~?#]
+		if (!preg_match('/^\/[A-Za-z0-9_\-.~?#]/', $filtered)) {
+			return new RedirectResponse($baseUrl);
 		}
 
 		return new RedirectResponse($filtered);
