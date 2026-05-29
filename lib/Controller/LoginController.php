@@ -539,7 +539,13 @@ class LoginController extends BaseOidcController {
 		}
 
 		// default is false
-		if (isset($oidcSystemConfig['enrich_login_id_token_with_userinfo']) && $oidcSystemConfig['enrich_login_id_token_with_userinfo']) {
+		$globalEnrichWithUserinfo = isset($oidcSystemConfig['enrich_login_id_token_with_userinfo']) && $oidcSystemConfig['enrich_login_id_token_with_userinfo'];
+		$providerEnrichWithUserinfo = $this->providerService->getSetting(
+			$provider->getId(),
+			ProviderService::SETTING_ENRICH_LOGIN_ID_TOKEN_WITH_USERINFO,
+			'0'
+		) === '1';
+		if ($globalEnrichWithUserinfo || $providerEnrichWithUserinfo) {
 			$userInfo = $this->oidcService->userInfo($provider, $data['access_token']);
 			$this->logger->debug('[UserInfoEnrich] Enriching the JWT payload with userinfo values');
 			foreach ($userInfo as $key => $value) {
