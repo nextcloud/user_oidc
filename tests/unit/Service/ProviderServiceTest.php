@@ -99,7 +99,7 @@ class ProviderServiceTest extends TestCase {
 					'restrictLoginToGroups' => true,
 					'azureGroupNames' => true,
 					'nestedAndFallbackClaims' => true,
-					'enrichLoginIdTokenWithUserinfo' => false,
+					'enrichLoginIdTokenWithUserinfo' => true,
 				],
 			],
 			[
@@ -147,7 +147,7 @@ class ProviderServiceTest extends TestCase {
 					'restrictLoginToGroups' => true,
 					'azureGroupNames' => true,
 					'nestedAndFallbackClaims' => true,
-					'enrichLoginIdTokenWithUserinfo' => false,
+					'enrichLoginIdTokenWithUserinfo' => true,
 				],
 			],
 		], $this->providerService->getProvidersWithSettings());
@@ -191,6 +191,7 @@ class ProviderServiceTest extends TestCase {
 			'restrictLoginToGroups' => false,
 			'azureGroupNames' => false,
 			'nestedAndFallbackClaims' => false,
+			'enrichLoginIdTokenWithUserinfo' => false,
 		];
 		$this->appConfig->expects(self::any())
 			->method('getValueString')
@@ -231,6 +232,7 @@ class ProviderServiceTest extends TestCase {
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '', true, '0'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_AZURE_GROUP_NAMES, '', true, '0'],
 				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '', true, '0'],
+				[Application::APP_ID, 'provider-1-' . ProviderService::SETTING_ENRICH_LOGIN_ID_TOKEN_WITH_USERINFO, '', true, '0'],
 			]);
 
 		Assert::assertEquals(
