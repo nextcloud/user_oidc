@@ -787,7 +787,6 @@ class ProvisioningService {
 		return $syncGroups;
 	}
 
-
 	public function getGroupWhitelistRegex(int $providerId): string {
 		$regex = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '');
 

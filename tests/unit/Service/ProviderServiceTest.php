@@ -7,7 +7,6 @@
 
 declare(strict_types=1);
 
-
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;

@@ -43,7 +43,6 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
-
 use OCP\Util;
 use Psr\Log\LoggerInterface;
 

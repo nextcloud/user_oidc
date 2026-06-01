@@ -11,10 +11,8 @@ namespace OCA\UserOIDC\Command;
 use Exception;
 use OC\Core\Command\Base;
 use OCA\UserOIDC\Db\ProviderMapper;
-
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\DoesNotExistException;
-
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;

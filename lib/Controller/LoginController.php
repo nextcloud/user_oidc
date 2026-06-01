@@ -327,7 +327,6 @@ class LoginController extends BaseOidcController {
 			$data['code_challenge_method'] = 'S256';
 		}
 
-
 		$authorizationUrl = $this->discoveryService->buildAuthorizationUrl($discovery['authorization_endpoint'], $data);
 
 		$this->logger->debug('Redirecting user to: ' . $authorizationUrl);

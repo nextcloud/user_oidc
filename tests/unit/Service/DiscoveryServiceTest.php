@@ -7,7 +7,6 @@
 
 declare(strict_types=1);
 
-
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;

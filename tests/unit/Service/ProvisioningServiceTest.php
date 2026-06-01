@@ -290,7 +290,6 @@ class ProvisioningServiceTest extends TestCase {
 			->with('twitter')
 			->willReturn($property);
 
-
 		$this->accountManager->expects(self::once())
 			->method('getAccount')
 			->with($user)
