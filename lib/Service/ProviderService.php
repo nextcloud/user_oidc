@@ -7,7 +7,6 @@
 
 declare(strict_types=1);
 
-
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\AppInfo\Application;

@@ -11,7 +11,6 @@ namespace OCA\UserOIDC\Helper;
 
 use OCA\UserOIDC\Vendor\Id4me\RP\HttpClient;
 use OCP\Http\Client\IClientService;
-
 use OCP\IConfig;
 
 class HttpClientHelper implements HttpClient {

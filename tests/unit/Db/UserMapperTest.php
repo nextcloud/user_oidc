@@ -7,7 +7,6 @@
 
 declare(strict_types=1);
 
-
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Service\LocalIdService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -43,7 +42,6 @@ class UserMapperTest extends TestCase {
 			->onlyMethods(['getUser', 'insert'])
 			->getMock();
 	}
-
 
 	public static function dataCreate(): array {
 		return [

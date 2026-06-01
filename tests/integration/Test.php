@@ -63,7 +63,6 @@ class Test extends \Test\TestCase {
 		}
 	}
 
-
 	public function testAlternativeLogins() {
 		$alternativeLogins = OC_App::getAlternativeLogIns();
 		self::assertCount(1, $alternativeLogins);
