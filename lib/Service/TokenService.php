@@ -28,6 +28,8 @@ use OCP\Authentication\Token\IToken;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Http\Client\IClient;
 use OCP\IAppConfig;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -49,8 +51,14 @@ class TokenService {
 
 	private const SESSION_TOKEN_KEY = Application::APP_ID . '-user-token';
 	private const REFRESH_LOCK_KEY = Application::APP_ID . '-lock-key';
+	// Coordination keys for cross-request refresh deduplication (suffixed with the session id)
+	private const REFRESH_RESULT_CACHE_PREFIX = 'refresh-result_';
+	private const REFRESH_THROTTLE_CACHE_PREFIX = 'refresh-throttle_';
+	// Minimum delay between two refresh attempts of the same session (seconds)
+	private const REFRESH_THROTTLE_TTL = 30;
 
 	private IClient $client;
+	private ICache $cache;
 
 	public function __construct(
 		public HttpClientHelper $clientService,
@@ -69,12 +77,18 @@ class TokenService {
 		private ProviderMapper $providerMapper,
 		private ILockingProvider $lockingProvider,
 		private ITimeFactory $timeFactory,
+		ICacheFactory $cacheFactory,
 	) {
+		$this->cache = $cacheFactory->createDistributed('user_oidc');
 	}
 
 	public function storeToken(array $tokenData): Token {
 		$token = new Token($tokenData, $this->timeFactory);
 		$this->session->set(self::SESSION_TOKEN_KEY, json_encode($token, JSON_THROW_ON_ERROR));
+		// Mirror the token into the distributed cache so concurrent requests (which may hold a
+		// stale in-memory session snapshot) can reuse it instead of refreshing again with an
+		// already-rotated refresh token. See refresh() and getToken().
+		$this->cacheRefreshedToken($token);
 		$this->logger->debug('[TokenService] Store token in the session', ['session_id' => $this->session->getId()]);
 		return $token;
 	}
@@ -102,8 +116,8 @@ class TokenService {
 		if (!$token->isExpired()) {
 			// proactively refresh when past half the token lifetime to keep the IdP session alive
 			if ($refreshIfExpiring && $token->isExpiring() && $token->getRefreshToken() !== null && !$token->refreshIsExpired()) {
-				$this->logger->debug('[TokenService] getToken: token is expiring, proactively refreshing to keep IdP session alive, expires in ' . strval($token->getExpiresInFromNow()));
-				return $this->refresh($token);
+				$this->logger->debug('[TokenService] getToken: token is expiring, refreshing to keep the IdP session alive, expires in ' . strval($token->getExpiresInFromNow()));
+				return $this->refreshOrAdopt($token, requireFresh: true);
 			}
 			$this->logger->debug('[TokenService] getToken: token is still valid, it expires in ' . strval($token->getExpiresInFromNow()) . ' and refresh expires in ' . strval($token->getRefreshExpiresInFromNow()));
 			return $token;
@@ -113,11 +127,38 @@ class TokenService {
 		// try to refresh the token if there is a refresh token and it is still valid
 		if ($refreshIfExpired && $token->getRefreshToken() !== null && !$token->refreshIsExpired()) {
 			$this->logger->debug('[TokenService] getToken: token is expired and refresh token is still valid, refresh expires in ' . strval($token->getRefreshExpiresInFromNow()));
-			return $this->refresh($token);
+			return $this->refreshOrAdopt($token, requireFresh: false);
 		}
 
 		$this->logger->debug('[TokenService] getToken: return a token that has not been refreshed');
 		return $token;
+	}
+
+	/**
+	 * Satisfy a refresh request while protecting the IdP from redundant/racing calls:
+	 *  - if a concurrent or recent request already refreshed (visible in the shared cache),
+	 *    adopt that token instead of presenting our (possibly already-rotated) refresh token;
+	 *  - else, if a refresh was attempted very recently, skip and return the current token
+	 *    (throttle) so a dead refresh token or slow IdP is not hammered on every request;
+	 *  - else perform the refresh.
+	 *
+	 * @param Token $token the token currently stored in the session (expiring or expired)
+	 * @param bool $requireFresh when true (token still valid, proactive keep-alive) only adopt a
+	 *        cached token that is not itself expiring; when false (token already expired) adopt
+	 *        any still-valid cached token, since even an expiring one is an upgrade
+	 */
+	private function refreshOrAdopt(Token $token, bool $requireFresh): Token {
+		$cachedToken = $this->getCachedRefreshedToken();
+		if ($cachedToken !== null && !$cachedToken->isExpired() && (!$requireFresh || !$cachedToken->isExpiring())) {
+			$this->logger->debug('[TokenService] getToken: adopting token already refreshed by another request');
+			return $this->storeToken($cachedToken->jsonSerialize());
+		}
+		if ($this->isRefreshThrottled()) {
+			$this->logger->debug('[TokenService] getToken: refresh throttled, returning current token, expires in ' . strval($token->getExpiresInFromNow()));
+			return $token;
+		}
+		$this->markRefreshAttempt();
+		return $this->refresh($token);
 	}
 
 	/**
@@ -169,9 +210,14 @@ class TokenService {
 		$token = $this->getToken(refreshIfExpired: true, refreshIfExpiring: true);
 		if ($token === null) {
 			$this->logger->debug('[TokenService] checkLoginToken: token is null');
-			// if we don't have a token but we had one once,
-			// it means the session (where we store the token) has died
-			// so we need to reauthenticate
+			// if we don't have a token but we had one once, the session (where we store the
+			// token) has died. Only force re-authentication on a real top-level navigation; on
+			// background/XHR requests keep the Nextcloud session intact, otherwise logging out
+			// here would make the web UI force-reload the page and lose unsaved work (#1449).
+			if (!RequestClassificationService::isTopLevelHtmlNavigation($this->request)) {
+				$this->logger->debug('[TokenService] checkLoginToken: token is null on a non-navigation request, keeping the session');
+				return;
+			}
 			$this->logger->debug('[TokenService] checkLoginToken: token is null and user had_token_once -> logout');
 			$this->userSession->logout();
 			return;
@@ -186,8 +232,12 @@ class TokenService {
 
 	public function reauthenticate(int $providerId) {
 		if (!RequestClassificationService::isTopLevelHtmlNavigation($this->request)) {
-			$this->userSession->logout();
-			$this->logger->debug('[TokenService] reauthenticate skipped: request is not a top-level HTML navigation', [
+			// Do NOT terminate the Nextcloud session on background/XHR requests. Calling logout()
+			// here kills the session mid-work; the web UI then detects the dead session and
+			// force-reloads the page, discarding any unsaved work (#1449). The Nextcloud session
+			// is independent of the OIDC access-token validity, so we keep it and re-authenticate
+			// on the next top-level navigation instead.
+			$this->logger->debug('[TokenService] reauthenticate skipped: not a top-level HTML navigation, keeping the session', [
 				'provider_id' => $providerId,
 				'request_uri' => $this->request->getRequestUri(),
 			]);
@@ -241,6 +291,19 @@ class TokenService {
 			//   * while we were waiting for the lock (another request held it)
 			//   * OR in another process between the moment this process checked
 			//     the token expiration and the moment it attempted to acquire the lock
+			//
+			// Check the distributed cache first: unlike $this->session, it is shared across
+			// processes and is not subject to per-request in-memory snapshots, so it reliably
+			// surfaces a token just refreshed by a concurrent request even when the session
+			// backend does not lock concurrent requests (e.g. Redis/memcached sessions).
+			$cachedToken = $this->getCachedRefreshedToken();
+			if ($cachedToken !== null && !$cachedToken->isExpired() && !$cachedToken->isExpiring()) {
+				$this->logger->debug('[TokenService] Token already refreshed by another request (cache)');
+				return $this->storeToken($cachedToken->jsonSerialize());
+			}
+
+			// Fallback double-check against the in-session token (covers setups without a
+			// distributed cache, where concurrent same-session requests are serialized anyway).
 			$sessionData = $this->session->get(self::SESSION_TOKEN_KEY);
 			if ($sessionData) {
 				$currentToken = new Token(json_decode($sessionData, true, 512, JSON_THROW_ON_ERROR), $this->timeFactory);
@@ -250,8 +313,18 @@ class TokenService {
 				}
 			}
 
-			// Token still expired, proceed with refresh
-			$oidcProvider = $this->providerMapper->getProvider($token->getProviderId());
+			// Refresh using the freshest refresh token we know about. If the cache holds a newer
+			// (still valid) token than the one we were called with, use its refresh token to avoid
+			// presenting a rotated/invalidated one to the IdP.
+			$baseToken = $token;
+			if ($cachedToken !== null && !$cachedToken->isExpired()
+				&& $cachedToken->getRefreshToken() !== null
+				&& $cachedToken->getCreatedAt() >= $baseToken->getCreatedAt()) {
+				$baseToken = $cachedToken;
+			}
+
+			// Token still expired/expiring, proceed with refresh
+			$oidcProvider = $this->providerMapper->getProvider($baseToken->getProviderId());
 			$discovery = $this->discoveryService->obtainDiscovery($oidcProvider);
 
 			$clientSecret = $oidcProvider->getClientSecret();
@@ -270,14 +343,14 @@ class TokenService {
 					'client_id' => $oidcProvider->getClientId(),
 					'client_secret' => $clientSecret,
 					'grant_type' => 'refresh_token',
-					'refresh_token' => $token->getRefreshToken(),
+					'refresh_token' => $baseToken->getRefreshToken(),
 				]
 			);
 
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] ---- Refresh token success');
 			return $this->storeToken(
-				array_merge($bodyArray, ['provider_id' => $token->getProviderId()])
+				array_merge($bodyArray, ['provider_id' => $baseToken->getProviderId()])
 			);
 		} catch (\Exception $e) {
 			$this->logger->error('[TokenService] Failed to refresh token', ['exception' => $e]);
@@ -291,6 +364,69 @@ class TokenService {
 					$this->logger->error('[TokenService] Failed to release lock', ['exception' => $e]);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Store the freshly refreshed token in the distributed cache, encrypted, so concurrent
+	 * requests can reuse it instead of refreshing again. The entry lives for the remaining
+	 * lifetime of the token (it is only useful while still valid).
+	 */
+	private function cacheRefreshedToken(Token $token): void {
+		try {
+			$ttl = max($token->getExpiresInFromNow(), self::REFRESH_THROTTLE_TTL);
+			$this->cache->set(
+				self::REFRESH_RESULT_CACHE_PREFIX . $this->session->getId(),
+				$this->crypto->encrypt(json_encode($token, JSON_THROW_ON_ERROR)),
+				$ttl,
+			);
+		} catch (\Throwable $e) {
+			// Caching is a best-effort optimization; never let it break token handling
+			$this->logger->debug('[TokenService] Failed to cache refreshed token', ['exception' => $e]);
+		}
+	}
+
+	/**
+	 * Read the token most recently refreshed for this session from the distributed cache.
+	 */
+	private function getCachedRefreshedToken(): ?Token {
+		try {
+			$cached = $this->cache->get(self::REFRESH_RESULT_CACHE_PREFIX . $this->session->getId());
+			if (!is_string($cached) || $cached === '') {
+				return null;
+			}
+			$json = $this->crypto->decrypt($cached);
+			return new Token(json_decode($json, true, 512, JSON_THROW_ON_ERROR), $this->timeFactory);
+		} catch (\Throwable $e) {
+			$this->logger->debug('[TokenService] Failed to read cached refreshed token', ['exception' => $e]);
+			return null;
+		}
+	}
+
+	/**
+	 * Whether a refresh has been attempted recently for this session.
+	 */
+	private function isRefreshThrottled(): bool {
+		try {
+			// read directly instead of hasKey() (deprecated to avoid TOCTOU); the marker value is irrelevant
+			return $this->cache->get(self::REFRESH_THROTTLE_CACHE_PREFIX . $this->session->getId()) !== null;
+		} catch (\Throwable $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Record that a refresh has just been attempted for this session.
+	 */
+	private function markRefreshAttempt(): void {
+		try {
+			$this->cache->set(
+				self::REFRESH_THROTTLE_CACHE_PREFIX . $this->session->getId(),
+				'1',
+				self::REFRESH_THROTTLE_TTL,
+			);
+		} catch (\Throwable $e) {
+			// best-effort throttle, ignore failures
 		}
 	}
 
