@@ -251,6 +251,33 @@ class TokenServiceTest extends TestCase {
 	}
 
 	/**
+	 * RFC 6749 section 6: a provider MAY omit the refresh token in a refresh response, in which
+	 * case the previous refresh token remains valid. It must be carried over into the stored
+	 * token, otherwise non-rotating providers lose refreshability after the first refresh.
+	 */
+	public function testRefreshKeepsPreviousRefreshTokenWhenResponseOmitsIt(): void {
+		$this->session->method('get')->willReturn($this->tokenJson('old-access', 800, refreshToken: 'original-refresh-token'));
+		$this->cache->method('get')->willReturn(null);
+
+		$provider = new Provider();
+		$provider->setClientId('client-id');
+		$provider->setClientSecret('');
+		$this->providerMapper->method('getProvider')->willReturn($provider);
+		$this->discoveryService->method('obtainDiscovery')->willReturn(['token_endpoint' => 'https://idp.example/token']);
+
+		// the refresh response contains no refresh_token (non-rotating provider)
+		$this->clientService->expects($this->once())
+			->method('post')
+			->willReturn($this->tokenJson('refreshed-access', self::NOW, refreshToken: null));
+
+		$result = $this->tokenService->getToken(refreshIfExpired: true, refreshIfExpiring: true);
+
+		Assert::assertNotNull($result);
+		Assert::assertSame('refreshed-access', $result->getAccessToken());
+		Assert::assertSame('original-refresh-token', $result->getRefreshToken(), 'the previous refresh token must be kept when the response omits one');
+	}
+
+	/**
 	 * #1449: a background/XHR request whose token cannot be refreshed must NOT terminate the
 	 * Nextcloud session — doing so makes the web UI detect a dead session and force-reload the
 	 * page, losing unsaved work. Only a real top-level navigation may log out and redirect.

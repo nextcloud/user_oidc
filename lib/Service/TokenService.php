@@ -142,10 +142,12 @@ class TokenService {
 	 *    (throttle) so a dead refresh token or slow IdP is not hammered on every request;
 	 *  - else perform the refresh.
 	 *
+	 * When $requireFresh is true (token still valid, proactive keep-alive) only a cached token
+	 * that is not itself expiring is adopted; when false (token already expired) any still-valid
+	 * cached token is adopted, since even an expiring one is an upgrade.
+	 *
 	 * @param Token $token the token currently stored in the session (expiring or expired)
-	 * @param bool $requireFresh when true (token still valid, proactive keep-alive) only adopt a
-	 *        cached token that is not itself expiring; when false (token already expired) adopt
-	 *        any still-valid cached token, since even an expiring one is an upgrade
+	 * @param bool $requireFresh whether only a still-fresh (non-expiring) cached token may be adopted
 	 */
 	private function refreshOrAdopt(Token $token, bool $requireFresh): Token {
 		$cachedToken = $this->getCachedRefreshedToken();
@@ -348,6 +350,16 @@ class TokenService {
 			);
 
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
+			// RFC 6749 section 6: the provider MAY omit the refresh token in a refresh response,
+			// in which case the previous refresh token remains valid. Carry it over so the session
+			// does not silently lose the ability to refresh (rotating providers always send a new one).
+			if (($bodyArray['refresh_token'] ?? null) === null && $baseToken->getRefreshToken() !== null) {
+				$bodyArray['refresh_token'] = $baseToken->getRefreshToken();
+				if (!isset($bodyArray['refresh_expires_in']) && $baseToken->getRefreshExpiresIn() !== null) {
+					// preserve the remaining validity of the carried-over refresh token
+					$bodyArray['refresh_expires_in'] = max(0, $baseToken->getRefreshExpiresInFromNow());
+				}
+			}
 			$this->logger->debug('[TokenService] ---- Refresh token success');
 			return $this->storeToken(
 				array_merge($bodyArray, ['provider_id' => $baseToken->getProviderId()])
