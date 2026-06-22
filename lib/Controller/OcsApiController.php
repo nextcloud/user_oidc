@@ -14,10 +14,12 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCSController;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IRequest;
 use OCP\IUserManager;
+use OCP\User\Events\UserFirstTimeLoggedInEvent;
 
 class OcsApiController extends OCSController {
 
@@ -26,6 +28,8 @@ class OcsApiController extends OCSController {
 		private IRootFolder $root,
 		private UserMapper $userMapper,
 		private IUserManager $userManager,
+		private IEventDispatcher $eventDispatcher,
+		private IConfig $config,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -65,12 +69,19 @@ class OcsApiController extends OCSController {
 			$user->setQuota($quota);
 		}
 
-		$userFolder = $this->root->getUserFolder($user->getUID());
-		try {
-			// copy skeleton
-			\OC_Util::copySkeleton($user->getUID(), $userFolder);
-		} catch (NotPermittedException $ex) {
-			// read only uses
+		// Slighly incorrect, but this event trigger the creation of the file skeleton and
+		// the contact book entry.
+		$this->eventDispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($user));
+
+		/** Replace with ServerVersion once we depend on NC 31 */
+		if (version_compare($this->config->getSystemValueString('version', '0.0.0'), '34.0.0', '<')) {
+			$userFolder = $this->root->getUserFolder($user->getUID());
+			try {
+				// copy skeleton
+				\OC_Util::copySkeleton($user->getUID(), $userFolder);
+			} catch (NotPermittedException $ex) {
+				// read only uses
+			}
 		}
 
 		return new DataResponse(['user_id' => $user->getUID()]);
