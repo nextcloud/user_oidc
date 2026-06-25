@@ -206,6 +206,7 @@ class LoginController extends BaseOidcController {
 		$this->logger->debug('Storing OIDC state', ['state' => $state]);
 		$timestamp = $this->timeFactory->getTime();
 		$this->session->set(self::TIMESTAMP . $sessionKeySuffix, $timestamp);
+		$this->logger->debug('Storing redirect URL', ['key' => self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix, 'redirectUrl' => $redirectUrl]);
 		$this->session->set(self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix, $redirectUrl);
 
 		$nonce = $this->random->generate(32, ISecureRandom::CHAR_DIGITS . ISecureRandom::CHAR_UPPER);
@@ -360,6 +361,7 @@ class LoginController extends BaseOidcController {
 		if ($this->userSession->isLoggedIn()) {
 			$sessionKeySuffix = '-' . $state;
 			$redirectUrl = $this->session->get(self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix);
+			$this->logger->debug('Retrieving redirect URL', ['key' => self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix, 'redirectUrl' => $redirectUrl]);
 			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->getRedirectResponse(!empty($redirectUrl) ? $redirectUrl : null);
 		}
