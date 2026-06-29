@@ -3,6 +3,12 @@ OC.L10N.register(
     {
     "Error" : "Erro",
     "Access forbidden" : "Acesso proibido",
+    "Invalid authority issuer" : "Emissor de autoridade inválido",
+    "The received token is expired." : "O token recebido está expirado",
+    "You must access Nextcloud with HTTPS to use OpenID Connect." : "Você deve acessar o Nextcloud com HTTPS para usar o OpenID Connect.",
+    "Failed to contact the OIDC provider token endpoint" : "Falha ao entrar em contato com o endpoint de token do provedor OIDC.",
+    "User conflict" : "Conflito de usuários",
+    "Are you sure you want to delete the provider \"{providerName}\"?" : "Tem certeza de que deseja excluir o provedor \"{providerName}\"?",
     "Client ID" : "Id. de Cliente",
     "Update" : "Atualizar",
     "Remove" : "Remover",
