@@ -82,7 +82,7 @@ OC.L10N.register(
     "Email mapping" : "El. pašto susiejimas",
     "Phone mapping" : "Telefono susiejimas",
     "Language mapping" : "Kalbos susiejimas",
-    "Locale mapping" : "Kalbos ir regiono susiejimas",
+    "Locale mapping" : "Lokalės susiejimas",
     "Role/Title mapping" : "Pareigų / pareigų susiejimas",
     "Street mapping" : "Gatvės susiejimas",
     "Postal code mapping" : "Pašto kodo susiejimas",
