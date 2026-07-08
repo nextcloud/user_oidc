@@ -498,9 +498,14 @@ class ProvisioningServiceTest extends TestCase {
 			]);
 
 		$this->groupManager
-			->method('getUserGroups')
+			->method('getUserGroupIds')
 			->with($user)
-			->willReturn([$local_group]);
+			->willReturn(['local_group']);
+
+		$this->groupManager
+			->method('get')
+			->with('local_group')
+			->willReturn($local_group);
 
 		$local_group
 			->method('getGID')
