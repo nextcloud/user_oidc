@@ -762,13 +762,13 @@ class ProvisioningService {
 			return null;
 		}
 
-		$userGroups = $this->groupManager->getUserGroups($user);
-		foreach ($userGroups as $group) {
-			if (!in_array($group->getGID(), array_column($syncGroups, 'gid'))) {
-				if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $group->getGID())) {
+		$userGroups = $this->groupManager->getUserGroupIds($user);
+		foreach ($userGroups as $groupGID) {
+			if (!in_array($groupGID, array_column($syncGroups, 'gid'))) {
+				if ($groupsWhitelistRegex && !preg_match($groupsWhitelistRegex, $groupGID)) {
 					continue;
 				}
-				$group->removeUser($user);
+				$this->groupManager->get($groupGID)?->removeUser($user);
 			}
 		}
 

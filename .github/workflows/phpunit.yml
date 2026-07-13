@@ -29,6 +29,9 @@ jobs:
             server-versions: stable31
           - databases: pgsql
             server-versions: stable32
+		  # Not compatible anymore
+          - php-versions: 8.2
+            server-versions: master
         include:
           # PHP 8.5 with mysql on latest versions
           - php-versions: 8.5
