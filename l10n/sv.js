@@ -13,7 +13,7 @@ OC.L10N.register(
     "Delete" : "Radera",
     "Submit" : "Skicka",
     "Client secret" : "Klienthemlighet",
-    "Scope" : "Sammanhang",
+    "Scope" : "Omfattning",
     "Attribute mapping" : "Attributmappning",
     "Pronouns mapping" : "Pronomenmappning",
     "Back to %s" : "Tillbaka till %s",
