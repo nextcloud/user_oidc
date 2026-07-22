@@ -176,10 +176,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	}
 
 	/**
-	 * {@inheritdoc}
+	 * @return non-empty-string
 	 */
 	public function getLogoutUrl(): string {
-		return $this->urlGenerator->linkToRouteAbsolute('user_oidc.login.singleLogoutService');
+		/** @var non-empty-string $url */
+		$url = $this->urlGenerator->linkToRouteAbsolute('user_oidc.login.singleLogoutService');
+		return $url;
 	}
 
 	/**
