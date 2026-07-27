@@ -27,5 +27,6 @@ class User extends Entity {
 
 	public function __construct() {
 		$this->addType('userId', Types::STRING);
+		$this->addType('displayName', Types::STRING);
 	}
 }
