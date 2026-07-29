@@ -167,7 +167,10 @@ class UserMapper extends QBMapper {
 
 		$user = new User();
 		$user->setUserId($userId);
-		return $this->insert($user);
+		$user->setDisplayName('');
+		$user = $this->insert($user);
+		$this->userCache->set($userId, $user);
+		return $user;
 	}
 
 	/**

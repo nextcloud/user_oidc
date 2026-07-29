@@ -49,6 +49,9 @@ class OcsApiController extends OCSController {
 	): DataResponse {
 		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
 		$user = $this->userManager->get($backendUser->getUserId());
+		if ($user === null) {
+			throw new \RuntimeException('Unable to get user that was just created with userId=' . $backendUser->getUserId());
+		}
 
 		if ($displayName) {
 			if ($displayName !== $backendUser->getDisplayName()) {
