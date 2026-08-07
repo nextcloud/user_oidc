@@ -5,6 +5,7 @@ OC.L10N.register(
     "Access forbidden" : "Tilgang forbudt",
     "Client ID" : "Klient-ID",
     "Update" : "Oppdater",
+    "Remove" : "Fjern",
     "Cancel" : "Cancel",
     "Delete" : "Slett"
 },
