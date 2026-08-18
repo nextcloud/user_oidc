@@ -506,6 +506,57 @@ php occ user_oidc:provider <your-provider-identifier> --resolve-nested-claims=0
 This setting is also available in the web interface when configuring a provider.
 This setting is **disabled by default** to ensure full backward compatibility with existing configurations and flat token structures.
 
+## Additional Configuration Notes
+
+### Callback URL
+
+When creating an OpenID Connect client for Nextcloud, the callback URL is not always obvious from the application interface.
+
+The callback URL used by the `user_oidc` app is:
+
+```text
+https://cloud.example.com/apps/user_oidc/code
+```
+
+Replace `cloud.example.com` with your Nextcloud domain.
+
+This URL must be registered as an allowed redirect URI in your OpenID Connect provider; otherwise, the authentication flow will fail.
+
+### Allow Connections to External Identity Providers
+
+If your OpenID Connect provider is hosted on a different server or domain, Nextcloud may block outgoing requests by default.
+
+Add the following option to your `config/config.php` file:
+
+```php
+'allow_local_remote_servers' => true,
+```
+
+### Trusted Domains
+
+If your OpenID Connect provider is hosted on a domain that is not already trusted by Nextcloud, you may also need to add it to the `trusted_domains` configuration.
+
+Example:
+
+```php
+'trusted_domains' => [
+    'cloud.example.com',
+    'auth.example.com',
+],
+```
+
+Replace the domains with your actual Nextcloud and OpenID Connect provider domains.
+
+### Troubleshooting
+
+If the OpenID Connect configuration appears correct but authentication requests fail, verify:
+
+* The redirect URI exactly matches the callback URL.
+* `allow_local_remote_servers` is enabled when required.
+* The identity provider domain is included in `trusted_domains`.
+* The Nextcloud server can reach the OpenID Connect provider over the network.
+
+---
 
 ## Building the app
 
