@@ -715,6 +715,16 @@ class LoginController extends BaseOidcController {
 				['provider_id' => $providerId],
 			);
 			$this->tokenService->storeToken($tokenData);
+			if (($data['refresh_token'] ?? null) === null) {
+				$this->logger->warning(
+					'store_login_token is enabled but the identity provider did not return a refresh token.'
+					. ' The login token cannot be renewed, so session keep-alive will not work and users will be'
+					. ' re-authenticated on the next page navigation after the token expires.'
+					. ' Depending on the provider, issuing refresh tokens may require requesting the offline_access'
+					. ' scope (e.g. Authentik, Microsoft Entra ID, Okta) or enabling refresh tokens for the client.',
+					['provider_id' => $providerId]
+				);
+			}
 		}
 		$this->config->setUserValue($user->getUID(), Application::APP_ID, 'had_token_once', '1');
 
