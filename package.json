@@ -22,7 +22,7 @@
 		"stylelint:fix": "stylelint **/*.css **/*.scss **/*.vue --fix"
 	},
 	"dependencies": {
-		"@nextcloud/axios": "^2.5.1",
+		"@nextcloud/axios": "^2.6.0",
 		"@nextcloud/dialogs": "^7.1.0",
 		"@nextcloud/initial-state": "^3.0.0",
 		"@nextcloud/logger": "^3.0.2",
