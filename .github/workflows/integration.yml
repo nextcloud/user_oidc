@@ -38,7 +38,7 @@ jobs:
               server-versions: stable34
             - php-versions: 8.4
               databases: mysql
-              server-versions: master
+              server-versions: stable35
             - php-versions: 8.5
               databases: mysql
               server-versions: master
