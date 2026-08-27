@@ -237,4 +237,36 @@ class UserMapper extends QBMapper {
 
 		return (int)$count;
 	}
+
+	/**
+	 * @return array<string, string>
+	 */
+	public function searchKnownUsersByDisplayName(string $searcher, string $pattern, ?int $limit = null, ?int $offset = null): array {
+		$query = $this->db->getQueryBuilder();
+
+		$query->select('u.user_id', 'u.display_name')
+			->from($this->getTableName(), 'u')
+			->leftJoin('u', 'known_users', 'k', $query->expr()->andX(
+				$query->expr()->eq('k.known_user', 'u.user_id'),
+				$query->expr()->eq('k.known_to', $query->createNamedParameter($searcher))
+			))
+			->where($query->expr()->eq('k.known_to', $query->createNamedParameter($searcher)))
+			->andWhere($query->expr()->orX(
+				$query->expr()->iLike('u.user_id', $query->createNamedParameter('%' . $this->db->escapeLikeParameter($pattern) . '%')),
+				$query->expr()->iLike('u.display_name', $query->createNamedParameter('%' . $this->db->escapeLikeParameter($pattern) . '%'))
+			))
+			->orderBy('u.display_name', 'ASC')
+			->addOrderBy('u.user_id', 'ASC')
+			->setMaxResults($limit)
+			->setFirstResult($offset);
+
+		$result = $query->executeQuery();
+		$displayNames = [];
+		while ($row = $result->fetch()) {
+			$displayNames[(string)$row['user_id']] = (string)$row['display_name'];
+		}
+		$result->closeCursor();
+
+		return $displayNames;
+	}
 }
