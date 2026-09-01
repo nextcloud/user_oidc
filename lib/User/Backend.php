@@ -43,11 +43,12 @@ use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
+use OCP\User\Backend\ISearchKnownUsersBackend;
 use OCP\User\Events\UserFirstTimeLoggedInEvent;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend {
+class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend, ISearchKnownUsersBackend {
 	private const SESSION_USER_DATA = 'user_oidc.oidcUserData';
 
 	/** @var list<class-string<IBearerTokenValidator>> */
@@ -474,5 +475,20 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 			]);
 			return null;
 		}
+	}
+
+	#[\Override]
+	public function searchKnownUsersByDisplayName(string $searcher, string $pattern, ?int $limit = null, ?int $offset = null): array {
+		$limit = $this->fixLimit($limit);
+
+		return $this->userMapper->searchKnownUsersByDisplayName($searcher, $pattern, $limit, $offset);
+	}
+
+	private function fixLimit(?int $limit): ?int {
+		if (is_int($limit) && $limit >= 0) {
+			return $limit;
+		}
+
+		return null;
 	}
 }
