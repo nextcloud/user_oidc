@@ -5,7 +5,11 @@ OC.L10N.register(
     "Access forbidden" : "Zougrëff net erlaabt",
     "Client ID" : "Client ID",
     "Update" : "Update",
+    "Remove" : "Ewechhuelen",
     "Cancel" : "Cancel",
-    "Delete" : "Läschen"
+    "Delete" : "Läschen",
+    "Submit" : "Iwwermëttelen",
+    "Scope" : "Uwendungsberäich",
+    "Domain" : "Domain"
 },
 "nplurals=2; plural=(n != 1);");
