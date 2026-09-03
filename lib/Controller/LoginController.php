@@ -19,6 +19,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
+use OCA\UserOIDC\Event\UserObtainedTokenEvent;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
@@ -710,6 +711,16 @@ class LoginController extends BaseOidcController {
 
 			$this->eventDispatcher->dispatchTyped(new UserLoggedInEvent($user, $userId, null, false));
 		}
+
+		$this->eventDispatcher->dispatchTyped(
+			new UserObtainedTokenEvent(
+				$user->getUID(),
+				null,
+				$data,
+				$provider,
+				$discovery
+			)
+		);
 
 		$storeLoginTokenEnabled = $this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0', lazy: true) === '1';
 		if ($storeLoginTokenEnabled) {

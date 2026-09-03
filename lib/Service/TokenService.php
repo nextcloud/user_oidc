@@ -13,7 +13,7 @@ use GuzzleHttp\Exception\ServerException;
 use OC\Authentication\Token\IProvider;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
-use OCA\UserOIDC\Event\TokenRefreshedEvent;
+use OCA\UserOIDC\Event\UserObtainedTokenEvent;
 use OCA\UserOIDC\Exception\TokenExchangeFailedException;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Model\Token;
@@ -278,11 +278,15 @@ class TokenService {
 			$bodyArray = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 			$this->logger->debug('[TokenService] ---- Refresh token success');
 
-			$this->eventDispatcher->dispatchTyped(
-				new TokenRefreshedEvent(
-					$token->jsonSerialize(), $bodyArray, $oidcProvider, $discovery
-				)
-			);
+			$currentUser = $this->userSession->getUser();
+			if ($currentUser !== null) {
+				$currentUserId = $currentUser->getUID();
+				$this->eventDispatcher->dispatchTyped(
+					new UserObtainedTokenEvent(
+						$currentUserId, $token->jsonSerialize(), $bodyArray, $oidcProvider, $discovery
+					)
+				);
+			}
 
 			return $this->storeToken(
 				array_merge($bodyArray, ['provider_id' => $token->getProviderId()])
