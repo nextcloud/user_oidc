@@ -23,7 +23,7 @@
 	},
 	"dependencies": {
 		"@nextcloud/axios": "^2.6.0",
-		"@nextcloud/dialogs": "^7.4.1",
+		"@nextcloud/dialogs": "^7.5.0",
 		"@nextcloud/initial-state": "^3.0.0",
 		"@nextcloud/logger": "^3.0.2",
 		"@nextcloud/password-confirmation": "^6.1.0",
