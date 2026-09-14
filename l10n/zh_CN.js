@@ -1,8 +1,11 @@
 OC.L10N.register(
     "user_oidc",
     {
+    "Login with %1s" : "使用 %1s 登录",
     "Error" : "错误",
     "Access forbidden" : "访问被禁止",
+    "ID4Me is disabled" : "已停用 ID4Me",
+    "Invalid OpenID domain" : "无效的 OpenID 域名",
     "Client ID" : "客户端 ID",
     "Update" : "更新",
     "Remove" : "移除",
