@@ -620,7 +620,21 @@ class ProvisioningService {
 					$group = $v;
 				} elseif (is_string($v)) {
 					// Handle array of strings, e.g. ["group1", "group2", ...]
-					$group = (object)['gid' => $v, 'displayName' => $v];
+					// Some upstream servers return each group object as a JSON-encoded string,
+					// e.g. "{\"gid\":\"group1\",\"displayName\":\"Group 1\"}". Decode these so the
+					// gid and displayName can be read correctly instead of being passed through verbatim.
+					$decoded = json_decode($v, true);
+					if (is_array($decoded) && isset($decoded['gid'])) {
+						if (empty($decoded['gid']) && $decoded['gid'] !== '0' && $decoded['gid'] !== 0) {
+							continue;
+						}
+						$group = (object)[
+							'gid' => $decoded['gid'],
+							'displayName' => $decoded['displayName'] ?? $decoded['gid'],
+						];
+					} else {
+						$group = (object)['gid' => $v, 'displayName' => $v];
+					}
 				} else {
 					continue;
 				}
