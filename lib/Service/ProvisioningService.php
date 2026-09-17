@@ -586,7 +586,7 @@ class ProvisioningService {
 
 		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
-		$event = new AttributeMappedEvent($mappingSettingKey, $idTokenPayload, json_encode($groupsData));
+		$event = new AttributeMappedEvent($mappingSettingKey, $idTokenPayload, $groupsData !== null ? json_encode($groupsData) : null,);
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug($mappingSettingKey . ' mapping event dispatched');
 
