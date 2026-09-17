@@ -322,12 +322,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						);
 						// prevent login of users that are not in a whitelisted group (if activated)
 						$restrictLoginToGroups = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0');
-						if ($restrictLoginToGroups === '1') {
+						$forbidLoginWithoutGroup = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_FORBID_LOGIN_WITHOUT_GROUP, '0');
+						if ($restrictLoginToGroups === '1' || $forbidLoginWithoutGroup === '1') {
 							$tokenAttributes = $validator->getUserAttributes($provider, $headerToken);
-							$syncGroups = $this->provisioningService->getSyncGroupsOfToken($provider->getId(), $tokenAttributes);
 
-							if ($syncGroups === null || count($syncGroups) === 0) {
-								$this->logger->debug('Prevented user from using a bearer token as user is not part of a whitelisted group');
+							if ($restrictLoginToGroups === '1') {
+								$syncGroups = $this->provisioningService->getSyncGroupsOfToken($provider->getId(), $tokenAttributes);
+
+								if ($syncGroups === null || count($syncGroups) === 0) {
+									$this->logger->debug('Prevented user from using a bearer token as user is not part of a whitelisted group');
+									return '';
+								}
+							}
+							// forbid login of users that are not in any group at all (regardless of the whitelist)
+							if ($forbidLoginWithoutGroup === '1' && !$this->provisioningService->hasGroups($provider->getId(), $tokenAttributes)) {
+								$this->logger->debug('Prevented user from using a bearer token as user is not part of any group');
 								return '';
 							}
 						}
