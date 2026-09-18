@@ -26,6 +26,7 @@ use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCA\UserOIDC\Service\RequestClassificationService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\Service\TokenService;
 use OCA\UserOIDC\User\Backend;
@@ -172,6 +173,15 @@ class LoginController extends BaseOidcController {
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcLogin')]
 	public function login(int $providerId, ?string $redirectUrl = null) {
+		if (RequestClassificationService::isSpeculativeRequest($this->request)) {
+			// A browser speculative preload of the login URL must never mint OIDC state
+			// or hit the identity provider's /authorize endpoint on the user's behalf.
+			// Returning a non-2xx status makes the browser discard the speculative
+			// response entirely (per the Speculation Rules spec), so the user's real
+			// click issues a fresh, normal request that completes the flow.
+			$this->logger->debug('Ignoring speculative request to the login endpoint');
+			return new DataDisplayResponse('', Http::STATUS_BAD_REQUEST);
+		}
 		if ($this->userSession->isLoggedIn()) {
 			return $this->getRedirectResponse($redirectUrl);
 		}
@@ -351,7 +361,7 @@ class LoginController extends BaseOidcController {
 	 * @param string $scope
 	 * @param string $error
 	 * @param string $error_description
-	 * @return JSONResponse|RedirectResponse|TemplateResponse
+	 * @return DataDisplayResponse|JSONResponse|RedirectResponse|TemplateResponse
 	 * @throws DoesNotExistException
 	 * @throws MultipleObjectsReturnedException
 	 * @throws SessionNotAvailableException
@@ -362,6 +372,18 @@ class LoginController extends BaseOidcController {
 	#[UseSession]
 	#[BruteForceProtection(action: 'userOidcCode')]
 	public function code(string $state = '', string $code = '', string $scope = '', string $error = '', string $error_description = '') {
+		if (RequestClassificationService::isSpeculativeRequest($this->request)) {
+			// A browser speculative preload of the OIDC callback must never consume the
+			// single-use login state: doing so regenerates and deletes the session,
+			// stranding the user's real navigation on a dead session ("Access forbidden").
+			// This must run before the isLoggedIn() branch below, which itself destroys
+			// session state via cleanupSessionState(). Returning a non-2xx status makes
+			// the browser discard the speculative response entirely (per the Speculation
+			// Rules spec), so the user's real click issues a fresh, normal request that
+			// completes the flow.
+			$this->logger->debug('Ignoring speculative request to the code endpoint');
+			return new DataDisplayResponse('', Http::STATUS_BAD_REQUEST);
+		}
 		if ($this->userSession->isLoggedIn()) {
 			$sessionKeySuffix = '-' . $state;
 			$redirectUrl = $this->session->get(self::REDIRECT_AFTER_LOGIN . $sessionKeySuffix);

@@ -115,8 +115,13 @@ class Application extends App implements IBootstrap {
 		} catch (Exception $e) {
 			// in case any errors happen when checking for the path do not apply redirect logic as it is only needed for the login
 		}
+		// A speculative preload of /login passes isTopLevelHtmlNavigation() (it's a GET
+		// with no OCS or XHR header), so without this check a preloaded login page would
+		// get auto-redirected to the identity provider below, minting OIDC state the
+		// user never asked for.
 		if ($isDefaultLogin
 			&& RequestClassificationService::isTopLevelHtmlNavigation($request)
+			&& !RequestClassificationService::isSpeculativeRequest($request)
 			&& !$settings->getAllowMultipleUserBackEnds()
 		) {
 			$providers = $this->getCachedProviders($providerMapper);
