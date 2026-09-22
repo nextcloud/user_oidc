@@ -13,8 +13,11 @@ use OCP\AppFramework\Db\IMapperException;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\Cache\CappedMemoryCache;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\HintException;
 use OCP\IConfig;
 use OCP\IDBConnection;
+use OCP\Support\Subscription\IAssertion;
+use Psr\Container\ContainerInterface;
 
 /**
  * @extends QBMapper<User>
@@ -27,6 +30,7 @@ class UserMapper extends QBMapper {
 		IDBConnection $db,
 		private LocalIdService $idService,
 		private IConfig $config,
+		private ContainerInterface $container,
 	) {
 		parent::__construct($db, 'user_oidc', User::class);
 		$this->userCache = new CappedMemoryCache();
@@ -172,6 +176,7 @@ class UserMapper extends QBMapper {
 
 	/**
 	 * @param non-empty-string $sub
+	 * @throws HintException When creating a new user is not allowed
 	 */
 	public function getOrCreate(int $providerId, string $sub, bool $id4me = false): User {
 		// the sub is the stable identifier we want to keep around, so guard it
@@ -209,6 +214,12 @@ class UserMapper extends QBMapper {
 		} catch (IMapperException $e) {
 			// just ignore and continue
 		}
+
+		// Resolve the assertion lazily as it depends on the user manager, which in
+		// turn loads this backend. Injecting it directly would create a cycle.
+		/** @var IAssertion $assertion */
+		$assertion = $this->container->get(IAssertion::class);
+		$assertion->createUserIsLegit();
 
 		$user = new User();
 		$user->setUserId($userId);

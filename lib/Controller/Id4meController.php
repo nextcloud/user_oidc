@@ -33,6 +33,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\HintException;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -309,7 +310,12 @@ class Id4meController extends BaseOidcController {
 		}
 
 		// Insert or update user
-		$backendUser = $this->userMapper->getOrCreate($id4Me->getId(), $plainPayload['sub'], true);
+		try {
+			$backendUser = $this->userMapper->getOrCreate($id4Me->getId(), $plainPayload['sub'], true);
+		} catch (HintException $e) {
+			$this->logger->info('ID4ME user provisioning was rejected', ['exception' => $e]);
+			return $this->build403TemplateResponse($e->getHint(), Http::STATUS_FORBIDDEN, ['reason' => 'user creation denied']);
+		}
 		$user = $this->userManager->get($backendUser->getUserId());
 
 		$this->userSession->setUser($user);
