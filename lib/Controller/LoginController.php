@@ -640,6 +640,20 @@ class LoginController extends BaseOidcController {
 			}
 		}
 
+		// Forbid login of users that are not in any group
+		$forbidLoginWithoutGroup = $this->providerService->getSetting($providerId, ProviderService::SETTING_FORBID_LOGIN_WITHOUT_GROUP, '0');
+
+		if ($forbidLoginWithoutGroup === '1') {
+			$hasGroups = $this->provisioningService->hasGroups($providerId, $idTokenPayload);
+
+			if (!$hasGroups) {
+				$this->logger->debug('Prevented user from login as user is not part of any group');
+				$this->cleanupSessionState($sessionKeySuffix);
+				$message = $this->l10n->t('You do not have permission to log in to this instance. If you think this is an error, please contact an administrator.');
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'user not in any group']);
+			}
+		}
+
 		$autoProvisionAllowed = (!isset($oidcSystemConfig['auto_provision']) || $oidcSystemConfig['auto_provision']);
 		$softAutoProvisionAllowed = (!isset($oidcSystemConfig['soft_auto_provision']) || $oidcSystemConfig['soft_auto_provision']);
 

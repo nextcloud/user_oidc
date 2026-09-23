@@ -309,6 +309,14 @@
 			{{ t('user_oidc', 'Users that are not part of any whitelisted group are not created and can not login') }}
 		</p>
 		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.forbidLoginWithoutGroup"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Forbid login to users without at least one group') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'When enabled, users must belong to at least one group provided by the OIDC group claim in order to log in.') }}
+		</p>
+		<NcCheckboxRadioSwitch
 			v-model="localProvider.settings.checkBearer"
 			wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDAV requests') }}
