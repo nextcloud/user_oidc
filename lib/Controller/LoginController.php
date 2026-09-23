@@ -697,7 +697,7 @@ class LoginController extends BaseOidcController {
 			$this->eventDispatcher->dispatchTyped(new BeforeUserLoggedInEvent($userId, null, \OCP\Server::get(Backend::class)));
 
 			$this->userSession->completeLogin($user, ['loginName' => $userId, 'password' => '']);
-			$this->userSession->createSessionToken($this->request, $userId, $userId);
+			$this->userSession->createSessionToken($this->request, $userId, $userId, remember: IToken::REMEMBER);
 			$this->userSession->createRememberMeToken($user);
 
 			// prevent password confirmation
