@@ -13,9 +13,11 @@ use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCSController;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
+use OCP\HintException;
 use OCP\IRequest;
 use OCP\IUserManager;
 
@@ -41,13 +43,20 @@ class OcsApiController extends OCSController {
 	 * @return DataResponse<Http::STATUS_OK, array{user_id: string}, array{}>
 	 *
 	 * 200: The user was created or updated successfully
+	 * 403: Creating a new user is not allowed
+	 *
+	 * @throws OCSForbiddenException
 	 */
 	#[OpenAPI(scope: OpenAPI::SCOPE_DEFAULT, tags: ['user_oidc_provisioning'])]
 	public function createUser(
 		int $providerId, string $userId, ?string $displayName = null,
 		?string $email = null, ?string $quota = null,
 	): DataResponse {
-		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
+		try {
+			$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
+		} catch (HintException $e) {
+			throw new OCSForbiddenException($e->getHint(), $e);
+		}
 		$user = $this->userManager->get($backendUser->getUserId());
 		if ($user === null) {
 			throw new \RuntimeException('Unable to get user that was just created with userId=' . $backendUser->getUserId());
