@@ -19,6 +19,7 @@ use OCA\UserOIDC\User\Backend;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\HintException;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -156,6 +157,19 @@ class BackendTest extends \Test\TestCase {
 		$this->ldapService->method('isLdapDeletedUser')->with($user)->willReturn(false);
 
 		$this->assertResolvesUserWithoutLoggingIn(self::TOKEN_USER_ID);
+	}
+
+	public function testBearerAuthRejectsProvisioningWhenUserCreationIsNotLegit(): void {
+		$this->givenAValidBearerToken();
+
+		$this->userManager->method('userExists')->with(self::TOKEN_USER_ID)->willReturn(false);
+		$this->userManager->method('get')->with(self::TOKEN_USER_ID)->willReturn(null);
+		$this->userMapper->expects(self::once())
+			->method('getOrCreate')
+			->with(self::PROVIDER_ID, self::TOKEN_USER_ID)
+			->willThrowException(new HintException('The user limit has been reached.'));
+
+		$this->assertSame('', $this->backend->getCurrentUserId());
 	}
 
 	/**

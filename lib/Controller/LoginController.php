@@ -49,6 +49,7 @@ use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Token\IToken;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\HintException;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -665,7 +666,13 @@ class LoginController extends BaseOidcController {
 				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict'], false);
 			}
 			// use potential user from other backend, create it in our backend if it does not exist
-			$provisioningResult = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $existingUser);
+			try {
+				$provisioningResult = $this->provisioningService->provisionUser($userId, $providerId, $idTokenPayload, $existingUser);
+			} catch (HintException $e) {
+				$this->logger->info('OIDC user provisioning was rejected', ['exception' => $e]);
+				$this->cleanupSessionState($sessionKeySuffix);
+				return $this->build403TemplateResponse($e->getHint(), Http::STATUS_FORBIDDEN, ['reason' => 'user creation denied']);
+			}
 			$user = $provisioningResult['user'];
 			if ($existingUser === null && $user !== null) {
 				// we know we just created a user

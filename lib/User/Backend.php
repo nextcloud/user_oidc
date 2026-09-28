@@ -31,6 +31,7 @@ use OCP\Files\IRootFolder;
 use OCP\Files\ISetupManager;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
+use OCP\HintException;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
@@ -353,7 +354,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 							if ($existingUser === null) {
 								// only create the user in our backend if the user does not exist in another backend
-								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId);
+								try {
+									$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId);
+								} catch (HintException $e) {
+									$this->logger->info('OIDC bearer user provisioning was rejected', ['exception' => $e]);
+									return '';
+								}
 								$userId = $backendUser->getUserId();
 							} else {
 								$userId = $existingUser->getUID();
