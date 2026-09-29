@@ -33,7 +33,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -60,12 +59,11 @@ class Id4meController extends BaseOidcController {
 		private IConfig $config,
 		private IL10N $l10n,
 		private ITimeFactory $timeFactory,
-		private IClientService $clientService,
 		private IURLGenerator $urlGenerator,
 		private UserMapper $userMapper,
 		private IUserSession $userSession,
 		private IUserManager $userManager,
-		HttpClientHelper $clientHelper,
+		private HttpClientHelper $clientHelper,
 		private Id4MeMapper $id4MeMapper,
 		private ID4MeService $id4MeService,
 		private LoggerInterface $logger,
@@ -222,24 +220,21 @@ class Id4meController extends BaseOidcController {
 			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 		}
 
-		$client = $this->clientService->newClient();
-		$result = $client->post(
+		$body = $this->clientHelper->post(
 			$openIdConfig->getTokenEndpoint(),
 			[
-				'headers' => [
-					'Authorization' => 'Basic ' . base64_encode($id4Me->getClientId() . ':' . $id4meClientSecret)
-				],
-				'body' => [
-					'code' => $code,
-					'client_id' => $id4Me->getClientId(),
-					'client_secret' => $id4meClientSecret,
-					'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.id4me.code'),
-					'grant_type' => 'authorization_code',
-				],
+				'code' => $code,
+				'client_id' => $id4Me->getClientId(),
+				'client_secret' => $id4meClientSecret,
+				'redirect_uri' => $this->urlGenerator->linkToRouteAbsolute(Application::APP_ID . '.id4me.code'),
+				'grant_type' => 'authorization_code',
+			],
+			[
+				'Authorization' => 'Basic ' . base64_encode($id4Me->getClientId() . ':' . $id4meClientSecret),
 			]
 		);
 
-		$data = json_decode($result->getBody(), true);
+		$data = json_decode($body, true);
 
 		// documentation about token validation:
 		// https://gitlab.com/ID4me/documentation/blob/master/id4ME%20Relying%20Party%20Implementation%20Guide.pdf

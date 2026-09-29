@@ -12,6 +12,7 @@ use Exception;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\ResponseDefinitions;
 use OCA\UserOIDC\Service\ID4MeService;
 use OCA\UserOIDC\Service\ProviderService;
@@ -22,7 +23,6 @@ use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\Attribute\PasswordConfirmationRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCSController;
-use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\Security\ICrypto;
@@ -40,7 +40,7 @@ class SettingsController extends OCSController {
 		private ID4MeService $id4meService,
 		private ProviderService $providerService,
 		private ICrypto $crypto,
-		private IClientService $clientService,
+		private HttpClientHelper $httpClientHelper,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -53,13 +53,10 @@ class SettingsController extends OCSController {
 		];
 
 		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get($url);
-			$httpCode = $response->getStatusCode();
-			$body = $response->getBody();
+			$body = $this->httpClientHelper->get($url);
 
 			// Check if the request was successful
-			if ($httpCode === Http::STATUS_OK && !empty($body)) {
+			if (!empty($body)) {
 				$result['isReachable'] = true;
 				$data = json_decode($body, true);
 
