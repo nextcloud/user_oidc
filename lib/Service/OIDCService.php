@@ -11,6 +11,7 @@ namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Helper\HttpClientHelper;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -37,10 +38,29 @@ class OIDCService {
 				'Authorization' => 'Bearer ' . $accessToken,
 			],
 		];
+
 		try {
-			return json_decode($this->clientService->get($url, [], $options), true);
+			$userInfoResponse = $this->clientService->get($url, [], $options);
 		} catch (Throwable $e) {
 			$this->logger->warning('[UserInfo] Failed to fetch user info endpoint', ['exception' => $e]);
+			return [];
+		}
+
+		try {
+			return json_decode($userInfoResponse, true, 512, JSON_THROW_ON_ERROR);
+		} catch (Throwable) {
+			$this->logger->debug('[UserInfo] The response is not JSON');
+		}
+
+		JWT::$leeway = 60;
+		try {
+			$jwks = $this->discoveryService->obtainJWK($provider, $userInfoResponse);
+			$payload = JWT::decode($userInfoResponse, $jwks);
+			$arrayPayload = json_decode(json_encode($payload), true);
+			$this->logger->debug('[UserInfo] Decoded the JWT response', ['decoded_userinfo_response' => $arrayPayload]);
+			return $arrayPayload;
+		} catch (Throwable $e) {
+			$this->logger->warning('[UserInfo] Failed to decode the response as a JWT', ['exception' => $e]);
 			return [];
 		}
 	}
