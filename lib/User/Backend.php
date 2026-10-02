@@ -21,6 +21,7 @@ use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\User\Validator\IBearerTokenValidator;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
+use OCP\Accounts\IAccountManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Authentication\IApacheBackend;
@@ -43,12 +44,13 @@ use OCP\User\Backend\ICountUsersBackend;
 use OCP\User\Backend\ICustomLogout;
 use OCP\User\Backend\IGetDisplayNameBackend;
 use OCP\User\Backend\IPasswordConfirmationBackend;
+use OCP\User\Backend\IPropertyPermissionBackend;
 use OCP\User\Backend\ISearchKnownUsersBackend;
 use OCP\User\Events\UserFirstTimeLoggedInEvent;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend, ISearchKnownUsersBackend {
+class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisplayNameBackend, IApacheBackend, ICustomLogout, ICountUsersBackend, ISearchKnownUsersBackend, IPropertyPermissionBackend {
 	private const SESSION_USER_DATA = 'user_oidc.oidcUserData';
 
 	/** @var list<class-string<IBearerTokenValidator>> */
@@ -118,6 +120,21 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 	public function userExists($uid): bool {
 		return is_string($uid) && $uid !== '' && $this->userMapper->userExists($uid);
+	}
+
+	/**
+	 * The email address is owned by the identity provider: it is mapped from
+	 * the provider's `email` claim on every login, so a locally edited address
+	 * would be silently overwritten at the next login. Report the property as
+	 * not editable — core then sets `emailChangeSupported` to false and the
+	 * personal settings render the field read-only (the same mechanism
+	 * `user_ldap` uses when it owns the email attribute).
+	 */
+	public function canEditProperty(string $uid, string $property): bool {
+		if ($property === IAccountManager::PROPERTY_EMAIL) {
+			return false;
+		}
+		return true;
 	}
 
 	public function getDisplayName($uid): string {

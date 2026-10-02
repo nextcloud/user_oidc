@@ -17,6 +17,7 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\User\Backend;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
+use OCP\Accounts\IAccountManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
@@ -164,6 +165,17 @@ class BackendTest extends \Test\TestCase {
 	 *
 	 * @param array<string, mixed> $systemConfig the 'user_oidc' system config
 	 */
+	/**
+	 * The email address is provider-managed: it is re-applied from the `email`
+	 * claim at every login, so it must not be editable locally. Other account
+	 * properties keep their default editability.
+	 */
+	public function testCanEditPropertyLocksTheProviderManagedEmail(): void {
+		$this->assertFalse($this->backend->canEditProperty(self::TOKEN_USER_ID, IAccountManager::PROPERTY_EMAIL));
+		$this->assertTrue($this->backend->canEditProperty(self::TOKEN_USER_ID, IAccountManager::PROPERTY_PHONE));
+		$this->assertTrue($this->backend->canEditProperty(self::TOKEN_USER_ID, IAccountManager::PROPERTY_WEBSITE));
+	}
+
 	private function givenAValidBearerToken(array $systemConfig = []): void {
 		$this->config->method('getSystemValue')->with('user_oidc', [])->willReturn($systemConfig);
 		$this->request->method('getHeader')
