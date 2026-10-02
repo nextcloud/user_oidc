@@ -103,6 +103,14 @@
 				placeholder="groups"
 				:disabled="!localProvider.settings.groupProvisioning">
 		</p>
+		<p>
+			<label for="mapping-group-admin-for">{{ t('user_oidc', 'Group admin for mapping') }}</label>
+			<input id="mapping-group-admin-for"
+				v-model="localProvider.settings.mappingGroupAdminFor"
+				type="text"
+				placeholder="group_admin_for"
+				:disabled="!localProvider.settings.groupProvisioning">
+		</p>
 
 		<h3>
 			<NcButton variant="secondary" @click="toggleProfileAttributes">
