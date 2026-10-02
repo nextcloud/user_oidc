@@ -45,7 +45,7 @@ OC.L10N.register(
     "Registered Providers" : "Preferovaní poskytovatelia",
     "Register new provider" : "Registrovať nového poskytovateľa",
     "Register a new provider" : "Registrovať nového poskytovateľa",
-    "Configure your provider to redirect back to {url}" : "Nastavte vášho poskytovateľa pre presmerovanie na {url}",
+    "Configure your provider to redirect back to {url}" : "Nastavte svojho poskytovateľa tak, aby presmeroval späť na {url}.",
     "No providers registered." : "Neboli zaregistrovaný žiadny poskytovatelia.",
     "Client ID" : "Client ID",
     "Discovery endpoint" : "Koncový bod discovery",
