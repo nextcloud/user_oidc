@@ -576,6 +576,43 @@ class ProvisioningService {
 		}
 	}
 
+	public function hasGroups(int $providerId, object $idTokenPayload): bool {
+		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
+
+		$groupsData = $this->getClaimValues($idTokenPayload, $groupsAttribute, $providerId);
+
+		// If the claim is null or empty, there are no groups.
+		if (empty($groupsData)) {
+			return false;
+		}
+
+		// If it's an array, checks that it has at least one element
+		// Example: $groupsData = ['group1', 'group2', ...];
+		if (is_array($groupsData) && count($groupsData) > 0) {
+			return true;
+		}
+
+		// If it's a comma-separated string
+		// Example: $groupsData = "group1,group2,...";
+		if (is_string($groupsData)) {
+			$groups = array_filter(array_map('trim', explode(',', $groupsData)));
+			return count($groups) > 0;
+		}
+
+		// If it's an object (e.g. [{gid:"1"}, {gid:"2"}])
+		// Example:
+		// $groupsData = [
+		//   {gid: "1"},
+		//   {gid: "2"},
+		//   ...
+		// ];
+		if (is_object($groupsData)) {
+			return !empty(get_object_vars($groupsData));
+		}
+
+		return false;
+	}
+
 	public function getSyncGroupsOfToken(int $providerId, object $idTokenPayload): ?array {
 		$groupsAttribute = $this->providerService->getSetting($providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups');
 		$groupsData = $this->getClaimValues($idTokenPayload, $groupsAttribute, $providerId);
