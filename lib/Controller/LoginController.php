@@ -390,8 +390,21 @@ class LoginController extends BaseOidcController {
 
 		$currentTimestamp = $this->timeFactory->getTime();
 		$sessionTimestamp = $this->session->get(self::TIMESTAMP . $sessionKeySuffix);
-		if ($currentTimestamp - $sessionTimestamp > self::LOGIN_FLOW_TIMEOUT) {
+		$loginFlowAge = $currentTimestamp - $sessionTimestamp;
+		if ($loginFlowAge > self::LOGIN_FLOW_TIMEOUT) {
 			// the state, nonce etc... were stored too long ago, the login flow has expired
+			//
+			// This is logged because it is otherwise invisible: the user is shown a generic
+			// "Access forbidden" page and nothing at all is written to the log, so an
+			// administrator has no way to tell an expired flow apart from any other cause of
+			// the same page. The age and the timeout are both reported so it is obvious
+			// whether users are genuinely running out of time at the identity provider (a
+			// slow login, a password reset, two-factor) or the timeout is simply too short.
+			$this->logger->warning('Login flow has expired', [
+				'state' => $state,
+				'login_flow_age_seconds' => $loginFlowAge,
+				'login_flow_timeout_seconds' => self::LOGIN_FLOW_TIMEOUT,
+			]);
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The received state has expired.');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
