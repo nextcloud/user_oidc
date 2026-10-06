@@ -10,9 +10,11 @@ declare(strict_types=1);
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\RedirectMiddleware;
+use OC\Authentication\Login\AlternativeLoginService;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\App\IAppManager;
+use OCP\Authentication\IAlternativeLogin;
 use OCP\IConfig;
 use OCP\IUserManager;
 use OCP\Server;
@@ -64,7 +66,15 @@ class Test extends \Test\TestCase {
 	}
 
 	public function testAlternativeLogins() {
-		$alternativeLogins = OC_App::getAlternativeLogIns();
+		if (class_exists(AlternativeLoginService::class)) {
+			$alternativeLogins = array_map(static fn (IAlternativeLogin $login) => [
+				'name' => $login->getLabel(),
+				'href' => $login->getLink(),
+			], Server::get(AlternativeLoginService::class)->getAlternativeLogins());
+		} else {
+			// Nextcloud < 36
+			$alternativeLogins = OC_App::getAlternativeLogIns();
+		}
 		self::assertCount(1, $alternativeLogins);
 		$alternativeLogin = $alternativeLogins[0];
 		self::assertEquals('Login with nextcloudci', $alternativeLogin['name']);
