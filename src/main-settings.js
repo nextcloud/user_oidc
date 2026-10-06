@@ -12,6 +12,7 @@ import App from './components/AdminSettings.vue'
 const app = createApp(App, {
 	initialId4MeState: loadState('user_oidc', 'id4meState'),
 	initialStoreLoginTokenState: loadState('user_oidc', 'storeLoginTokenState'),
+	initialHideDefaultLoginState: loadState('user_oidc', 'hideDefaultLoginState'),
 	initialProviders: loadState('user_oidc', 'providers'),
 	redirectUrl: loadState('user_oidc', 'redirectUrl'),
 })

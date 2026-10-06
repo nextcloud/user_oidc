@@ -40,6 +40,10 @@ class AdminSettings implements ISettings {
 			$this->appConfig->getValueString(Application::APP_ID, 'store_login_token', '0', lazy: true) === '1'
 		);
 		$this->initialStateService->provideInitialState(
+			'hideDefaultLoginState',
+			$this->appConfig->getValueString(Application::APP_ID, 'hide_default_login', '0', lazy: true) === '1'
+		);
+		$this->initialStateService->provideInitialState(
 			'providers',
 			$this->providerService->getProvidersWithSettings()
 		);
