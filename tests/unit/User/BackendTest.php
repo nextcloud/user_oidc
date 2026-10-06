@@ -178,6 +178,7 @@ class BackendTest extends \Test\TestCase {
 		$this->providerService->method('getSetting')->willReturnMap([
 			[self::PROVIDER_ID, ProviderService::SETTING_CHECK_BEARER, '0', '1'],
 			[self::PROVIDER_ID, ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0', '0'],
+			[self::PROVIDER_ID, ProviderService::SETTING_FORBID_LOGIN_WITHOUT_GROUP, '0', '0'],
 			[self::PROVIDER_ID, ProviderService::SETTING_BEARER_PROVISIONING, '0', '0'],
 		]);
 
