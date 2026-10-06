@@ -12,6 +12,7 @@ namespace OCA\UserOIDC\AlternativeLogin;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\ProviderService;
 use OCP\Authentication\IAlternativeLoginProvider;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -29,6 +30,7 @@ class AlternativeLoginProvider implements IAlternativeLoginProvider {
 		private IConfig $config,
 		private IL10N $l10n,
 		private ID4MeService $id4MeService,
+		private ProviderService $providerService,
 	) {
 	}
 
@@ -44,6 +46,7 @@ class AlternativeLoginProvider implements IAlternativeLoginProvider {
 					? preg_replace('/{name}/', $provider->getIdentifier(), $customLoginLabel)
 					: $this->l10n->t('Login with %1s', [$provider->getIdentifier()]),
 				$this->urlGenerator->linkToRoute(Application::APP_ID . '.login.login', ['providerId' => $provider->getId(), 'redirectUrl' => $absoluteRedirectUrl]),
+				$this->providerService->getLoginButtonCssClass($provider->getId()),
 			);
 		}
 

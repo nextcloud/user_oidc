@@ -61,6 +61,8 @@ class ProviderService {
 	public const SETTING_AZURE_GROUP_NAMES = 'azureGroupNames';
 	public const SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING = 'nestedAndFallbackClaims';
 	public const SETTING_ENRICH_LOGIN_ID_TOKEN_WITH_USERINFO = 'enrichLoginIdTokenWithUserinfo';
+	public const SETTING_APPEARANCE_ICON = 'appearanceIcon';
+	public const SETTING_APPEARANCE_BUTTON_BACKGROUND_COLOR = 'appearanceButtonBackgroundColor';
 
 	public const BOOLEAN_SETTINGS_DEFAULT_VALUES = [
 		self::SETTING_GROUP_PROVISIONING => false,
@@ -197,7 +199,28 @@ class ProviderService {
 			self::SETTING_AZURE_GROUP_NAMES,
 			self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
 			self::SETTING_ENRICH_LOGIN_ID_TOKEN_WITH_USERINFO,
+			self::SETTING_APPEARANCE_ICON,
+			self::SETTING_APPEARANCE_BUTTON_BACKGROUND_COLOR,
 		];
+	}
+
+	// The appearance values end up in a style tag of the login page, only accept a strict format
+	public function getAppearanceIcon(int $providerId): ?string {
+		$icon = $this->getSetting($providerId, self::SETTING_APPEARANCE_ICON);
+		return preg_match('/^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+\/]+={0,2}$/i', $icon) === 1 ? $icon : null;
+	}
+
+	public function getAppearanceButtonBackgroundColor(int $providerId): ?string {
+		$color = $this->getSetting($providerId, self::SETTING_APPEARANCE_BUTTON_BACKGROUND_COLOR);
+		return preg_match('/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i', $color) === 1 ? $color : null;
+	}
+
+	public function getLoginButtonCssClass(int $providerId): string {
+		$cssClass = 'oidc-provider-' . $providerId;
+		if ($this->getAppearanceIcon($providerId) !== null) {
+			$cssClass .= ' oidc-provider-icon';
+		}
+		return $cssClass;
 	}
 
 	private function convertFromJSON(string $key, $value): string {

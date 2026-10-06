@@ -165,6 +165,18 @@ class UpsertProvider extends Base {
 			'setting_key' => ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
 			'description' => 'Enable support for dot-separated and fallback claim mappings (e.g. "a.b | c.d | e"). 1 to enable, 0 to disable (default)',
 		],
+		'appearance-icon' => [
+			'shortcut' => null,
+			'mode' => InputOption::VALUE_REQUIRED,
+			'setting_key' => ProviderService::SETTING_APPEARANCE_ICON,
+			'description' => 'Button icon in base64 format (e.g., data:image/svg+xml;base64,...)',
+		],
+		'appearance-button-background-color' => [
+			'shortcut' => null,
+			'mode' => InputOption::VALUE_REQUIRED,
+			'setting_key' => ProviderService::SETTING_APPEARANCE_BUTTON_BACKGROUND_COLOR,
+			'description' => 'Button background color in hex format (e.g., #0082c9)',
+		],
 	];
 
 	public function __construct(
