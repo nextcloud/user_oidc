@@ -12,6 +12,7 @@ use Exception;
 use OC_App;
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\UserOIDC\AlternativeLogin\AlternativeLoginProvider;
+use OCA\UserOIDC\AlternativeLogin\DefaultLoginShow;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Event\ExchangedTokenRequestedEvent;
 use OCA\UserOIDC\Event\ExternalTokenRequestedEvent;
@@ -30,6 +31,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -79,6 +81,13 @@ class Application extends App implements IBootstrap {
 			 * @psalm-suppress MissingDependency
 			 */
 			$context->registerAlternativeLoginProvider(AlternativeLoginProvider::class);
+		}
+
+		/** @var IAppConfig $appConfig */
+		$appConfig = $this->getContainer()->get(IAppConfig::class);
+		$hideDefaultLogin = $appConfig->getValueString(self::APP_ID, 'hide_default_login', '0', lazy: true) === '1';
+		if ($hideDefaultLogin) {
+			$context->registerAlternativeLogin(DefaultLoginShow::class);
 		}
 	}
 

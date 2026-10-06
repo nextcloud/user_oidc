@@ -22,9 +22,17 @@
 						@update:model-value="onStoreLoginTokenChange">
 						{{ t('user_oidc', 'Store login tokens') }}
 					</NcFormBoxSwitch>
+					<NcFormBoxSwitch
+						v-model="hideDefaultLoginState"
+						@update:model-value="onHideDefaultLoginChange">
+						{{ t('user_oidc', 'Hide default login form') }}
+					</NcFormBoxSwitch>
 				</NcFormBox>
 				<NcNoteCard type="info">
 					{{ t('user_oidc', '"Store login tokens" is needed if you are using other apps that want to use user_oidc\'s token exchange or simply get the login token') }}
+				</NcNoteCard>
+				<NcNoteCard v-if="hideDefaultLoginState" type="info">
+					{{ t('user_oidc', 'The standard username/password login form will be hidden. Users can still access it by clicking "Log in with username or email".') }}
 				</NcNoteCard>
 			</div>
 		</div>
@@ -173,6 +181,10 @@ export default {
 			type: Boolean,
 			required: true,
 		},
+		initialHideDefaultLoginState: {
+			type: Boolean,
+			required: true,
+		},
 		initialProviders: {
 			type: Array,
 			required: true,
@@ -188,6 +200,8 @@ export default {
 			loadingId4Me: false,
 			storeLoginTokenState: this.initialStoreLoginTokenState,
 			loadingStoreLoginToken: false,
+			hideDefaultLoginState: this.initialHideDefaultLoginState,
+			loadingHideDefaultLogin: false,
 			providers: this.initialProviders,
 			newProvider: {
 				identifier: '',
@@ -261,6 +275,26 @@ export default {
 				showError(t('user_oidc', 'Could not save storeLoginToken state: {msg}', { msg: error.message }))
 			} finally {
 				this.loadingStoreLoginToken = false
+			}
+		},
+		async onHideDefaultLoginChange(newValue) {
+			logger.info('Hide default login state changed', { enabled: newValue })
+
+			this.loadingHideDefaultLogin = true
+			try {
+				await confirmPassword()
+				const url = generateOcsUrl('/apps/user_oidc/api/v1/admin-config')
+
+				await axios.post(url, {
+					values: {
+						hide_default_login: newValue,
+					},
+				})
+			} catch (error) {
+				logger.error('Could not save hideDefaultLogin state: ' + error.message, { error })
+				showError(t('user_oidc', 'Could not save hideDefaultLogin state: {msg}', { msg: error.message }))
+			} finally {
+				this.loadingHideDefaultLogin = false
 			}
 		},
 		updateProvider(provider) {
