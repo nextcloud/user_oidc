@@ -19,9 +19,11 @@ use OCA\UserOIDC\Event\InternalTokenRequestedEvent;
 use OCA\UserOIDC\Listener\ExchangedTokenRequestedListener;
 use OCA\UserOIDC\Listener\ExternalTokenRequestedListener;
 use OCA\UserOIDC\Listener\InternalTokenRequestedListener;
+use OCA\UserOIDC\Listener\LoginButtonAppearanceListener;
 use OCA\UserOIDC\Listener\TimezoneHandlingListener;
 use OCA\UserOIDC\Listener\TokenInvalidatedListener;
 use OCA\UserOIDC\Service\ID4MeService;
+use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\RequestClassificationService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\Service\TokenService;
@@ -30,6 +32,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Http\Events\BeforeLoginTemplateRenderedEvent;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -68,6 +71,7 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(ExchangedTokenRequestedEvent::class, ExchangedTokenRequestedListener::class);
 		$context->registerEventListener(ExternalTokenRequestedEvent::class, ExternalTokenRequestedListener::class);
 		$context->registerEventListener(InternalTokenRequestedEvent::class, InternalTokenRequestedListener::class);
+		$context->registerEventListener(BeforeLoginTemplateRenderedEvent::class, LoginButtonAppearanceListener::class);
 
 		if (class_exists(\OCP\Authentication\Events\TokenInvalidatedEvent::class)) {
 			$context->registerEventListener(\OCP\Authentication\Events\TokenInvalidatedEvent::class, TokenInvalidatedListener::class);
@@ -132,7 +136,7 @@ class Application extends App implements IBootstrap {
 	}
 
 	private function registerLogin(
-		IRequest $request, IL10N $l10n, IURLGenerator $urlGenerator, IConfig $config, ProviderMapper $providerMapper,
+		IRequest $request, IL10N $l10n, IURLGenerator $urlGenerator, IConfig $config, ProviderMapper $providerMapper, ProviderService $providerService,
 	): void {
 		$redirectUrl = $request->getParam('redirect_url');
 		$absoluteRedirectUrl = !empty($redirectUrl) ? $urlGenerator->getAbsoluteURL($redirectUrl) : $redirectUrl;
@@ -145,6 +149,7 @@ class Application extends App implements IBootstrap {
 					? preg_replace('/{name}/', $provider->getIdentifier(), $customLoginLabel)
 					: $l10n->t('Login with %1s', [$provider->getIdentifier()]),
 				'href' => $urlGenerator->linkToRoute(self::APP_ID . '.login.login', ['providerId' => $provider->getId(), 'redirectUrl' => $absoluteRedirectUrl]),
+				'class' => $providerService->getLoginButtonCssClass($provider->getId()),
 			]);
 		}
 
