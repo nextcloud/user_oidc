@@ -20,11 +20,11 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\DB\Exception;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Group\ISubAdmin;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
 use OCP\IConfig;
 use OCP\IGroupManager;
-use OCP\Group\ISubAdmin;
 use OCP\Image;
 use OCP\ISession;
 use OCP\IUser;
@@ -586,7 +586,7 @@ class ProvisioningService {
 
 		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
 
-		$event = new AttributeMappedEvent($mappingSettingKey, $idTokenPayload, $groupsData !== null ? json_encode($groupsData) : null,);
+		$event = new AttributeMappedEvent($mappingSettingKey, $idTokenPayload, $groupsData !== null ? json_encode($groupsData) : null, );
 		$this->eventDispatcher->dispatchTyped($event);
 		$this->logger->debug($mappingSettingKey . ' mapping event dispatched');
 
