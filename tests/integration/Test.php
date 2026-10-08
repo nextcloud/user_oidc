@@ -64,7 +64,18 @@ class Test extends \Test\TestCase {
 	}
 
 	public function testAlternativeLogins() {
-		$alternativeLogins = OC_App::getAlternativeLogIns();
+		// Fetch the rendered login page instead of calling into server internals,
+		// which have changed between Nextcloud versions (OC_App::getAlternativeLogIns()
+		// on nc < 34, OC\Authentication\Login\AlternativeLoginService since).
+		$response = $this->client->get($this->baseUrl . '/index.php/login');
+		$doc = new DOMDocument();
+		$doc->loadHtml($response->getBody()->getContents());
+		$selector = new DOMXpath($doc);
+		$input = $selector->query('//input[@id="initial-state-core-alternativeLogins"]')->item(0);
+		libxml_clear_errors();
+		self::assertNotNull($input, 'Could not find the core-alternativeLogins initial state on the login page');
+		$alternativeLogins = json_decode(base64_decode($input->getAttribute('value')), true);
+
 		self::assertCount(1, $alternativeLogins);
 		$alternativeLogin = $alternativeLogins[0];
 		self::assertEquals('Login with nextcloudci', $alternativeLogin['name']);
