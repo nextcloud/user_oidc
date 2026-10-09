@@ -30,7 +30,7 @@
 		"@nextcloud/router": "^3.0.1",
 		"@nextcloud/vue": "^9.13.1",
 		"jstz": "^2.1.1",
-		"vue": "^3.5.17",
+		"vue": "^3.5.43",
 		"vue-material-design-icons": "^5.3.1"
 	},
 	"browserslist": [
