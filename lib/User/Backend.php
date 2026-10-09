@@ -254,8 +254,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		}
 
 		// get the bearer token from headers
+		// the auth-scheme is case-insensitive and is separated from the credentials
+		// by one or more spaces or horizontal tabs (RFC 9110, section 11.1), so this
+		// guard has to accept exactly what the strip below removes
 		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
-		if (!str_starts_with($headerToken, 'bearer ') && !str_starts_with($headerToken, 'Bearer ')) {
+		if (preg_match('/^bearer\s+/i', $headerToken) !== 1) {
 			$this->logger->debug('No Bearer token');
 			return '';
 		}
