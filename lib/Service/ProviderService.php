@@ -57,6 +57,7 @@ class ProviderService {
 	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
 	public const SETTING_GROUP_WHITELIST_REGEX = 'groupWhitelistRegex';
+	public const SETTING_GROUP_ADMIN_ALIAS = 'groupAdminAlias';
 	public const SETTING_RESTRICT_LOGIN_TO_GROUPS = 'restrictLoginToGroups';
 	public const SETTING_AZURE_GROUP_NAMES = 'azureGroupNames';
 	public const SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING = 'nestedAndFallbackClaims';
@@ -193,6 +194,7 @@ class ProviderService {
 			self::SETTING_PROVIDER_BASED_ID,
 			self::SETTING_GROUP_PROVISIONING,
 			self::SETTING_GROUP_WHITELIST_REGEX,
+			self::SETTING_GROUP_ADMIN_ALIAS,
 			self::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 			self::SETTING_AZURE_GROUP_NAMES,
 			self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,

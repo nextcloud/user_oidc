@@ -123,6 +123,7 @@
                     "providerBasedId",
                     "groupProvisioning",
                     "groupWhitelistRegex",
+                    "groupAdminAlias",
                     "restrictLoginToGroups",
                     "nestedAndFallbackClaims",
                     "enrichLoginIdTokenWithUserinfo"
@@ -225,6 +226,9 @@
                         "type": "boolean"
                     },
                     "groupWhitelistRegex": {
+                        "type": "string"
+                    },
+                    "groupAdminAlias": {
                         "type": "string"
                     },
                     "restrictLoginToGroups": {
