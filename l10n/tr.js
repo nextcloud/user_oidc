@@ -70,7 +70,7 @@ OC.L10N.register(
     "Scope" : "Kapsam",
     "Extra claims" : "Ek istekler",
     "Attribute mapping" : "Öznitelik eşleştirmesi",
-    "Enable nested and fallback claim mappings (like \"{example}\")" : "İç içe ve varsayılan istek eşlemeleri kullanılsın (\"{example}\" gibi)",
+    "Enable nested and fallback claim mappings (like \"{example}\")" : "Alt alta ve varsayılan istek eşlemeleri kullanılsın (\"{example}\" gibi)",
     "User ID mapping" : "Kullanıcı kimliği eşleştirmesi",
     "Quota mapping" : "Kota eşleştirmesi",
     "Groups mapping" : "Grup eşleştirmesi",
