@@ -15,6 +15,7 @@ use OCP\Accounts\IAccount;
 use OCP\Accounts\IAccountManager;
 use OCP\Accounts\IAccountProperty;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Group\ISubAdmin;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
 use OCP\IConfig;
@@ -96,6 +97,9 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var ICrypto | MockObject */
 	private $crypto;
 
+	/** @var ISubAdmin | MockObject */
+	private $subAdminManager;
+
 	public function setUp(): void {
 		parent::setUp();
 		$this->idService = $this->createMock(LocalIdService::class);
@@ -113,6 +117,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->l10nFactory = $this->createMock(IFactory::class);
 		$this->providerMapper = $this->createMock(ProviderMapper::class);
 		$this->crypto = $this->createMock(ICrypto::class);
+		$this->subAdminManager = $this->createMock(ISubAdmin::class);
 
 		$this->provisioningService = new ProvisioningService(
 			$this->idService,
@@ -130,6 +135,7 @@ class ProvisioningServiceTest extends TestCase {
 			$this->l10nFactory,
 			$this->providerMapper,
 			$this->crypto,
+			$this->subAdminManager,
 		);
 	}
 

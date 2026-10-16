@@ -31,6 +31,7 @@ class ProviderService {
 	public const SETTING_MAPPING_EMAIL = 'mappingEmail';
 	public const SETTING_MAPPING_QUOTA = 'mappingQuota';
 	public const SETTING_MAPPING_GROUPS = 'mappingGroups';
+	public const SETTING_MAPPING_GROUP_ADMIN_FOR = 'mappingGroupAdminFor';
 	public const SETTING_MAPPING_LANGUAGE = 'mappingLanguage';
 	public const SETTING_MAPPING_LOCALE = 'mappingLocale';
 	public const SETTING_MAPPING_ADDRESS = 'mappingAddress';
@@ -165,6 +166,7 @@ class ProviderService {
 			self::SETTING_MAPPING_QUOTA,
 			self::SETTING_MAPPING_UID,
 			self::SETTING_MAPPING_GROUPS,
+			self::SETTING_MAPPING_GROUP_ADMIN_FOR,
 			self::SETTING_MAPPING_LANGUAGE,
 			self::SETTING_MAPPING_LOCALE,
 			self::SETTING_MAPPING_ADDRESS,
