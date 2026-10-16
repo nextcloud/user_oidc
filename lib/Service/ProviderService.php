@@ -58,6 +58,7 @@ class ProviderService {
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
 	public const SETTING_GROUP_WHITELIST_REGEX = 'groupWhitelistRegex';
 	public const SETTING_RESTRICT_LOGIN_TO_GROUPS = 'restrictLoginToGroups';
+	public const SETTING_FORBID_LOGIN_WITHOUT_GROUP = 'forbidLoginWithoutGroup';
 	public const SETTING_AZURE_GROUP_NAMES = 'azureGroupNames';
 	public const SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING = 'nestedAndFallbackClaims';
 	public const SETTING_ENRICH_LOGIN_ID_TOKEN_WITH_USERINFO = 'enrichLoginIdTokenWithUserinfo';
@@ -70,6 +71,7 @@ class ProviderService {
 		self::SETTING_CHECK_BEARER => false,
 		self::SETTING_SEND_ID_TOKEN_HINT => false,
 		self::SETTING_RESTRICT_LOGIN_TO_GROUPS => false,
+		self::SETTING_FORBID_LOGIN_WITHOUT_GROUP => false,
 		self::SETTING_AZURE_GROUP_NAMES => false,
 		self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING => false,
 		self::SETTING_ENRICH_LOGIN_ID_TOKEN_WITH_USERINFO => false,
@@ -194,6 +196,7 @@ class ProviderService {
 			self::SETTING_GROUP_PROVISIONING,
 			self::SETTING_GROUP_WHITELIST_REGEX,
 			self::SETTING_RESTRICT_LOGIN_TO_GROUPS,
+			self::SETTING_FORBID_LOGIN_WITHOUT_GROUP,
 			self::SETTING_AZURE_GROUP_NAMES,
 			self::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING,
 			self::SETTING_ENRICH_LOGIN_ID_TOKEN_WITH_USERINFO,
