@@ -75,6 +75,23 @@
 				type="text"
 				placeholder="claim1 claim2 claim3">
 		</p>
+		<h3><b>{{ t('user_oidc', 'Appearance') }}</b></h3>
+		<p>
+			<label for="appearance-icon">{{ t('user_oidc', 'Icon in base64') }}</label>
+			<input id="appearance-icon"
+				v-model="localProvider.settings.appearanceIcon"
+				type="text"
+				placeholder="data:image/svg+xml;base64,...">
+		</p>
+		<p>
+			<label for="appearance-buttonBackgroundColor">{{ t('user_oidc', 'Button background color in hex') }}</label>
+			<input id="appearance-buttonBackgroundColor"
+				v-model="localProvider.settings.appearanceButtonBackgroundColor"
+				type="text"
+				placeholder="#0082c9"
+				maxlength="7">
+		</p>
+
 		<h3><b>{{ t('user_oidc', 'Attribute mapping') }}</b></h3>
 		<NcCheckboxRadioSwitch
 			v-model="localProvider.settings.nestedAndFallbackClaims"
