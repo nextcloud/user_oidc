@@ -8,8 +8,10 @@
 declare(strict_types=1);
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
@@ -79,6 +81,7 @@ class BackendTest extends \Test\TestCase {
 	private SettingsService&MockObject $settingsService;
 	private IUserManager&MockObject $userManager;
 	private ITimeFactory&MockObject $timeFactory;
+	private AuditLogger&MockObject $auditLogger;
 
 	private Backend $backend;
 
@@ -101,6 +104,7 @@ class BackendTest extends \Test\TestCase {
 		$this->settingsService->method('parseUserId')->willReturnArgument(0);
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->timeFactory = $this->createMock(ITimeFactory::class);
+		$this->auditLogger = $this->createMock(AuditLogger::class);
 
 		$this->backend = new Backend(
 			$this->config,
@@ -118,6 +122,7 @@ class BackendTest extends \Test\TestCase {
 			$this->settingsService,
 			$this->userManager,
 			$this->timeFactory,
+			$this->auditLogger,
 		);
 	}
 
@@ -157,6 +162,59 @@ class BackendTest extends \Test\TestCase {
 		$this->userManager->method('userExists')->with(self::TOKEN_USER_ID)->willReturn(true);
 		$this->userManager->method('get')->with(self::TOKEN_USER_ID)->willReturn($user);
 		$this->ldapService->method('isLdapDeletedUser')->with($user)->willReturn(false);
+
+		$this->assertResolvesUserWithoutLoggingIn(self::TOKEN_USER_ID);
+	}
+
+	public static function dataBearerAuthForUserUnknownToTheUserManager(): array {
+		return [
+			'new account' => [true],
+			'account known to this backend under another uid' => [false],
+		];
+	}
+
+	/**
+	 * Auto-provisioning enabled and no user with the token user ID exists: the
+	 * account is looked up or created in this backend, and only logged as
+	 * provisioned when it was created.
+	 */
+	#[DataProvider('dataBearerAuthForUserUnknownToTheUserManager')]
+	public function testBearerAuthForUserUnknownToTheUserManager(bool $created): void {
+		$this->givenAValidBearerToken();
+
+		$backendUser = new User();
+		$backendUser->setUserId('backend-uid');
+		$this->userMapper->expects($this->once())
+			->method('getOrCreate')
+			->with(self::PROVIDER_ID, self::TOKEN_USER_ID)
+			->willReturnCallback(static function (int $providerId, string $sub, bool $id4me = false, ?bool &$wasCreated = null) use ($backendUser, $created): User {
+				$wasCreated = $created;
+				return $backendUser;
+			});
+
+		$user = $this->givenAUserThatHasLoggedInBefore('backend-uid');
+		$this->userManager->method('userExists')->with(self::TOKEN_USER_ID)->willReturn(false);
+		$this->userManager->method('get')->willReturnMap([
+			[self::TOKEN_USER_ID, null],
+			['backend-uid', $user],
+		]);
+
+		$this->auditLogger->expects($created ? $this->once() : $this->never())
+			->method('userProvisioned')
+			->with('backend-uid', self::PROVIDER_ID, 'bearer_token');
+
+		$this->assertResolvesUserWithoutLoggingIn('backend-uid');
+	}
+
+	public function testBearerAuthForExistingUserDoesNotLogProvisioning(): void {
+		$this->givenAValidBearerToken();
+
+		$user = $this->givenAUserThatHasLoggedInBefore(self::TOKEN_USER_ID);
+		$this->userManager->method('userExists')->with(self::TOKEN_USER_ID)->willReturn(true);
+		$this->userManager->method('get')->with(self::TOKEN_USER_ID)->willReturn($user);
+		$this->ldapService->method('isLdapDeletedUser')->with($user)->willReturn(false);
+		$this->userMapper->expects($this->never())->method('getOrCreate');
+		$this->auditLogger->expects($this->never())->method('userProvisioned');
 
 		$this->assertResolvesUserWithoutLoggingIn(self::TOKEN_USER_ID);
 	}

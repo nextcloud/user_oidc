@@ -172,8 +172,10 @@ class UserMapper extends QBMapper {
 
 	/**
 	 * @param non-empty-string $sub
+	 * @param-out bool $created whether a new user was inserted
 	 */
-	public function getOrCreate(int $providerId, string $sub, bool $id4me = false): User {
+	public function getOrCreate(int $providerId, string $sub, bool $id4me = false, ?bool &$created = null): User {
+		$created = false;
 		// the sub is the stable identifier we want to keep around, so guard it
 		// against the column length the same way the userId is further below
 		$storedSub = strlen($sub) > 256 ? hash('sha256', $sub) : $sub;
@@ -217,6 +219,7 @@ class UserMapper extends QBMapper {
 		$user->setSub($storedSub);
 		$user = $this->insert($user);
 		$this->userCache->set($userId, $user);
+		$created = true;
 		return $user;
 	}
 

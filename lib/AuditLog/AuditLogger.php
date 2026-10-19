@@ -71,4 +71,15 @@ class AuditLogger {
 			'providerId' => $provider->getId(),
 		]);
 	}
+
+	/**
+	 * @param 'provisioning_api'|'bearer_token'|'id4me_login' $source
+	 */
+	public function userProvisioned(string $userId, int $providerId, string $source): void {
+		$this->log(Operation::UserProvisioned, 'User %s was provisioned by OpenID Connect provider %s', [
+			'userId' => $userId,
+			'providerId' => $providerId,
+			'source' => $source,
+		]);
+	}
 }
