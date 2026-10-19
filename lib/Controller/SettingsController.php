@@ -10,6 +10,7 @@ namespace OCA\UserOIDC\Controller;
 
 use Exception;
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
@@ -42,6 +43,7 @@ class SettingsController extends OCSController {
 		private ICrypto $crypto,
 		private HttpClientHelper $httpClientHelper,
 		private LoggerInterface $logger,
+		private AuditLogger $auditLogger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -126,6 +128,7 @@ class SettingsController extends OCSController {
 		$provider = $this->providerMapper->insert($provider);
 
 		$providerSettings = $this->providerService->setSettings($provider->getId(), $settings);
+		$this->auditLogger->providerCreated($provider);
 
 		return new DataResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
@@ -180,10 +183,12 @@ class SettingsController extends OCSController {
 		$provider->setScope($scope);
 		$provider = $this->providerMapper->update($provider);
 
+		$settingsBefore = $this->providerService->getSettings($providerId);
 		$providerSettings = $this->providerService->setSettings($providerId, $settings);
 		// invalidate JWKS cache
 		$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE, '');
 		$this->providerService->setSetting($providerId, ProviderService::SETTING_JWKS_CACHE_TIMESTAMP, '');
+		$this->auditLogger->providerUpdated($provider, (bool)$clientSecret, $settingsBefore, $this->providerService->getSettings($providerId));
 
 		return new DataResponse(array_merge($provider->jsonSerialize(), ['settings' => $providerSettings]));
 	}
@@ -210,6 +215,7 @@ class SettingsController extends OCSController {
 
 		$this->providerMapper->delete($provider);
 		$this->providerService->deleteSettings($providerId);
+		$this->auditLogger->providerDeleted($provider);
 
 		return new DataResponse([], Http::STATUS_OK);
 	}
