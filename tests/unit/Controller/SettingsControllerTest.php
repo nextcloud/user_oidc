@@ -6,7 +6,9 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\AuditLog\AuditLogger;
+use OCA\UserOIDC\AuditLog\Operation;
 use OCA\UserOIDC\Controller\SettingsController;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
@@ -175,5 +177,31 @@ class SettingsControllerTest extends TestCase {
 
 		$response = $this->controller->deleteProvider(3);
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+	}
+
+	public static function dataSetAdminConfig(): array {
+		return [
+			'enable' => [true, '1', 'Storing the login tokens of users was enabled'],
+			'disable' => [false, '0', 'Storing the login tokens of users was disabled'],
+		];
+	}
+
+	#[DataProvider('dataSetAdminConfig')]
+	public function testSetAdminConfig(bool $value, string $storedValue, string $message): void {
+		$this->appConfig->expects($this->once())
+			->method('setValueString')
+			->with(Application::APP_ID, 'store_login_token', $storedValue, true);
+		$this->auditLogger->expects($this->once())
+			->method('log')
+			->with(Operation::AdminConfigUpdated, $message, ['key' => 'store_login_token', 'value' => $value]);
+
+		$this->controller->setAdminConfig(['store_login_token' => $value]);
+	}
+
+	public function testSetAdminConfigIgnoresUnsupportedValues(): void {
+		$this->appConfig->expects($this->never())->method('setValueString');
+		$this->auditLogger->expects($this->never())->method('log');
+
+		$this->controller->setAdminConfig(['store_login_token' => 'yes', 'unknown_key' => true]);
 	}
 }
