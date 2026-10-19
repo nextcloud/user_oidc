@@ -387,9 +387,40 @@ class LoginController extends BaseOidcController {
 
 		$sessionKeySuffix = '-' . $state;
 		$storedState = $this->session->get(self::STATE . $sessionKeySuffix);
+		$sessionTimestamp = $this->session->get(self::TIMESTAMP . $sessionKeySuffix);
+
+		// The session holds no record of this login flow at all. That is not an expiry, and
+		// reporting it as one sends people looking for a timeout that never happened: it
+		// means the callback landed on a different (or brand new) session than the one that
+		// started the flow. A duplicate or speculatively preloaded callback arriving without
+		// the session cookie does exactly this, as does a state we never issued.
+		//
+		// This has to be checked before the expiry comparison below, because $sessionTimestamp
+		// is null here and null coerces to 0 in the subtraction, which makes
+		// "$currentTimestamp - $sessionTimestamp > self::LOGIN_FLOW_TIMEOUT" unconditionally
+		// true no matter how quickly the callback came back.
+		//
+		// Deliberately not throttled: the most common cause is the user's own browser
+		// re-issuing the request, so throttling would penalise a legitimate sign-in.
+		if ($storedState === null || $sessionTimestamp === null) {
+			$this->logger->warning('Login flow not found in session, the session holds no entry for this state', [
+				'state' => $state,
+				'state_exists_in_session' => $this->session->exists(self::STATE . $sessionKeySuffix),
+				'timestamp_exists_in_session' => $this->session->exists(self::TIMESTAMP . $sessionKeySuffix),
+			]);
+			$this->cleanupSessionState($sessionKeySuffix);
+			$message = $this->l10n->t('The login could not be completed because the session was lost. Please try again.');
+			if ($this->isDebugModeEnabled()) {
+				return new JSONResponse([
+					'error' => 'session_not_found',
+					'error_description' => $message,
+					'state' => $state,
+				], Http::STATUS_FORBIDDEN);
+			}
+			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'login flow not found in session'], false);
+		}
 
 		$currentTimestamp = $this->timeFactory->getTime();
-		$sessionTimestamp = $this->session->get(self::TIMESTAMP . $sessionKeySuffix);
 		if ($currentTimestamp - $sessionTimestamp > self::LOGIN_FLOW_TIMEOUT) {
 			// the state, nonce etc... were stored too long ago, the login flow has expired
 			$this->cleanupSessionState($sessionKeySuffix);
