@@ -21,6 +21,8 @@ enum Operation: string {
 	case Id4meUpdated = 'user_oidc.id4me.updated';
 	case AdminConfigUpdated = 'user_oidc.admin_config.updated';
 	case UserProvisioned = 'user_oidc.user.provisioned';
+	case LoginFailed = 'user_oidc.login.failed';
+	case SessionRevoked = 'user_oidc.session.revoked';
 
 	/**
 	 * Short description of when the operation is logged, used for the documentation
@@ -33,6 +35,8 @@ enum Operation: string {
 			self::Id4meUpdated => 'An admin enabled or disabled the login with ID4me',
 			self::AdminConfigUpdated => 'An admin enabled or disabled storing the tokens users obtain from the identity provider at login',
 			self::UserProvisioned => 'An account was created for a user of an identity provider through the provisioning API, a bearer token or an ID4me login',
+			self::LoginFailed => 'A login through an OpenID Connect provider was rejected, for example because of an invalid state, token or nonce or a group restriction',
+			self::SessionRevoked => 'An identity provider ended a session of a user through a back-channel logout',
 		};
 	}
 }
