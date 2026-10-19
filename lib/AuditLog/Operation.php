@@ -18,6 +18,8 @@ enum Operation: string {
 	case ProviderCreated = 'user_oidc.provider.created';
 	case ProviderUpdated = 'user_oidc.provider.updated';
 	case ProviderDeleted = 'user_oidc.provider.deleted';
+	case Id4meUpdated = 'user_oidc.id4me.updated';
+	case AdminConfigUpdated = 'user_oidc.admin_config.updated';
 
 	/**
 	 * Short description of when the operation is logged, used for the documentation
@@ -27,6 +29,8 @@ enum Operation: string {
 			self::ProviderCreated => 'An OpenID Connect provider was created',
 			self::ProviderUpdated => 'The configuration of an OpenID Connect provider was changed',
 			self::ProviderDeleted => 'An OpenID Connect provider was deleted',
+			self::Id4meUpdated => 'An admin enabled or disabled the login with ID4me',
+			self::AdminConfigUpdated => 'An admin enabled or disabled storing the tokens users obtain from the identity provider at login',
 		};
 	}
 }

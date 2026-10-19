@@ -11,6 +11,7 @@ namespace OCA\UserOIDC\Controller;
 use Exception;
 use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\AuditLog\AuditLogger;
+use OCA\UserOIDC\AuditLog\Operation;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Helper\HttpClientHelper;
@@ -277,6 +278,11 @@ class SettingsController extends OCSController {
 		foreach ($values as $key => $value) {
 			if ($key === 'store_login_token' && is_bool($value)) {
 				$this->appConfig->setValueString(Application::APP_ID, 'store_login_token', $value ? '1' : '0', lazy: true);
+				$this->auditLogger->log(
+					Operation::AdminConfigUpdated,
+					$value ? 'Storing the login tokens of users was enabled' : 'Storing the login tokens of users was disabled',
+					['key' => $key, 'value' => $value],
+				);
 			}
 		}
 		return new DataResponse([]);
