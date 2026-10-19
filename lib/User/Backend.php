@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\User;
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Controller\LoginController;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
@@ -72,6 +73,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		private LdapService $ldapService,
 		private IUserManager $userManager,
 		private ITimeFactory $timeFactory,
+		private AuditLogger $auditLogger,
 	) {
 	}
 
@@ -356,8 +358,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 							if ($existingUser === null) {
 								// only create the user in our backend if the user does not exist in another backend
-								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId);
+								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId, created: $created);
 								$userId = $backendUser->getUserId();
+								if ($created) {
+									$this->auditLogger->userProvisioned($userId, $provider->getId(), 'bearer_token');
+								}
 							} else {
 								$userId = $existingUser->getUID();
 							}
