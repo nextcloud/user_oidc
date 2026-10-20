@@ -369,9 +369,9 @@ class ProvisioningService {
 		$this->logger->debug('Language mapping event dispatched');
 		if ($event->hasValue()) {
 			$language = $event->getValue();
-			$languagesCodes = $this->l10nFactory->findAvailableLanguages();
-			if (in_array($language, $languagesCodes, true) || $language === 'en') {
-				$this->config->setUserValue($user->getUID(), 'core', 'lang', $language);
+			$resolvedLanguage = is_string($language) ? $this->resolveLanguage($language) : null;
+			if ($resolvedLanguage !== null) {
+				$this->config->setUserValue($user->getUID(), 'core', 'lang', $resolvedLanguage);
 			} else {
 				$this->logger->debug('Invalid language in ID token', ['language' => $language]);
 			}
@@ -476,6 +476,36 @@ class ProvisioningService {
 			'user' => $user,
 			'userData' => $oidcGssUserData,
 		];
+	}
+
+	/**
+	 * Map a language claim to an available Nextcloud language code
+	 *
+	 * Accepts Nextcloud language codes (de, de_DE) as well as BCP47 tags (de-DE)
+	 * as specified in https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims.
+	 * Falls back to the primary language subtag if the region specific variant is not available.
+	 *
+	 * @return string|null the matching language code or null if no available language matches
+	 */
+	public function resolveLanguage(string $language): ?string {
+		if ($language === '') {
+			return null;
+		}
+
+		$languageCodes = $this->l10nFactory->findAvailableLanguages();
+		$languageCodes[] = 'en';
+
+		$candidates = [
+			$language,
+			Locale::canonicalize($language),
+			Locale::getPrimaryLanguage($language),
+		];
+		foreach ($candidates as $candidate) {
+			if ($candidate !== null && in_array($candidate, $languageCodes, true)) {
+				return $candidate;
+			}
+		}
+		return null;
 	}
 
 	/**
