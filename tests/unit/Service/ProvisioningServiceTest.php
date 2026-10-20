@@ -491,6 +491,7 @@ class ProvisioningServiceTest extends TestCase {
 			->method('getSetting')
 			->willReturnMap([
 				[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', $group_whitelist],
+				[$providerId, ProviderService::SETTING_GROUP_ADMIN_ALIAS, '', ''],
 				[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
 				[$providerId, ProviderService::SETTING_AZURE_GROUP_NAMES, '0', '0'],
 				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
@@ -536,4 +537,22 @@ class ProvisioningServiceTest extends TestCase {
 		);
 	}
 
+	public function testGetSyncGroupsOfTokenWithAdminGroupAlias(): void {
+		$providerId = 421;
+		$this->providerService
+			->method('getSetting')
+			->willReturnMap([
+				[$providerId, ProviderService::SETTING_GROUP_WHITELIST_REGEX, '', ''],
+				[$providerId, ProviderService::SETTING_GROUP_ADMIN_ALIAS, '', 'Admins'],
+				[$providerId, ProviderService::SETTING_MAPPING_GROUPS, 'groups', 'groups'],
+				[$providerId, ProviderService::SETTING_AZURE_GROUP_NAMES, '0', '0'],
+				[$providerId, ProviderService::SETTING_RESOLVE_NESTED_AND_FALLBACK_CLAIMS_MAPPING, '0', '0'],
+			]);
+		$this->idService->method('getId')
+			->willReturnCallback(static fn (int $providerId, string $id) => 'oidc-' . $id);
+
+		$groups = $this->provisioningService->getSyncGroupsOfToken($providerId, (object)['groups' => ['Admins', 'users']]);
+
+		$this->assertSame(['admin', 'oidc-Admins', 'oidc-users'], array_column($groups, 'gid'));
+	}
 }

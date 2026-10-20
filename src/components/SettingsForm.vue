@@ -300,6 +300,15 @@
 		<p class="settings-hint">
 			{{ t('user_oidc', 'Only groups matching the whitelist regex will be created, updated and deleted by the group claim. For example: {regex} allows all groups which ID starts with {substr}', { regex: '/^blue/', substr: 'blue' }) }}
 		</p>
+		<p>
+			<label for="group-admin-alias">{{ t('user_oidc', 'Admin group alias') }}</label>
+			<input id="group-admin-alias"
+				v-model="localProvider.settings.groupAdminAlias"
+				type="text">
+		</p>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'Members of this group from the groups claim are also added to the Nextcloud admin group. For example: {group}', { group: 'Admins' }) }}
+		</p>
 		<NcCheckboxRadioSwitch
 			v-model="localProvider.settings.restrictLoginToGroups"
 			wrapper-element="div">
