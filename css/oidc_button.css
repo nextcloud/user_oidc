@@ -1,0 +1,14 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+#alternative-logins a.oidc-provider-icon::before {
+	content: '';
+	background-repeat: no-repeat;
+	background-size: contain;
+	height: 20px;
+	width: 40px;
+	display: inline-block;
+	vertical-align: bottom;
+}
