@@ -400,6 +400,30 @@ class ProvisioningServiceTest extends TestCase {
 		$this->assertEquals($expected, $result);
 	}
 
+	public static function dataResolveLanguage(): array {
+		return [
+			'Nextcloud language code' => ['de', 'de'],
+			'Nextcloud language code with region' => ['de_DE', 'de_DE'],
+			'BCP47 tag' => ['de-DE', 'de_DE'],
+			'BCP47 tag with different case' => ['DE-de', 'de_DE'],
+			'BCP47 tag falls back to primary language' => ['fr-FR', 'fr'],
+			'English is always available' => ['en', 'en'],
+			'English BCP47 tag falls back to English' => ['en-US', 'en'],
+			'Unknown language' => ['xx', null],
+			'Unknown BCP47 tag' => ['xx-XX', null],
+			'Empty string' => ['', null],
+		];
+	}
+
+	#[DataProvider('dataResolveLanguage')]
+	public function testResolveLanguage(string $language, ?string $expected): void {
+		$this->l10nFactory
+			->method('findAvailableLanguages')
+			->willReturn(['de', 'de_DE', 'fr', 'pt_BR']);
+
+		$this->assertSame($expected, $this->provisioningService->resolveLanguage($language));
+	}
+
 	public function testGetClaimValuesWithoutNestedResolution(): void {
 		$providerId = 1;
 
