@@ -95,6 +95,7 @@
                     "mappingQuota",
                     "mappingUid",
                     "mappingGroups",
+                    "mappingGroupAdminFor",
                     "mappingLanguage",
                     "mappingLocale",
                     "mappingAddress",
@@ -141,6 +142,9 @@
                         "type": "string"
                     },
                     "mappingGroups": {
+                        "type": "string"
+                    },
+                    "mappingGroupAdminFor": {
                         "type": "string"
                     },
                     "mappingLanguage": {
