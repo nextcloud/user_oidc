@@ -569,11 +569,12 @@ class LoginController extends BaseOidcController {
 				return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, throttle: false);
 			}
 			$this->logger->debug('JWT HEADER', ['jwt_header' => $jwtHeader]);
-			if (isset($jwtHeader['typ']) && $jwtHeader['typ'] === 'JWT') {
-				// we have a JWT, do nothing
-			} elseif (isset($jwtHeader['cty']) && $jwtHeader['cty'] === 'JWT') {
+			// a JWE may also have typ=JWT, so cty must be checked first
+			if (isset($jwtHeader['cty']) && $jwtHeader['cty'] === 'JWT') {
 				// we have a JWE that contains the JWT string (the ID token)
 				$idTokenRaw = $this->jweService->decryptSerializedJwe($idTokenRaw);
+			} elseif (isset($jwtHeader['typ']) && $jwtHeader['typ'] === 'JWT') {
+				// we have a JWT, do nothing
 			} else {
 				$this->logger->warning('Unsupported id_token when using "private key JWT"');
 			}
