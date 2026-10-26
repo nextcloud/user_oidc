@@ -31,9 +31,32 @@ class JwkService {
 	public const PEM_ENC_KEY_EXPIRES_AFTER_SECONDS = 60 * 60;
 	public const PEM_ENC_KEY_ALGORITHM = 'ECDH-ES+A192KW';
 	public const PEM_ENC_KEY_CURVE = 'P-384';
-	// we store the expired encryption key and can use it for one extra hour after a new one has been generated
-	public const PEM_EXPIRED_ENC_KEY_SETTINGS_KEY = 'pemExpiredEncryptionKey';
-	public const PEM_EXPIRED_ENC_KEY_CREATED_AT_SETTINGS_KEY = 'pemExpiredEncryptionKeyCreatedAt';
+	public const PEM_NEXT_ENC_KEY_SETTINGS_KEY = 'pemNextEncryptionKey';
+	public const PEM_NEXT_ENC_KEY_CREATED_AT_SETTINGS_KEY = 'pemNextEncryptionKeyCreatedAt';
+	// the retired encryption key is not published anymore but can still decrypt for this long after its retirement
+	public const PEM_PREVIOUS_ENC_KEY_SETTINGS_KEY = 'pemPreviousEncryptionKey';
+	public const PEM_PREVIOUS_ENC_KEY_CREATED_AT_SETTINGS_KEY = 'pemPreviousEncryptionKeyCreatedAt';
+	public const PEM_PREVIOUS_ENC_KEY_RETIRED_AT_SETTINGS_KEY = 'pemPreviousEncryptionKeyRetiredAt';
+	public const PEM_PREVIOUS_ENC_KEY_GRACE_PERIOD_SECONDS = 60 * 60;
+
+	private const SIGNATURE_KEY_SET = [
+		'current' => self::PEM_SIG_KEY_SETTINGS_KEY,
+		'currentCreatedAt' => self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY,
+		'next' => self::PEM_NEXT_SIG_KEY_SETTINGS_KEY,
+		'nextCreatedAt' => self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY,
+		'expiresAfter' => self::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS,
+	];
+
+	private const ENCRYPTION_KEY_SET = [
+		'current' => self::PEM_ENC_KEY_SETTINGS_KEY,
+		'currentCreatedAt' => self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY,
+		'next' => self::PEM_NEXT_ENC_KEY_SETTINGS_KEY,
+		'nextCreatedAt' => self::PEM_NEXT_ENC_KEY_CREATED_AT_SETTINGS_KEY,
+		'expiresAfter' => self::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS,
+		'previous' => self::PEM_PREVIOUS_ENC_KEY_SETTINGS_KEY,
+		'previousCreatedAt' => self::PEM_PREVIOUS_ENC_KEY_CREATED_AT_SETTINGS_KEY,
+		'previousRetiredAt' => self::PEM_PREVIOUS_ENC_KEY_RETIRED_AT_SETTINGS_KEY,
+	];
 
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -47,41 +70,46 @@ class JwkService {
 	 * @throws AppConfigTypeConflictException
 	 */
 	public function getMyPemSignatureKey(): string {
-		$this->ensureSignatureKeysInitialized();
-		$this->rotateSignatureKeysIfNeeded();
-
-		return $this->appConfig->getAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, lazy: true);
+		return $this->getCurrentPemKey(self::SIGNATURE_KEY_SET);
 	}
 
 	/**
-	 * Get our stored encryption PEM key (or regenerate it if it's expired)
+	 * Get our current encryption PEM key after applying rotation if needed.
 	 *
-	 * @param bool $refresh
 	 * @return string
 	 * @throws AppConfigTypeConflictException
 	 */
-	public function getMyEncryptionKey(bool $refresh = true): string {
-		$pemEncryptionKey = $this->appConfig->getAppValueString(self::PEM_ENC_KEY_SETTINGS_KEY, lazy: true);
-		$pemEncryptionKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+	public function getMyEncryptionKey(): string {
+		return $this->getCurrentPemKey(self::ENCRYPTION_KEY_SET);
+	}
 
-		if ($pemEncryptionKey === ''
-			|| $pemEncryptionKeyCreatedAt === 0
-			|| ($refresh && (time() > $pemEncryptionKeyCreatedAt + self::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS))
-		) {
-			// if we have an old expired key, keep it for one hour
-			if ($pemEncryptionKey !== ''
-				&& $pemEncryptionKeyCreatedAt !== 0
-				&& (time() > $pemEncryptionKeyCreatedAt + self::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS)) {
-				$this->appConfig->setAppValueString(self::PEM_EXPIRED_ENC_KEY_SETTINGS_KEY, $pemEncryptionKey, lazy: true);
-				$this->appConfig->setAppValueInt(self::PEM_EXPIRED_ENC_KEY_CREATED_AT_SETTINGS_KEY, $pemEncryptionKeyCreatedAt, lazy: true);
-			}
-			// generate a new key
-			$pemEncryptionKey = $this->generatePemPrivateKey();
-			// store the key
-			$this->appConfig->setAppValueString(self::PEM_ENC_KEY_SETTINGS_KEY, $pemEncryptionKey, lazy: true);
-			$this->appConfig->setAppValueInt(self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY, time(), lazy: true);
+	/**
+	 * Get all the private encryption JWKs that may have been used by an IdP to encrypt a JWE for us:
+	 * the current and next keys (both published) and the previous one during its grace period.
+	 *
+	 * @return list<array>
+	 * @throws AppConfigTypeConflictException
+	 */
+	public function getDecryptionJwks(): array {
+		$currentPem = $this->getMyEncryptionKey();
+		$jwks = [
+			$this->getJwkFromPem($currentPem, $this->getStoredInt(self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY), true, true),
+			$this->getJwkFromPem(
+				$this->getStoredString(self::PEM_NEXT_ENC_KEY_SETTINGS_KEY),
+				$this->getStoredInt(self::PEM_NEXT_ENC_KEY_CREATED_AT_SETTINGS_KEY),
+				true, true,
+			),
+		];
+
+		$previousPem = $this->getStoredString(self::PEM_PREVIOUS_ENC_KEY_SETTINGS_KEY);
+		$previousCreatedAt = $this->getStoredInt(self::PEM_PREVIOUS_ENC_KEY_CREATED_AT_SETTINGS_KEY);
+		$previousRetiredAt = $this->getStoredInt(self::PEM_PREVIOUS_ENC_KEY_RETIRED_AT_SETTINGS_KEY);
+		if ($previousPem !== '' && $previousCreatedAt !== 0
+			&& time() <= $previousRetiredAt + self::PEM_PREVIOUS_ENC_KEY_GRACE_PERIOD_SECONDS) {
+			$jwks[] = $this->getJwkFromPem($previousPem, $previousCreatedAt, true, true);
 		}
-		return $pemEncryptionKey;
+
+		return $jwks;
 	}
 
 	/**
@@ -116,24 +144,21 @@ class JwkService {
 	 * @throws AppConfigTypeConflictException
 	 */
 	public function getJwks(): array {
-		$myPemSignatureKey = $this->getMyPemSignatureKey();
-		$pemSignatureKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
-		$sslSignatureKey = openssl_pkey_get_private($myPemSignatureKey);
-		$sslSignatureKeyDetails = openssl_pkey_get_details($sslSignatureKey);
-
-		$myNextPemSignatureKey = $this->appConfig->getAppValueString(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, lazy: true);
-		$nextPemSignatureKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
-		$sslNextSignatureKey = openssl_pkey_get_private($myNextPemSignatureKey);
-		$sslNextSignatureKeyDetails = openssl_pkey_get_details($sslNextSignatureKey);
-
-		$myPemEncryptionKey = $this->getMyEncryptionKey(true);
-		$pemEncryptionKeyCreatedAt = $this->appConfig->getAppValueInt(self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
-		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
-		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
+		$signaturePem = $this->getMyPemSignatureKey();
+		$encryptionPem = $this->getMyEncryptionKey();
 		return [
-			$this->getJwkFromSslKey($sslSignatureKeyDetails, keyCreatedAt: $pemSignatureKeyCreatedAt),
-			$this->getJwkFromSslKey($sslNextSignatureKeyDetails, keyCreatedAt: $nextPemSignatureKeyCreatedAt),
-			$this->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true, keyCreatedAt: $pemEncryptionKeyCreatedAt),
+			$this->getJwkFromPem($signaturePem, $this->getStoredInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY), false),
+			$this->getJwkFromPem(
+				$this->getStoredString(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY),
+				$this->getStoredInt(self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY),
+				false,
+			),
+			$this->getJwkFromPem($encryptionPem, $this->getStoredInt(self::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY), true),
+			$this->getJwkFromPem(
+				$this->getStoredString(self::PEM_NEXT_ENC_KEY_SETTINGS_KEY),
+				$this->getStoredInt(self::PEM_NEXT_ENC_KEY_CREATED_AT_SETTINGS_KEY),
+				true,
+			),
 		];
 	}
 
@@ -197,61 +222,86 @@ class JwkService {
 		return $this->createJwt($payload, $sslPrivateKey, 'sig_key_' . $pemSignatureKeyCreatedAt, self::PEM_SIG_KEY_ALGORITHM);
 	}
 
-	private function ensureSignatureKeysInitialized(): void {
-		$currentPem = $this->appConfig->getAppValueString(self::PEM_SIG_KEY_SETTINGS_KEY, lazy: true);
-		$currentCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
-		$nextPem = $this->appConfig->getAppValueString(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, lazy: true);
-		$nextCreatedAt = $this->appConfig->getAppValueInt(self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+	private function getJwkFromPem(string $pemKey, int $createdAt, bool $isEncryptionKey, bool $includePrivateKey = false): array {
+		$sslKeyDetails = openssl_pkey_get_details(openssl_pkey_get_private($pemKey));
+		return $this->getJwkFromSslKey($sslKeyDetails, $isEncryptionKey, $includePrivateKey, $createdAt);
+	}
+
+	private function getStoredString(string $key): string {
+		return $this->appConfig->getAppValueString($key, lazy: true);
+	}
+
+	private function getStoredInt(string $key): int {
+		return $this->appConfig->getAppValueInt($key, lazy: true);
+	}
+
+	private function getCurrentPemKey(array $keySet): string {
+		$this->ensureKeysInitialized($keySet);
+		$this->rotateKeysIfNeeded($keySet);
+
+		return $this->getStoredString($keySet['current']);
+	}
+
+	private function ensureKeysInitialized(array $keySet): void {
+		$currentPem = $this->getStoredString($keySet['current']);
+		$currentCreatedAt = $this->getStoredInt($keySet['currentCreatedAt']);
+		$nextPem = $this->getStoredString($keySet['next']);
+		$nextCreatedAt = $this->getStoredInt($keySet['nextCreatedAt']);
 
 		if ($currentPem === '' || $currentCreatedAt === 0) {
 			if ($nextPem !== '' && $nextCreatedAt !== 0) {
-				$this->storeSignatureKey(self::PEM_SIG_KEY_SETTINGS_KEY, self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, $nextPem, $nextCreatedAt);
-				$currentPem = $nextPem;
+				$this->storeKey($keySet['current'], $keySet['currentCreatedAt'], $nextPem, $nextCreatedAt);
 				$currentCreatedAt = $nextCreatedAt;
 				$nextPem = '';
 				$nextCreatedAt = 0;
 			} else {
 				$currentCreatedAt = $this->getFreshKeyCreatedAt();
-				$currentPem = $this->generatePemPrivateKey();
-				$this->storeSignatureKey(self::PEM_SIG_KEY_SETTINGS_KEY, self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, $currentPem, $currentCreatedAt);
+				$this->storeKey($keySet['current'], $keySet['currentCreatedAt'], $this->generatePemPrivateKey(), $currentCreatedAt);
 			}
 		}
 
 		if ($nextPem === '' || $nextCreatedAt === 0) {
 			$nextCreatedAt = $this->getFreshKeyCreatedAt($currentCreatedAt);
-			$nextPem = $this->generatePemPrivateKey();
-			$this->storeSignatureKey(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, $nextPem, $nextCreatedAt);
+			$this->storeKey($keySet['next'], $keySet['nextCreatedAt'], $this->generatePemPrivateKey(), $nextCreatedAt);
 		}
 	}
 
-	private function rotateSignatureKeysIfNeeded(): void {
-		$currentCreatedAt = $this->appConfig->getAppValueInt(self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
-		$nextPem = $this->appConfig->getAppValueString(self::PEM_NEXT_SIG_KEY_SETTINGS_KEY, lazy: true);
-		$nextCreatedAt = $this->appConfig->getAppValueInt(self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
+	/**
+	 * Promote the next key to current once both have been published for longer than the expiration delay,
+	 * so the promoted key has been in the JWKS long enough for IdPs to have it in their cache.
+	 */
+	private function rotateKeysIfNeeded(array $keySet): void {
+		$currentPem = $this->getStoredString($keySet['current']);
+		$currentCreatedAt = $this->getStoredInt($keySet['currentCreatedAt']);
+		$nextPem = $this->getStoredString($keySet['next']);
+		$nextCreatedAt = $this->getStoredInt($keySet['nextCreatedAt']);
 
-		if (!$this->shouldRotateSignatureKeys($currentCreatedAt, $nextCreatedAt) || $nextPem === '') {
+		if (!$this->shouldRotateKeys($currentCreatedAt, $nextCreatedAt, $keySet['expiresAfter']) || $nextPem === '') {
 			return;
 		}
 
-		$this->storeSignatureKey(self::PEM_SIG_KEY_SETTINGS_KEY, self::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY, $nextPem, $nextCreatedAt);
+		if (isset($keySet['previous'])) {
+			$this->storeKey($keySet['previous'], $keySet['previousCreatedAt'], $currentPem, $currentCreatedAt);
+			$this->appConfig->setAppValueInt($keySet['previousRetiredAt'], time(), lazy: true);
+		}
 
-		$freshNextCreatedAt = $this->getFreshKeyCreatedAt($nextCreatedAt);
-		$this->storeSignatureKey(
-			self::PEM_NEXT_SIG_KEY_SETTINGS_KEY,
-			self::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY,
+		$this->storeKey($keySet['current'], $keySet['currentCreatedAt'], $nextPem, $nextCreatedAt);
+		$this->storeKey(
+			$keySet['next'],
+			$keySet['nextCreatedAt'],
 			$this->generatePemPrivateKey(),
-			$freshNextCreatedAt,
+			$this->getFreshKeyCreatedAt($nextCreatedAt),
 		);
 	}
 
-	private function shouldRotateSignatureKeys(int $currentCreatedAt, int $nextCreatedAt): bool {
+	private function shouldRotateKeys(int $currentCreatedAt, int $nextCreatedAt, int $expiresAfter): bool {
 		if ($currentCreatedAt === 0 || $nextCreatedAt === 0) {
 			return false;
 		}
 
 		$now = time();
-		return $now > $currentCreatedAt + self::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS
-			&& $now > $nextCreatedAt + self::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS;
+		return $now > $currentCreatedAt + $expiresAfter
+			&& $now > $nextCreatedAt + $expiresAfter;
 	}
 
 	private function getFreshKeyCreatedAt(int ...$existingCreatedAt): int {
@@ -259,7 +309,7 @@ class JwkService {
 		return max(time(), $latestExistingCreatedAt + 1);
 	}
 
-	private function storeSignatureKey(string $keySetting, string $createdAtSetting, string $pemKey, int $createdAt): void {
+	private function storeKey(string $keySetting, string $createdAtSetting, string $pemKey, int $createdAt): void {
 		$this->appConfig->setAppValueString($keySetting, $pemKey, lazy: true);
 		$this->appConfig->setAppValueInt($createdAtSetting, $createdAt, lazy: true);
 	}

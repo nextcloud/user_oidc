@@ -24,7 +24,7 @@ use Jose\Component\Encryption\JWELoader;
 use Jose\Component\Encryption\JWETokenSupport;
 use Jose\Component\Encryption\Serializer\CompactSerializer;
 use Jose\Component\Encryption\Serializer\JWESerializerManager;
-use OCP\AppFramework\Services\IAppConfig;
+use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
 use Psr\Log\LoggerInterface;
 
 class JweService {
@@ -33,7 +33,6 @@ class JweService {
 
 	public function __construct(
 		private JwkService $jwkService,
-		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 	) {
 	}
@@ -82,7 +81,7 @@ class JweService {
 				'enc' => $contentEncryptionAlg,
 				//'zip' => 'DEF'            // Not recommended.
 				'cty' => 'JWT',
-			])
+			] + (isset($encryptionJwk['kid']) ? ['kid' => $encryptionJwk['kid']] : []))
 			->addRecipient($jwk)    // We add a recipient (a shared key or public key).
 			->build();
 
@@ -165,36 +164,39 @@ class JweService {
 		return $payload;
 	}
 
+	/**
+	 * Decrypt a JWE with one of our encryption keys, trying the one matching the JWE 'kid' header first
+	 *
+	 * @param string $serializedJwe
+	 * @return string
+	 * @throws \Exception
+	 */
 	public function decryptSerializedJwe(string $serializedJwe): string {
-		$myPemEncryptionKey = $this->jwkService->getMyEncryptionKey(true);
-		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
-		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
-		$encryptionPrivateJwk = $this->jwkService->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true, includePrivateKey: true);
-
-		try {
-			return $this->decryptSerializedJweWithKey($serializedJwe, $encryptionPrivateJwk);
-		} catch (\Exception $e) {
-			// try the old expired key
-			$oldPemEncryptionKey = $this->appConfig->getAppValueString(JwkService::PEM_EXPIRED_ENC_KEY_SETTINGS_KEY, lazy: true);
-			$oldPemEncryptionKeyCreatedAt = $this->appConfig->getAppValueInt(JwkService::PEM_EXPIRED_ENC_KEY_CREATED_AT_SETTINGS_KEY, lazy: true);
-			if ($oldPemEncryptionKey === '' || $oldPemEncryptionKeyCreatedAt === 0) {
-				$this->logger->debug('JWE decryption failed with a fresh key and there is no old key');
-				throw $e;
-			}
-			// the old encryption key is expired for more than an hour, we can't use it
-			if (time() > $oldPemEncryptionKeyCreatedAt + JwkService::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS + (60 * 60)) {
-				$this->logger->debug('JWE decryption failed with a fresh key and the old key is expired for more than an hour');
-				throw $e;
-			}
-			$oldSslEncryptionKey = openssl_pkey_get_private($oldPemEncryptionKey);
-			$oldSslEncryptionKeyDetails = openssl_pkey_get_details($oldSslEncryptionKey);
-			$oldEncryptionPrivateJwk = $this->jwkService->getJwkFromSslKey($oldSslEncryptionKeyDetails, isEncryptionKey: true, includePrivateKey: true);
-			return $this->decryptSerializedJweWithKey($serializedJwe, $oldEncryptionPrivateJwk);
+		$privateJwks = $this->jwkService->getDecryptionJwks();
+		$kid = $this->getKeyId($serializedJwe);
+		if ($kid !== null) {
+			usort($privateJwks, static fn (array $a, array $b) => ($b['kid'] === $kid) <=> ($a['kid'] === $kid));
 		}
+
+		$lastException = null;
+		foreach ($privateJwks as $privateJwk) {
+			try {
+				return $this->decryptSerializedJweWithKey($serializedJwe, $privateJwk);
+			} catch (\Exception $e) {
+				$lastException = $e;
+			}
+		}
+		$this->logger->debug('JWE decryption failed with all our encryption keys', ['kid' => $kid]);
+		throw $lastException ?? new \Exception('No encryption key available to decrypt the JWE');
+	}
+
+	private function getKeyId(string $serializedJwe): ?string {
+		$header = json_decode(JWT::urlsafeB64Decode(explode('.', $serializedJwe, 2)[0]), true);
+		return is_array($header) && isset($header['kid']) && is_string($header['kid']) ? $header['kid'] : null;
 	}
 
 	public function createSerializedJwe(string $payload): string {
-		$myPemEncryptionKey = $this->jwkService->getMyEncryptionKey(true);
+		$myPemEncryptionKey = $this->jwkService->getMyEncryptionKey();
 		$sslEncryptionKey = openssl_pkey_get_private($myPemEncryptionKey);
 		$sslEncryptionKeyDetails = openssl_pkey_get_details($sslEncryptionKey);
 		$encPublicJwk = $this->jwkService->getJwkFromSslKey($sslEncryptionKeyDetails, isEncryptionKey: true);

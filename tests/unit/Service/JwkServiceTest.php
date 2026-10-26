@@ -7,7 +7,6 @@
 
 declare(strict_types=1);
 
-
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Service\JwkService;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
@@ -103,14 +102,53 @@ class JwkServiceTest extends TestCase {
 		$this->assertEquals(JwkService::PEM_ENC_KEY_ALGORITHM, $encJwk['alg']);
 	}
 
-	public function testJwksContainsCurrentAndNextSignatureKeys(): void {
+	public function testJwksContainsCurrentAndNextKeys(): void {
 		$jwks = $this->jwkService->getJwks();
 
-		$this->assertCount(3, $jwks);
-		$this->assertSame('sig', $jwks[0]['use']);
-		$this->assertSame('sig', $jwks[1]['use']);
-		$this->assertSame('enc', $jwks[2]['use']);
-		$this->assertNotSame($jwks[0]['kid'], $jwks[1]['kid']);
+		$this->assertCount(4, $jwks);
+		$this->assertSame(['sig', 'sig', 'enc', 'enc'], array_column($jwks, 'use'));
+		$this->assertSame('sig_key_' . $this->appConfigInts[JwkService::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY], $jwks[0]['kid']);
+		$this->assertSame('sig_key_' . $this->appConfigInts[JwkService::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY], $jwks[1]['kid']);
+		$this->assertSame('enc_key_' . $this->appConfigInts[JwkService::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY], $jwks[2]['kid']);
+		$this->assertSame('enc_key_' . $this->appConfigInts[JwkService::PEM_NEXT_ENC_KEY_CREATED_AT_SETTINGS_KEY], $jwks[3]['kid']);
+		$this->assertCount(4, array_unique(array_column($jwks, 'kid')));
+		foreach ($jwks as $jwk) {
+			$this->assertArrayNotHasKey('d', $jwk);
+		}
+	}
+
+	public function testKeysAreStableBetweenCalls(): void {
+		$firstJwks = $this->jwkService->getJwks();
+		$secondJwks = $this->jwkService->getJwks();
+
+		$this->assertSame($firstJwks, $secondJwks);
+	}
+
+	public function testSignatureKeyIsNotRotatedWhileNextKeyIsRecent(): void {
+		$currentKey = $this->jwkService->generatePemPrivateKey();
+		$nextKey = $this->jwkService->generatePemPrivateKey();
+		$currentCreatedAt = time() - JwkService::PEM_SIG_KEY_EXPIRES_AFTER_SECONDS - 10;
+		$nextCreatedAt = time() - 10;
+		$this->appConfigStrings[JwkService::PEM_SIG_KEY_SETTINGS_KEY] = $currentKey;
+		$this->appConfigInts[JwkService::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY] = $currentCreatedAt;
+		$this->appConfigStrings[JwkService::PEM_NEXT_SIG_KEY_SETTINGS_KEY] = $nextKey;
+		$this->appConfigInts[JwkService::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY] = $nextCreatedAt;
+
+		$this->assertSame($currentKey, $this->jwkService->getMyPemSignatureKey());
+		$this->assertSame($nextKey, $this->appConfigStrings[JwkService::PEM_NEXT_SIG_KEY_SETTINGS_KEY]);
+		$this->assertSame($nextCreatedAt, $this->appConfigInts[JwkService::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY]);
+	}
+
+	public function testMissingCurrentSignatureKeyPromotesNextKey(): void {
+		$nextKey = $this->jwkService->generatePemPrivateKey();
+		$nextCreatedAt = time() - 10;
+		$this->appConfigStrings[JwkService::PEM_NEXT_SIG_KEY_SETTINGS_KEY] = $nextKey;
+		$this->appConfigInts[JwkService::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY] = $nextCreatedAt;
+
+		$this->assertSame($nextKey, $this->jwkService->getMyPemSignatureKey());
+		$this->assertSame($nextCreatedAt, $this->appConfigInts[JwkService::PEM_SIG_KEY_CREATED_AT_SETTINGS_KEY]);
+		$this->assertNotSame($nextKey, $this->appConfigStrings[JwkService::PEM_NEXT_SIG_KEY_SETTINGS_KEY]);
+		$this->assertGreaterThan($nextCreatedAt, $this->appConfigInts[JwkService::PEM_NEXT_SIG_KEY_CREATED_AT_SETTINGS_KEY]);
 	}
 
 	public function testExpiredCurrentSignatureKeyPromotesPrepublishedNextKey(): void {
@@ -137,5 +175,56 @@ class JwkServiceTest extends TestCase {
 		$jwks = $this->jwkService->getJwks();
 		$this->assertSame('sig_key_' . $oldNextCreatedAt, $jwks[0]['kid']);
 		$this->assertNotSame($jwks[0]['kid'], $jwks[1]['kid']);
+	}
+
+	public function testExpiredEncryptionKeyIsRetiredAndNextKeyPromoted(): void {
+		$oldCurrentKey = $this->jwkService->generatePemPrivateKey();
+		$oldNextKey = $this->jwkService->generatePemPrivateKey();
+		$oldCurrentCreatedAt = time() - JwkService::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS - 20;
+		$oldNextCreatedAt = time() - JwkService::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS - 10;
+		$this->appConfigStrings[JwkService::PEM_ENC_KEY_SETTINGS_KEY] = $oldCurrentKey;
+		$this->appConfigInts[JwkService::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY] = $oldCurrentCreatedAt;
+		$this->appConfigStrings[JwkService::PEM_NEXT_ENC_KEY_SETTINGS_KEY] = $oldNextKey;
+		$this->appConfigInts[JwkService::PEM_NEXT_ENC_KEY_CREATED_AT_SETTINGS_KEY] = $oldNextCreatedAt;
+
+		$this->assertSame($oldNextKey, $this->jwkService->getMyEncryptionKey());
+		$this->assertSame($oldNextCreatedAt, $this->appConfigInts[JwkService::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY]);
+		$this->assertNotSame($oldNextKey, $this->appConfigStrings[JwkService::PEM_NEXT_ENC_KEY_SETTINGS_KEY]);
+		$this->assertSame($oldCurrentKey, $this->appConfigStrings[JwkService::PEM_PREVIOUS_ENC_KEY_SETTINGS_KEY]);
+		$this->assertSame($oldCurrentCreatedAt, $this->appConfigInts[JwkService::PEM_PREVIOUS_ENC_KEY_CREATED_AT_SETTINGS_KEY]);
+		$this->assertGreaterThanOrEqual(time() - 5, $this->appConfigInts[JwkService::PEM_PREVIOUS_ENC_KEY_RETIRED_AT_SETTINGS_KEY]);
+
+		// the retired key is not published anymore, but can still decrypt
+		$publishedKids = array_column($this->jwkService->getJwks(), 'kid');
+		$this->assertNotContains('enc_key_' . $oldCurrentCreatedAt, $publishedKids);
+		$this->assertContains('enc_key_' . $oldNextCreatedAt, $publishedKids);
+		$decryptionKids = array_column($this->jwkService->getDecryptionJwks(), 'kid');
+		$this->assertContains('enc_key_' . $oldCurrentCreatedAt, $decryptionKids);
+	}
+
+	public function testDecryptionJwksContainPublishedKeysWithPrivatePart(): void {
+		$publishedEncKids = array_column(
+			array_filter($this->jwkService->getJwks(), static fn (array $jwk) => $jwk['use'] === 'enc'),
+			'kid',
+		);
+		$decryptionJwks = $this->jwkService->getDecryptionJwks();
+
+		$this->assertSame(array_values($publishedEncKids), array_column($decryptionJwks, 'kid'));
+		foreach ($decryptionJwks as $jwk) {
+			$this->assertArrayHasKey('d', $jwk);
+		}
+	}
+
+	public function testRetiredEncryptionKeyIsDroppedAfterGracePeriod(): void {
+		$this->jwkService->getMyEncryptionKey();
+		$previousCreatedAt = time() - 3 * 60 * 60;
+		$this->appConfigStrings[JwkService::PEM_PREVIOUS_ENC_KEY_SETTINGS_KEY] = $this->jwkService->generatePemPrivateKey();
+		$this->appConfigInts[JwkService::PEM_PREVIOUS_ENC_KEY_CREATED_AT_SETTINGS_KEY] = $previousCreatedAt;
+
+		$this->appConfigInts[JwkService::PEM_PREVIOUS_ENC_KEY_RETIRED_AT_SETTINGS_KEY] = time() - JwkService::PEM_PREVIOUS_ENC_KEY_GRACE_PERIOD_SECONDS + 60;
+		$this->assertContains('enc_key_' . $previousCreatedAt, array_column($this->jwkService->getDecryptionJwks(), 'kid'));
+
+		$this->appConfigInts[JwkService::PEM_PREVIOUS_ENC_KEY_RETIRED_AT_SETTINGS_KEY] = time() - JwkService::PEM_PREVIOUS_ENC_KEY_GRACE_PERIOD_SECONDS - 60;
+		$this->assertNotContains('enc_key_' . $previousCreatedAt, array_column($this->jwkService->getDecryptionJwks(), 'kid'));
 	}
 }
