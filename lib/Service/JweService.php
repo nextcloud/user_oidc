@@ -8,23 +8,21 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
-require_once __DIR__ . '/../../vendor/autoload.php';
-
-use Jose\Component\Checker\AlgorithmChecker;
-use Jose\Component\Checker\HeaderCheckerManager;
-use Jose\Component\Core\AlgorithmManager;
-use Jose\Component\Core\JWK;
-use Jose\Component\Encryption\Algorithm\ContentEncryption\A192CBCHS384;
-use Jose\Component\Encryption\Algorithm\ContentEncryption\A256CBCHS512;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A256KW;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHESA192KW;
-use Jose\Component\Encryption\JWEBuilder;
-use Jose\Component\Encryption\JWEDecrypter;
-use Jose\Component\Encryption\JWELoader;
-use Jose\Component\Encryption\JWETokenSupport;
-use Jose\Component\Encryption\Serializer\CompactSerializer;
-use Jose\Component\Encryption\Serializer\JWESerializerManager;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
+use OCA\UserOIDC\Vendor\Jose\Component\Checker\AlgorithmChecker;
+use OCA\UserOIDC\Vendor\Jose\Component\Checker\HeaderCheckerManager;
+use OCA\UserOIDC\Vendor\Jose\Component\Core\AlgorithmManager;
+use OCA\UserOIDC\Vendor\Jose\Component\Core\JWK;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\Algorithm\ContentEncryption\A192CBCHS384;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\Algorithm\ContentEncryption\A256CBCHS512;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\Algorithm\KeyEncryption\A256KW;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\Algorithm\KeyEncryption\ECDHESA192KW;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\JWEBuilder;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\JWEDecrypter;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\JWELoader;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\JWETokenSupport;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\Serializer\CompactSerializer;
+use OCA\UserOIDC\Vendor\Jose\Component\Encryption\Serializer\JWESerializerManager;
 use Psr\Log\LoggerInterface;
 
 class JweService {

@@ -8,8 +8,6 @@ declare(strict_types=1);
 
 namespace OCA\UserOIDC\Service;
 
-require_once __DIR__ . '/../../vendor/autoload.php';
-
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
