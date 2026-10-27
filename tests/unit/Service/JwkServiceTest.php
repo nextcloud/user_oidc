@@ -22,6 +22,7 @@ class JwkServiceTest extends TestCase {
 	/** @var JwkService|MockObject */
 	private $jwkService;
 	private array $appConfigStrings = [];
+	private array $sensitiveAppConfigKeys = [];
 	private array $appConfigInts = [];
 
 	public function setUp(): void {
@@ -36,8 +37,11 @@ class JwkServiceTest extends TestCase {
 				return $this->appConfigInts[$key] ?? ($default ?? 0);
 			});
 		$this->appConfig->method('setAppValueString')
-			->willReturnCallback(function (string $key, string $value, bool $lazy = false) {
+			->willReturnCallback(function (string $key, string $value, bool $lazy = false, bool $sensitive = false) {
 				$this->appConfigStrings[$key] = $value;
+				if ($sensitive) {
+					$this->sensitiveAppConfigKeys[$key] = true;
+				}
 				return true;
 			});
 		$this->appConfig->method('setAppValueInt')
@@ -200,6 +204,27 @@ class JwkServiceTest extends TestCase {
 		$this->assertContains('enc_key_' . $oldNextCreatedAt, $publishedKids);
 		$decryptionKids = array_column($this->jwkService->getDecryptionJwks(), 'kid');
 		$this->assertContains('enc_key_' . $oldCurrentCreatedAt, $decryptionKids);
+	}
+
+	public function testPrivateKeysAreStoredAsSensitive(): void {
+		$this->appConfigStrings[JwkService::PEM_ENC_KEY_SETTINGS_KEY] = $this->jwkService->generatePemPrivateKey();
+		$this->appConfigInts[JwkService::PEM_ENC_KEY_CREATED_AT_SETTINGS_KEY] = time() - JwkService::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS - 20;
+		$this->appConfigStrings[JwkService::PEM_NEXT_ENC_KEY_SETTINGS_KEY] = $this->jwkService->generatePemPrivateKey();
+		$this->appConfigInts[JwkService::PEM_NEXT_ENC_KEY_CREATED_AT_SETTINGS_KEY] = time() - JwkService::PEM_ENC_KEY_EXPIRES_AFTER_SECONDS - 10;
+
+		$this->jwkService->getJwks();
+
+		$expectedKeys = [
+			JwkService::PEM_SIG_KEY_SETTINGS_KEY,
+			JwkService::PEM_NEXT_SIG_KEY_SETTINGS_KEY,
+			JwkService::PEM_ENC_KEY_SETTINGS_KEY,
+			JwkService::PEM_NEXT_ENC_KEY_SETTINGS_KEY,
+			JwkService::PEM_PREVIOUS_ENC_KEY_SETTINGS_KEY,
+		];
+		sort($expectedKeys);
+		$sensitiveKeys = array_keys($this->sensitiveAppConfigKeys);
+		sort($sensitiveKeys);
+		$this->assertSame($expectedKeys, $sensitiveKeys);
 	}
 
 	public function testDecryptionJwksContainPublishedKeysWithPrivatePart(): void {

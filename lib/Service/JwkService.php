@@ -308,7 +308,7 @@ class JwkService {
 	}
 
 	private function storeKey(string $keySetting, string $createdAtSetting, string $pemKey, int $createdAt): void {
-		$this->appConfig->setAppValueString($keySetting, $pemKey, lazy: true);
+		$this->appConfig->setAppValueString($keySetting, $pemKey, lazy: true, sensitive: true);
 		$this->appConfig->setAppValueInt($createdAtSetting, $createdAt, lazy: true);
 	}
 }
