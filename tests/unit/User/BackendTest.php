@@ -15,6 +15,7 @@ use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\User\Backend;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -75,6 +76,7 @@ class BackendTest extends \Test\TestCase {
 	private ProviderService&MockObject $providerService;
 	private ProvisioningService&MockObject $provisioningService;
 	private LdapService&MockObject $ldapService;
+	private SettingsService&MockObject $settingsService;
 	private IUserManager&MockObject $userManager;
 	private ITimeFactory&MockObject $timeFactory;
 
@@ -95,6 +97,8 @@ class BackendTest extends \Test\TestCase {
 		$this->providerService = $this->createMock(ProviderService::class);
 		$this->provisioningService = $this->createMock(ProvisioningService::class);
 		$this->ldapService = $this->createMock(LdapService::class);
+		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->settingsService->method('parseUserId')->willReturnArgument(0);
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->timeFactory = $this->createMock(ITimeFactory::class);
 
@@ -111,6 +115,7 @@ class BackendTest extends \Test\TestCase {
 			$this->providerService,
 			$this->provisioningService,
 			$this->ldapService,
+			$this->settingsService,
 			$this->userManager,
 			$this->timeFactory,
 		);
