@@ -11,11 +11,16 @@ updates:
   cooldown:
     default-days: 10
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: coenjacobs/mozart
-    versions:
-    - 0.6.0
-    - 0.7.0
+- package-ecosystem: composer
+  directories:
+  - "/vendor-bin/*"
+  schedule:
+    interval: daily
+    time: "03:00"
+    timezone: Europe/Paris
+  cooldown:
+    default-days: 10
+  open-pull-requests-limit: 10
 - package-ecosystem: npm
   directory: "/"
   schedule:

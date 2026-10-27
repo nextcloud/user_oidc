@@ -38,3 +38,5 @@
 /webpack.prod.js
 /vendor/bin
 /vendor-bin
+/lib/Vendor/autoload.php
+/lib/Vendor/composer
