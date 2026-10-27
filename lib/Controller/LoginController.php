@@ -218,7 +218,9 @@ class LoginController extends BaseOidcController {
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
-		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+		$usePkce = $oidcSystemConfig['use_pkce'] ?? true;
+		$forcePkce = $usePkce === 'force';
+		$isPkceEnabled = $forcePkce || ($isPkceSupported && $usePkce);
 
 		if ($isPkceEnabled) {
 			// PKCE code_challenge see https://datatracker.ietf.org/doc/html/rfc7636
@@ -437,7 +439,9 @@ class LoginController extends BaseOidcController {
 
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$isPkceSupported = in_array('S256', $discovery['code_challenge_methods_supported'] ?? [], true);
-		$isPkceEnabled = $isPkceSupported && ($oidcSystemConfig['use_pkce'] ?? true);
+		$usePkce = $oidcSystemConfig['use_pkce'] ?? true;
+		$forcePkce = $usePkce === 'force';
+		$isPkceEnabled = $forcePkce || ($isPkceSupported && $usePkce);
 
 		try {
 			$requestBody = [
