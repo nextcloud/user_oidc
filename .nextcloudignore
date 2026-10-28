@@ -27,6 +27,7 @@
 /package-lock.json
 /psalm.xml
 /screenshots
+/scripts
 /src
 /stylelint.config.js
 /tests

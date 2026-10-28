@@ -22,6 +22,8 @@ use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Event\UserObtainedTokenEvent;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Service\DiscoveryService;
+use OCA\UserOIDC\Service\JweService;
+use OCA\UserOIDC\Service\JwkService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
@@ -112,6 +114,8 @@ class LoginController extends BaseOidcController {
 		private ICrypto $crypto,
 		private TokenService $tokenService,
 		private OidcService $oidcService,
+		private JwkService $jwkService,
+		private JweService $jweService,
 	) {
 		parent::__construct($request, $config, $l10n);
 	}
@@ -424,15 +428,6 @@ class LoginController extends BaseOidcController {
 
 		$providerId = (int)$this->session->get(self::LOGIN_PROVIDERID . $sessionKeySuffix);
 		$provider = $this->providerMapper->getProvider($providerId);
-		try {
-			$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
-		} catch (\Exception $e) {
-			$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
-			$this->cleanupSessionState($sessionKeySuffix);
-			$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
-			return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
-		}
-
 		$discovery = $this->discoveryService->obtainDiscovery($provider);
 
 		$this->logger->debug('Obtainting data from: ' . $discovery['token_endpoint']);
@@ -442,6 +437,7 @@ class LoginController extends BaseOidcController {
 		$usePkce = $oidcSystemConfig['use_pkce'] ?? true;
 		$forcePkce = $usePkce === 'force';
 		$isPkceEnabled = $forcePkce || ($isPkceSupported && $usePkce);
+		$usePrivateKeyJwt = $this->providerService->getSetting($providerId, ProviderService::SETTING_USE_PRIVATE_KEY_JWT, '0') !== '0';
 
 		try {
 			$requestBody = [
@@ -472,7 +468,16 @@ class LoginController extends BaseOidcController {
 				$tokenEndpointAuthMethod = 'client_secret_post';
 			}
 
-			if ($tokenEndpointAuthMethod === 'client_secret_basic') {
+			// private key JWT auth does not work with client_secret_basic, we don't wanna pass the client secret
+			if ($tokenEndpointAuthMethod === 'client_secret_basic' && !$usePrivateKeyJwt) {
+				try {
+					$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
+				} catch (\Exception $e) {
+					$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
+					$this->cleanupSessionState($sessionKeySuffix);
+					$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
+					return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+				}
 				$headers = [
 					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
 					'Content-Type' => 'application/x-www-form-urlencoded',
@@ -480,7 +485,20 @@ class LoginController extends BaseOidcController {
 			} else {
 				// Assuming client_secret_post as no other option is supported currently
 				$requestBody['client_id'] = $provider->getClientId();
-				$requestBody['client_secret'] = $providerClientSecret;
+				if ($usePrivateKeyJwt) {
+					$requestBody['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
+					$requestBody['client_assertion'] = $this->jwkService->generateClientAssertion($provider, $discovery['issuer'], $code);
+				} else {
+					try {
+						$providerClientSecret = $this->crypto->decrypt($provider->getClientSecret());
+					} catch (\Exception $e) {
+						$this->logger->error('Failed to decrypt the client secret', ['exception' => $e]);
+						$this->cleanupSessionState($sessionKeySuffix);
+						$message = $this->l10n->t('Failed to decrypt the OIDC provider client secret');
+						return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
+					}
+					$requestBody['client_secret'] = $providerClientSecret;
+				}
 			}
 
 			$body = $this->clientService->post(
@@ -534,8 +552,33 @@ class LoginController extends BaseOidcController {
 		$this->logger->debug('Received code response');
 		$this->eventDispatcher->dispatchTyped(new TokenObtainedEvent($data, $provider, $discovery));
 
-		// TODO: proper error handling
 		$idTokenRaw = $data['id_token'];
+		if ($usePrivateKeyJwt) {
+			// if kid is our private JWK, we have a JWE to decrypt
+			// if typ=JWT, we have a classic JWT to decode
+			$jwtParts = explode('.', $idTokenRaw, 3);
+			try {
+				$jwtHeader = json_decode(JWT::urlsafeB64Decode($jwtParts[0]), true, flags: JSON_THROW_ON_ERROR);
+			} catch (\JsonException $e) {
+				$this->logger->error('Malformed JWT id token header', ['exception' => $e]);
+				$message = $this->l10n->t('Failed to decode JWT id token header');
+				return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, throttle: false);
+			} catch (\Exception|\Throwable $e) {
+				$this->logger->error('Impossible to decode JWT id token header', ['exception' => $e]);
+				$message = $this->l10n->t('Failed to decode JWT id token header');
+				return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, throttle: false);
+			}
+			$this->logger->debug('JWT HEADER', ['jwt_header' => $jwtHeader]);
+			// a JWE may also have typ=JWT, so cty must be checked first
+			if (isset($jwtHeader['cty']) && $jwtHeader['cty'] === 'JWT') {
+				// we have a JWE that contains the JWT string (the ID token)
+				$idTokenRaw = $this->jweService->decryptSerializedJwe($idTokenRaw);
+			} elseif (isset($jwtHeader['typ']) && $jwtHeader['typ'] === 'JWT') {
+				// we have a JWT, do nothing
+			} else {
+				$this->logger->warning('Unsupported id_token when using "private key JWT"');
+			}
+		}
 		$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw);
 		JWT::$leeway = 60;
 		try {
