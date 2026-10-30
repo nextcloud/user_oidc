@@ -1,9 +1,0 @@
-{ "translations": {
-    "Error" : "දෝෂය",
-    "Update" : "යාවත්කාල",
-    "Remove" : "ඉවත් කරන්න",
-    "Cancel" : "අවලංගු",
-    "Delete" : "Delete",
-    "Domain" : "වසම"
-},"pluralForm" :"nplurals=2; plural=(n != 1);"
-}
