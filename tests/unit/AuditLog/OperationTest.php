@@ -12,12 +12,14 @@ use PHPUnit\Framework\TestCase;
 
 class OperationTest extends TestCase {
 	public static function dataOperations(): array {
-		return array_map(static fn (Operation $operation): array => [$operation], Operation::cases());
+		$constants = (new \ReflectionClass(Operation::class))->getConstants();
+		unset($constants['DESCRIPTIONS']);
+		return array_map(static fn (string $operation): array => [$operation], $constants);
 	}
 
 	#[DataProvider('dataOperations')]
-	public function testOperationFormat(Operation $operation): void {
-		$this->assertMatchesRegularExpression('/^user_oidc\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/', $operation->value);
-		$this->assertNotSame('', $operation->description());
+	public function testOperationFormat(string $operation): void {
+		$this->assertMatchesRegularExpression('/^user_oidc\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/', $operation);
+		$this->assertNotSame('', Operation::DESCRIPTIONS[$operation] ?? '');
 	}
 }

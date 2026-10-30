@@ -54,7 +54,7 @@ class ID4MeServiceTest extends TestCase {
 			->with(Application::APP_ID, 'id4me_enabled', $storedValue, true);
 		$this->auditLogger->expects($this->once())
 			->method('log')
-			->with(Operation::Id4meUpdated, $message, ['enabled' => $enabled]);
+			->with(Operation::ID4ME_UPDATED, $message, ['enabled' => $enabled]);
 
 		$this->service->setID4ME($enabled);
 	}

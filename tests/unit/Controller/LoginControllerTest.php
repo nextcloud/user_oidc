@@ -97,13 +97,16 @@ class LoginControllerTest extends TestCase {
 		$this->request->method('getServerProtocol')->willReturn('https');
 		$this->config->method('getSystemValue')->with('user_oidc', [])->willReturn([]);
 
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('parseUserId')->willReturnArgument(0);
+
 		$this->controller = new LoginController(
 			$this->request,
 			$this->providerMapper,
 			$this->providerService,
 			$this->discoveryService,
 			$this->createMock(LdapService::class),
-			$this->createMock(SettingsService::class),
+			$settingsService,
 			$this->createMock(ISecureRandom::class),
 			$this->session,
 			$this->clientService,
@@ -189,7 +192,7 @@ class LoginControllerTest extends TestCase {
 	private function expectLoginFailure(string $reason, ?int $providerId, ?string $userId = null): void {
 		$this->auditLogger->expects($this->once())
 			->method('log')
-			->with(Operation::LoginFailed, 'OpenID Connect login failed: %s', [
+			->with(Operation::LOGIN_FAILED, 'OpenID Connect login failed: %s', [
 				'reason' => $reason,
 				'providerId' => $providerId,
 				'userId' => $userId,
@@ -309,7 +312,7 @@ class LoginControllerTest extends TestCase {
 		$this->auditLogger->expects($this->once())
 			->method('log')
 			->with(
-				Operation::SessionRevoked,
+				Operation::SESSION_REVOKED,
 				'Session of user %s was revoked by a back-channel logout from OpenID Connect provider "%s"',
 				['userId' => 'alice', 'identifier' => 'keycloak', 'providerId' => self::PROVIDER_ID, 'authTokenId' => 42],
 			);

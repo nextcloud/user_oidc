@@ -1123,7 +1123,7 @@ class LoginController extends BaseOidcController {
 				$userId = $authToken->getUID();
 				$this->authTokenProvider->invalidateTokenById($userId, $authToken->getId());
 				$this->auditLogger->log(
-					Operation::SessionRevoked,
+					Operation::SESSION_REVOKED,
 					'Session of user %s was revoked by a back-channel logout from OpenID Connect provider "%s"',
 					[
 						'userId' => $userId,
@@ -1199,7 +1199,7 @@ class LoginController extends BaseOidcController {
 	 * Logs a rejected code flow login, never with the code or any token
 	 */
 	private function logLoginFailure(string $reason, ?int $providerId, ?string $userId = null): void {
-		$this->auditLogger->log(Operation::LoginFailed, 'OpenID Connect login failed: %s', [
+		$this->auditLogger->log(Operation::LOGIN_FAILED, 'OpenID Connect login failed: %s', [
 			'reason' => $reason,
 			'providerId' => $providerId,
 			'userId' => $userId,

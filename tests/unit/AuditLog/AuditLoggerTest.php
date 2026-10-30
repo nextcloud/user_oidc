@@ -22,12 +22,18 @@ class AuditLoggerTest extends TestCase {
 		parent::setUp();
 
 		$this->eventDispatcher = $this->createMock(IEventDispatcher::class);
+		$this->auditLogger = new AuditLogger($this->eventDispatcher);
+	}
+
+	private function expectEvent(): void {
+		if (!method_exists(CriticalActionPerformedEvent::class, 'getOperation')) {
+			$this->markTestSkipped('Requires Nextcloud 36 or later');
+		}
 		$this->eventDispatcher->expects($this->once())
 			->method('dispatchTyped')
 			->willReturnCallback(function (CriticalActionPerformedEvent $event): void {
 				$this->event = $event;
 			});
-		$this->auditLogger = new AuditLogger($this->eventDispatcher);
 	}
 
 	private function getProvider(): Provider {
@@ -41,6 +47,7 @@ class AuditLoggerTest extends TestCase {
 	}
 
 	public function testProviderCreated(): void {
+		$this->expectEvent();
 		$this->auditLogger->providerCreated($this->getProvider());
 
 		$this->assertOperation('user_oidc.provider.created');
@@ -54,6 +61,7 @@ class AuditLoggerTest extends TestCase {
 	}
 
 	public function testProviderUpdatedListsChangedSettingsOnly(): void {
+		$this->expectEvent();
 		$this->auditLogger->providerUpdated(
 			$this->getProvider(),
 			true,
@@ -74,6 +82,7 @@ class AuditLoggerTest extends TestCase {
 	}
 
 	public function testProviderUpdatedWithoutChanges(): void {
+		$this->expectEvent();
 		$this->auditLogger->providerUpdated($this->getProvider(), false, ['checkBearer' => true], ['checkBearer' => true]);
 
 		$parameters = $this->event->getParameters();
@@ -82,6 +91,7 @@ class AuditLoggerTest extends TestCase {
 	}
 
 	public function testProviderDeleted(): void {
+		$this->expectEvent();
 		$this->auditLogger->providerDeleted($this->getProvider());
 
 		$this->assertOperation('user_oidc.provider.deleted');
@@ -89,12 +99,16 @@ class AuditLoggerTest extends TestCase {
 		$this->assertSame(['identifier' => 'keycloak', 'providerId' => 3], $this->event->getParameters());
 	}
 
-	/**
-	 * Servers before the operation was added to CriticalActionPerformedEvent do not keep it
-	 */
-	private function assertOperation(string $operation): void {
-		if (method_exists($this->event, 'getOperation')) {
-			$this->assertSame($operation, $this->event->getOperation());
+	public function testNothingIsLoggedBeforeNextcloud36(): void {
+		if (method_exists(CriticalActionPerformedEvent::class, 'getOperation')) {
+			$this->markTestSkipped('Only applies before Nextcloud 36');
 		}
+		$this->eventDispatcher->expects($this->never())->method('dispatchTyped');
+
+		$this->auditLogger->providerCreated($this->getProvider());
+	}
+
+	private function assertOperation(string $operation): void {
+		$this->assertSame($operation, $this->event->getOperation());
 	}
 }

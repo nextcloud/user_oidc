@@ -20,20 +20,20 @@ class AuditLogger {
 	}
 
 	/**
-	 * The operation is only passed on to servers whose CriticalActionPerformedEvent supports it
+	 * Does nothing on servers before Nextcloud 36, whose CriticalActionPerformedEvent has no operation
 	 *
 	 * @param array<string, mixed> $parameters named values for the placeholders of $message, in order, optionally followed by more context
 	 */
-	public function log(Operation $operation, string $message, array $parameters = []): void {
-		$arguments = [$message, $parameters, false];
-		if (method_exists(CriticalActionPerformedEvent::class, 'getOperation')) {
-			$arguments[] = $operation->value;
+	public function log(string $operation, string $message, array $parameters = []): void {
+		if (!method_exists(CriticalActionPerformedEvent::class, 'getOperation')) {
+			return;
 		}
+		$arguments = [$message, $parameters, false, $operation];
 		$this->eventDispatcher->dispatchTyped(new CriticalActionPerformedEvent(...$arguments));
 	}
 
 	public function providerCreated(Provider $provider): void {
-		$this->log(Operation::ProviderCreated, 'OpenID Connect provider "%s" with ID %s was created', [
+		$this->log(Operation::PROVIDER_CREATED, 'OpenID Connect provider "%s" with ID %s was created', [
 			'identifier' => $provider->getIdentifier(),
 			'providerId' => $provider->getId(),
 			'clientId' => $provider->getClientId(),
@@ -55,7 +55,7 @@ class AuditLogger {
 			}
 		}
 
-		$this->log(Operation::ProviderUpdated, 'OpenID Connect provider "%s" with ID %s was updated', [
+		$this->log(Operation::PROVIDER_UPDATED, 'OpenID Connect provider "%s" with ID %s was updated', [
 			'identifier' => $provider->getIdentifier(),
 			'providerId' => $provider->getId(),
 			'clientId' => $provider->getClientId(),
@@ -66,7 +66,7 @@ class AuditLogger {
 	}
 
 	public function providerDeleted(Provider $provider): void {
-		$this->log(Operation::ProviderDeleted, 'OpenID Connect provider "%s" with ID %s was deleted', [
+		$this->log(Operation::PROVIDER_DELETED, 'OpenID Connect provider "%s" with ID %s was deleted', [
 			'identifier' => $provider->getIdentifier(),
 			'providerId' => $provider->getId(),
 		]);
@@ -76,7 +76,7 @@ class AuditLogger {
 	 * @param 'provisioning_api'|'bearer_token'|'id4me_login' $source
 	 */
 	public function userProvisioned(string $userId, int $providerId, string $source): void {
-		$this->log(Operation::UserProvisioned, 'User %s was provisioned by OpenID Connect provider %s', [
+		$this->log(Operation::USER_PROVISIONED, 'User %s was provisioned by OpenID Connect provider %s', [
 			'userId' => $userId,
 			'providerId' => $providerId,
 			'source' => $source,

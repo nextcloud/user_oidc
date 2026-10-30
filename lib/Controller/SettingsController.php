@@ -279,7 +279,7 @@ class SettingsController extends OCSController {
 			if ($key === 'store_login_token' && is_bool($value)) {
 				$this->appConfig->setValueString(Application::APP_ID, 'store_login_token', $value ? '1' : '0', lazy: true);
 				$this->auditLogger->log(
-					Operation::AdminConfigUpdated,
+					Operation::ADMIN_CONFIG_UPDATED,
 					$value ? 'Storing the login tokens of users was enabled' : 'Storing the login tokens of users was disabled',
 					['key' => $key, 'value' => $value],
 				);

@@ -11,7 +11,9 @@ use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Controller\OcsApiController;
 use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\IUserFolder;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -39,9 +41,12 @@ class OcsApiControllerTest extends \Test\TestCase {
 		$this->auditLogger = $this->createMock(AuditLogger::class);
 		$this->overwriteService(TemplateManager::class, $this->createMock(TemplateManager::class));
 
+		$root = $this->createMock(IRootFolder::class);
+		$root->method('getUserFolder')->willReturn($this->createMock(interface_exists(IUserFolder::class) ? IUserFolder::class : Folder::class));
+
 		$this->controller = new OcsApiController(
 			$this->createMock(IRequest::class),
-			$this->createMock(IRootFolder::class),
+			$root,
 			$this->userMapper,
 			$this->userManager,
 			$this->auditLogger,

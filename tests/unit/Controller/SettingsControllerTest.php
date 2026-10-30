@@ -193,7 +193,7 @@ class SettingsControllerTest extends TestCase {
 			->with(Application::APP_ID, 'store_login_token', $storedValue, true);
 		$this->auditLogger->expects($this->once())
 			->method('log')
-			->with(Operation::AdminConfigUpdated, $message, ['key' => 'store_login_token', 'value' => $value]);
+			->with(Operation::ADMIN_CONFIG_UPDATED, $message, ['key' => 'store_login_token', 'value' => $value]);
 
 		$this->controller->setAdminConfig(['store_login_token' => $value]);
 	}

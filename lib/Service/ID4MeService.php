@@ -36,7 +36,7 @@ class ID4MeService {
 	public function setID4ME(bool $enabled): void {
 		$this->appConfig->setValueString(Application::APP_ID, 'id4me_enabled', $enabled ? '1' : '0', lazy: true);
 		$this->auditLogger->log(
-			Operation::Id4meUpdated,
+			Operation::ID4ME_UPDATED,
 			$enabled ? 'Login with ID4me was enabled' : 'Login with ID4me was disabled',
 			['enabled' => $enabled],
 		);
