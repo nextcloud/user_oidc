@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Controller;
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\UserMapper;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
@@ -26,6 +27,7 @@ class OcsApiController extends OCSController {
 		private IRootFolder $root,
 		private UserMapper $userMapper,
 		private IUserManager $userManager,
+		private AuditLogger $auditLogger,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -47,10 +49,13 @@ class OcsApiController extends OCSController {
 		int $providerId, string $userId, ?string $displayName = null,
 		?string $email = null, ?string $quota = null,
 	): DataResponse {
-		$backendUser = $this->userMapper->getOrCreate($providerId, $userId);
+		$backendUser = $this->userMapper->getOrCreate($providerId, $userId, created: $created);
 		$user = $this->userManager->get($backendUser->getUserId());
 		if ($user === null) {
 			throw new \RuntimeException('Unable to get user that was just created with userId=' . $backendUser->getUserId());
+		}
+		if ($created) {
+			$this->auditLogger->userProvisioned($user->getUID(), $providerId, 'provisioning_api');
 		}
 
 		if ($displayName) {

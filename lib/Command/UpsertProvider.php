@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Command;
 
 use OC\Core\Command\Base;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -175,6 +176,7 @@ class UpsertProvider extends Base {
 		private ProviderService $providerService,
 		private ProviderMapper $providerMapper,
 		private ICrypto $crypto,
+		private AuditLogger $auditLogger,
 	) {
 		parent::__construct();
 	}
@@ -256,9 +258,11 @@ class UpsertProvider extends Base {
 		}
 
 		$provider = $this->providerService->getProviderByIdentifier($identifier);
+		$settingsBefore = null;
 		if ($provider !== null) {
 			// existing provider, keep values that are not set, the scope has to be set anyway
 			$scope = $scope ?? $provider->getScope();
+			$settingsBefore = $this->providerService->getSettings($provider->getId());
 		} else {
 			// new provider default scope value
 			$scope = $scope ?? 'openid email profile';
@@ -283,6 +287,12 @@ class UpsertProvider extends Base {
 				}
 				$this->providerService->setSetting($provider->getId(), $option['setting_key'], $value);
 			}
+		}
+
+		if ($settingsBefore === null) {
+			$this->auditLogger->providerCreated($provider);
+		} else {
+			$this->auditLogger->providerUpdated($provider, $clientSecret !== null, $settingsBefore, $this->providerService->getSettings($provider->getId()));
 		}
 		return 0;
 	}

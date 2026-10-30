@@ -10,6 +10,7 @@ namespace OCA\UserOIDC\Controller;
 
 use OC\User\Session as OC_UserSession;
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\Id4Me;
 use OCA\UserOIDC\Db\Id4MeMapper;
 use OCA\UserOIDC\Db\UserMapper;
@@ -68,6 +69,7 @@ class Id4meController extends BaseOidcController {
 		private ID4MeService $id4MeService,
 		private LoggerInterface $logger,
 		private ICrypto $crypto,
+		private AuditLogger $auditLogger,
 	) {
 		parent::__construct($request, $config, $l10n);
 
@@ -304,8 +306,11 @@ class Id4meController extends BaseOidcController {
 		}
 
 		// Insert or update user
-		$backendUser = $this->userMapper->getOrCreate($id4Me->getId(), $plainPayload['sub'], true);
+		$backendUser = $this->userMapper->getOrCreate($id4Me->getId(), $plainPayload['sub'], true, $created);
 		$user = $this->userManager->get($backendUser->getUserId());
+		if ($created) {
+			$this->auditLogger->userProvisioned($backendUser->getUserId(), $id4Me->getId(), 'id4me_login');
+		}
 
 		$this->userSession->setUser($user);
 		if ($this->userSession instanceof OC_UserSession) {

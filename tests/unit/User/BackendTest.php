@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\UserMapper;
@@ -118,6 +119,7 @@ class BackendTest extends \Test\TestCase {
 			$this->settingsService,
 			$this->userManager,
 			$this->timeFactory,
+			$this->createMock(AuditLogger::class),
 		);
 	}
 

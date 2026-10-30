@@ -16,6 +16,8 @@ use GuzzleHttp\Exception\ServerException;
 use OC\Authentication\Token\IProvider;
 use OC\User\Session as OC_UserSession;
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
+use OCA\UserOIDC\AuditLog\Operation;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
@@ -116,6 +118,7 @@ class LoginController extends BaseOidcController {
 		private OidcService $oidcService,
 		private JwkService $jwkService,
 		private JweService $jweService,
+		private AuditLogger $auditLogger,
 	) {
 		parent::__construct($request, $config, $l10n);
 	}
@@ -381,6 +384,7 @@ class LoginController extends BaseOidcController {
 
 		if ($error !== '') {
 			$this->logger->warning('Code login error', ['error' => $error, 'error_description' => $error_description]);
+			$this->logLoginFailure('idp_error', $this->getLoginProviderId('-' . $state));
 			if ($this->isDebugModeEnabled()) {
 				return new JSONResponse([
 					'error' => $error,
@@ -398,6 +402,7 @@ class LoginController extends BaseOidcController {
 		$sessionTimestamp = $this->session->get(self::TIMESTAMP . $sessionKeySuffix);
 		if ($currentTimestamp - $sessionTimestamp > self::LOGIN_FLOW_TIMEOUT) {
 			// the state, nonce etc... were stored too long ago, the login flow has expired
+			$this->logLoginFailure('state_expired', $this->getLoginProviderId($sessionKeySuffix));
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The received state has expired.');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
@@ -409,6 +414,7 @@ class LoginController extends BaseOidcController {
 				'expected' => $storedState,
 				'state_exists_in_session' => $this->session->exists(self::STATE . $sessionKeySuffix),
 			]);
+			$this->logLoginFailure('state_mismatch', null);
 
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The received state does not match the expected value.');
@@ -521,11 +527,13 @@ class LoginController extends BaseOidcController {
 				$this->logger->debug('Failed to contact the OIDC provider token endpoint', ['exception' => $e]);
 				$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
 			}
+			$this->logLoginFailure('token_request_failed', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		} catch (\Exception $e) {
 			$this->logger->debug('Failed to contact the OIDC provider token endpoint', ['exception' => $e]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			$this->logLoginFailure('token_request_failed', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
@@ -538,6 +546,7 @@ class LoginController extends BaseOidcController {
 				'body' => $body,
 			]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			$this->logLoginFailure('token_request_failed', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
@@ -545,6 +554,7 @@ class LoginController extends BaseOidcController {
 		if (!isset($data['id_token'])) {
 			$this->logger->error('Missing id_token in IdP token response', ['keys' => array_keys($data)]);
 			$message = $this->l10n->t('Failed to contact the OIDC provider token endpoint');
+			$this->logLoginFailure('token_request_failed', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, [], false);
 		}
@@ -586,7 +596,12 @@ class LoginController extends BaseOidcController {
 		} catch (UnexpectedValueException $e) {
 			$this->logger->debug('Failed to decode the JWT token, retrying with fresh JWK');
 			$jwks = $this->discoveryService->obtainJWK($provider, $idTokenRaw, false);
-			$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+			try {
+				$idTokenPayload = JWT::decode($idTokenRaw, $jwks);
+			} catch (UnexpectedValueException $e) {
+				$this->logLoginFailure('invalid_token', $providerId);
+				throw $e;
+			}
 		}
 
 		// default is false
@@ -614,6 +629,7 @@ class LoginController extends BaseOidcController {
 
 		if (!isset($idTokenPayload->exp) || $idTokenPayload->exp < $this->timeFactory->getTime()) {
 			$this->logger->debug('Token expired');
+			$this->logLoginFailure('token_expired', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The received token is expired.');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'token expired']);
@@ -622,6 +638,7 @@ class LoginController extends BaseOidcController {
 		// Verify issuer
 		if (!isset($idTokenPayload->iss) || $idTokenPayload->iss !== $discovery['issuer']) {
 			$this->logger->debug('This token is issued by the wrong issuer');
+			$this->logLoginFailure('invalid_issuer', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The issuer does not match the one from the discovery endpoint');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_issuer' => $idTokenPayload->iss]);
@@ -638,6 +655,7 @@ class LoginController extends BaseOidcController {
 				|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
 			) {
 				$this->logger->debug('This token is not for us');
+				$this->logLoginFailure('invalid_audience', $providerId);
 				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('The audience does not match ours');
 				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud]);
@@ -651,6 +669,7 @@ class LoginController extends BaseOidcController {
 			// If the azp claim is present, it should be the client ID
 			if (isset($idTokenPayload->azp) && $idTokenPayload->azp !== $provider->getClientId()) {
 				$this->logger->debug('This token is not for us, authorized party (azp) is different than the client ID');
+				$this->logLoginFailure('invalid_azp', $providerId);
 				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('The authorized party does not match ours');
 				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_azp' => $idTokenPayload->azp]);
@@ -659,6 +678,7 @@ class LoginController extends BaseOidcController {
 
 		if (isset($idTokenPayload->nonce) && $idTokenPayload->nonce !== $this->session->get(self::NONCE . $sessionKeySuffix)) {
 			$this->logger->debug('Nonce does not match');
+			$this->logLoginFailure('invalid_nonce', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('The nonce does not match');
 			return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'invalid nonce']);
@@ -669,6 +689,7 @@ class LoginController extends BaseOidcController {
 		$userId = $this->provisioningService->getClaimValue($idTokenPayload, $uidAttribute, $providerId);
 
 		if ($userId === null) {
+			$this->logLoginFailure('missing_user_id', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('Failed to provision the user');
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
@@ -683,6 +704,7 @@ class LoginController extends BaseOidcController {
 
 			if ($syncGroups === null || count($syncGroups) === 0) {
 				$this->logger->debug('Prevented user from login as user is not part of a whitelisted group');
+				$this->logLoginFailure('not_in_whitelisted_group', $providerId, $userId);
 				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('You do not have permission to log in to this instance. If you think this is an error, please contact an administrator.');
 				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['reason' => 'user not in any whitelisted group']);
@@ -709,6 +731,7 @@ class LoginController extends BaseOidcController {
 			if (!$softAutoProvisionAllowed && $existingUser !== null && $existingUser->getBackendClassName() !== Application::APP_ID) {
 				// if soft auto-provisioning is disabled,
 				// we refuse login for a user that already exists in another backend
+				$this->logLoginFailure('user_conflict', $providerId, $userId);
 				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('User conflict');
 				return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'non-soft auto provision, user conflict'], false);
@@ -727,6 +750,7 @@ class LoginController extends BaseOidcController {
 		}
 
 		if ($user === null) {
+			$this->logLoginFailure('provisioning_failed', $providerId, $userId);
 			$this->cleanupSessionState($sessionKeySuffix);
 			$message = $this->l10n->t('Failed to provision the user');
 			return $this->build403TemplateResponse($message, Http::STATUS_BAD_REQUEST, ['reason' => 'failed to provision user']);
@@ -1098,6 +1122,16 @@ class LoginController extends BaseOidcController {
 				// $authToken = $this->authTokenProvider->getToken($oidcSession->getNcSessionId());
 				$userId = $authToken->getUID();
 				$this->authTokenProvider->invalidateTokenById($userId, $authToken->getId());
+				$this->auditLogger->log(
+					Operation::SESSION_REVOKED,
+					'Session of user %s was revoked by a back-channel logout from OpenID Connect provider "%s"',
+					[
+						'userId' => $userId,
+						'identifier' => $provider->getIdentifier(),
+						'providerId' => $provider->getId(),
+						'authTokenId' => $authToken->getId(),
+					],
+				);
 			} catch (InvalidTokenException $e) {
 				$this->logger->warning('[BackchannelLogout] Nextcloud session not found', ['authtoken_id' => $authTokenId]);
 			}
@@ -1154,6 +1188,22 @@ class LoginController extends BaseOidcController {
 		$s = str_replace('+', '-', $s); // 62nd char of encoding
 		$s = str_replace('/', '_', $s); // 63rd char of encoding
 		return $s;
+	}
+
+	private function getLoginProviderId(string $sessionKeySuffix): ?int {
+		$providerId = $this->session->get(self::LOGIN_PROVIDERID . $sessionKeySuffix);
+		return $providerId === null ? null : (int)$providerId;
+	}
+
+	/**
+	 * Logs a rejected code flow login, never with the code or any token
+	 */
+	private function logLoginFailure(string $reason, ?int $providerId, ?string $userId = null): void {
+		$this->auditLogger->log(Operation::LOGIN_FAILED, 'OpenID Connect login failed: %s', [
+			'reason' => $reason,
+			'providerId' => $providerId,
+			'userId' => $userId,
+		]);
 	}
 
 	/**
