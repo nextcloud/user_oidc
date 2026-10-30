@@ -58,6 +58,7 @@ class ProviderService {
 	public const SETTING_PROVIDER_BASED_ID = 'providerBasedId';
 	public const SETTING_GROUP_PROVISIONING = 'groupProvisioning';
 	public const SETTING_GROUP_WHITELIST_REGEX = 'groupWhitelistRegex';
+	public const SETTING_GROUP_ADMIN_ALIAS = 'groupAdminAlias';
 	public const SETTING_RESTRICT_LOGIN_TO_GROUPS = 'restrictLoginToGroups';
 	public const SETTING_FORBID_LOGIN_WITHOUT_GROUP = 'forbidLoginWithoutGroup';
 	public const SETTING_AZURE_GROUP_NAMES = 'azureGroupNames';
@@ -198,6 +199,7 @@ class ProviderService {
 			self::SETTING_PROVIDER_BASED_ID,
 			self::SETTING_GROUP_PROVISIONING,
 			self::SETTING_GROUP_WHITELIST_REGEX,
+			self::SETTING_GROUP_ADMIN_ALIAS,
 			self::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 			self::SETTING_FORBID_LOGIN_WITHOUT_GROUP,
 			self::SETTING_AZURE_GROUP_NAMES,

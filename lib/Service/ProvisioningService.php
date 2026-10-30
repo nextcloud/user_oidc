@@ -648,6 +648,7 @@ class ProvisioningService {
 		$groupsData = $this->getClaimValues($idTokenPayload, $groupsAttribute, $providerId);
 
 		$groupsWhitelistRegex = $this->getGroupWhitelistRegex($providerId);
+		$adminGroupAlias = $this->providerService->getSetting($providerId, ProviderService::SETTING_GROUP_ADMIN_ALIAS) ?: null;
 
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_GROUPS, $idTokenPayload, json_encode($groupsData));
 		$this->eventDispatcher->dispatchTyped($event);
@@ -716,6 +717,10 @@ class ProvisioningService {
 						}
 						continue;
 					}
+				}
+
+				if ($group->gid === $adminGroupAlias) {
+					$syncGroups[] = (object)['gid' => 'admin'];
 				}
 
 				if ($this->providerService->getSetting($providerId, ProviderService::SETTING_AZURE_GROUP_NAMES, '0') === '1' && is_string($v)) {

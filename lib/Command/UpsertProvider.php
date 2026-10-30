@@ -152,6 +152,10 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_GROUP_WHITELIST_REGEX,
 			'description' => 'Group whitelist regex',
 		],
+		'group-admin-alias' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_GROUP_ADMIN_ALIAS,
+			'description' => 'Group from the groups claim that also grants the Nextcloud admin group',
+		],
 		'group-restrict-login-to-whitelist' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 			'description' => 'Restrict login for users that are not in any whitelisted groups. 1 to enable, 0 to disable (default)',
