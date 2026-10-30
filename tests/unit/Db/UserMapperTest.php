@@ -85,8 +85,7 @@ class UserMapperTest extends TestCase {
 			});
 		$this->userMapper->expects(self::never())->method('update');
 
-		$user = $this->userMapper->getOrCreate($providerId, $sub, $id4me, $created);
-		Assert::assertTrue($created);
+		$user = $this->userMapper->getOrCreate($providerId, $sub, $id4me);
 		Assert::assertEquals($expected, $user->getUserId());
 		Assert::assertSame($providerId, $user->getProviderId());
 		Assert::assertSame($sub, $user->getSub());
@@ -139,8 +138,7 @@ class UserMapperTest extends TestCase {
 			});
 		$this->userMapper->expects(self::never())->method('insert');
 
-		$user = $this->userMapper->getOrCreate(5, 'the-sub', created: $created);
-		Assert::assertFalse($created);
+		$user = $this->userMapper->getOrCreate(5, 'the-sub');
 		Assert::assertSame(5, $user->getProviderId());
 		Assert::assertSame('the-sub', $user->getSub());
 	}
@@ -162,8 +160,7 @@ class UserMapperTest extends TestCase {
 		$this->userMapper->expects(self::never())->method('update');
 		$this->userMapper->expects(self::never())->method('insert');
 
-		$user = $this->userMapper->getOrCreate(5, 'the-sub', created: $created);
-		Assert::assertFalse($created);
+		$user = $this->userMapper->getOrCreate(5, 'the-sub');
 		Assert::assertSame($existing, $user);
 	}
 }
