@@ -109,6 +109,8 @@
     "Group whitelist regex" : "Group whitelist regex",
     "Restrict login for users that are not in any whitelisted group" : "Restrict login for users that are not in any whitelisted group",
     "Users that are not part of any whitelisted group are not created and can not login" : "Users that are not part of any whitelisted group are not created and can not login",
+    "Forbid login to users without at least one group" : "Forbid login to users without at least one group",
+    "When enabled, users must belong to at least one group provided by the OIDC group claim in order to log in." : "When enabled, users must belong to at least one group provided by the OIDC group claim in order to log in.",
     "Check Bearer token on API and WebDAV requests" : "Check Bearer token on API and WebDAV requests",
     "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?" : "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "Auto provision user when accessing API and WebDAV with Bearer token",

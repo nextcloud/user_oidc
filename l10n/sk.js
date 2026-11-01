@@ -111,6 +111,8 @@ OC.L10N.register(
     "Group whitelist regex" : "Regulárny výraz zoznamu povolených skupín",
     "Restrict login for users that are not in any whitelisted group" : "Obmedziť prihlasovanie používateľom, ktorí nie sú v žiadnej povolenej skupine",
     "Users that are not part of any whitelisted group are not created and can not login" : "Používatelia, ktorí nie sú členmi žiadnej povolenej skupiny, sa nevytvoria a nemôžu sa prihlásiť",
+    "Forbid login to users without at least one group" : "Zakázať prihlásenie používateľom, ktorí nie sú členmi aspoň jednej skupiny",
+    "When enabled, users must belong to at least one group provided by the OIDC group claim in order to log in." : "Ak je táto možnosť zapnutá, používatelia musia byť členmi aspoň jednej skupiny uvedenej v OIDC nároku na skupiny, aby sa mohli prihlásiť.",
     "Check Bearer token on API and WebDAV requests" : "Kontrolovať token Bearer v požiadavkách API a WebDAV",
     "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?" : "Chcete povoliť volania API a požiadavky WebDAV overené pomocou tokenu ID alebo prístupového tokenu OIDC?",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "Automaticky vytvoriť používateľa pri prístupe k API a WebDAV s tokenom Bearer",

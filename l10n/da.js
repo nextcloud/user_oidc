@@ -111,6 +111,8 @@ OC.L10N.register(
     "Group whitelist regex" : "Regulært udtryk for tilladte grupper",
     "Restrict login for users that are not in any whitelisted group" : "Begræns login for brugere, der ikke er med i nogen tilladt gruppe",
     "Users that are not part of any whitelisted group are not created and can not login" : "Brugere, der ikke er med i en gruppe på tilladelseslisten, bliver ikke oprettet og kan ikke logge ind",
+    "Forbid login to users without at least one group" : "Afvis login for brugere, der ikke er med i nogen gruppe",
+    "When enabled, users must belong to at least one group provided by the OIDC group claim in order to log in." : "Når indstillingen er slået til, skal brugerne være med i mindst én gruppe fra OIDC-gruppe-claimet for at kunne logge ind.",
     "Check Bearer token on API and WebDAV requests" : "Tjek Bearer-token ved API- og WebDAV-anmodninger",
     "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?" : "Vil du tillade API-kald og WebDAV-anmodninger, der er godkendt med et OIDC-id-token eller et adgangstoken?",
     "Auto provision user when accessing API and WebDAV with Bearer token" : "Automatisk provisionering af brugeren ved adgang til API og WebDAV med et Bearer-token",
