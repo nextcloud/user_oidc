@@ -109,7 +109,7 @@
     "Group whitelist regex" : "Gruppen-Whitelist-Regex",
     "Restrict login for users that are not in any whitelisted group" : "Die Anmeldung für Benutzer, die sich nicht in einer Whitelist-Gruppe befinden, beschränken",
     "Users that are not part of any whitelisted group are not created and can not login" : "Benutzer, die keiner Whitelist-Gruppe angehören, werden nicht erstellt und können sich nicht anmelden",
-    "Forbid login to users without at least one group" : "Anmeldung für Benutzer ohne mindestens eine Gruppenzugehörigkeit untersagen",
+    "Forbid login to users without at least one group" : "Anmeldung für Benutzer, die nicht wenigstens einer Gruppe angehören, untersagen",
     "When enabled, users must belong to at least one group provided by the OIDC group claim in order to log in." : "Wenn diese Option aktiviert ist, müssen Benutzer mindestens einer Gruppe angehören, die über den OIDC-Gruppen-Claim bereitgestellt wird, um sich anmelden zu können.",
     "Check Bearer token on API and WebDAV requests" : "Bearer-Token bei API- und WebDAV-Anfragen überprüfen",
     "Do you want to allow API calls and WebDAV requests that are authenticated with an OIDC ID token or access token?" : "Sollen API-Aufrufe und WebDAV-Anfragen zugelassen werden, die mit einem OIDC-ID-Token oder Zugriffstoken authentifiziert werden?",
