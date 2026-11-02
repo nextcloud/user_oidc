@@ -180,15 +180,19 @@ class UserMapper extends QBMapper {
 		// against the column length the same way the userId is further below
 		$storedSub = strlen($sub) > 256 ? hash('sha256', $sub) : $sub;
 
-		try {
-			// look this identity up by its immutable (provider, sub) pair
-			// first: if it has been provisioned before, this always returns
-			// its existing account, even if the uid-generation settings
-			// changed since - this is what keeps a provider's own attribute
-			// drift from forking the account into a second, empty one
-			return $this->getByProviderAndSub($providerId, $storedSub);
-		} catch (IMapperException $e) {
-			// not seen under this provider+sub yet, fall through below
+		// ID4me authority ids and OIDC provider ids are separate sequences that
+		// overlap, so ID4me accounts never get a (provider_id, sub) key
+		if (!$id4me) {
+			try {
+				// look this identity up by its immutable (provider, sub) pair
+				// first: if it has been provisioned before, this always returns
+				// its existing account, even if the uid-generation settings
+				// changed since - this is what keeps a provider's own attribute
+				// drift from forking the account into a second, empty one
+				return $this->getByProviderAndSub($providerId, $storedSub);
+			} catch (IMapperException $e) {
+				// not seen under this provider+sub yet, fall through below
+			}
 		}
 
 		$userId = $this->idService->getId($providerId, $sub, $id4me);
@@ -199,7 +203,7 @@ class UserMapper extends QBMapper {
 
 		try {
 			$user = $this->getUser($userId);
-			if ($user->getProviderId() === null || $user->getSub() === null) {
+			if (!$id4me && ($user->getProviderId() === null || $user->getSub() === null)) {
 				// backfill accounts that were provisioned before these columns
 				// existed, so their next login takes the fast path above
 				$user->setProviderId($providerId);
@@ -215,8 +219,10 @@ class UserMapper extends QBMapper {
 		$user = new User();
 		$user->setUserId($userId);
 		$user->setDisplayName('');
-		$user->setProviderId($providerId);
-		$user->setSub($storedSub);
+		if (!$id4me) {
+			$user->setProviderId($providerId);
+			$user->setSub($storedSub);
+		}
 		$user = $this->insert($user);
 		$this->userCache->set($userId, $user);
 		$created = true;
