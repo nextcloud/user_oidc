@@ -16,6 +16,7 @@ namespace OCA\UserOIDC;
  *     mappingQuota: string,
  *     mappingUid: string,
  *     mappingGroups: string,
+ *     mappingGroupAdminFor: string,
  *     mappingLanguage: string,
  *     mappingLocale: string,
  *     mappingAddress: string,
