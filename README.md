@@ -488,15 +488,16 @@ This can be done in the graphical settings for the provider by with the occ comm
 sudo -u www-data php occ user_oidc:provider demoprovider --entraid-group-names=1
 ```
 
-### Disable audience and azp checks
+### Disable audience, azp and nonce checks
 
-The `audience` and `azp` token claims will be checked when validating a login ID token.
+The `audience`, `azp` and `nonce` token claims will be checked when validating a login ID token.
 Only the `audience` will be checked when validating a Bearer token.
 You can disable these checks with these config values (in config.php):
 ``` php
 'user_oidc' => [
     'login_validation_audience_check' => false,
     'login_validation_azp_check' => false,
+    'login_validation_nonce_check' => false,
     'selfencoded_bearer_validation_audience_check' => false,
 ],
 ```

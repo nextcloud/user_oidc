@@ -23,6 +23,7 @@ use OCA\UserOIDC\Db\SessionMapper;
 use OCA\UserOIDC\Event\TokenObtainedEvent;
 use OCA\UserOIDC\Event\UserObtainedTokenEvent;
 use OCA\UserOIDC\Helper\HttpClientHelper;
+use OCA\UserOIDC\Helper\TokenClaims;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\JweService;
 use OCA\UserOIDC\Service\JwkService;
@@ -648,17 +649,12 @@ class LoginController extends BaseOidcController {
 		$checkAudience = !isset($oidcSystemConfig['login_validation_audience_check'])
 			|| !in_array($oidcSystemConfig['login_validation_audience_check'], [false, 'false', 0, '0'], true);
 		if ($checkAudience) {
-			$tokenAudience = $idTokenPayload->aud;
-			$providerClientId = $provider->getClientId();
-			if (
-				(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
-				|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
-			) {
+			if (!TokenClaims::audienceContains($idTokenPayload, $provider->getClientId())) {
 				$this->logger->debug('This token is not for us');
 				$this->logLoginFailure('invalid_audience', $providerId);
 				$this->cleanupSessionState($sessionKeySuffix);
 				$message = $this->l10n->t('The audience does not match ours');
-				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud]);
+				return $this->build403TemplateResponse($message, Http::STATUS_FORBIDDEN, ['invalid_audience' => $idTokenPayload->aud ?? null]);
 			}
 		}
 
@@ -676,7 +672,11 @@ class LoginController extends BaseOidcController {
 			}
 		}
 
-		if (isset($idTokenPayload->nonce) && $idTokenPayload->nonce !== $this->session->get(self::NONCE . $sessionKeySuffix)) {
+		$checkNonce = !isset($oidcSystemConfig['login_validation_nonce_check'])
+			|| !in_array($oidcSystemConfig['login_validation_nonce_check'], [false, 'false', 0, '0'], true);
+		if ($checkNonce
+			&& (!isset($idTokenPayload->nonce) || $idTokenPayload->nonce !== $this->session->get(self::NONCE . $sessionKeySuffix))
+		) {
 			$this->logger->debug('Nonce does not match');
 			$this->logLoginFailure('invalid_nonce', $providerId);
 			$this->cleanupSessionState($sessionKeySuffix);
@@ -1018,8 +1018,7 @@ class LoginController extends BaseOidcController {
 		// check the audience
 		$aud = $logoutTokenPayload->aud;
 		$clientId = $provider->getClientId();
-		$audMatches = (is_string($aud) && $aud === $clientId) || (is_array($aud) && in_array($clientId, $aud, true));
-		if (!$audMatches) {
+		if (!TokenClaims::audienceContains($logoutTokenPayload, $clientId)) {
 			return $this->getBackchannelLogoutErrorResponse(
 				'invalid audience',
 				'The audience of the logout token does not match the provider',
