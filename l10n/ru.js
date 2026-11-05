@@ -79,6 +79,7 @@ OC.L10N.register(
     "User ID mapping" : "Сопоставление идентификатора пользователя",
     "Quota mapping" : "Сопоставление квоты",
     "Groups mapping" : "Сопоставление групп",
+    "Group admin for mapping" : "Сопоставление администрируемых групп",
     "Extra attributes mapping" : "Сопоставление дополнительных атрибутов",
     "Display name mapping" : "Сопоставление отображаемого имени",
     "Birth date mapping" : "Сопоставление даты рождения",

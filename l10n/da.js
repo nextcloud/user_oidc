@@ -79,6 +79,7 @@ OC.L10N.register(
     "User ID mapping" : "Tilknytning af bruger-id",
     "Quota mapping" : "Kvotetilknytning",
     "Groups mapping" : "Tilknytning af grupper",
+    "Group admin for mapping" : "Tilknytning af gruppeadministrator for",
     "Extra attributes mapping" : "Tilknytning af ekstra attributter",
     "Display name mapping" : "Tilknytning af visningsnavn",
     "Birth date mapping" : "Tilknytning af fødselsdato",

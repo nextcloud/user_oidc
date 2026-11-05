@@ -79,6 +79,7 @@ OC.L10N.register(
     "User ID mapping" : "Kullanıcı kimliği eşleştirmesi",
     "Quota mapping" : "Kota eşleştirmesi",
     "Groups mapping" : "Grup eşleştirmesi",
+    "Group admin for mapping" : "Eşleştirme için grup yöneticisi",
     "Extra attributes mapping" : "Ek öznitelikler eşleştirmesi",
     "Display name mapping" : "Görüntülenecek ad eşleştirmesi",
     "Birth date mapping" : "Doğum tarihi eşleştirmesi",

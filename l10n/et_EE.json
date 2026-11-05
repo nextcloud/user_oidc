@@ -26,6 +26,7 @@
     "Could not register provider:" : "Teenusepakkuja registreerimine ei õnnestunud:",
     "Allows users to authenticate via OpenID Connect providers." : "Võimaldab kasutada autentimist OpenID Connecti teenusepakkujate abil.",
     "Enable ID4me" : "Lülita ID4me sisse",
+    "Store login tokens" : "Salvesta sisselogimise tunnusload",
     "Registered Providers" : "Registreeritud teenusepakkujad",
     "Register new provider" : "Registreeri uus teenusepakkuja",
     "Register a new provider" : "Registreeri uus teenusepakkuja",
