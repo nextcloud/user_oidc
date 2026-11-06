@@ -458,22 +458,7 @@ class LoginController extends BaseOidcController {
 			}
 
 			$headers = [];
-			// follow what is described in https://openid.net/specs/openid-connect-discovery-1_0.html
-			// about token_endpoint_auth_methods_supported: "If omitted, the default is client_secret_basic"
-			// Use client_secret_post if supported
-			// We still allow changing the default auth method in config.php
-			$tokenEndpointAuthMethod = $oidcSystemConfig['default_token_endpoint_auth_method'] ?? 'client_secret_basic';
-			// deal with invalid values
-			if (!in_array($tokenEndpointAuthMethod, ['client_secret_basic', 'client_secret_post'], true)) {
-				$tokenEndpointAuthMethod = 'client_secret_basic';
-			}
-			if (
-				array_key_exists('token_endpoint_auth_methods_supported', $discovery)
-				&& is_array($discovery['token_endpoint_auth_methods_supported'])
-				&& in_array('client_secret_post', $discovery['token_endpoint_auth_methods_supported'], true)
-			) {
-				$tokenEndpointAuthMethod = 'client_secret_post';
-			}
+			$tokenEndpointAuthMethod = $this->discoveryService->getTokenEndpointAuthMethod($discovery);
 
 			// private key JWT auth does not work with client_secret_basic, we don't wanna pass the client secret
 			if ($tokenEndpointAuthMethod === 'client_secret_basic' && !$usePrivateKeyJwt) {
@@ -486,7 +471,8 @@ class LoginController extends BaseOidcController {
 					return $this->buildErrorTemplateResponse($message, Http::STATUS_BAD_REQUEST, [], false);
 				}
 				$headers = [
-					'Authorization' => 'Basic ' . base64_encode($provider->getClientId() . ':' . $providerClientSecret),
+					// RFC 6749 section 2.3.1: credentials are form-urlencoded before being base64 encoded
+					'Authorization' => 'Basic ' . base64_encode(urlencode($provider->getClientId()) . ':' . urlencode($providerClientSecret)),
 					'Content-Type' => 'application/x-www-form-urlencoded',
 				];
 			} else {
