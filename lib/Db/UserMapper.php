@@ -171,18 +171,17 @@ class UserMapper extends QBMapper {
 	}
 
 	/**
-	 * @param non-empty-string $sub
+	 * @param non-empty-string $uid
+	 * @param string|null $sub the token's subject, null if it is not known
 	 * @param-out bool $created whether a new user was inserted
 	 */
-	public function getOrCreate(int $providerId, string $sub, bool $id4me = false, ?bool &$created = null): User {
+	public function getOrCreate(int $providerId, string $uid, bool $id4me = false, ?bool &$created = null, ?string $sub = null): User {
 		$created = false;
-		// the sub is the stable identifier we want to keep around, so guard it
-		// against the column length the same way the userId is further below
-		$storedSub = strlen($sub) > 256 ? hash('sha256', $sub) : $sub;
-
 		// ID4me authority ids and OIDC provider ids are separate sequences that
 		// overlap, so ID4me accounts never get a (provider_id, sub) key
-		if (!$id4me) {
+		$storedSub = ($id4me || $sub === null || $sub === '') ? null : $this->storedSub($sub);
+
+		if ($storedSub !== null) {
 			try {
 				// look this identity up by its immutable (provider, sub) pair
 				// first: if it has been provisioned before, this always returns
@@ -195,21 +194,13 @@ class UserMapper extends QBMapper {
 			}
 		}
 
-		$userId = $this->idService->getId($providerId, $sub, $id4me);
-
-		if (strlen($userId) > 64) {
-			$userId = hash('sha256', $userId);
-		}
+		$userId = $this->userIdFor($providerId, $uid, $id4me);
 
 		try {
 			$user = $this->getUser($userId);
-			if (!$id4me && ($user->getProviderId() === null || $user->getSub() === null)) {
-				// backfill accounts that were provisioned before these columns
-				// existed, so their next login takes the fast path above
-				$user->setProviderId($providerId);
-				$user->setSub($storedSub);
-				$user = $this->update($user);
-				$this->userCache->set($userId, $user);
+			if ($storedSub !== null && !$this->hasKey($user)) {
+				// backfill accounts without a key, so their next login takes the fast path above
+				$user = $this->setKey($user, $providerId, $storedSub);
 			}
 			return $user;
 		} catch (IMapperException $e) {
@@ -219,7 +210,8 @@ class UserMapper extends QBMapper {
 		$user = new User();
 		$user->setUserId($userId);
 		$user->setDisplayName('');
-		if (!$id4me) {
+		if ($storedSub !== null) {
+			// both or neither, Oracle treats (provider_id, NULL) rows as duplicates
 			$user->setProviderId($providerId);
 			$user->setSub($storedSub);
 		}
@@ -227,6 +219,49 @@ class UserMapper extends QBMapper {
 		$this->userCache->set($userId, $user);
 		$created = true;
 		return $user;
+	}
+
+	/**
+	 * Record the token's subject for an account found by its uid, if the account has no key yet
+	 *
+	 * @param non-empty-string $uid
+	 * @param non-empty-string $sub
+	 */
+	public function setSubIfMissing(User $user, int $providerId, string $uid, string $sub): User {
+		// only for the account this uid maps to, not one whose user id merely equals the uid
+		if ($this->hasKey($user) || $user->getUserId() !== $this->userIdFor($providerId, $uid, false)) {
+			return $user;
+		}
+		$storedSub = $this->storedSub($sub);
+		try {
+			// another account has this key already
+			$this->getByProviderAndSub($providerId, $storedSub);
+			return $user;
+		} catch (IMapperException $e) {
+			// the key is free
+		}
+		return $this->setKey($user, $providerId, $storedSub);
+	}
+
+	private function hasKey(User $user): bool {
+		return $user->getProviderId() !== null || $user->getSub() !== null;
+	}
+
+	private function setKey(User $user, int $providerId, string $storedSub): User {
+		$user->setProviderId($providerId);
+		$user->setSub($storedSub);
+		$user = $this->update($user);
+		$this->userCache->set($user->getUserId(), $user);
+		return $user;
+	}
+
+	private function userIdFor(int $providerId, string $uid, bool $id4me): string {
+		$userId = $this->idService->getId($providerId, $uid, $id4me);
+		return strlen($userId) > 64 ? hash('sha256', $userId) : $userId;
+	}
+
+	private function storedSub(string $sub): string {
+		return strlen($sub) > 256 ? hash('sha256', $sub) : $sub;
 	}
 
 	/**
