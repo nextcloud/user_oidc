@@ -100,6 +100,32 @@ class DiscoveryService {
 	}
 
 	/**
+	 * Prefer the configured method, then client_secret_basic (RFC 6749 section 2.3.1)
+	 *
+	 * @return 'client_secret_basic'|'client_secret_post'
+	 */
+	public function getTokenEndpointAuthMethod(array $discovery): string {
+		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
+		$configuredMethod = $oidcSystemConfig['default_token_endpoint_auth_method'] ?? null;
+		if (!in_array($configuredMethod, ['client_secret_basic', 'client_secret_post'], true)) {
+			$configuredMethod = null;
+		}
+
+		$supportedMethods = $discovery['token_endpoint_auth_methods_supported'] ?? null;
+		if (!is_array($supportedMethods)) {
+			return $configuredMethod ?? 'client_secret_basic';
+		}
+
+		foreach ([$configuredMethod, 'client_secret_basic', 'client_secret_post'] as $method) {
+			if ($method !== null && in_array($method, $supportedMethods, true)) {
+				return $method;
+			}
+		}
+
+		return $configuredMethod ?? 'client_secret_basic';
+	}
+
+	/**
 	 * @param string $authorizationEndpoint
 	 * @param array $extraGetParameters
 	 * @return string
