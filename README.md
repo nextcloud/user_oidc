@@ -32,6 +32,30 @@ It is especially useful when your OAuth2 or OIDC provider is hosted locally or u
 
 ---
 
+## `user_oidc.httpclient.allowlocalprovider`
+
+```php
+'user_oidc' => [
+    'httpclient.allowlocalprovider' => true,
+]
+```
+
+This configuration allows Nextcloud to **reach a provider on a local network address** (for example `192.168.x.x`),
+such as an identity provider in the same home or company network.
+Nextcloud's HTTP client refuses local addresses unless `allow_local_remote_servers` is set, which allows them
+for every request the server makes (link previews, calendar subscriptions and so on).
+This option allows them only for user_oidc's requests to the host of a configured provider's discovery endpoint,
+and for the check of the discovery endpoint when an admin creates or updates a provider.
+Other requests, such as fetching avatars from a URL in the user's claims, keep the protection.
+
+* **true**: Requests to a configured provider's host may reach a local address
+* **false** (default): The usual protection applies
+
+> ⚠️ Nextcloud does not check where redirects lead for these requests, so a redirect from the provider's host is followed
+> even to another local address. Only enable this for a provider you trust.
+
+---
+
 ## `user_oidc.prompt`
 
 ```php
