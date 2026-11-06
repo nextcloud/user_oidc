@@ -12,6 +12,7 @@ OC.L10N.register(
     "Authority not found" : "找不到權威",
     "Failed to decrypt the ID4ME provider client secret" : "無法解密 ID4ME 提供者的客戶端祕密",
     "The received token is expired." : "接收到的權杖已過期。",
+    "OpenID Connect" : "OpenID Connect",
     "Registered Providers" : "已註冊的提供者",
     "Register new provider" : "註冊新提供者",
     "Client ID" : "客戶端 ID",

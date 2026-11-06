@@ -79,6 +79,7 @@ OC.L10N.register(
     "User ID mapping" : "User ID mapping",
     "Quota mapping" : "Quota mapping",
     "Groups mapping" : "Groups mapping",
+    "Group admin for mapping" : "Group admin for mapping",
     "Extra attributes mapping" : "Extra attributes mapping",
     "Display name mapping" : "Display name mapping",
     "Birth date mapping" : "Birth date mapping",
