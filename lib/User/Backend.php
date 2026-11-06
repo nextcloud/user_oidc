@@ -350,6 +350,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						$discovery = $this->discoveryService->obtainDiscovery($provider);
 						$this->eventDispatcher->dispatchTyped(new TokenValidatedEvent(['token' => $headerToken], $provider, $discovery));
 
+						// the validators return the uid claim, which is the subject only if that claim is "sub"
+						$tokenSub = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT) === 'sub'
+							? $tokenUserId
+							: null;
+						$bearerProvisioning = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_BEARER_PROVISIONING, '0') === '1'
+							&& $validator->getProvisioningStrategy() !== '';
 						$tokenUserId = $this->settingsService->parseUserId($tokenUserId);
 
 						if ($autoProvisionAllowed) {
@@ -370,8 +376,12 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								return '';
 							}
 							if ($existingUser === null) {
+								if ($tokenSub === null && $bearerProvisioning) {
+									// find the account the provisioning below finds by the subject
+									$tokenSub = $this->getTokenSub($validator, $provider, $headerToken);
+								}
 								// only create the user in our backend if the user does not exist in another backend
-								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId, created: $created);
+								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId, created: $created, sub: $tokenSub);
 								$userId = $backendUser->getUserId();
 								if ($created) {
 									$this->auditLogger->userProvisioned($userId, $provider->getId(), 'bearer_token');
@@ -382,11 +392,8 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 							$this->checkFirstLogin($userId);
 
-							if ($this->providerService->getSetting($provider->getId(), ProviderService::SETTING_BEARER_PROVISIONING, '0') === '1') {
-								$provisioningStrategy = $validator->getProvisioningStrategy();
-								if ($provisioningStrategy) {
-									$this->provisionUser($validator->getProvisioningStrategy(), $provider, $tokenUserId, $headerToken, $existingUser);
-								}
+							if ($bearerProvisioning) {
+								$this->provisionUser($validator->getProvisioningStrategy(), $provider, $tokenUserId, $headerToken, $existingUser);
 							}
 
 							$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
@@ -471,6 +478,16 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$user->updateLastLoginTimestamp();
 		return $firstLogin;
+	}
+
+	private function getTokenSub(IBearerTokenValidator $validator, Provider $provider, string $bearerToken): ?string {
+		try {
+			$sub = $validator->getUserAttributes($provider, $bearerToken)->sub ?? null;
+		} catch (Throwable $e) {
+			$this->logger->debug('Could not read the subject of the bearer token', ['exception' => $e]);
+			return null;
+		}
+		return is_string($sub) && $sub !== '' ? $sub : null;
 	}
 
 	/**
