@@ -79,6 +79,7 @@ OC.L10N.register(
     "User ID mapping" : "Benutzer-ID-Mapping",
     "Quota mapping" : "Kontingent-Mapping",
     "Groups mapping" : "Gruppen-Mapping",
+    "Group admin for mapping" : "Gruppenadministration für das Mapping",
     "Extra attributes mapping" : "Extra-Attribute-Mapping",
     "Display name mapping" : "Anzeigename-Mapping",
     "Birth date mapping" : "Zuordnung des Geburtsdatums",
