@@ -79,6 +79,7 @@ OC.L10N.register(
     "User ID mapping" : "Léarscáiliú aitheantais úsáideora",
     "Quota mapping" : "Mapáil cuóta",
     "Groups mapping" : "Mapáil grúpaí",
+    "Group admin for mapping" : "Riarthóir grúpa don mhapáil",
     "Extra attributes mapping" : "Mapáil tréithe breise",
     "Display name mapping" : "Taispeáin mapáil ainmneacha",
     "Birth date mapping" : "Mapáil dáta breithe",
