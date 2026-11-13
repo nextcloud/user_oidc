@@ -284,6 +284,9 @@ class SettingsController extends OCSController {
 					['key' => $key, 'value' => $value],
 				);
 			}
+			if ($key === 'hide_default_login' && is_bool($value)) {
+				$this->appConfig->setValueString(Application::APP_ID, 'hide_default_login', $value ? '1' : '0', lazy: true);
+			}
 		}
 		return new DataResponse([]);
 	}

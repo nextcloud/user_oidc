@@ -1,0 +1,14 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+#body-login form,
+#body-login form ~ * {display:none}
+
+#body-login a[href*='#body-login'] {background-color:inherit;font-size:inherit;font-weight:inherit}
+
+#body-login:target form,
+#body-login:target form ~ * {display:inherit}
+
+#body-login:target a[href*='#body-login'] {display:none}
