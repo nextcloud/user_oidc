@@ -85,7 +85,7 @@ class UserMapperTest extends TestCase {
 			});
 		$this->userMapper->expects(self::never())->method('update');
 
-		$user = $this->userMapper->getOrCreate($providerId, $sub, $id4me);
+		$user = $this->userMapper->getOrCreate($providerId, $sub, $id4me, sub: $sub);
 		Assert::assertEquals($expected, $user->getUserId());
 		Assert::assertSame($id4me ? null : $providerId, $user->getProviderId());
 		Assert::assertSame($id4me ? null : $sub, $user->getSub());
@@ -110,7 +110,7 @@ class UserMapperTest extends TestCase {
 				return $arg;
 			});
 
-		$user = $this->userMapper->getOrCreate(1, $longSub);
+		$user = $this->userMapper->getOrCreate(1, 'alice', sub: $longSub);
 		Assert::assertSame(hash('sha256', $longSub), $user->getSub());
 	}
 
@@ -138,7 +138,7 @@ class UserMapperTest extends TestCase {
 			});
 		$this->userMapper->expects(self::never())->method('insert');
 
-		$user = $this->userMapper->getOrCreate(5, 'the-sub');
+		$user = $this->userMapper->getOrCreate(5, 'existing', sub: 'the-sub');
 		Assert::assertSame(5, $user->getProviderId());
 		Assert::assertSame('the-sub', $user->getSub());
 	}
@@ -160,7 +160,7 @@ class UserMapperTest extends TestCase {
 		$this->userMapper->expects(self::never())->method('update');
 		$this->userMapper->expects(self::never())->method('insert');
 
-		$user = $this->userMapper->getOrCreate(5, 'the-sub');
+		$user = $this->userMapper->getOrCreate(5, 'existing', sub: 'the-sub');
 		Assert::assertSame($existing, $user);
 	}
 
@@ -178,7 +178,105 @@ class UserMapperTest extends TestCase {
 		$this->userMapper->expects(self::never())->method('update');
 		$this->userMapper->expects(self::never())->method('insert');
 
-		$user = $this->userMapper->getOrCreate(1, 'alice', true);
+		$user = $this->userMapper->getOrCreate(1, 'alice', true, sub: 'alice');
 		Assert::assertSame($existing, $user);
+	}
+
+	private function existing(?int $providerId, ?string $sub): User {
+		$user = new User();
+		$user->setUserId('alice');
+		$user->setDisplayName('Alice');
+		$user->setProviderId($providerId);
+		$user->setSub($sub);
+		return $user;
+	}
+
+	private function expectUid(string $userId, ?User $existing): void {
+		$this->idService->expects(self::once())->method('getId')->with(1, 'alice', false)->willReturn($userId);
+		$getUser = $this->userMapper->expects(self::once())->method('getUser')->with($userId);
+		if ($existing === null) {
+			$getUser->willThrowException(new DoesNotExistException('No user'));
+		} else {
+			$getUser->willReturn($existing);
+		}
+	}
+
+	public function testGetOrCreateKeysANewAccountByTheTokenSubNotTheUid(): void {
+		// uid claim "alice" (e.g. preferred_username), subject "8f1d0c": the key is the subject
+		$this->userMapper->expects(self::once())
+			->method('getByProviderAndSub')
+			->with(1, '8f1d0c')
+			->willThrowException(new DoesNotExistException('No user'));
+		$this->expectUid('alice', null);
+		$this->userMapper->expects(self::once())->method('insert')->willReturnArgument(0);
+
+		$user = $this->userMapper->getOrCreate(1, 'alice', created: $created, sub: '8f1d0c');
+		Assert::assertTrue($created);
+		Assert::assertSame('alice', $user->getUserId());
+		Assert::assertSame(1, $user->getProviderId());
+		Assert::assertSame('8f1d0c', $user->getSub());
+	}
+
+	public function testGetOrCreateFindsTheAccountAfterTheUidClaimChanged(): void {
+		// the provider renamed alice to alice2: her subject still finds her account
+		$existing = $this->existing(1, '8f1d0c');
+		$this->userMapper->expects(self::once())
+			->method('getByProviderAndSub')
+			->with(1, '8f1d0c')
+			->willReturn($existing);
+		$this->idService->expects(self::never())->method('getId');
+		$this->userMapper->expects(self::never())->method('insert');
+
+		$user = $this->userMapper->getOrCreate(1, 'alice2', created: $created, sub: '8f1d0c');
+		Assert::assertFalse($created);
+		Assert::assertSame($existing, $user);
+	}
+
+	public function testGetOrCreateWithoutSub(): void {
+		// the provisioning API knows no subject: no key, and no provider_id without it
+		$this->userMapper->expects(self::never())->method('getByProviderAndSub');
+		$this->expectUid('alice', null);
+		$this->userMapper->expects(self::once())->method('insert')->willReturnArgument(0);
+
+		$user = $this->userMapper->getOrCreate(1, 'alice', created: $created);
+		Assert::assertTrue($created);
+		Assert::assertNull($user->getProviderId());
+		Assert::assertNull($user->getSub());
+	}
+
+	public function testSetSubIfMissing(): void {
+		$this->idService->method('getId')->with(1, 'alice', false)->willReturn('alice');
+		$this->userMapper->expects(self::once())
+			->method('getByProviderAndSub')
+			->with(1, '8f1d0c')
+			->willThrowException(new DoesNotExistException('No user'));
+		$this->userMapper->expects(self::once())->method('update')->willReturnArgument(0);
+
+		$user = $this->userMapper->setSubIfMissing($this->existing(null, null), 1, 'alice', '8f1d0c');
+		Assert::assertSame('8f1d0c', $user->getSub());
+	}
+
+	public function testSetSubIfMissingWhenAnotherAccountHasTheKey(): void {
+		// the identity has another account already
+		$this->idService->method('getId')->willReturn('alice');
+		$this->userMapper->expects(self::once())
+			->method('getByProviderAndSub')
+			->with(1, '8f1d0c')
+			->willReturn($this->existing(1, '8f1d0c'));
+		$this->userMapper->expects(self::never())->method('update');
+
+		$user = $this->userMapper->setSubIfMissing($this->existing(null, null), 1, 'alice', '8f1d0c');
+		Assert::assertNull($user->getSub());
+	}
+
+	public function testSetSubIfMissingKeepsAnAccountTheUidDoesNotMapTo(): void {
+		// the uid claim equals the user id of an account it does not map to, e.g. another
+		// identity's hashed user id
+		$this->idService->method('getId')->with(1, 'alice', false)->willReturn(hash('sha256', '1_0_alice'));
+		$this->userMapper->expects(self::never())->method('getByProviderAndSub');
+		$this->userMapper->expects(self::never())->method('update');
+
+		$user = $this->userMapper->setSubIfMissing($this->existing(null, null), 1, 'alice', '8f1d0c');
+		Assert::assertNull($user->getSub());
 	}
 }

@@ -242,9 +242,21 @@ class ProvisioningService {
 		$event = new AttributeMappedEvent(ProviderService::SETTING_MAPPING_UID, $idTokenPayload, $tokenUserId);
 		$this->eventDispatcher->dispatchTyped($event);
 
+		$sub = isset($idTokenPayload->sub) && is_string($idTokenPayload->sub) && $idTokenPayload->sub !== ''
+			? $idTokenPayload->sub
+			: null;
+		$tokenUid = $event->getValue() ?? '';
+
 		// use an existing user (from another backend) when soft auto provisioning is enabled
 		if ($existingLocalUser !== null) {
 			$user = $existingLocalUser;
+			if ($sub !== null && $tokenUid !== '' && $user->getBackendClassName() === Application::APP_ID) {
+				try {
+					$this->userMapper->setSubIfMissing($this->userMapper->getUser($user->getUID()), $providerId, $tokenUid, $sub);
+				} catch (DoesNotExistException|MultipleObjectsReturnedException|Exception $e) {
+					$this->logger->warning('Could not record the sub of ' . $user->getUID(), ['exception' => $e]);
+				}
+			}
 		} else {
 			// if disable_account_creation is true, user_oidc should not create any user
 			// so we just exit
@@ -259,7 +271,7 @@ class ProvisioningService {
 				];
 			}
 
-			$backendUser = $this->userMapper->getOrCreate($providerId, $event->getValue() ?? '');
+			$backendUser = $this->userMapper->getOrCreate($providerId, $tokenUid, sub: $sub);
 			$this->logger->debug('User obtained from the OIDC user backend: ' . $backendUser->getUserId());
 
 			$user = $this->userManager->get($backendUser->getUserId());
