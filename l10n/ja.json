@@ -15,6 +15,7 @@
     "There is no such OpenID Connect provider." : "そのような OpenID Connect プロバイダーは存在しません。",
     "Could not reach the OpenID Connect provider." : "OpenID Connect プロバイダーにアクセスできませんでした。",
     "You do not have permission to log in to this instance. If you think this is an error, please contact an administrator." : "このインスタンスにログインする権限がありません。エラーと思われる場合は、管理者にお問い合わせください。",
+    "OpenID Connect" : "OpenID Connect",
     "Allows users to authenticate via OpenID Connect providers." : "ユーザーが OpenID Connect プロバイダー経由で認証できるようにします。",
     "Enable ID4me" : "ID4me を使用する",
     "Registered Providers" : "登録済みのプロバイダー",
