@@ -9,6 +9,8 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Service;
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
+use OCA\UserOIDC\AuditLog\Operation;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWK;
 use OCP\IAppConfig;
@@ -26,12 +28,18 @@ class ID4MeService {
 		private LoggerInterface $logger,
 		private HttpClientHelper $clientService,
 		ICacheFactory $cacheFactory,
+		private AuditLogger $auditLogger,
 	) {
 		$this->cache = $cacheFactory->createDistributed('user_oidc');
 	}
 
 	public function setID4ME(bool $enabled): void {
 		$this->appConfig->setValueString(Application::APP_ID, 'id4me_enabled', $enabled ? '1' : '0', lazy: true);
+		$this->auditLogger->log(
+			Operation::ID4ME_UPDATED,
+			$enabled ? 'Login with ID4me was enabled' : 'Login with ID4me was disabled',
+			['enabled' => $enabled],
+		);
 	}
 
 	public function getID4ME(): bool {

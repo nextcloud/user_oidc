@@ -1,7 +1,7 @@
 {
 	"name": "user_oidc",
 	"description": "OIDC connect user backend for Nextcloud",
-	"version": "8.12.0-dev.0",
+	"version": "8.13.0",
 	"author": "Roeland Jago Douma <roeland@famdouma.nl>",
 	"repository": {
 		"url": "https://github.com/nextcloud/user_oidc",
@@ -26,12 +26,12 @@
 		"@nextcloud/dialogs": "^7.5.0",
 		"@nextcloud/initial-state": "^3.0.0",
 		"@nextcloud/logger": "^3.0.2",
-		"@nextcloud/password-confirmation": "^6.2.0",
+		"@nextcloud/password-confirmation": "^6.2.1",
 		"@nextcloud/router": "^3.0.1",
-		"@nextcloud/vue": "^9.13.1",
+		"@nextcloud/vue": "^9.14.1",
 		"jstz": "^2.1.1",
 		"vue": "^3.5.43",
-		"vue-material-design-icons": "^5.3.1"
+		"vue-material-design-icons": "^5.4.0"
 	},
 	"browserslist": [
 		"extends @nextcloud/browserslist-config"
@@ -45,7 +45,7 @@
 		"@nextcloud/browserslist-config": "^3.1.1",
 		"@nextcloud/eslint-config": "^8.4.2",
 		"@nextcloud/stylelint-config": "^3.2.2",
-		"@nextcloud/webpack-vue-config": "^7.0.4",
+		"@nextcloud/webpack-vue-config": "^7.1.0",
 		"eslint-webpack-plugin": "^5.0.2",
 		"stylelint-webpack-plugin": "^5.1.0",
 		"vue-template-compiler": "^2.7.16"

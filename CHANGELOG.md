@@ -8,6 +8,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 8.13.0 – 2026-11-04
+
+### Added
+
+- Setting `mapping-group-admin-for` to provision subadmin groups @rizlas [#1533](https://github.com/nextcloud/user_oidc/pull/1533)
+
+### Fixed
+
+- Require `aud` and `nonce` claims in tokens @pringelmann [#1606](https://github.com/nextcloud/user_oidc/pull/1606)
+- Keep ID4me accounts out of the provider/sub lookup @pringelmann [#1607](https://github.com/nextcloud/user_oidc/pull/1607)
+
 ## 8.11.0 – 2026-08-24
 
 - Support for Nextcloud 35

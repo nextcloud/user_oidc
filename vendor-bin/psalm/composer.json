@@ -3,7 +3,7 @@
 		"php": "^8.2 || ^8.3 || ^8.4 || ^8.5"
 	},
 	"require-dev": {
-		"vimeo/psalm": "^6.10.0"
+		"vimeo/psalm": "^7.0.0"
 	},
 	"config": {
 		"platform": {

@@ -9,5 +9,6 @@ node_modules/
 /.php_cs.cache
 /.php-cs-fixer.cache
 /lib/Vendor
+/lib/autoload
 tests/.phpunit.result.cache
 /vendor-bin/mozart/vendor

@@ -21,18 +21,22 @@
     "post-install-cmd": [
       "@composer bin all install --ansi",
       "\"vendor/bin/mozart\" compose",
+      "@php scripts/fix-vendor-namespaces.php",
       "composer dump-autoload"
     ],
     "post-update-cmd": [
       "@composer bin all install --ansi",
       "\"vendor/bin/mozart\" compose",
+      "@php scripts/fix-vendor-namespaces.php",
       "composer dump-autoload"
     ]
   },
   "require": {
     "id4me/id4me-rp": "^1.2",
     "firebase/php-jwt": "^7",
-    "bamarni/composer-bin-plugin": "^1.4"
+    "bamarni/composer-bin-plugin": "^1.4",
+    "web-token/jwt-library": "^4.1",
+    "spomky-labs/aes-key-wrap": "^7.0"
   },
   "require-dev": {
     "nextcloud/coding-standard": "^1.0.0",
@@ -49,7 +53,12 @@
         "classmap_prefix": "NEXTCLOUD_USER_OIDC_",
         "packages": [
             "firebase/php-jwt",
-            "id4me/id4me-rp"
+            "id4me/id4me-rp",
+            "web-token/jwt-library",
+            "spomky-labs/aes-key-wrap"
+        ],
+        "excluded_packages": [
+            "psr/clock"
         ],
         "delete_vendor_directories": true,
 		"override_autoload": {

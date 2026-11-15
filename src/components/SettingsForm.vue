@@ -23,13 +23,32 @@
 				type="text"
 				required>
 		</p>
+		<div class="line">
+			<NcCheckboxRadioSwitch
+				v-model="localProvider.settings.usePrivateKeyJwt"
+				wrapper-element="div">
+				{{ t('user_oidc', 'Use private key JWT authentication method') }}
+			</NcCheckboxRadioSwitch>
+			<a href="https://github.com/nextcloud/user_oidc#private-key-jwt-authentication" target="_blank">
+				<NcButton variant="tertiary"
+					:title="t('user_oidc', 'More details on private key JWT authentication method')">
+					<template #icon>
+						<HelpCircleOutlineIcon />
+					</template>
+				</NcButton>
+			</a>
+		</div>
+		<NcNoteCard v-if="localProvider.settings.usePrivateKeyJwt" type="info">
+			{{ t('user_oidc', 'Use this JWKS URL in your IdP\'s client settings: {jwksUrl}', { jwksUrl }) }}
+		</NcNoteCard>
 		<p>
 			<label for="oidc-client-secret">{{ t('user_oidc', 'Client secret') }}</label>
 			<input id="oidc-client-secret"
 				v-model="localProvider.clientSecret"
-				:placeholder="update ? t('user_oidc', 'Leave empty to keep existing') : null"
+				:placeholder="clientSecretPlaceholder"
 				type="text"
-				:required="!update"
+				:disabled="localProvider.settings.usePrivateKeyJwt"
+				:required="!update && !localProvider.settings.usePrivateKeyJwt"
 				autocomplete="off">
 		</p>
 		<p class="settings-hint warning-hint">
@@ -101,6 +120,14 @@
 				v-model="localProvider.settings.mappingGroups"
 				type="text"
 				placeholder="groups"
+				:disabled="!localProvider.settings.groupProvisioning">
+		</p>
+		<p>
+			<label for="mapping-group-admin-for">{{ t('user_oidc', 'Group admin for mapping') }}</label>
+			<input id="mapping-group-admin-for"
+				v-model="localProvider.settings.mappingGroupAdminFor"
+				type="text"
+				placeholder="group_admin_for"
 				:disabled="!localProvider.settings.groupProvisioning">
 		</p>
 
@@ -309,6 +336,14 @@
 			{{ t('user_oidc', 'Users that are not part of any whitelisted group are not created and can not login') }}
 		</p>
 		<NcCheckboxRadioSwitch
+			v-model="localProvider.settings.forbidLoginWithoutGroup"
+			wrapper-element="div">
+			{{ t('user_oidc', 'Forbid login to users without at least one group') }}
+		</NcCheckboxRadioSwitch>
+		<p class="settings-hint">
+			{{ t('user_oidc', 'When enabled, users must belong to at least one group provided by the OIDC group claim in order to log in.') }}
+		</p>
+		<NcCheckboxRadioSwitch
 			v-model="localProvider.settings.checkBearer"
 			wrapper-element="div">
 			{{ t('user_oidc', 'Check Bearer token on API and WebDAV requests') }}
@@ -360,10 +395,13 @@ import AlertOutlineIcon from 'vue-material-design-icons/AlertOutline.vue'
 import CheckIcon from 'vue-material-design-icons/Check.vue'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import ChevronDownIcon from 'vue-material-design-icons/ChevronDown.vue'
+import HelpCircleOutlineIcon from 'vue-material-design-icons/HelpCircleOutline.vue'
 
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
+
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'SettingsForm',
@@ -375,6 +413,7 @@ export default {
 		CheckIcon,
 		ChevronRightIcon,
 		ChevronDownIcon,
+		HelpCircleOutlineIcon,
 	},
 	props: {
 		submitText: {
@@ -399,11 +438,20 @@ export default {
 			localProvider: null,
 			maxIdentifierLength: 128,
 			showProfileAttributes: false,
+			jwksUrl: window.location.protocol + '//' + window.location.host + generateUrl('/apps/user_oidc/jwks'),
 		}
 	},
 	computed: {
 		identifierLength() {
 			return this.localProvider.identifier.length
+		},
+		clientSecretPlaceholder() {
+			if (this.localProvider.settings.usePrivateKeyJwt) {
+				return t('user_oidc', 'Not used with private key JWT authentication')
+			}
+			return this.update
+				? t('user_oidc', 'Leave empty to keep existing')
+				: null
 		},
 	},
 	created() {
@@ -440,6 +488,12 @@ export default {
 		.icon {
 			margin-right: 8px;
 		}
+	}
+
+	.line {
+		display: flex;
+		align-items: center;
+		margin: 4px 0;
 	}
 
 	.warning-hint {

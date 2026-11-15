@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\User\Validator;
 
 use OCA\UserOIDC\Db\Provider;
+use OCA\UserOIDC\Helper\TokenClaims;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
@@ -66,11 +67,7 @@ class SelfEncodedValidator implements IBearerTokenValidator {
 			|| !in_array($oidcSystemConfig['selfencoded_bearer_validation_audience_check'], [false, 'false', 0, '0'], true);
 		$providerClientId = $provider->getClientId();
 		if ($checkAudience) {
-			$tokenAudience = $payload->aud;
-			if (
-				(is_string($tokenAudience) && $tokenAudience !== $providerClientId)
-					|| (is_array($tokenAudience) && !in_array($providerClientId, $tokenAudience, true))
-			) {
+			if (!TokenClaims::audienceContains($payload, $providerClientId)) {
 				$this->logger->debug('This token is not for us, the audience does not match the client ID');
 				return null;
 			}

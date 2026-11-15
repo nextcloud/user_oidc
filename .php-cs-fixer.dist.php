@@ -20,5 +20,6 @@ $config
 	->notPath('src')
 	->notPath('vendor')
 	->notPath('lib/Vendor')
+	->notPath('lib/autoload')
 	->in(__DIR__);
 return $config;

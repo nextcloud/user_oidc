@@ -68,7 +68,7 @@ class UserMapperTest extends TestCase {
 
 	#[DataProvider('dataCreate')]
 	public function testCreate(int $providerId, string $sub, string $generatedId, bool $id4me, string $expected): void {
-		$this->userMapper->expects(self::once())
+		$this->userMapper->expects($id4me ? self::never() : self::once())
 			->method('getByProviderAndSub')
 			->willThrowException(new DoesNotExistException('No user'));
 
@@ -87,8 +87,8 @@ class UserMapperTest extends TestCase {
 
 		$user = $this->userMapper->getOrCreate($providerId, $sub, $id4me);
 		Assert::assertEquals($expected, $user->getUserId());
-		Assert::assertSame($providerId, $user->getProviderId());
-		Assert::assertSame($sub, $user->getSub());
+		Assert::assertSame($id4me ? null : $providerId, $user->getProviderId());
+		Assert::assertSame($id4me ? null : $sub, $user->getSub());
 	}
 
 	public function testCreateHashesOverlongSub(): void {
@@ -161,6 +161,24 @@ class UserMapperTest extends TestCase {
 		$this->userMapper->expects(self::never())->method('insert');
 
 		$user = $this->userMapper->getOrCreate(5, 'the-sub');
+		Assert::assertSame($existing, $user);
+	}
+
+	public function testGetOrCreateDoesNotResolveId4meThroughProviderAndSub(): void {
+		$existing = new User();
+		$existing->setUserId('id4me-user');
+		$existing->setDisplayName('ID4me User');
+
+		$this->userMapper->expects(self::never())->method('getByProviderAndSub');
+		$this->idService->expects(self::once())->method('getId')->with(1, 'alice', true)->willReturn('id4me-user');
+		$this->userMapper->expects(self::once())
+			->method('getUser')
+			->with('id4me-user')
+			->willReturn($existing);
+		$this->userMapper->expects(self::never())->method('update');
+		$this->userMapper->expects(self::never())->method('insert');
+
+		$user = $this->userMapper->getOrCreate(1, 'alice', true);
 		Assert::assertSame($existing, $user);
 	}
 }

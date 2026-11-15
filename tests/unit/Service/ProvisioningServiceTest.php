@@ -15,6 +15,7 @@ use OCP\Accounts\IAccount;
 use OCP\Accounts\IAccountManager;
 use OCP\Accounts\IAccountProperty;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Group\ISubAdmin;
 use OCP\Http\Client\IClientService;
 use OCP\IAvatarManager;
 use OCP\IConfig;
@@ -96,6 +97,9 @@ class ProvisioningServiceTest extends TestCase {
 	/** @var ICrypto | MockObject */
 	private $crypto;
 
+	/** @var ISubAdmin | MockObject */
+	private $subAdminManager;
+
 	public function setUp(): void {
 		parent::setUp();
 		$this->idService = $this->createMock(LocalIdService::class);
@@ -113,6 +117,7 @@ class ProvisioningServiceTest extends TestCase {
 		$this->l10nFactory = $this->createMock(IFactory::class);
 		$this->providerMapper = $this->createMock(ProviderMapper::class);
 		$this->crypto = $this->createMock(ICrypto::class);
+		$this->subAdminManager = $this->createMock(ISubAdmin::class);
 
 		$this->provisioningService = new ProvisioningService(
 			$this->idService,
@@ -130,6 +135,7 @@ class ProvisioningServiceTest extends TestCase {
 			$this->l10nFactory,
 			$this->providerMapper,
 			$this->crypto,
+			$this->subAdminManager,
 		);
 	}
 
@@ -398,6 +404,30 @@ class ProvisioningServiceTest extends TestCase {
 
 		$result = $this->provisioningService->getClaimValues($tokenPayload, $claimPath, $providerId);
 		$this->assertEquals($expected, $result);
+	}
+
+	public static function dataResolveLanguage(): array {
+		return [
+			'Nextcloud language code' => ['de', 'de'],
+			'Nextcloud language code with region' => ['de_DE', 'de_DE'],
+			'BCP47 tag' => ['de-DE', 'de_DE'],
+			'BCP47 tag with different case' => ['DE-de', 'de_DE'],
+			'BCP47 tag falls back to primary language' => ['fr-FR', 'fr'],
+			'English is always available' => ['en', 'en'],
+			'English BCP47 tag falls back to English' => ['en-US', 'en'],
+			'Unknown language' => ['xx', null],
+			'Unknown BCP47 tag' => ['xx-XX', null],
+			'Empty string' => ['', null],
+		];
+	}
+
+	#[DataProvider('dataResolveLanguage')]
+	public function testResolveLanguage(string $language, ?string $expected): void {
+		$this->l10nFactory
+			->method('findAvailableLanguages')
+			->willReturn(['de', 'de_DE', 'fr', 'pt_BR']);
+
+		$this->assertSame($expected, $this->provisioningService->resolveLanguage($language));
 	}
 
 	public function testGetClaimValuesWithoutNestedResolution(): void {

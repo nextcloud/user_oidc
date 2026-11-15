@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Command;
 
 use OC\Core\Command\Base;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -26,6 +27,10 @@ class UpsertProvider extends Base {
 		'unique-uid' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_UNIQUE_UID,
 			'description' => 'Determines if unique user ids shall be used or not. 1 to enable, 0 to disable',
+		],
+		'use-private-key-jwt' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_USE_PRIVATE_KEY_JWT,
+			'description' => 'If enabled, user_oidc will use the private key JWT authentication method instead of using the client secret. 1 to enable, 0 to disable (default when creating a new provider)',
 		],
 		'check-bearer' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_CHECK_BEARER,
@@ -151,9 +156,17 @@ class UpsertProvider extends Base {
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS,
 			'description' => 'Restrict login for users that are not in any whitelisted groups. 1 to enable, 0 to disable (default)',
 		],
+		'group-forbid-login-without-group' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_FORBID_LOGIN_WITHOUT_GROUP,
+			'description' => 'Forbid login for users that are not member of any group provided by the OIDC group claim. 1 to enable, 0 to disable (default)',
+		],
 		'mapping-groups' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_GROUPS,
 			'description' => 'Attribute mapping of the groups',
+		],
+		'mapping-group-admin-for' => [
+			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_MAPPING_GROUP_ADMIN_FOR,
+			'description' => 'Attribute mapping for the "Group admin for" field',
 		],
 		'entraid-group-names' => [
 			'shortcut' => null, 'mode' => InputOption::VALUE_REQUIRED, 'setting_key' => ProviderService::SETTING_AZURE_GROUP_NAMES,
@@ -171,6 +184,7 @@ class UpsertProvider extends Base {
 		private ProviderService $providerService,
 		private ProviderMapper $providerMapper,
 		private ICrypto $crypto,
+		private AuditLogger $auditLogger,
 	) {
 		parent::__construct();
 	}
@@ -252,9 +266,11 @@ class UpsertProvider extends Base {
 		}
 
 		$provider = $this->providerService->getProviderByIdentifier($identifier);
+		$settingsBefore = null;
 		if ($provider !== null) {
 			// existing provider, keep values that are not set, the scope has to be set anyway
 			$scope = $scope ?? $provider->getScope();
+			$settingsBefore = $this->providerService->getSettings($provider->getId());
 		} else {
 			// new provider default scope value
 			$scope = $scope ?? 'openid email profile';
@@ -279,6 +295,12 @@ class UpsertProvider extends Base {
 				}
 				$this->providerService->setSetting($provider->getId(), $option['setting_key'], $value);
 			}
+		}
+
+		if ($settingsBefore === null) {
+			$this->auditLogger->providerCreated($provider);
+		} else {
+			$this->auditLogger->providerUpdated($provider, $clientSecret !== null, $settingsBefore, $this->providerService->getSettings($provider->getId()));
 		}
 		return 0;
 	}

@@ -95,6 +95,7 @@
                     "mappingQuota",
                     "mappingUid",
                     "mappingGroups",
+                    "mappingGroupAdminFor",
                     "mappingLanguage",
                     "mappingLocale",
                     "mappingAddress",
@@ -124,6 +125,7 @@
                     "groupProvisioning",
                     "groupWhitelistRegex",
                     "restrictLoginToGroups",
+                    "forbidLoginWithoutGroup",
                     "nestedAndFallbackClaims",
                     "enrichLoginIdTokenWithUserinfo"
                 ],
@@ -141,6 +143,9 @@
                         "type": "string"
                     },
                     "mappingGroups": {
+                        "type": "string"
+                    },
+                    "mappingGroupAdminFor": {
                         "type": "string"
                     },
                     "mappingLanguage": {
@@ -228,6 +233,9 @@
                         "type": "string"
                     },
                     "restrictLoginToGroups": {
+                        "type": "boolean"
+                    },
+                    "forbidLoginWithoutGroup": {
                         "type": "boolean"
                     },
                     "nestedAndFallbackClaims": {

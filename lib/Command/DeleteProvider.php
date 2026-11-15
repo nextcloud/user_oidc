@@ -10,6 +10,7 @@ namespace OCA\UserOIDC\Command;
 
 use Exception;
 use OC\Core\Command\Base;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -24,6 +25,7 @@ class DeleteProvider extends Base {
 	public function __construct(
 		private ProviderMapper $providerMapper,
 		private ProviderService $providerService,
+		private AuditLogger $auditLogger,
 	) {
 		parent::__construct();
 	}
@@ -51,6 +53,7 @@ class DeleteProvider extends Base {
 			if ($input->getOption('force') || $helper->ask($input, $output, $question)) {
 				$this->providerMapper->delete($provider);
 				$this->providerService->deleteSettings($provider->getId());
+				$this->auditLogger->providerDeleted($provider);
 				$output->writeln('"' . $provider->getIdentifier() . '" has been deleted.');
 			}
 		} catch (Exception $e) {

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\User;
 
 use OCA\UserOIDC\AppInfo\Application;
+use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Controller\LoginController;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
@@ -18,6 +19,7 @@ use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\User\Validator\IBearerTokenValidator;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCA\UserOIDC\User\Validator\UserInfoValidator;
@@ -70,8 +72,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 		private ProviderService $providerService,
 		private ProvisioningService $provisioningService,
 		private LdapService $ldapService,
+		private SettingsService $settingsService,
 		private IUserManager $userManager,
 		private ITimeFactory $timeFactory,
+		private AuditLogger $auditLogger,
 	) {
 	}
 
@@ -325,17 +329,28 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 						);
 						// prevent login of users that are not in a whitelisted group (if activated)
 						$restrictLoginToGroups = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0');
-						if ($restrictLoginToGroups === '1') {
+						$forbidLoginWithoutGroup = $this->providerService->getSetting($provider->getId(), ProviderService::SETTING_FORBID_LOGIN_WITHOUT_GROUP, '0');
+						if ($restrictLoginToGroups === '1' || $forbidLoginWithoutGroup === '1') {
 							$tokenAttributes = $validator->getUserAttributes($provider, $headerToken);
-							$syncGroups = $this->provisioningService->getSyncGroupsOfToken($provider->getId(), $tokenAttributes);
 
-							if ($syncGroups === null || count($syncGroups) === 0) {
-								$this->logger->debug('Prevented user from using a bearer token as user is not part of a whitelisted group');
+							if ($restrictLoginToGroups === '1') {
+								$syncGroups = $this->provisioningService->getSyncGroupsOfToken($provider->getId(), $tokenAttributes);
+
+								if ($syncGroups === null || count($syncGroups) === 0) {
+									$this->logger->debug('Prevented user from using a bearer token as user is not part of a whitelisted group');
+									return '';
+								}
+							}
+							// forbid login of users that are not in any group at all (regardless of the whitelist)
+							if ($forbidLoginWithoutGroup === '1' && !$this->provisioningService->hasGroups($provider->getId(), $tokenAttributes)) {
+								$this->logger->debug('Prevented user from using a bearer token as user is not part of any group');
 								return '';
 							}
 						}
 						$discovery = $this->discoveryService->obtainDiscovery($provider);
 						$this->eventDispatcher->dispatchTyped(new TokenValidatedEvent(['token' => $headerToken], $provider, $discovery));
+
+						$tokenUserId = $this->settingsService->parseUserId($tokenUserId);
 
 						if ($autoProvisionAllowed) {
 							// look for user in other backends
@@ -356,8 +371,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 							}
 							if ($existingUser === null) {
 								// only create the user in our backend if the user does not exist in another backend
-								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId);
+								$backendUser = $this->userMapper->getOrCreate($provider->getId(), $tokenUserId, created: $created);
 								$userId = $backendUser->getUserId();
+								if ($created) {
+									$this->auditLogger->userProvisioned($userId, $provider->getId(), 'bearer_token');
+								}
 							} else {
 								$userId = $existingUser->getUID();
 							}

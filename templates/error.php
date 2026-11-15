@@ -10,6 +10,12 @@
         <li>
             <p><?php p($_['message']); ?></p>
         </li>
+        <?php
+		if (isset($_['error_description'])) {
+			echo '<li><p>';
+			p($_['error_description']);
+			echo '</p></li>';
+		} ?>
     </ul>
     <br>
     <p>
