@@ -127,7 +127,9 @@
                     "restrictLoginToGroups",
                     "forbidLoginWithoutGroup",
                     "nestedAndFallbackClaims",
-                    "enrichLoginIdTokenWithUserinfo"
+                    "enrichLoginIdTokenWithUserinfo",
+                    "appearanceIcon",
+                    "appearanceButtonBackgroundColor"
                 ],
                 "properties": {
                     "mappingDisplayName": {
@@ -243,6 +245,12 @@
                     },
                     "enrichLoginIdTokenWithUserinfo": {
                         "type": "boolean"
+                    },
+                    "appearanceIcon": {
+                        "type": "string"
+                    },
+                    "appearanceButtonBackgroundColor": {
+                        "type": "string"
                     }
                 }
             }

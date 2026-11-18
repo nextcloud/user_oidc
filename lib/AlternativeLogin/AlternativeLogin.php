@@ -15,6 +15,7 @@ class AlternativeLogin implements IAlternativeLogin {
 	public function __construct(
 		private string $name,
 		private string $href,
+		private string $class = '',
 	) {
 	}
 
@@ -27,7 +28,7 @@ class AlternativeLogin implements IAlternativeLogin {
 	}
 
 	public function getClass(): string {
-		return '';
+		return $this->class;
 	}
 
 	public function load(): void {
