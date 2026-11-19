@@ -15,9 +15,12 @@ use OCP\IUserSession;
 
 // Trashbin::restore reads user_id from the session, not IUserSession::getUser.
 class DavRequestUser {
-	private ?IUserSession $fallback = null;
+	public function __construct(
+		private EphemeralPhpSession $ephemeralPhpSession,
+	) {
+	}
 
-	private bool $fallbackArmed = false;
+	private ?IUserSession $fallback = null;
 
 	public function bind(IUserSession $userSession, IUser $user): bool {
 		$overlaid = $this->installOverlay($userSession);
@@ -60,11 +63,7 @@ class DavRequestUser {
 
 	private function scheduleFallbackClear(IUserSession $userSession): void {
 		$this->fallback = $userSession;
-		if ($this->fallbackArmed) {
-			return;
-		}
-		$this->fallbackArmed = true;
-		register_shutdown_function(function (): void {
+		$this->ephemeralPhpSession->runBeforeDiscard(function (): void {
 			$this->releaseFallback();
 		});
 	}

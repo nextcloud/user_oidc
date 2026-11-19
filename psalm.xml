@@ -49,6 +49,8 @@
 				<referencedClass name="OCP\Files\ISetupManager" />
 				<referencedClass name="OCP\User\Events\UserFirstTimeLoggedInEvent" />
 				<referencedClass name="OCP\Authentication\IAlternativeLoginProvider" />
+				<referencedClass name="Redis" />
+				<referencedClass name="Memcached" />
 			</errorLevel>
 		</UndefinedClass>
 		<UndefinedDocblockClass>

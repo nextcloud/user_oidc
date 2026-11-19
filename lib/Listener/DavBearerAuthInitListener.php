@@ -10,8 +10,10 @@ declare(strict_types=1);
 namespace OCA\UserOIDC\Listener;
 
 use OCA\UserOIDC\Dav\BearerBackend;
+use OCA\UserOIDC\Dav\EphemeralPhpSession;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use OCP\IRequest;
 use Sabre\DAV\Auth\Plugin;
 
 /**
@@ -21,6 +23,8 @@ class DavBearerAuthInitListener implements IEventListener {
 
 	public function __construct(
 		private BearerBackend $bearerBackend,
+		private EphemeralPhpSession $ephemeralPhpSession,
+		private IRequest $request,
 	) {
 	}
 
@@ -35,5 +39,6 @@ class DavBearerAuthInitListener implements IEventListener {
 		}
 
 		$authPlugin->addBackend($this->bearerBackend);
+		$this->ephemeralPhpSession->armIfStatelessBearer($this->request);
 	}
 }

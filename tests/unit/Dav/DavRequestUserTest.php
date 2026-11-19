@@ -8,6 +8,7 @@ declare(strict_types=1);
  */
 
 use OCA\UserOIDC\Dav\DavRequestUser;
+use OCA\UserOIDC\Dav\EphemeralPhpSession;
 use OCA\UserOIDC\Dav\RequestUserOverlay;
 use OCP\ISession;
 use OCP\IUser;
@@ -61,7 +62,7 @@ class DavRequestUserTest extends TestCase {
 	}
 
 	private function binder(): DavRequestUser {
-		return new DavRequestUser();
+		return new DavRequestUser(new EphemeralPhpSession());
 	}
 
 	private function user(string $uid): IUser {
