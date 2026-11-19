@@ -16,6 +16,7 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Event\ExchangedTokenRequestedEvent;
 use OCA\UserOIDC\Event\ExternalTokenRequestedEvent;
 use OCA\UserOIDC\Event\InternalTokenRequestedEvent;
+use OCA\UserOIDC\Listener\DavBearerAuthInitListener;
 use OCA\UserOIDC\Listener\ExchangedTokenRequestedListener;
 use OCA\UserOIDC\Listener\ExternalTokenRequestedListener;
 use OCA\UserOIDC\Listener\InternalTokenRequestedListener;
@@ -71,6 +72,10 @@ class Application extends App implements IBootstrap {
 
 		if (class_exists(\OCP\Authentication\Events\TokenInvalidatedEvent::class)) {
 			$context->registerEventListener(\OCP\Authentication\Events\TokenInvalidatedEvent::class, TokenInvalidatedListener::class);
+		}
+
+		if (class_exists(\OCA\DAV\Events\SabrePluginAuthInitEvent::class)) {
+			$context->registerEventListener(\OCA\DAV\Events\SabrePluginAuthInitEvent::class, DavBearerAuthInitListener::class);
 		}
 
 		if (version_compare($config->getSystemValueString('version', '0.0.0'), '34.0.0', '>=')) {

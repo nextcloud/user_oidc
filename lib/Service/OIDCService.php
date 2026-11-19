@@ -12,21 +12,46 @@ namespace OCA\UserOIDC\Service;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Helper\HttpClientHelper;
 use OCA\UserOIDC\Vendor\Firebase\JWT\JWT;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 class OIDCService {
+	public const USERINFO_CACHE_TTL_SECONDS = 300;
+
+	private ?ICache $userInfoCache = null;
 
 	public function __construct(
 		private DiscoveryService $discoveryService,
 		private LoggerInterface $logger,
 		private HttpClientHelper $clientService,
 		private ICrypto $crypto,
+		?ICacheFactory $cacheFactory = null,
 	) {
+		if ($cacheFactory !== null) {
+			$this->userInfoCache = $cacheFactory->createDistributed('user_oidc-userinfo');
+		}
 	}
 
 	public function userinfo(Provider $provider, string $accessToken): array {
+		$cacheKey = hash('sha256', (string)$provider->getId() . "\0" . $accessToken);
+		if ($this->userInfoCache !== null) {
+			$cached = $this->userInfoCache->get($cacheKey);
+			if (is_array($cached)) {
+				return $cached;
+			}
+		}
+
+		$userInfo = $this->fetchUserInfo($provider, $accessToken);
+		if ($userInfo !== [] && $this->userInfoCache !== null) {
+			$this->userInfoCache->set($cacheKey, $userInfo, self::USERINFO_CACHE_TTL_SECONDS);
+		}
+		return $userInfo;
+	}
+
+	private function fetchUserInfo(Provider $provider, string $accessToken): array {
 		$url = $this->discoveryService->obtainDiscovery($provider)['userinfo_endpoint'] ?? null;
 		if ($url === null) {
 			return [];
