@@ -56,7 +56,7 @@ class SettingsController extends OCSController {
 		];
 
 		try {
-			$body = $this->httpClientHelper->get($url);
+			$body = $this->httpClientHelper->getProviderSetupDiscovery($url);
 
 			// Check if the request was successful
 			if (!empty($body)) {
