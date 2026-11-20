@@ -14,6 +14,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\ICacheFactory;
 use OCP\IConfig;
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -150,6 +151,31 @@ class DiscoveryServiceTest extends TestCase {
 		Assert::assertEquals('EC', $result['keys'][0]['kty']);
 		Assert::assertEquals('ec-key-1', $result['keys'][0]['kid']);
 		Assert::assertEquals('EC', $result['keys'][1]['kty']);
+	}
+
+	public static function tokenEndpointAuthMethodProvider(): array {
+		return [
+			'no discovery value, no config' => [[], null, 'client_secret_basic'],
+			'no discovery value, config post' => [[], 'client_secret_post', 'client_secret_post'],
+			'no discovery value, invalid config' => [[], 'private_key_jwt', 'client_secret_basic'],
+			'both supported, no config' => [['client_secret_post', 'client_secret_basic'], null, 'client_secret_basic'],
+			'both supported, config post' => [['client_secret_basic', 'client_secret_post'], 'client_secret_post', 'client_secret_post'],
+			'only post supported, config basic' => [['client_secret_post'], 'client_secret_basic', 'client_secret_post'],
+			'only post supported, no config' => [['client_secret_post'], null, 'client_secret_post'],
+			'only basic supported, config post' => [['client_secret_basic'], 'client_secret_post', 'client_secret_basic'],
+			'none supported, no config' => [['private_key_jwt'], null, 'client_secret_basic'],
+			'none supported, config post' => [['private_key_jwt'], 'client_secret_post', 'client_secret_post'],
+		];
+	}
+
+	#[DataProvider('tokenEndpointAuthMethodProvider')]
+	public function testGetTokenEndpointAuthMethod(array $supportedMethods, ?string $configuredMethod, string $expected): void {
+		$this->config->method('getSystemValue')
+			->with('user_oidc', [])
+			->willReturn($configuredMethod === null ? [] : ['default_token_endpoint_auth_method' => $configuredMethod]);
+
+		$discovery = $supportedMethods === [] ? [] : ['token_endpoint_auth_methods_supported' => $supportedMethods];
+		Assert::assertSame($expected, $this->discoveryService->getTokenEndpointAuthMethod($discovery));
 	}
 
 	public function testBuildAuthorizationUrl() {
