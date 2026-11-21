@@ -11,6 +11,7 @@ use OCA\UserOIDC\AppInfo\Application;
 use OCA\UserOIDC\AuditLog\AuditLogger;
 use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Db\ProviderMapper;
+use OCA\UserOIDC\Db\User;
 use OCA\UserOIDC\Db\UserMapper;
 use OCA\UserOIDC\Service\DiscoveryService;
 use OCA\UserOIDC\Service\LdapService;
@@ -18,6 +19,7 @@ use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
 use OCA\UserOIDC\Service\SettingsService;
 use OCA\UserOIDC\User\Backend;
+use OCA\UserOIDC\User\Provisioning\SelfEncodedTokenProvisioning;
 use OCA\UserOIDC\User\Validator\SelfEncodedValidator;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -83,6 +85,9 @@ class BackendTest extends \Test\TestCase {
 
 	private Backend $backend;
 
+	private string $uidClaim = 'sub';
+	private string $bearerProvisioning = '0';
+
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -132,6 +137,62 @@ class BackendTest extends \Test\TestCase {
 		$this->givenTheTokenUserExists();
 
 		$this->assertResolvesUserWithoutLoggingIn(self::TOKEN_USER_ID);
+	}
+
+	public static function dataBearerAuthProvisionsWithTheSubIfTheUidClaimIsTheSub(): array {
+		return [
+			'uid claim is the sub' => ['sub', self::TOKEN_USER_ID],
+			'uid claim is another claim' => ['preferred_username', null],
+		];
+	}
+
+	#[DataProvider('dataBearerAuthProvisionsWithTheSubIfTheUidClaimIsTheSub')]
+	public function testBearerAuthProvisionsWithTheSubIfTheUidClaimIsTheSub(string $uidClaim, ?string $expectedSub): void {
+		$this->uidClaim = $uidClaim;
+		$this->givenAValidBearerToken();
+		$this->userManager->method('userExists')->willReturn(false);
+		$this->userManager->method('get')->willReturn(null);
+
+		$backendUser = new User();
+		$backendUser->setUserId('backend-user-id');
+		$this->userMapper->expects($this->once())
+			->method('getOrCreate')
+			->willReturnCallback(function (int $providerId, string $uid, bool $id4me = false, ?bool &$created = null, ?string $sub = null) use ($backendUser, $expectedSub): User {
+				$this->assertSame(self::PROVIDER_ID, $providerId);
+				$this->assertSame(self::TOKEN_USER_ID, $uid);
+				$this->assertSame($expectedSub, $sub);
+				$created = false;
+				return $backendUser;
+			});
+
+		$this->assertResolvesUserWithoutLoggingIn('backend-user-id');
+	}
+
+	public function testBearerAuthWithProvisioningLooksUpByTheTokensSub(): void {
+		$this->uidClaim = 'preferred_username';
+		$this->bearerProvisioning = '1';
+		$this->givenAValidBearerToken();
+		$validator = Server::get(SelfEncodedValidator::class);
+		$validator->method('getProvisioningStrategy')->willReturn(SelfEncodedTokenProvisioning::class);
+		$validator->method('getUserAttributes')->willReturn((object)['sub' => '8f1d0c', 'preferred_username' => self::TOKEN_USER_ID]);
+		$provisioning = $this->createMock(SelfEncodedTokenProvisioning::class);
+		$provisioning->expects($this->once())->method('provisionUser');
+		$this->overwriteService(SelfEncodedTokenProvisioning::class, $provisioning);
+		$this->userManager->method('userExists')->willReturn(false);
+		$this->userManager->method('get')->willReturn(null);
+
+		$backendUser = new User();
+		$backendUser->setUserId('backend-user-id');
+		$this->userMapper->expects($this->once())
+			->method('getOrCreate')
+			->willReturnCallback(function (int $providerId, string $uid, bool $id4me = false, ?bool &$created = null, ?string $sub = null) use ($backendUser): User {
+				$this->assertSame(self::TOKEN_USER_ID, $uid);
+				$this->assertSame('8f1d0c', $sub);
+				$created = false;
+				return $backendUser;
+			});
+
+		$this->assertResolvesUserWithoutLoggingIn('backend-user-id');
 	}
 
 	/**
@@ -255,7 +316,8 @@ class BackendTest extends \Test\TestCase {
 			[self::PROVIDER_ID, ProviderService::SETTING_CHECK_BEARER, '0', '1'],
 			[self::PROVIDER_ID, ProviderService::SETTING_RESTRICT_LOGIN_TO_GROUPS, '0', '0'],
 			[self::PROVIDER_ID, ProviderService::SETTING_FORBID_LOGIN_WITHOUT_GROUP, '0', '0'],
-			[self::PROVIDER_ID, ProviderService::SETTING_BEARER_PROVISIONING, '0', '0'],
+			[self::PROVIDER_ID, ProviderService::SETTING_BEARER_PROVISIONING, '0', $this->bearerProvisioning],
+			[self::PROVIDER_ID, ProviderService::SETTING_MAPPING_UID, ProviderService::SETTING_MAPPING_UID_DEFAULT, $this->uidClaim],
 		]);
 
 		$this->discoveryService->method('obtainDiscovery')->willReturn([]);
