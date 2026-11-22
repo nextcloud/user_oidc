@@ -32,6 +32,25 @@ It is especially useful when your OAuth2 or OIDC provider is hosted locally or u
 
 ---
 
+## `user_oidc.httpclient.allowlocal`
+
+```php
+'user_oidc' => [
+    'httpclient.allowlocal' => true,
+]
+```
+
+By default, Nextcloud's HTTP client refuses to connect to local or private addresses (loopback, `192.168.x.x`, `10.x.x.x`, etc.) to protect against SSRF.
+This configuration allows user_oidc's requests to the identity provider (discovery, JWKS, token, userinfo...) to reach local/private addresses.
+It is useful when your provider is hosted on the local network, in the same Docker network or resolves to a private IP via split DNS.
+
+* **true**: Adds the `allow_local_address` option to user_oidc's requests to the identity provider
+* **false** (default): Local and private addresses are blocked unless the server-wide `allow_local_remote_servers` is enabled
+
+Unlike `allow_local_remote_servers`, this only affects user_oidc's requests to the provider and keeps SSRF protection in place for the rest of Nextcloud.
+
+---
+
 ## `user_oidc.prompt`
 
 ```php
