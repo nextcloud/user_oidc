@@ -158,7 +158,8 @@ class Test extends \Test\TestCase {
 
 		/** @var IConfig $config */
 		$config = Server::get(IConfig::class);
-		$config->setSystemValue('user_oidc', [ 'auto_provision' => false ]);
+		$initialOidcConfig = $config->getSystemValue('user_oidc', []);
+		$config->setSystemValue('user_oidc', array_merge($initialOidcConfig, [ 'auto_provision' => false ]));
 
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '0');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, 'preferred_username');
@@ -182,7 +183,7 @@ class Test extends \Test\TestCase {
 
 		// restore initial settings
 		$localUser->delete();
-		$config->setSystemValue('user_oidc', [ 'auto_provision' => true ]);
+		$config->setSystemValue('user_oidc', $initialOidcConfig);
 		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '1');
 		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, '');
 		sleep(5);
