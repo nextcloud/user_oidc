@@ -25,6 +25,9 @@ class HttpClientHelper implements HttpClient {
 		if ($this->shouldDisableSSLVerification()) {
 			$options['verify'] = false;
 		}
+		if ($this->shouldAllowLocalAddresses()) {
+			$options['nextcloud']['allow_local_address'] = true;
+		}
 
 		return $this->clientService->newClient()->get($url, $options)->getBody();
 	}
@@ -38,6 +41,9 @@ class HttpClientHelper implements HttpClient {
 		if ($this->shouldDisableSSLVerification()) {
 			$options['verify'] = false;
 		}
+		if ($this->shouldAllowLocalAddresses()) {
+			$options['nextcloud']['allow_local_address'] = true;
+		}
 
 		return $this->clientService->newClient()->post($url, $options)->getBody();
 	}
@@ -47,16 +53,29 @@ class HttpClientHelper implements HttpClient {
 			return true;
 		}
 
+		return $this->isOidcConfigFlagEnabled('httpclient.allowselfsigned');
+	}
+
+	/**
+	 * Allow requests to local/private addresses (e.g. a self-hosted IdP on the LAN,
+	 * split DNS or the same Docker network) without enabling the server-wide
+	 * allow_local_remote_servers option.
+	 */
+	private function shouldAllowLocalAddresses(): bool {
+		return $this->isOidcConfigFlagEnabled('httpclient.allowlocal');
+	}
+
+	private function isOidcConfigFlagEnabled(string $key): bool {
 		$oidcConfig = $this->config->getSystemValue('user_oidc', []);
-		if (!isset($oidcConfig['httpclient.allowselfsigned'])) {
+		if (!is_array($oidcConfig) || !isset($oidcConfig[$key])) {
 			return false;
 		}
 
-		$allowSelfSigned = $oidcConfig['httpclient.allowselfsigned'];
+		$value = $oidcConfig[$key];
 
-		return !($allowSelfSigned === false
-			|| $allowSelfSigned === 'false'
-			|| $allowSelfSigned === 0
-			|| $allowSelfSigned === '0');
+		return !($value === false
+			|| $value === 'false'
+			|| $value === 0
+			|| $value === '0');
 	}
 }
