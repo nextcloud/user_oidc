@@ -15,10 +15,12 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCSController;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotPermittedException;
 use OCP\IRequest;
 use OCP\IUserManager;
+use OCP\User\Events\UserChangedEvent;
 
 class OcsApiController extends OCSController {
 
@@ -28,6 +30,7 @@ class OcsApiController extends OCSController {
 		private UserMapper $userMapper,
 		private IUserManager $userManager,
 		private AuditLogger $auditLogger,
+		private IEventDispatcher $eventDispatcher,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -59,9 +62,14 @@ class OcsApiController extends OCSController {
 		}
 
 		if ($displayName) {
-			if ($displayName !== $backendUser->getDisplayName()) {
+			$oldDisplayName = $backendUser->getDisplayName();
+			if ($displayName !== $oldDisplayName) {
 				$backendUser->setDisplayName($displayName);
 				$this->userMapper->update($backendUser);
+				// The backend has no display name setter, so IUser::setDisplayName() cannot be used and core
+				// does not emit the event. Dispatch it here so listeners (e.g. Talk attendees, account data)
+				// pick up the new name, as ProvisioningService does on login.
+				$this->eventDispatcher->dispatchTyped(new UserChangedEvent($user, 'displayName', $displayName, $oldDisplayName));
 			}
 		}
 
