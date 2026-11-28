@@ -14,6 +14,7 @@ use OCA\UserOIDC\Db\ProviderMapper;
 use OCA\UserOIDC\Service\ProviderService;
 use OCP\App\IAppManager;
 use OCP\IConfig;
+use OCP\IDBConnection;
 use OCP\IUserManager;
 use OCP\Server;
 
@@ -52,6 +53,7 @@ class Test extends \Test\TestCase {
 		$this->cleanupUser('f617ef761d09b2afe1647c0bf9080ab75ec0d0fa1fbc95850091614f5fec1eea');
 		$this->cleanupUser('9aa987a707a5d4699efb0753d0e1a9bb9303bf028d613538883fba0368c164da');
 		$this->cleanupUser('aea81860-b25c-4f75-b9b5-9d632c3ba06f');
+		$this->cleanupUser('keycloak1@example.com');
 	}
 
 	private function cleanupUser(string $userId): void {
@@ -61,6 +63,11 @@ class Test extends \Test\TestCase {
 			$user = $userManager->get($userId);
 			$user->delete();
 		}
+		// the mapper's user cache can hide a row an earlier test deleted
+		$qb = Server::get(IDBConnection::class)->getQueryBuilder();
+		$qb->delete('user_oidc')
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+			->executeStatement();
 	}
 
 	public function testAlternativeLogins() {
@@ -241,5 +248,35 @@ class Test extends \Test\TestCase {
 		$response = $this->loginToKeycloak($headersRedirect[0], 'keycloak1', 'keycloak1');
 		$userId = $this->getUserHtmlData($response)['userId'];
 		self::assertEquals($userId, hash('sha256', '1_0_keycloak1'));
+	}
+
+	private function loginAs(string $username, string $password): string {
+		$this->newClient();
+		$response = $this->client->get($this->baseUrl . '/index.php/apps/user_oidc/login/1');
+		$headersRedirect = $response->getHeader(RedirectMiddleware::HISTORY_HEADER);
+		$response = $this->loginToKeycloak($headersRedirect[0], $username, $password);
+		return $this->getUserHtmlData($response)['userId'];
+	}
+
+	private function storedSub(string $userId): ?string {
+		$qb = Server::get(IDBConnection::class)->getQueryBuilder();
+		$sub = $qb->select('sub')
+			->from('user_oidc')
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+			->executeQuery()
+			->fetchOne();
+		return $sub === false ? null : $sub;
+	}
+
+	public function testChangedUidClaimKeepsTheAccount() {
+		$this->providerService->setSetting(1, ProviderService::SETTING_UNIQUE_UID, '0');
+		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, 'preferred_username');
+		self::assertEquals('keycloak1', $this->loginAs('keycloak1', 'keycloak1'));
+		self::assertEquals('aea81860-b25c-4f75-b9b5-9d632c3ba06f', $this->storedSub('keycloak1'));
+
+		// the uid claim changes, the identity stays the same
+		$this->providerService->setSetting(1, ProviderService::SETTING_MAPPING_UID, 'email');
+		self::assertEquals('keycloak1', $this->loginAs('keycloak1', 'keycloak1'));
+		self::assertFalse(Server::get(IUserManager::class)->userExists('keycloak1@example.com'));
 	}
 }

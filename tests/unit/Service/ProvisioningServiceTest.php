@@ -566,4 +566,45 @@ class ProvisioningServiceTest extends TestCase {
 		);
 	}
 
+	private function provisionWithSub(?IUser $existingLocalUser): void {
+		$this->providerService
+			->method('getSetting')
+			->willReturnCallback(fn (int $providerId, string $key, string $default = ''): string => $default);
+		$this->provisioningService->provisionUser(
+			'alice',
+			312,
+			(object)['sub' => '8f1d0c', 'preferred_username' => 'alice'],
+			$existingLocalUser,
+		);
+	}
+
+	public function testProvisionUserKeysANewAccountByTheTokenSub(): void {
+		$backendUser = new User();
+		$backendUser->setUserId('alice');
+		$backendUser->setDisplayName('');
+		$this->userMapper->expects(self::once())
+			->method('getOrCreate')
+			->with(312, 'alice', false, null, '8f1d0c')
+			->willReturn($backendUser);
+		$this->userMapper->expects(self::never())->method('setSubIfMissing');
+		$this->userManager->method('get')->willReturn($this->createMock(IUser::class));
+
+		$this->provisionWithSub(null);
+	}
+
+	public function testProvisionUserRecordsTheSubOfAnExistingAccount(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$user->method('getBackendClassName')->willReturn('user_oidc');
+		$backendUser = new User();
+		$backendUser->setUserId('alice');
+		$this->userMapper->expects(self::never())->method('getOrCreate');
+		$this->userMapper->method('getUser')->with('alice')->willReturn($backendUser);
+		$this->userMapper->expects(self::once())
+			->method('setSubIfMissing')
+			->with($backendUser, 312, 'alice', '8f1d0c')
+			->willReturn($backendUser);
+
+		$this->provisionWithSub($user);
+	}
 }
