@@ -49,6 +49,8 @@ namespace OCA\UserOIDC;
  *     forbidLoginWithoutGroup: bool,
  *     nestedAndFallbackClaims: bool,
  *     enrichLoginIdTokenWithUserinfo: bool,
+ *     appearanceIcon: string,
+ *     appearanceButtonBackgroundColor: string,
  * }
  *
  * @psalm-type UserOIDCProvider = array{
