@@ -76,6 +76,8 @@
 		<file name="tests/stubs/oc_app.php" />
 		<file name="tests/stubs/oc_user.php" />
 		<file name="tests/stubs/oca_files_events.php" />
+		<file name="tests/stubs/oca_dav_events.php" />
+		<file name="tests/stubs/sabre_dav_auth.php" />
 		<file name="tests/stubs/oca_user_ldap.php" />
 		<file name="tests/stubs/oca_oidc_events.php" />
 		<file name="tests/stubs/ocp_imapperexception.php" />

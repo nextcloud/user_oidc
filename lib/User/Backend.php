@@ -172,11 +172,40 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @since 6.0.0
 	 */
 	public function isSessionActive(): bool {
-		// if this returns true, getCurrentUserId is called
-		// not sure if we should rather to the validation in here as otherwise it might fail for other backends or bave other side effects
+		if ($this->isDavOidcBearerRequest()) {
+			return false;
+		}
 		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
 		// session is active if we have a bearer token (API request) OR if we logged in via user_oidc (we have a provider ID in the session)
 		return $headerToken !== '' || $this->session->get(LoginController::PROVIDERID) !== null;
+	}
+
+	private function isDavOidcBearerRequest(): bool {
+		$headerToken = $this->request->getHeader(Application::OIDC_API_REQ_HEADER);
+		if (preg_match('/^bearer\s+\S/i', $headerToken) !== 1) {
+			return false;
+		}
+
+		$scriptName = $this->request->getScriptName();
+		$pathInfo = $this->request->getPathInfo();
+		$candidates = [
+			$this->request->getRequestUri(),
+			$scriptName . (is_string($pathInfo) ? $pathInfo : ''),
+		];
+		foreach ($candidates as $uri) {
+			if ($uri === '') {
+				continue;
+			}
+			$path = parse_url($uri, PHP_URL_PATH);
+			if (!is_string($path) || $path === '') {
+				$path = $uri;
+			}
+			if (str_contains($path, '/remote.php/dav')) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -248,6 +277,10 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 	 * @since 6.0.0
 	 */
 	public function getCurrentUserId(): string {
+		return $this->resolveBearerUserId(true);
+	}
+
+	public function resolveBearerUserId(bool $confirmPasswordInSession = true): string {
 		$oidcSystemConfig = $this->config->getSystemValue('user_oidc', []);
 		$ncOidcProviderBearerValidation = isset($oidcSystemConfig['oidc_provider_bearer_validation']) && $oidcSystemConfig['oidc_provider_bearer_validation'] === true;
 
@@ -389,11 +422,11 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								}
 							}
 
-							$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
+							$this->confirmPasswordInSession($confirmPasswordInSession);
 							return $userId;
 						} elseif ($this->userExists($tokenUserId)) {
 							$this->checkFirstLogin($tokenUserId);
-							$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
+							$this->confirmPasswordInSession($confirmPasswordInSession);
 							return $tokenUserId;
 						} else {
 							// check if the user exists locally
@@ -414,7 +447,7 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 								return '';
 							}
 							$this->checkFirstLogin($tokenUserId);
-							$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
+							$this->confirmPasswordInSession($confirmPasswordInSession);
 							return $tokenUserId;
 						}
 					}
@@ -424,6 +457,13 @@ class Backend extends ABackend implements IPasswordConfirmationBackend, IGetDisp
 
 		$this->logger->debug('Could not find unique token validation');
 		return '';
+	}
+
+	private function confirmPasswordInSession(bool $confirmPasswordInSession): void {
+		if (!$confirmPasswordInSession) {
+			return;
+		}
+		$this->session->set('last-password-confirm', $this->timeFactory->getTime() + 4 * 365 * 24 * 3600);
 	}
 
 	/**
