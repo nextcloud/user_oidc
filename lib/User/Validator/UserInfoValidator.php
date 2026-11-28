@@ -13,6 +13,7 @@ use OCA\UserOIDC\Db\Provider;
 use OCA\UserOIDC\Service\OIDCService;
 use OCA\UserOIDC\Service\ProviderService;
 use OCA\UserOIDC\Service\ProvisioningService;
+use OCA\UserOIDC\User\Provisioning\UserInfoProvisioning;
 
 class UserInfoValidator implements IBearerTokenValidator {
 
@@ -37,7 +38,6 @@ class UserInfoValidator implements IBearerTokenValidator {
 	}
 
 	public function getProvisioningStrategy(): string {
-		// TODO implement provisioning over user info endpoint
-		return '';
+		return UserInfoProvisioning::class;
 	}
 }
