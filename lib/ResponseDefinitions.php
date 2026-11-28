@@ -45,6 +45,7 @@ namespace OCA\UserOIDC;
  *     providerBasedId: bool,
  *     groupProvisioning: bool,
  *     groupWhitelistRegex: string,
+ *     groupAdminAlias: string,
  *     restrictLoginToGroups: bool,
  *     forbidLoginWithoutGroup: bool,
  *     nestedAndFallbackClaims: bool,
